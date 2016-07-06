@@ -1,0 +1,6 @@
+[package]
+name = "rust-bio-tools"
+version = "0.1.0"
+authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>"]
+
+[dependencies]

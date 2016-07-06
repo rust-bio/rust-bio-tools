@@ -1,0 +1,13 @@
+name: Rust-Bio-Tools
+version: 0.1
+author: Johannes Köster <johannes.koester@tu-dortmund.de>
+about: A set of command line utilities for bioinformatics tasks based on Rust-Bio.
+subcommands:
+  - fastq-split:
+      about: Split FASTQ file from STDIN into N chunks
+      version: 0.1
+      author: Johannes Köster <johannes.koester@tu-dortmund.de>
+      args:
+        - chunks:
+            multiple: true
+            help: Chunks to create.

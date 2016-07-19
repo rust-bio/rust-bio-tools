@@ -7,3 +7,8 @@ authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>"]
 bio = {git = "https://github.com/rust-bio/rust-bio.git"}
 clap = {version = "2", features = ["yaml", "color", "suggestions"]}
 itertools = "0.4.*"
+log = "0.3.*"
+fern = "0.3.*"
+rust-htslib = {git = "https://github.com/rust-bio/rust-htslib.git"}
+csv = "0.14.*"
+rustc-serialize = "0.3.*"

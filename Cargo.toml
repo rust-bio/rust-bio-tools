@@ -1,5 +1,5 @@
 [package]
-name = "rbt"
+name = "rust-bio-tools"
 version = "0.1.0"
 authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>"]
 description = "A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio."
@@ -8,7 +8,7 @@ homepage = "https://github.com/rust-bio/rust-bio-tools"
 
 [dependencies]
 bio = "0.8.*"
-clap = {version = "2", features = ["yaml", "color", "suggestions"]}
+clap = {version = "2.9.*", features = ["yaml", "color", "suggestions"]}
 itertools = "0.4.*"
 log = "0.3.*"
 fern = "0.3.*"

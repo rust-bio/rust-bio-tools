@@ -1,6 +1,8 @@
 # Rust-Bio-Tools
 
-A set of command line utilities based on Rust-Bio.
+A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio.
+Functionality is added as it is needed by the authors.
+Any contributions are highly welcome.
 
 ## Installation
 

@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>"]
 
 [dependencies]
-bio = {git = "https://github.com/rust-bio/rust-bio.git"}
+bio = "0.8.*"
 clap = {version = "2", features = ["yaml", "color", "suggestions"]}
 itertools = "0.4.*"
 log = "0.3.*"

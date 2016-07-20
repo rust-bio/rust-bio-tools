@@ -1,5 +1,7 @@
 # Rust-Bio-Tools
 
+[![Travis](https://img.shields.io/travis/rust-bio/rust-bio-tools.svg?maxAge=2592000?style=flat-square)](https://travis-ci.org/rust-bio/rust-bio-tools)
+
 A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio.
 Functionality is added as it is needed by the authors.
 Any contributions are highly welcome.

@@ -2,6 +2,9 @@
 name = "rbt"
 version = "0.1.0"
 authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>"]
+description = "A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio."
+license-file = "LICENSE.md"
+homepage = "https://github.com/rust-bio/rust-bio-tools"
 
 [dependencies]
 bio = "0.8.*"

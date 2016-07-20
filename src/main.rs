@@ -17,7 +17,7 @@ pub mod bam;
 
 fn main() {
     let yaml = load_yaml!("cli.yaml");
-    let matches = App::from_yaml(yaml).get_matches();
+    let matches = App::from_yaml(yaml).version(env!("CARGO_PKG_VERSION")).get_matches();
 
     fern::init_global_logger(fern::DispatchConfig {
         format: Box::new(|msg, _, _| msg.to_owned()),

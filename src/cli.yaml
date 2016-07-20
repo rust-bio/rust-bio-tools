@@ -1,12 +1,10 @@
 name: Rust-Bio-Tools
-version: 0.1
 author: Johannes Köster <johannes.koester@tu-dortmund.de>
 about: A set of ultra-fast command line utilities for bioinformatics tasks based on Rust-Bio.
 subcommands:
   - fastq-split:
       about: Split FASTQ file from STDIN into N chunks.
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
-      version: 0.1
       args:
         - chunks:
             required: true
@@ -15,7 +13,6 @@ subcommands:
   - bam-depth:
       about: "Print depth of BAM or CRAM file at given positions from STDIN (tab separated: chrom, pos)."
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
-      version: 0.1
       args:
         - bam-path:
             required: true

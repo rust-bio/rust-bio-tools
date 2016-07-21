@@ -15,3 +15,7 @@ fern = "0.3.*"
 rust-htslib = "0.6.*"
 csv = "0.14.*"
 rustc-serialize = "0.3.*"
+
+[[bin]]
+name = "rbt"
+path = "src/main.rs"

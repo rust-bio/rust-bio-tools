@@ -14,7 +14,13 @@ struct PosRecord {
 }
 
 
-pub fn depth(bam_path: &str, max_read_length: u32) {
+pub fn depth(
+    bam_path: &str,
+    max_read_length: u32,
+    include_flags: u16,
+    exclude_flags: u16,
+    min_mapq: u8)
+{
     let mut bam_reader = bam::IndexedReader::new(&bam_path).unwrap();
     let mut pos_reader = csv::Reader::from_reader(io::stdin()).has_headers(false).delimiter(b'\t');
     let mut csv_writer = csv::Writer::from_buffer(io::BufWriter::new(io::stdout())).delimiter(b'\t');
@@ -43,8 +49,17 @@ pub fn depth(bam_path: &str, max_read_length: u32) {
             covered = pileup.pos() == record.pos - 1;
             last_tid = pileup.tid();
             last_pos = pileup.pos();
+
             if covered {
-                csv_writer.encode((&record.chrom, record.pos, pileup.depth())).unwrap();
+                let depth = pileup.alignments().filter(|alignment| {
+                    let record = alignment.record();
+                    let flags = record.flags();
+                    (!flags) & include_flags == 0 &&
+                    flags & exclude_flags == 0 &&
+                    record.mapq() >= min_mapq
+                }).count();
+
+                csv_writer.encode((&record.chrom, record.pos, depth)).unwrap();
                 break;
             } else if pileup.pos() > record.pos {
                 exceeded = true;

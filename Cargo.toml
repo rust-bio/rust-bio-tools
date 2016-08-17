@@ -12,7 +12,7 @@ clap = {version = "2.9.*", features = ["yaml", "color", "suggestions"]}
 itertools = "0.4.*"
 log = "0.3.*"
 fern = "0.3.*"
-rust-htslib = "0.6.*"
+rust-htslib = "^0.8.1"
 csv = "0.14.*"
 rustc-serialize = "0.3.*"
 

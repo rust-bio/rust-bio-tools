@@ -33,17 +33,21 @@ fn main() {
     ).unwrap();
 
     if let Some(matches) = matches.subcommand_matches("fastq-split") {
-        fastq::split::split(
+        if let Err(e) = fastq::split::split(
             &matches.values_of("chunks").unwrap().collect_vec()
-        )
+        ) {
+            println!("{}", e);
+        }
     }
     else if let Some(matches) = matches.subcommand_matches("bam-depth") {
-        bam::depth::depth(
+        if let Err(e) = bam::depth::depth(
             &matches.value_of("bam-path").unwrap(),
             value_t!(matches, "max-read-length", u32).unwrap_or(1000),
             value_t!(matches, "include-flags", u16).unwrap_or(0),
             value_t!(matches, "exclude-flags", u16).unwrap_or(4 | 256 | 512 | 1024),
             value_t!(matches, "min-mapq", u8).unwrap_or(0)
-        )
+        ) {
+            println!("{}", e);
+        }
     }
 }

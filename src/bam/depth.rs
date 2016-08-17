@@ -1,5 +1,6 @@
 use std::io;
 use std::cmp;
+use std::error::Error;
 
 use csv;
 
@@ -19,9 +20,9 @@ pub fn depth(
     max_read_length: u32,
     include_flags: u16,
     exclude_flags: u16,
-    min_mapq: u8)
+    min_mapq: u8) -> Result<(), Box<Error>>
 {
-    let mut bam_reader = bam::IndexedReader::new(&bam_path).unwrap();
+    let mut bam_reader = try!(bam::IndexedReader::new(&bam_path));
     let mut pos_reader = csv::Reader::from_reader(io::stdin()).has_headers(false).delimiter(b'\t');
     let mut csv_writer = csv::Writer::from_buffer(io::BufWriter::new(io::stdout())).delimiter(b'\t');
     let mut last_tid = 0;
@@ -30,14 +31,14 @@ pub fn depth(
     let mut pileup_iter = bam_reader.pileup();
 
     for (i, record) in pos_reader.decode().enumerate() {
-        let record: PosRecord = record.unwrap();
+        let record: PosRecord = try!(record);
 
         // jump to correct position if necessary
         let tid = bam_reader.header.tid(record.chrom.as_bytes()).unwrap();
         let start = cmp::max(record.pos as i32 - max_read_length as i32 - 1, 0) as u32;
         if exceeded || tid != last_tid || start > last_pos || record.pos - 1 <= last_pos {
             let n = bam_reader.header.target_len(tid).unwrap();
-            bam_reader.seek(tid, start, n).unwrap();
+            try!(bam_reader.seek(tid, start, n));
             pileup_iter = bam_reader.pileup();
         }
 
@@ -45,7 +46,7 @@ pub fn depth(
         let mut covered = false;
         exceeded = false;
         while let Some(pileup) = pileup_iter.next() {
-            let pileup = pileup.unwrap();
+            let pileup = try!(pileup);
             covered = pileup.pos() == record.pos - 1;
             last_tid = pileup.tid();
             last_pos = pileup.pos();
@@ -59,7 +60,7 @@ pub fn depth(
                     record.mapq() >= min_mapq
                 }).count();
 
-                csv_writer.encode((&record.chrom, record.pos, depth)).unwrap();
+                try!(csv_writer.encode((&record.chrom, record.pos, depth)));
                 break;
             } else if pileup.pos() > record.pos {
                 exceeded = true;
@@ -67,11 +68,12 @@ pub fn depth(
             }
         }
         if !covered {
-            csv_writer.encode((&record.chrom, record.pos, 0)).unwrap();
+            try!(csv_writer.encode((&record.chrom, record.pos, 0)));
         }
 
         if (i + 1) % 100 == 0 {
             info!("{} records written.", i + 1);
         }
     }
+    Ok(())
 }

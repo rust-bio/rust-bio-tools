@@ -29,3 +29,13 @@ fn bam_depth() {
             .spawn().unwrap().wait().unwrap().success());
     test_output("tests/depth.txt", "tests/expected/depth.txt");
 }
+
+
+#[test]
+fn vcf_to_txt() {
+    assert!(Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-to-txt --fmt S --info T < tests/test.vcf > tests/variant-table.txt")
+            .spawn().unwrap().wait().unwrap().success());
+    test_output("tests/variant-table.txt", "tests/expected/variant-table.txt");
+}

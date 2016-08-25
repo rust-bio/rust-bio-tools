@@ -1,0 +1,3 @@
+COMMON						S1	S2	S3	
+CHROM	POS	REF	ALT	QUAL	T	S	S	S	
+1	99	A	T	NaN	2	a	bbbbbbb	ccccccccc	

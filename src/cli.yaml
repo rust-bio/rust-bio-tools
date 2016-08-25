@@ -1,6 +1,13 @@
 name: Rust-Bio-Tools
 author: Johannes Köster <johannes.koester@tu-dortmund.de>
 about: A set of ultra-fast command line utilities for bioinformatics tasks based on Rust-Bio.
+
+settings:
+  - SubcommandRequired
+
+global_settings:
+  - ColoredHelp
+
 subcommands:
   - fastq-split:
       about: Split FASTQ file from STDIN into N chunks.
@@ -10,6 +17,7 @@ subcommands:
             required: true
             multiple: true
             help: Chunks to create.
+
   - bam-depth:
       about: "Print depth of BAM or CRAM file at given positions from STDIN (tab separated: chrom, pos)."
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
@@ -25,14 +33,31 @@ subcommands:
             long: incl-flags
             short: i
             value_name: INT
-            help:  Skip reads with mask bits unset [].
+            help:  "Skip reads with mask bits unset []."
         - exclude-flags:
             long: excl-flags
             short: e
             value_name: INT
-            help: Skip reads with mask bits set [UNMAP, SECONDARY, QCFAIL, DUP]
+            help: "Skip reads with mask bits set [UNMAP, SECONDARY, QCFAIL, DUP]."
         - min-mapq:
             long: "min-mapq"
             short: "q"
             value_name: INT
-            help: Minimum mapping quality [0].
+            help: "Minimum mapping quality [0]."
+
+  - vcf-to-txt:
+      about: Convert VCF/BCF file from STDIN to tab-separated TXT file at STDOUT. INFO and FORMAT tags have to be selected explicitly.
+      author: Johannes Köster <johannes.koester@tu-dortmund.de>
+      args:
+        - info:
+            long: info
+            short: i
+            value_name: NAME
+            multiple: true
+            help: Select INFO tags.
+        - format:
+            long: fmt
+            short: f
+            value_name: NAME
+            multiple: true
+            help: Select FORMAT tags.

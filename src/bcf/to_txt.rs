@@ -21,6 +21,18 @@ impl Writer {
         }
     }
 
+    fn write_integer(&mut self, value: i32) -> Result<(), Box<Error>> {
+        self.write_field(format!("{}", value).as_bytes())
+    }
+
+    fn write_float(&mut self, value: f32) -> Result<(), Box<Error>> {
+        self.write_field(format!("{}", value).as_bytes())
+    }
+
+    fn write_flag(&mut self, value: bool) -> Result<(), Box<Error>> {
+        self.write_field(format!("{}", value).as_bytes())
+    }
+
     fn write_field(&mut self, value: &[u8]) -> Result<(), Box<Error>> {
         if self.field_count > 0 {
             try!(self.inner.write(b"\t"));
@@ -92,12 +104,12 @@ pub fn to_txt(
         let alleles = record.alleles().into_iter().map(|a| a.to_owned()).collect_vec();
         for (i, allele) in alleles[1..].iter().enumerate() {
             try!(writer.write_field(reader.header.rid2name(record.rid().unwrap())));
-            try!(writer.write_field(format!("{}", record.pos()).as_bytes()));
+            try!(writer.write_integer(record.pos() as i32));
             try!(writer.write_field(&alleles[0]));
             try!(writer.write_field(allele));
             match record.qual() {
-                q if q == bcf::MISSING_FLOAT => try!(writer.write_field(b"")),
-                q => try!(writer.write_field(format!("{}", q).as_bytes()))
+                q if q == bcf::record::MISSING_FLOAT => try!(writer.write_field(b"")),
+                q => try!(writer.write_float(q))
             }
 
             for name in info_tags {
@@ -115,16 +127,28 @@ pub fn to_txt(
 
                 match tag_type {
                     bcf::header::TagType::Flag => {
-                        try!(writer.write_field(format!("{}", try!(record.info(_name).flag())).as_bytes()));
+                        try!(writer.write_flag(try!(record.info(_name).flag())));
                     },
                     bcf::header::TagType::Integer => {
-                        try!(writer.write_field(format!("{}", try!(record.info(_name).integer())[i]).as_bytes()));
+                        if let Some(values) = try!(record.info(_name).integer()) {
+                            try!(writer.write_integer(values[i]));
+                        } else {
+                            try!(writer.write_field(b""));
+                        }
                     },
                     bcf::header::TagType::Float => {
-                        try!(writer.write_field(format!("{}", try!(record.info(_name).float())[i]).as_bytes()));
+                        if let Some(values) = try!(record.info(_name).float()) {
+                            try!(writer.write_float(values[i]));
+                        } else {
+                            try!(writer.write_field(b""));
+                        }
                     },
                     bcf::header::TagType::String => {
-                        try!(writer.write_field(try!(record.info(_name).string())[i]));
+                        if let Some(values) = try!(record.info(_name).string()) {
+                            try!(writer.write_field(values[i]));
+                        } else {
+                            try!(writer.write_field(b""));
+                        }
                     }
                 }
             }

@@ -15,6 +15,8 @@ extern crate custom_derive;
 #[macro_use]
 extern crate newtype_derive;
 
+use std::process;
+
 use clap::{App,AppSettings};
 use itertools::Itertools;
 
@@ -44,6 +46,7 @@ fn main() {
             &matches.values_of("chunks").unwrap().collect_vec()
         ) {
             error!("{}", e);
+            process::exit(1);
         }
     }
     else if let Some(matches) = matches.subcommand_matches("bam-depth") {
@@ -55,6 +58,7 @@ fn main() {
             value_t!(matches, "min-mapq", u8).unwrap_or(0)
         ) {
             error!("{}", e);
+            process::exit(1);
         }
     } else if let Some(matches) = matches.subcommand_matches("vcf-to-txt") {
         if let Err(e) = bcf::to_txt::to_txt(
@@ -63,6 +67,7 @@ fn main() {
             matches.is_present("genotypes")
         ) {
             error!("{}", e);
+            process::exit(1);
         }
     }
 }

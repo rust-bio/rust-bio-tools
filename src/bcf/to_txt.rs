@@ -104,7 +104,7 @@ pub fn to_txt(
         let alleles = record.alleles().into_iter().map(|a| a.to_owned()).collect_vec();
         for (i, allele) in alleles[1..].iter().enumerate() {
             try!(writer.write_field(reader.header.rid2name(record.rid().unwrap())));
-            try!(writer.write_integer(record.pos() as i32));
+            try!(writer.write_integer(record.pos() as i32 + 1));
             try!(writer.write_field(&alleles[0]));
             try!(writer.write_field(allele));
             match record.qual() {

@@ -7,42 +7,57 @@ use itertools::Itertools;
 use rust_htslib::bcf;
 
 
-pub struct Writer(io::BufWriter<io::Stdout>);
+pub struct Writer {
+    inner: io::BufWriter<io::Stdout>,
+    field_count: usize
+}
 
 
 impl Writer {
-    fn write_field(&mut self, value: &[u8]) -> Result<(), Box<Error>> {
-        let &mut Writer(ref mut w) = self;
-        try!(w.write(value));
-        try!(w.write(b"\t"));
+    fn new(inner: io::BufWriter<io::Stdout>) -> Self {
+        Writer {
+            inner: inner,
+            field_count: 0
+        }
+    }
 
+    fn write_field(&mut self, value: &[u8]) -> Result<(), Box<Error>> {
+        if self.field_count > 0 {
+            try!(self.inner.write(b"\t"));
+        }
+        try!(self.inner.write(value));
+        self.field_count += 1;
         Ok(())
     }
-    fn newline(&mut self) -> Result<(), Box<Error>> {
-        let &mut Writer(ref mut w) = self;
-        try!(w.write(b"\n"));
 
+    fn newline(&mut self) -> Result<(), Box<Error>> {
+        try!(self.inner.write(b"\n"));
+        self.field_count = 0;
         Ok(())
     }
 }
 
 
+const HEADER_COMMON: &'static [u8] = b"VARIANT";
+
+
 pub fn to_txt(
     info_tags: &[&str],
     format_tags: &[&str],
+    show_genotypes: bool
 ) -> Result<(), Box<Error>> {
     let reader = try!(bcf::Reader::new(&"-"));
-    let mut writer = Writer(io::BufWriter::new(io::stdout()));
+    let mut writer = Writer::new(io::BufWriter::new(io::stdout()));
 
     let common_n = 5 + info_tags.len();
-    try!(writer.write_field(b"COMMON"));
+    try!(writer.write_field(HEADER_COMMON));
     for _ in 1..common_n {
-        try!(writer.write_field(b""));
+        try!(writer.write_field(HEADER_COMMON));
     }
     for sample in reader.header.samples() {
         try!(writer.write_field(sample));
-        for _ in 1..format_tags.len() {
-            try!(writer.write_field(b""));
+        for _ in 1..format_tags.len() + show_genotypes as usize {
+            try!(writer.write_field(sample));
         }
     }
     try!(writer.newline());
@@ -55,6 +70,9 @@ pub fn to_txt(
         try!(writer.write_field(name.as_bytes()));
     }
     for _ in 0..reader.header.sample_count() {
+        if show_genotypes {
+            try!(writer.write_field(b"GT"));
+        }
         for name in format_tags {
             try!(writer.write_field(name.as_bytes()));
         }
@@ -77,7 +95,10 @@ pub fn to_txt(
             try!(writer.write_field(format!("{}", record.pos()).as_bytes()));
             try!(writer.write_field(&alleles[0]));
             try!(writer.write_field(allele));
-            try!(writer.write_field(format!("{}", record.qual()).as_bytes()));
+            match record.qual() {
+                q if q == bcf::MISSING_FLOAT => try!(writer.write_field(b"")),
+                q => try!(writer.write_field(format!("{}", q).as_bytes()))
+            }
 
             for name in info_tags {
                 let _name = name.as_bytes();
@@ -108,7 +129,21 @@ pub fn to_txt(
                 }
             }
 
+            let genotypes = if show_genotypes {
+                let genotypes = try!(record.genotypes());
+                Some(
+                    (0..reader.header.sample_count() as usize).map(|s| {
+                        format!("{}", genotypes.get(s))
+                    }).collect_vec()
+                )
+            } else {
+                None
+            };
+
             for s in 0..reader.header.sample_count() as usize {
+                if let Some(ref genotypes) = genotypes {
+                    try!(writer.write_field(genotypes[s].as_bytes()));
+                }
                 for name in format_tags {
                     let _name = name.as_bytes();
                     let (tag_type, tag_length) = try!(reader.header.format_type(_name));

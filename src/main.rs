@@ -10,6 +10,10 @@ extern crate csv;
 extern crate rust_htslib;
 #[macro_use]
 extern crate quick_error;
+#[macro_use]
+extern crate custom_derive;
+#[macro_use]
+extern crate newtype_derive;
 
 use clap::{App,AppSettings};
 use itertools::Itertools;
@@ -55,7 +59,8 @@ fn main() {
     } else if let Some(matches) = matches.subcommand_matches("vcf-to-txt") {
         if let Err(e) = bcf::to_txt::to_txt(
             &matches.values_of("info").map(|values| values.collect_vec()).unwrap_or(vec![]),
-            &matches.values_of("format").map(|values| values.collect_vec()).unwrap_or(vec![])
+            &matches.values_of("format").map(|values| values.collect_vec()).unwrap_or(vec![]),
+            matches.is_present("genotypes")
         ) {
             error!("{}", e);
         }

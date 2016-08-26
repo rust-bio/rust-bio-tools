@@ -46,9 +46,18 @@ subcommands:
             help: "Minimum mapping quality [0]."
 
   - vcf-to-txt:
-      about: Convert VCF/BCF file from STDIN to tab-separated TXT file at STDOUT. INFO and FORMAT tags have to be selected explicitly.
+      about: |
+        Convert VCF/BCF file from STDIN to tab-separated TXT file at STDOUT.
+        INFO and FORMAT tags have to be selected explicitly.
+        The resulting table can be e.g. parsed with PANDAS in Python:
+
+        pd.read_table("variants.txt", header=[0, 1])
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
       args:
+        - genotypes:
+            long: genotypes
+            short: g
+            help: Print genotypes.
         - info:
             long: info
             short: i

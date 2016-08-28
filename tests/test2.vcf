@@ -1,0 +1,18 @@
+##fileformat=VCFv4.3
+##FILTER=<ID=PASS,Description="All filters passed">
+##contig=<ID=1>
+##contig=<ID=2>
+##FORMAT=<ID=S,Number=1,Type=String,Description="Text">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=T,Number=A,Type=Integer,Description="Text">
+##INFO=<ID=SVTYPE,Number=A,Type=String,Description="SV type">
+##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="SV length">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
+1	100	a	A	G,T	.	.	T=2	S:GT
+1	200	.	A	AGG	.	.	.	S:GT
+2	500	.	GGT	G	.	.	SVTYPE=DEL;SVLEN=2	S:GT
+2	501	.	N	<DEL>	.	.	SVLEN=2	S:GT
+2	502	.	GGT	G	.	.	.	S:GT
+2	503	.	N	<DEL>	.	.	SVLEN=200	S:GT
+2	510	.	A	ATT	.	.	.	S:GT
+2	600	.	GGT	G	.	.	SVTYPE=DEL;SVLEN=2	S:GT

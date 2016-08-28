@@ -39,3 +39,13 @@ fn vcf_to_txt() {
             .spawn().unwrap().wait().unwrap().success());
     test_output("tests/variant-table.txt", "tests/expected/variant-table.txt");
 }
+
+
+#[test]
+fn vcf_match() {
+    assert!(Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-match tests/test3.vcf < tests/test2.vcf > tests/matching.bcf")
+            .spawn().unwrap().wait().unwrap().success());
+    test_output("tests/matching.bcf", "tests/expected/matching.bcf");
+}

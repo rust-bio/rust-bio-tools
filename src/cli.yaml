@@ -8,6 +8,12 @@ settings:
 global_settings:
   - ColoredHelp
 
+args:
+  - verbose:
+      long: verbose
+      short: v
+      help: Verbose output.
+
 subcommands:
   - fastq-split:
       about: Split FASTQ file from STDIN into N chunks.
@@ -70,3 +76,21 @@ subcommands:
             value_name: NAME
             multiple: true
             help: Select FORMAT tags.
+
+  - vcf-match:
+      about: |
+        Annotate for each variant in a VCF/BCF at STDIN whether it is contained in a
+        given second VCF/BCF. The matching is fuzzy for indels and exact for SNVs.
+      author: Johannes Köster <johannes.koester@tu-dortmund.de>
+      args:
+        - vcf:
+            required: true
+            help: VCF/BCF file to match against.
+        - max-dist:
+            long: max-dist
+            short: d
+            help: Maximum distance between centres of two indels considered to match [50].
+        - max-len-diff:
+            long: max-len-diff
+            short: l
+            help: Maximum difference between lengths of two indels [20].

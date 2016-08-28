@@ -36,9 +36,13 @@ fn main() {
         fern::DispatchConfig {
             format: Box::new(|msg, _, _| msg.to_owned()),
             output: vec![fern::OutputConfig::stderr()],
-            level: log::LogLevelFilter::Info
+            level: log::LogLevelFilter::Trace
         },
-        log::LogLevelFilter::Trace
+        if matches.is_present("verbose") {
+            log::LogLevelFilter::Debug
+        } else {
+            log::LogLevelFilter::Info
+        }
     ).unwrap();
 
     if let Some(matches) = matches.subcommand_matches("fastq-split") {
@@ -65,6 +69,15 @@ fn main() {
             &matches.values_of("info").map(|values| values.collect_vec()).unwrap_or(vec![]),
             &matches.values_of("format").map(|values| values.collect_vec()).unwrap_or(vec![]),
             matches.is_present("genotypes")
+        ) {
+            error!("{}", e);
+            process::exit(1);
+        }
+    } else if let Some(matches) = matches.subcommand_matches("vcf-match") {
+        if let Err(e) = bcf::match_variants::match_variants(
+            matches.value_of("vcf").unwrap(),
+            value_t!(matches, "max-dist", u32).unwrap_or(50),
+            value_t!(matches, "max-len-diff", u32).unwrap_or(20)
         ) {
             error!("{}", e);
             process::exit(1);

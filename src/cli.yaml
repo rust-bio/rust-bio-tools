@@ -81,6 +81,10 @@ subcommands:
       about: |
         Annotate for each variant in a VCF/BCF at STDIN whether it is contained in a
         given second VCF/BCF. The matching is fuzzy for indels and exact for SNVs.
+        Results are printed as BCF to STDOUT, with an additional INFO tag MATCHING.
+        
+        Example:
+        rbt vcf-match dbsnp.vcf < calls.vcf | bcftools view
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
       args:
         - vcf:

@@ -2,6 +2,7 @@
 ##FILTER=<ID=PASS,Description="All filters passed">
 ##contig=<ID=1>
 ##contig=<ID=2>
+##contig=<ID=3>
 ##FORMAT=<ID=S,Number=1,Type=String,Description="Text">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##INFO=<ID=T,Number=A,Type=Integer,Description="Text">
@@ -11,3 +12,4 @@
 1	100	a	A	G	.	.	T=2	S:GT
 1	200	.	A	AGG	.	.	.	S:GT
 2	540	.	GGAT	G	.	.	SVTYPE=DEL;SVLEN=3	S:GT
+3	6000	.	GGAT	G	.	.	SVTYPE=DEL;SVLEN=3	S:GT

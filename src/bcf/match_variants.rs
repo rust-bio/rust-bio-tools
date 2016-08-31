@@ -214,8 +214,25 @@ impl RecordBuffer {
         }
     }
 
-    pub fn rid(&self) -> Option<u32> {
+    pub fn last_rid(&self) -> Option<u32> {
         self.ringbuffer.back().map(|var| var.rid)
+    }
+
+    pub fn next_rid(&self) -> Option<u32> {
+        self.ringbuffer2.back().map(|var| var.rid)
+    }
+
+    fn swap_buffers(&mut self) {
+        // swap with buffer for next rid
+        mem::swap(&mut self.ringbuffer2, &mut self.ringbuffer);
+        // clear second buffer
+        self.ringbuffer2.clear();
+    }
+
+    fn drain_left(&mut self, rid: u32, window_start: u32) {
+        // remove records too far left or from wrong rid
+        let to_remove = self.ringbuffer.iter().take_while(|var| var.pos < window_start || var.rid != rid).count();
+        self.ringbuffer.drain(..to_remove);
     }
 
     pub fn fill(&mut self, chrom: &[u8], pos: u32) -> Result<(), Box<Error>> {
@@ -223,17 +240,25 @@ impl RecordBuffer {
         let window_end = pos + self.window;
         let rid = try!(self.reader.header.name2rid(chrom));
 
-        if let Some(last_rid) = self.rid() {
-            if rid != last_rid {
-                // swap with buffer for next rid
-                mem::swap(&mut self.ringbuffer2, &mut self.ringbuffer);
-                // clear second buffer
-                self.ringbuffer2.clear();
-            } else {
-                // remove records too far left of from wrong rid
-                let to_remove = self.ringbuffer.iter().take_while(|var| var.pos < window_start || var.rid != rid).count();
-                self.ringbuffer.drain(..to_remove);
-            }
+        match (self.last_rid(), self.next_rid()) {
+            (Some(last_rid), _) => {
+                if last_rid != rid {
+                    self.swap_buffers();
+                } else {
+                    self.drain_left(rid, window_start);
+                }
+            },
+            (_, Some(_)) => {
+                self.swap_buffers();
+                self.drain_left(rid, window_start);
+            },
+            _ => ()
+        }
+
+        if !self.ringbuffer2.is_empty() {
+            // We have already read beyond the current rid. Hence we can't extend to the right for
+            // this rid.
+            return Ok(())
         }
 
         // extend to the right

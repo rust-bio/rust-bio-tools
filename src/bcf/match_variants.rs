@@ -2,7 +2,6 @@ use std::error::Error;
 use std::collections::{VecDeque, vec_deque};
 use std::str;
 use std::cmp;
-use std::u32;
 use std::mem;
 
 use itertools::Itertools;
@@ -15,8 +14,9 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
 
     header.push_record(
         format!("##INFO=<ID=MATCHING,Number=A,Type=Integer,\
-        Description=\"For each alternative allele, 1 if it matches a variant in another VCF/BCF \
-        and 0 otherwise. For indels, matching is fuzzy: distance of centres <= {}, difference of \
+        Description=\"For each alternative allele, -1 if it does not match a variant in another VCF/BCF. \
+        If it matches a variant, an id i>=0 is points to the i-th variant in the VCF/BCF (counting each \
+        alternative allele separately). For indels, matching is fuzzy: distance of centres <= {}, difference of \
         lengths <= {}\">", max_dist, max_len_diff).as_bytes()
     );
     header.push_record(
@@ -29,6 +29,7 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
     let mut buffer = RecordBuffer::new(try!(bcf::Reader::new(&matchbcf)), max_dist);
 
     let mut rec = bcf::Record::new();
+    let mut i = 0;
     loop {
         if let Err(e) = inbcf.read(&mut rec) {
             if e.is_eof() {
@@ -44,14 +45,14 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
             // move buffer to pos
             try!(buffer.fill(chrom, pos));
 
-            let var = try!(Variant::new(&mut rec));
+            let var = try!(Variant::new(&mut rec, &mut i));
             let matching = var.alleles.iter().map(|a| {
                 for v in buffer.iter() {
-                    if var.matches(v, a, max_dist, max_len_diff) {
-                        return 1;
+                    if let Some(id) = var.matches(v, a, max_dist, max_len_diff) {
+                        return id as i32;
                     }
                 }
-                0
+                -1
             }).collect_vec();
 
             try!(rec.push_info_integer(b"MATCHING", &matching));
@@ -59,7 +60,12 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
         } else {
             try!(outbcf.write(&rec));
         }
+
+        if (i) % 1000 == 0 {
+            info!("{} variants written.", i);
+        }
     }
+    info!("{} variants written.", i);
 
     Ok(())
 }
@@ -67,6 +73,7 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
 
 #[derive(Debug)]
 pub struct Variant {
+    id: u32,
     rid: u32,
     pos: u32,
     alleles: Vec<VariantType>
@@ -75,7 +82,7 @@ pub struct Variant {
 
 impl Variant {
 
-    pub fn new(rec: &mut bcf::Record) -> Result<Self, Box<Error>> {
+    pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self, Box<Error>> {
         let pos = rec.pos();
 
         let svlen = if let Ok(Some(svlen)) = rec.info(b"SVLEN").integer() {
@@ -124,11 +131,14 @@ impl Variant {
             };
             _alleles.push(vartype);
         }
-        Ok(Variant {
+        let var = Variant {
+            id: *id,
             rid: rec.rid().unwrap(),
             pos: pos,
             alleles: _alleles
-        })
+        };
+        *id += alleles.len() as u32 - 1;
+        Ok(var)
     }
 
     pub fn centerpoint(&self, allele: &VariantType) -> u32 {
@@ -139,25 +149,29 @@ impl Variant {
         }
     }
 
-    pub fn matches(&self, other: &Variant, allele: &VariantType, max_dist: u32, max_len_diff: u32) -> bool {
-        for b in &other.alleles {
+    pub fn matches(&self, other: &Variant, allele: &VariantType, max_dist: u32, max_len_diff: u32) -> Option<u32> {
+        for (j, b) in other.alleles.iter().enumerate() {
             let dist = (self.centerpoint(allele) as i32 - other.centerpoint(b) as i32).abs() as u32;
             match (allele, b) {
                 (&VariantType::SNV(a), &VariantType::SNV(b)) => {
                     if a == b && dist == 0 {
-                        return true;
+                        return Some(other.id(j));
                     }
                 },
                 (&VariantType::Insertion(l1), &VariantType::Insertion(l2)) |
                 (&VariantType::Deletion(l1), &VariantType::Deletion(l2)) => {
                     if (l1 as i32 - l2 as i32).abs() as u32 <= max_len_diff && dist <= max_dist {
-                        return true;
+                        return Some(other.id(j));
                     }
                 },
                 _ => continue
             }
         }
-        false
+        None
+    }
+
+    pub fn id(&self, allele: usize) -> u32 {
+        self.id + allele as u32
     }
 }
 
@@ -185,7 +199,8 @@ pub struct RecordBuffer {
     reader: bcf::Reader,
     ringbuffer: VecDeque<Variant>,
     ringbuffer2: VecDeque<Variant>,
-    window: u32
+    window: u32,
+    i: u32
 }
 
 impl RecordBuffer {
@@ -194,7 +209,8 @@ impl RecordBuffer {
             reader: reader,
             ringbuffer: VecDeque::new(),
             ringbuffer2: VecDeque::new(),
-            window: window
+            window: window,
+            i: 0
         }
     }
 
@@ -234,15 +250,15 @@ impl RecordBuffer {
                 if rec_rid == rid {
                     if pos > window_end {
                         // Record is beyond our window. Store it anyways but stop.
-                        self.ringbuffer.push_back(try!(Variant::new(&mut rec)));
+                        self.ringbuffer.push_back(try!(Variant::new(&mut rec, &mut self.i)));
                         break;
                     } else if pos >= window_start {
                         // Record is within out window.
-                        self.ringbuffer.push_back(try!(Variant::new(&mut rec)));
+                        self.ringbuffer.push_back(try!(Variant::new(&mut rec, &mut self.i)));
                     }
                 } else if rec_rid > rid {
                     // record comes from next rid. Store it in second buffer but stop filling.
-                    self.ringbuffer2.push_back(try!(Variant::new(&mut rec)));
+                    self.ringbuffer2.push_back(try!(Variant::new(&mut rec, &mut self.i)));
                     break;
                 } else {
                     // Record comes from previous rid. Ignore it.

@@ -10,7 +10,7 @@ Any contributions are highly welcome.
 
 ### Bioconda
 
-Rust-Bio-Tools is be available via [Bioconda](https://bioconda.github.io).
+Rust-Bio-Tools is available via [Bioconda](https://bioconda.github.io).
 With Bioconda set up, installation is as easy as
 
     conda install rust-bio-tools

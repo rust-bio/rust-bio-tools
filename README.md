@@ -10,13 +10,18 @@ Any contributions are highly welcome.
 
 ### Bioconda
 
-Once stabilized, Rust-Bio-Tools will be available via [Bioconda](https://bioconda.github.io).
+Rust-Bio-Tools is be available via [Bioconda](https://bioconda.github.io).
+With Bioconda set up, installation is as easy as
 
-### Cargo
+    conda install rust-bio-tools
 
-If you have [Rust](https://rust-lang.org) set up, you can compile and install Rust-Bio-Tools via cargo:
+### Manual
 
-    cargo install rust-bio-tools
+Download the source code and issue
+
+    cargo install
+
+from the root directory of the source.
 
 ## Usage
 

@@ -1,0 +1,10 @@
+# Change Log
+All notable changes to this project will be documented in this file.
+This project adheres to [Semantic Versioning](http://semver.org/).
+
+## [0.1.0] - 2016-08-31
+### Added
+- Tool for matching VCF/BCF files.
+- Tool for converting VCF/BCF files to tabular TXT.
+- Tool for calculating BAM depth at given loci.
+- Tool for splitting FASTQ into n chunks in a single pass using a round-robin procedure.

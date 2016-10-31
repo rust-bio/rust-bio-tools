@@ -164,7 +164,13 @@ impl Variant {
     }
 
     pub fn matches(&self, other: &Variant, allele: &VariantType, max_dist: u32, max_len_diff: u32) -> Option<u32> {
+        if allele.is_unsupported() {
+            return None;
+        }
         for (j, b) in other.alleles.iter().enumerate() {
+            if b.is_unsupported() {
+                continue;
+            }
             let dist = (self.centerpoint(allele) as i32 - other.centerpoint(b) as i32).abs() as u32;
             match (allele, b) {
                 (&VariantType::SNV(a), &VariantType::SNV(b)) => {
@@ -197,6 +203,16 @@ pub enum VariantType {
     Insertion(u32),
     Deletion(u32),
     Unsupported
+}
+
+
+impl VariantType {
+    pub fn is_unsupported(&self) -> bool {
+        match self {
+            &VariantType::Unsupported => true,
+            _ => false
+        }
+    }
 }
 
 

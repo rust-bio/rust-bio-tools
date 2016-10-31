@@ -86,44 +86,49 @@ impl Variant {
         let pos = rec.pos();
 
         let svlen = if let Ok(Some(svlen)) = rec.info(b"SVLEN").integer() {
-            Some(svlen.to_owned())
+            Some(svlen[0] as u32)
         } else { None };
         let svtype = if let Ok(Some(svtype)) = rec.info(b"SVTYPE").string() {
-            Some(svtype.into_iter().map(|s| s.to_owned()).collect_vec())
+            Some(svtype[0].to_owned())
         } else { None };
-
-        let mut _alleles = Vec::new();
+        let end = if let Ok(Some(end)) = rec.info(b"END").integer() {
+            Some(end[0] as u32)
+        } else { None };
+        let inslen = if let Ok(Some(inslen)) = rec.info(b"INSLEN").integer() {
+            Some(inslen[0] as u32)
+        } else { None };
         let alleles = rec.alleles();
         let refallele = alleles[0];
-        for (i, &a) in alleles[1..].iter().enumerate() {
-            let vartype = match (&svlen, &svtype) {
 
-                (&Some(ref svlen), &Some(ref svtype)) => {
-                    let svlen = svlen.get(i).unwrap_or(&svlen[0]).abs();
-                    let svtype = svtype.get(i).unwrap_or(&svtype[0]);
-                    match &svtype[..] {
-                        b"INS" => VariantType::Insertion(svlen as u32),
-                        b"DEL" => VariantType::Deletion(svlen as u32),
-                        t => {
-                            info!("Unsupported variant {}", try!(str::from_utf8(t)));
-                            VariantType::Complex(svlen as u32)
+        let _alleles: Vec<VariantType> = if let Some(svtype) = svtype {
+            vec![
+                if svtype == b"INS" {
+                    let svlen = match (svlen, inslen) {
+                        (Some(svlen), _)     => svlen,
+                        (None, Some(inslen)) => inslen,
+                        _ => {
+                            return Err(Box::new(MatchError::MissingTag("SVLEN or INSLEN".to_owned())));
                         }
-                    }
-                },
-
-                (&Some(ref svlen), _) if a[0] == b'<' => {
-                    let svlen = svlen.get(i).unwrap_or(&svlen[0]).abs();
-                    match a {
-                        b"<DEL>" => VariantType::Deletion(svlen as u32),
-                        b"<INS>" => VariantType::Insertion(svlen as u32),
-                        a => {
-                            info!("Unsupported variant {}", try!(str::from_utf8(a)));
-                            VariantType::Complex(svlen as u32)
+                    };
+                    VariantType::Insertion(svlen)
+                } else if svtype == b"DEL" {
+                    let svlen = match(svlen, end) {
+                        (Some(svlen), _)  => svlen,
+                        (None, Some(end)) => end - 1 - pos,
+                        _ => {
+                            return Err(Box::new(MatchError::MissingTag("SVLEN or END".to_owned())));
                         }
-                    }
-                },
-
-                _ => {
+                    };
+                    VariantType::Deletion(svlen)
+                } else {
+                    warn!("Unsupported variant {}", try!(str::from_utf8(&svtype)));
+                    VariantType::Unsupported
+                }
+            ]
+        } else {
+            let mut _alleles = Vec::with_capacity(alleles.len() - 1);
+            for a in &alleles[1..] {
+                _alleles.push(
                     if a.len() < refallele.len() {
                         VariantType::Deletion((refallele.len() - a.len()) as u32)
                     } else if a.len() > refallele.len() {
@@ -131,13 +136,14 @@ impl Variant {
                     } else if a.len() == 1 {
                         VariantType::SNV(a[0])
                     } else {
-                        info!("Unsupported variant {} -> {}", try!(str::from_utf8(refallele)), try!(str::from_utf8(a)));
-                        VariantType::Complex(a.len() as u32)
+                        warn!("Unsupported variant {} -> {}", try!(str::from_utf8(refallele)), try!(str::from_utf8(a)));
+                        VariantType::Unsupported
                     }
-                }
-            };
-            _alleles.push(vartype);
-        }
+                );
+            }
+            _alleles
+        };
+
         let var = Variant {
             id: *id,
             rid: rec.rid().unwrap(),
@@ -153,7 +159,7 @@ impl Variant {
             &VariantType::SNV(_) => self.pos,
             &VariantType::Insertion(_) => self.pos,
             &VariantType::Deletion(len) => (self.pos as f64 + len as f64 / 2.0) as u32,
-            &VariantType::Complex(_) => panic!("Unsupported variant.")
+            &VariantType::Unsupported => panic!("Unsupported variant.")
         }
     }
 
@@ -190,16 +196,16 @@ pub enum VariantType {
     SNV(u8),
     Insertion(u32),
     Deletion(u32),
-    Complex(u32)
+    Unsupported
 }
 
 
 quick_error! {
     #[derive(Debug)]
     pub enum MatchError {
-        UnsupportedVariant(vartype: String) {
-            description("unsupported variant")
-            display("variant type {} is not supported", vartype)
+        MissingTag(tag: String) {
+            description("missing tag")
+            display("missing tag {}", tag)
         }
     }
 }

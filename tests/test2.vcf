@@ -6,8 +6,8 @@
 ##FORMAT=<ID=S,Number=1,Type=String,Description="Text">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##INFO=<ID=T,Number=A,Type=Integer,Description="Text">
-##INFO=<ID=SVTYPE,Number=A,Type=String,Description="SV type">
-##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="SV length">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="SV type">
+##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="SV length">
 #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
 1	100	a	A	G,T	.	.	T=2	S:GT
 1	200	.	A	AGG	.	.	.	S:GT

@@ -114,42 +114,46 @@ pub fn to_txt(
 
             for name in info_tags {
                 let _name = name.as_bytes();
-                let (tag_type, tag_length) = try!(reader.header.info_type(_name));
-                let i = match tag_length {
-                    bcf::header::TagLength::Fixed => {
-                        0
-                    },
-                    bcf::header::TagLength::AltAlleles => {
-                        i
-                    },
-                    _ => return Err(Box::new(ParseError::UnsupportedTagLength))
-                };
+                if let Ok((tag_type, tag_length)) = reader.header.info_type(_name) {
+                    let i = match tag_length {
+                        bcf::header::TagLength::Fixed => {
+                            0
+                        },
+                        bcf::header::TagLength::AltAlleles => {
+                            i
+                        },
+                        _ => return Err(Box::new(ParseError::UnsupportedTagLength))
+                    };
 
-                match tag_type {
-                    bcf::header::TagType::Flag => {
-                        try!(writer.write_flag(try!(record.info(_name).flag())));
-                    },
-                    bcf::header::TagType::Integer => {
-                        if let Some(values) = try!(record.info(_name).integer()) {
-                            try!(writer.write_integer(values[i]));
-                        } else {
-                            try!(writer.write_field(b""));
-                        }
-                    },
-                    bcf::header::TagType::Float => {
-                        if let Some(values) = try!(record.info(_name).float()) {
-                            try!(writer.write_float(values[i]));
-                        } else {
-                            try!(writer.write_field(b""));
-                        }
-                    },
-                    bcf::header::TagType::String => {
-                        if let Some(values) = try!(record.info(_name).string()) {
-                            try!(writer.write_field(values[i]));
-                        } else {
-                            try!(writer.write_field(b""));
+                    match tag_type {
+                        bcf::header::TagType::Flag => {
+                            try!(writer.write_flag(try!(record.info(_name).flag())));
+                        },
+                        bcf::header::TagType::Integer => {
+                            if let Some(values) = try!(record.info(_name).integer()) {
+                                try!(writer.write_integer(values[i]));
+                            } else {
+                                try!(writer.write_field(b""));
+                            }
+                        },
+                        bcf::header::TagType::Float => {
+                            if let Some(values) = try!(record.info(_name).float()) {
+                                try!(writer.write_float(values[i]));
+                            } else {
+                                try!(writer.write_field(b""));
+                            }
+                        },
+                        bcf::header::TagType::String => {
+                            if let Some(values) = try!(record.info(_name).string()) {
+                                try!(writer.write_field(values[i]));
+                            } else {
+                                try!(writer.write_field(b""));
+                            }
                         }
                     }
+                } else {
+                    // tag undefined, write NA
+                    try!(writer.write_field(b""));
                 }
             }
 
@@ -170,30 +174,34 @@ pub fn to_txt(
                 }
                 for name in format_tags {
                     let _name = name.as_bytes();
-                    let (tag_type, tag_length) = try!(reader.header.format_type(_name));
-                    let i = match tag_length {
-                        bcf::header::TagLength::Fixed => {
-                            0
-                        },
-                        bcf::header::TagLength::AltAlleles => {
-                            i
-                        },
-                        _ => return Err(Box::new(ParseError::UnsupportedTagLength))
-                    };
+                    if let Ok((tag_type, tag_length)) = reader.header.format_type(_name) {
+                        let i = match tag_length {
+                            bcf::header::TagLength::Fixed => {
+                                0
+                            },
+                            bcf::header::TagLength::AltAlleles => {
+                                i
+                            },
+                            _ => return Err(Box::new(ParseError::UnsupportedTagLength))
+                        };
 
-                    match tag_type {
-                        bcf::header::TagType::Flag => {
-                            panic!("there is no flag type for format");
-                        },
-                        bcf::header::TagType::Integer => {
-                            try!(writer.write_field(format!("{}", try!(record.format(_name).integer())[s][i]).as_bytes()));
-                        },
-                        bcf::header::TagType::Float => {
-                            try!(writer.write_field(format!("{}", try!(record.format(_name).float())[s][i]).as_bytes()));
-                        },
-                        bcf::header::TagType::String => {
-                            try!(writer.write_field(try!(record.format(_name).string())[s]));
+                        match tag_type {
+                            bcf::header::TagType::Flag => {
+                                panic!("there is no flag type for format");
+                            },
+                            bcf::header::TagType::Integer => {
+                                try!(writer.write_field(format!("{}", try!(record.format(_name).integer())[s][i]).as_bytes()));
+                            },
+                            bcf::header::TagType::Float => {
+                                try!(writer.write_field(format!("{}", try!(record.format(_name).float())[s][i]).as_bytes()));
+                            },
+                            bcf::header::TagType::String => {
+                                try!(writer.write_field(try!(record.format(_name).string())[s]));
+                            }
                         }
+                    } else {
+                        // tag undefined, write NA
+                        try!(writer.write_field(b""));
                     }
                 }
             }

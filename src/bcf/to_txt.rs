@@ -116,14 +116,16 @@ pub fn to_txt(
             for name in info_tags {
                 let _name = name.as_bytes();
                 if let Ok((tag_type, tag_length)) = reader.header.info_type(_name) {
-                    let i = match tag_length {
-                        bcf::header::TagLength::Fixed => {
-                            0
-                        },
-                        bcf::header::TagLength::AltAlleles => {
-                            i
-                        },
-                        _ => return Err(Box::new(ParseError::UnsupportedTagLength))
+                    let get_idx = || {
+                        match tag_length {
+                            bcf::header::TagLength::Fixed => {
+                                Ok(0)
+                            },
+                            bcf::header::TagLength::AltAlleles => {
+                                Ok(i)
+                            },
+                            _ => Err(Box::new(ParseError::UnsupportedTagLength))
+                        }
                     };
 
                     match tag_type {
@@ -131,6 +133,7 @@ pub fn to_txt(
                             try!(writer.write_flag(try!(record.info(_name).flag())));
                         },
                         bcf::header::TagType::Integer => {
+                            let i = try!(get_idx());
                             if let Some(values) = try!(record.info(_name).integer()) {
                                 try!(writer.write_integer(values[i]));
                             } else {
@@ -138,6 +141,7 @@ pub fn to_txt(
                             }
                         },
                         bcf::header::TagType::Float => {
+                            let i = try!(get_idx());
                             if let Some(values) = try!(record.info(_name).float()) {
                                 try!(writer.write_float(values[i]));
                             } else {
@@ -145,6 +149,7 @@ pub fn to_txt(
                             }
                         },
                         bcf::header::TagType::String => {
+                            let i = try!(get_idx());
                             if let Some(values) = try!(record.info(_name).string()) {
                                 try!(writer.write_field(values[i]));
                             } else {

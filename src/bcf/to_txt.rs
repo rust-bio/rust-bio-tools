@@ -5,6 +5,7 @@ use std::io::Write;
 
 use itertools::Itertools;
 use rust_htslib::bcf;
+use rust_htslib::bcf::record::Numeric;
 
 
 pub struct Writer {
@@ -108,7 +109,7 @@ pub fn to_txt(
             try!(writer.write_field(&alleles[0]));
             try!(writer.write_field(allele));
             match record.qual() {
-                q if q == bcf::record::MISSING_FLOAT => try!(writer.write_field(b"")),
+                q if q.is_missing() => try!(writer.write_field(b"")),
                 q => try!(writer.write_float(q))
             }
 

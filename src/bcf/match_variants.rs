@@ -104,7 +104,10 @@ impl Variant {
                     match &svtype[..] {
                         b"INS" => VariantType::Insertion(svlen as u32),
                         b"DEL" => VariantType::Deletion(svlen as u32),
-                        t => return Err(Box::new(MatchError::UnsupportedVariant(try!(str::from_utf8(t)).to_owned())))
+                        t => {
+                            info!("Unsupported variant {}", try!(str::from_utf8(t)));
+                            VariantType::Complex(svlen as u32)
+                        }
                     }
                 },
 
@@ -113,7 +116,10 @@ impl Variant {
                     match a {
                         b"<DEL>" => VariantType::Deletion(svlen as u32),
                         b"<INS>" => VariantType::Insertion(svlen as u32),
-                        a => return Err(Box::new(MatchError::UnsupportedVariant(try!(str::from_utf8(a)).to_owned())))
+                        a => {
+                            info!("Unsupported variant {}", try!(str::from_utf8(a)));
+                            VariantType::Complex(svlen as u32)
+                        }
                     }
                 },
 
@@ -125,7 +131,8 @@ impl Variant {
                     } else if a.len() == 1 {
                         VariantType::SNV(a[0])
                     } else {
-                        return Err(Box::new(MatchError::UnsupportedVariant("complex".to_owned())))
+                        info!("Unsupported variant {} -> {}", try!(str::from_utf8(refallele)), try!(str::from_utf8(a)));
+                        VariantType::Complex(a.len() as u32)
                     }
                 }
             };
@@ -145,7 +152,8 @@ impl Variant {
         match allele {
             &VariantType::SNV(_) => self.pos,
             &VariantType::Insertion(_) => self.pos,
-            &VariantType::Deletion(len) => (self.pos as f64 + len as f64 / 2.0) as u32
+            &VariantType::Deletion(len) => (self.pos as f64 + len as f64 / 2.0) as u32,
+            &VariantType::Complex(_) => panic!("Unsupported variant.")
         }
     }
 
@@ -164,6 +172,7 @@ impl Variant {
                         return Some(other.id(j));
                     }
                 },
+                // TODO: for now, ignore complex variants
                 _ => continue
             }
         }
@@ -180,7 +189,8 @@ impl Variant {
 pub enum VariantType {
     SNV(u8),
     Insertion(u32),
-    Deletion(u32)
+    Deletion(u32),
+    Complex(u32)
 }
 
 

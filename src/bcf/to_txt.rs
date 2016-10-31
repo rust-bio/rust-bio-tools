@@ -124,6 +124,9 @@ pub fn to_txt(
                             bcf::header::TagLength::AltAlleles => {
                                 Ok(i)
                             },
+                            bcf::header::TagLength::Variable => {
+                                Ok(i)
+                            },
                             _ => Err(Box::new(ParseError::UnsupportedTagLength))
                         }
                     };

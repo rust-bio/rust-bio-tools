@@ -303,6 +303,7 @@ impl RecordBuffer {
                 return Err(Box::new(e));
             }
             let pos = rec.pos();
+            let alt_count = rec.alleles().len() as u32 - 1;
             if let Some(rec_rid) = rec.rid() {
                 if rec_rid == rid {
                     if pos > window_end {
@@ -312,6 +313,10 @@ impl RecordBuffer {
                     } else if pos >= window_start {
                         // Record is within our window.
                         self.ringbuffer.push_back(try!(Variant::new(&mut rec, &mut self.i)));
+                    } else {
+                        // Record is upstream of our window, ignore it
+                        self.i += alt_count;
+                        continue
                     }
                 } else if rec_rid > rid {
                     // record comes from next rid. Store it in second buffer but stop filling.
@@ -319,12 +324,12 @@ impl RecordBuffer {
                     break;
                 } else {
                     // Record comes from previous rid. Ignore it.
-                    self.i += rec.alleles().len() as u32 - 1;
+                    self.i += alt_count;
                     continue;
                 }
             } else {
                 // skip records without proper rid
-                self.i += rec.alleles().len() as u32 - 1;
+                self.i += alt_count;
                 continue;
             }
         }

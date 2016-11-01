@@ -86,7 +86,7 @@ impl Variant {
         let pos = rec.pos();
 
         let svlen = if let Ok(Some(svlen)) = rec.info(b"SVLEN").integer() {
-            Some(svlen[0] as u32)
+            Some(svlen[0].abs() as u32)
         } else { None };
         let svtype = if let Ok(Some(svtype)) = rec.info(b"SVTYPE").string() {
             Some(svtype[0].to_owned())

@@ -310,7 +310,7 @@ impl RecordBuffer {
                         self.ringbuffer.push_back(try!(Variant::new(&mut rec, &mut self.i)));
                         break;
                     } else if pos >= window_start {
-                        // Record is within out window.
+                        // Record is within our window.
                         self.ringbuffer.push_back(try!(Variant::new(&mut rec, &mut self.i)));
                     }
                 } else if rec_rid > rid {
@@ -319,10 +319,12 @@ impl RecordBuffer {
                     break;
                 } else {
                     // Record comes from previous rid. Ignore it.
+                    self.i += rec.alleles().len() as u32 - 1;
                     continue;
                 }
             } else {
                 // skip records without proper rid
+                self.i += rec.alleles().len() as u32 - 1;
                 continue;
             }
         }

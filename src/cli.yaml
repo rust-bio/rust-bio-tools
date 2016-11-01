@@ -82,7 +82,7 @@ subcommands:
         Annotate for each variant in a VCF/BCF at STDIN whether it is contained in a
         given second VCF/BCF. The matching is fuzzy for indels and exact for SNVs.
         Results are printed as BCF to STDOUT, with an additional INFO tag MATCHING.
-        
+
         Example:
         rbt vcf-match dbsnp.vcf < calls.vcf | bcftools view
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
@@ -93,8 +93,10 @@ subcommands:
         - max-dist:
             long: max-dist
             short: d
-            help: Maximum distance between centres of two indels considered to match [50].
+            value_name: INT
+            help: Maximum distance between centres of two indels considered to match [20].
         - max-len-diff:
             long: max-len-diff
             short: l
-            help: Maximum difference between lengths of two indels [20].
+            value_name: INT
+            help: Maximum difference between lengths of two indels [10].

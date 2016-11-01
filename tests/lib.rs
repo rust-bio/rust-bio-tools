@@ -45,7 +45,7 @@ fn vcf_to_txt() {
 fn vcf_match() {
     assert!(Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt vcf-match tests/test3.vcf < tests/test2.vcf > tests/matching.bcf")
+            .arg("target/debug/rbt vcf-match -d 50 -l 20 tests/test3.vcf < tests/test2.vcf > tests/matching.bcf")
             .spawn().unwrap().wait().unwrap().success());
     test_output("tests/matching.bcf", "tests/expected/matching.bcf");
 }

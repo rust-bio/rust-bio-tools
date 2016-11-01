@@ -76,8 +76,8 @@ fn main() {
     } else if let Some(matches) = matches.subcommand_matches("vcf-match") {
         if let Err(e) = bcf::match_variants::match_variants(
             matches.value_of("vcf").unwrap(),
-            value_t!(matches, "max-dist", u32).unwrap_or(50),
-            value_t!(matches, "max-len-diff", u32).unwrap_or(20)
+            value_t!(matches, "max-dist", u32).unwrap_or(20),
+            value_t!(matches, "max-len-diff", u32).unwrap_or(10)
         ) {
             error!("{}", e);
             process::exit(1);

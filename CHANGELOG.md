@@ -2,8 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.1.2] - 2016-11-02
+### Changed
+- Improved robustness for exotic variant calls in vcf-match and vcf-to-txt.
+
 ## [0.1.1] - 2016-08-31
-## Changed
+### Changed
 - Hotfix of a bug in vcf-match.
 
 

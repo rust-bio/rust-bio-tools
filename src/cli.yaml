@@ -20,7 +20,6 @@ subcommands:
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
       args:
         - chunks:
-            required: true
             multiple: true
             help: Chunks to create.
 

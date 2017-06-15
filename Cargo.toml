@@ -8,7 +8,7 @@ homepage = "https://github.com/rust-bio/rust-bio-tools"
 
 [dependencies]
 bio = "0.14"
-clap = {version = "2.9", features = ["yaml", "color", "suggestions"]}
+clap = { version = "2.24", features = ["yaml", "color", "suggestions"]}
 itertools = "0.6"
 log = "0.3"
 fern = "0.4"

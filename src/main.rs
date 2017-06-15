@@ -10,9 +10,7 @@ extern crate csv;
 extern crate rust_htslib;
 #[macro_use]
 extern crate quick_error;
-#[macro_use]
 extern crate custom_derive;
-#[macro_use]
 extern crate newtype_derive;
 
 use std::process;
@@ -32,18 +30,17 @@ fn main() {
                                          AppSettings::ColoredHelp])
                       .get_matches();
 
-    fern::init_global_logger(
-        fern::DispatchConfig {
-            format: Box::new(|msg, _, _| msg.to_owned()),
-            output: vec![fern::OutputConfig::stderr()],
-            level: log::LogLevelFilter::Trace
-        },
-        if matches.is_present("verbose") {
-            log::LogLevelFilter::Debug
-        } else {
-            log::LogLevelFilter::Info
-        }
-    ).unwrap();
+    fern::Dispatch::new()
+                   .format(|out, message, _| out.finish(format_args!("{}", message)))
+                   .level(
+                       if matches.is_present("verbose") {
+                           log::LogLevelFilter::Debug
+                       } else {
+                           log::LogLevelFilter::Info
+                       }
+                   )
+                   .chain(std::io::stderr())
+                   .apply().unwrap();
 
     if let Some(matches) = matches.subcommand_matches("fastq-split") {
         if let Err(e) = fastq::split::split(

@@ -22,7 +22,7 @@ pub fn depth(
     exclude_flags: u16,
     min_mapq: u8) -> Result<(), Box<Error>>
 {
-    let mut bam_reader = try!(bam::IndexedReader::new(&bam_path));
+    let mut bam_reader = bam::IndexedReader::from_path(&bam_path)?;
     let mut pos_reader = csv::Reader::from_reader(io::stdin()).has_headers(false).delimiter(b'\t');
     let mut csv_writer = csv::Writer::from_buffer(io::BufWriter::new(io::stdout())).delimiter(b'\t');
     let mut last_tid = 0;
@@ -38,7 +38,7 @@ pub fn depth(
         let start = cmp::max(record.pos as i32 - max_read_length as i32 - 1, 0) as u32;
         if exceeded || tid != last_tid || start > last_pos || record.pos - 1 <= last_pos {
             let n = bam_reader.header.target_len(tid).unwrap();
-            try!(bam_reader.seek(tid, start, n));
+            try!(bam_reader.fetch(tid, start, n));
             pileup_iter = bam_reader.pileup();
         }
 

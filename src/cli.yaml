@@ -34,7 +34,8 @@ subcommands:
         - max-read-length:
             short: m
             value_name: INT
-            help: "Maximum read length to consider. This affects the speed of the involved pileup. Reads longer than this length can be missed when calculating the depth [1000]."
+            default_value: "1000"
+            help: "Maximum read length to consider. This affects the speed of the involved pileup. Reads longer than this length can be missed when calculating the depth."
         - include-flags:
             long: incl-flags
             short: i
@@ -49,7 +50,8 @@ subcommands:
             long: "min-mapq"
             short: "q"
             value_name: INT
-            help: "Minimum mapping quality [0]."
+            default_value: "0"
+            help: "Minimum mapping quality."
 
   - vcf-to-txt:
       about: |
@@ -94,9 +96,11 @@ subcommands:
             long: max-dist
             short: d
             value_name: INT
-            help: Maximum distance between centres of two indels considered to match [20].
+            default_value: "20"
+            help: Maximum distance between centres of two indels considered to match.
         - max-len-diff:
             long: max-len-diff
             short: l
             value_name: INT
-            help: Maximum difference between lengths of two indels [10].
+            default_value: "10"
+            help: Maximum difference between lengths of two indels.

@@ -59,7 +59,7 @@ pub fn to_txt(
     format_tags: &[&str],
     show_genotypes: bool
 ) -> Result<(), Box<Error>> {
-    let reader = try!(bcf::Reader::new(&"-"));
+    let reader = try!(bcf::Reader::from_path(&"-"));
     let mut writer = Writer::new(io::BufWriter::new(io::stdout()));
 
     let common_n = 5 + info_tags.len();

@@ -9,7 +9,7 @@ use rust_htslib::bcf;
 
 
 pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Result<(), Box<Error>> {
-    let inbcf = try!(bcf::Reader::new(&"-"));
+    let inbcf = bcf::Reader::from_path(&"-")?;
     let mut header = bcf::Header::with_template(&inbcf.header);
 
     header.push_record(
@@ -25,8 +25,8 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
     header.push_record(
         b"##rust-bio-tools-subcommand=vcf-match"
     );
-    let mut outbcf = try!(bcf::Writer::new(&"-", &header, false, false));
-    let mut buffer = RecordBuffer::new(try!(bcf::Reader::new(&matchbcf)), max_dist);
+    let mut outbcf = bcf::Writer::from_path(&"-", &header, false, false)?;
+    let mut buffer = RecordBuffer::new(bcf::Reader::from_path(&matchbcf)?, max_dist);
 
     let mut rec = bcf::Record::new();
     let mut i = 0;

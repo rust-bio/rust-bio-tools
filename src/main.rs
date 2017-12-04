@@ -15,7 +15,7 @@ extern crate newtype_derive;
 
 use std::process;
 
-use clap::{App,AppSettings};
+use clap::App;
 use itertools::Itertools;
 
 pub mod fastq;
@@ -26,8 +26,6 @@ fn main() {
     let yaml = load_yaml!("cli.yaml");
     let matches = App::from_yaml(yaml)
                       .version(env!("CARGO_PKG_VERSION"))
-                      .global_settings(&[AppSettings::SubcommandRequired,
-                                         AppSettings::ColoredHelp])
                       .get_matches();
 
     fern::Dispatch::new()

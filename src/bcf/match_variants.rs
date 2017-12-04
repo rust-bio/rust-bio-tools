@@ -9,7 +9,7 @@ use rust_htslib::bcf;
 
 
 pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Result<(), Box<Error>> {
-    let inbcf = bcf::Reader::from_path(&"-")?;
+    let inbcf = bcf::Reader::from_stdin()?;
     let mut header = bcf::Header::with_template(&inbcf.header);
 
     header.push_record(

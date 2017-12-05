@@ -10,7 +10,7 @@ use rust_htslib::bcf;
 
 pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Result<(), Box<Error>> {
     let mut inbcf = bcf::Reader::from_stdin()?;
-    let mut header = bcf::Header::with_template(&inbcf.header);
+    let mut header = bcf::Header::with_template(inbcf.header());
 
     header.push_record(
         format!("##INFO=<ID=MATCHING,Number=A,Type=Integer,\
@@ -41,7 +41,7 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
         outbcf.translate(&mut rec);
 
         if let Some(rid) = rec.rid() {
-            let chrom = inbcf.header.rid2name(rid);
+            let chrom = inbcf.header().rid2name(rid);
             let pos = rec.pos();
             // move buffer to pos
             try!(buffer.fill(chrom, pos));
@@ -271,7 +271,7 @@ impl RecordBuffer {
     pub fn fill(&mut self, chrom: &[u8], pos: u32) -> Result<(), Box<Error>> {
         let window_start = cmp::max(pos as i32 - self.window as i32 - 1, 0) as u32;
         let window_end = pos + self.window;
-        let rid = try!(self.reader.header.name2rid(chrom));
+        let rid = try!(self.reader.header().name2rid(chrom));
 
         match (self.last_rid(), self.next_rid()) {
             (Some(last_rid), _) => {

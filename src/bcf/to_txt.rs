@@ -67,7 +67,7 @@ pub fn to_txt(
     for _ in 1..common_n {
         try!(writer.write_field(HEADER_COMMON));
     }
-    for sample in reader.header.samples() {
+    for sample in reader.header().samples() {
         try!(writer.write_field(sample));
         for _ in 1..format_tags.len() + show_genotypes as usize {
             try!(writer.write_field(sample));
@@ -82,7 +82,7 @@ pub fn to_txt(
     for name in info_tags {
         try!(writer.write_field(name.as_bytes()));
     }
-    for _ in 0..reader.header.sample_count() {
+    for _ in 0..reader.header().sample_count() {
         if show_genotypes {
             try!(writer.write_field(b"GT"));
         }
@@ -104,7 +104,7 @@ pub fn to_txt(
 
         let alleles = record.alleles().into_iter().map(|a| a.to_owned()).collect_vec();
         for (i, allele) in alleles[1..].iter().enumerate() {
-            try!(writer.write_field(reader.header.rid2name(record.rid().unwrap())));
+            try!(writer.write_field(reader.header().rid2name(record.rid().unwrap())));
             try!(writer.write_integer(record.pos() as i32 + 1));
             try!(writer.write_field(&alleles[0]));
             try!(writer.write_field(allele));
@@ -115,7 +115,7 @@ pub fn to_txt(
 
             for name in info_tags {
                 let _name = name.as_bytes();
-                if let Ok((tag_type, tag_length)) = reader.header.info_type(_name) {
+                if let Ok((tag_type, tag_length)) = reader.header().info_type(_name) {
                     let get_idx = || {
                         match tag_length {
                             bcf::header::TagLength::Fixed => {
@@ -169,7 +169,7 @@ pub fn to_txt(
             let genotypes = if show_genotypes {
                 let genotypes = try!(record.genotypes());
                 Some(
-                    (0..reader.header.sample_count() as usize).map(|s| {
+                    (0..reader.header().sample_count() as usize).map(|s| {
                         format!("{}", genotypes.get(s))
                     }).collect_vec()
                 )
@@ -177,13 +177,13 @@ pub fn to_txt(
                 None
             };
 
-            for s in 0..reader.header.sample_count() as usize {
+            for s in 0..reader.header().sample_count() as usize {
                 if let Some(ref genotypes) = genotypes {
                     try!(writer.write_field(genotypes[s].as_bytes()));
                 }
                 for name in format_tags {
                     let _name = name.as_bytes();
-                    if let Ok((tag_type, tag_length)) = reader.header.format_type(_name) {
+                    if let Ok((tag_type, tag_length)) = reader.header().format_type(_name) {
                         let i = match tag_length {
                             bcf::header::TagLength::Fixed => {
                                 0

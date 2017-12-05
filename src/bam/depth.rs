@@ -23,33 +23,23 @@ pub fn depth(
     min_mapq: u8) -> Result<(), Box<Error>>
 {
     let mut bam_reader = bam::IndexedReader::from_path(&bam_path)?;
+    let bam_header = bam_reader.header().clone();
     let mut pos_reader = csv::Reader::from_reader(io::stdin()).has_headers(false).delimiter(b'\t');
     let mut csv_writer = csv::Writer::from_buffer(io::BufWriter::new(io::stdout())).delimiter(b'\t');
-    let mut last_tid = 0;
-    let mut last_pos = 0;
-    let mut exceeded = false;
-    let mut pileup_iter = bam_reader.pileup();
 
     for (i, record) in pos_reader.decode().enumerate() {
-        let record: PosRecord = try!(record);
+        let record: PosRecord = record?;
 
-        // jump to correct position if necessary
-        let tid = bam_reader.header.tid(record.chrom.as_bytes()).unwrap();
+        // jump to correct position
+        let tid = bam_header.tid(record.chrom.as_bytes()).unwrap();
         let start = cmp::max(record.pos as i32 - max_read_length as i32 - 1, 0) as u32;
-        if exceeded || tid != last_tid || start > last_pos || record.pos - 1 <= last_pos {
-            let n = bam_reader.header.target_len(tid).unwrap();
-            try!(bam_reader.fetch(tid, start, n));
-            pileup_iter = bam_reader.pileup();
-        }
+        bam_reader.fetch(tid, start, start + max_read_length * 2)?;
 
         // iterate over pileups
         let mut covered = false;
-        exceeded = false;
-        while let Some(pileup) = pileup_iter.next() {
-            let pileup = try!(pileup);
+        for pileup in bam_reader.pileup() {
+            let pileup = pileup?;
             covered = pileup.pos() == record.pos - 1;
-            last_tid = pileup.tid();
-            last_pos = pileup.pos();
 
             if covered {
                 let depth = pileup.alignments().filter(|alignment| {
@@ -63,7 +53,6 @@ pub fn depth(
                 try!(csv_writer.encode((&record.chrom, record.pos, depth)));
                 break;
             } else if pileup.pos() > record.pos {
-                exceeded = true;
                 break;
             }
         }

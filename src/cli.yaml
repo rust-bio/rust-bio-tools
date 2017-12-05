@@ -103,3 +103,11 @@ subcommands:
             value_name: INT
             default_value: "10"
             help: Maximum difference between lengths of two indels.
+
+  - vcf-baf:
+      about: |
+        Annotate b-allele frequency for each single nucleotide variant and sample.
+
+        Example:
+        rbt vcf-baf < calls.bcf > annotated.bcf
+      author: Johannes Köster <johannes.koester@uni-due.de>, Jan Forster <j.forster@dkfz.de>

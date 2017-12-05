@@ -49,3 +49,12 @@ fn vcf_match() {
             .spawn().unwrap().wait().unwrap().success());
     test_output("tests/matching.bcf", "tests/expected/matching.bcf");
 }
+
+#[test]
+fn vcf_baf() {
+    assert!(Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-baf < tests/test-freebayes.vcf > tests/baf.bcf")
+            .spawn().unwrap().wait().unwrap().success());
+    test_output("tests/baf.bcf", "tests/expected/baf.bcf");
+}

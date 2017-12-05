@@ -77,5 +77,10 @@ fn main() {
             error!("{}", e);
             process::exit(1);
         }
+    } else if let Some(_) = matches.subcommand_matches("vcf-baf") {
+        if let Err(e) = bcf::baf::calculate_baf() {
+            error!("{}", e);
+            process::exit(1);
+        }
     }
 }

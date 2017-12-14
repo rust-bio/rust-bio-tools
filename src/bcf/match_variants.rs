@@ -15,7 +15,7 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
     header.push_record(
         format!("##INFO=<ID=MATCHING,Number=A,Type=Integer,\
         Description=\"For each alternative allele, -1 if it does not match a variant in another VCF/BCF. \
-        If it matches a variant, an id i>=0 is points to the i-th variant in the VCF/BCF (counting each \
+        If it matches a variant, an id i>=0 points to the i-th variant in the VCF/BCF (counting each \
         alternative allele separately). For indels, matching is fuzzy: distance of centres <= {}, difference of \
         lengths <= {}\">", max_dist, max_len_diff).as_bytes()
     );

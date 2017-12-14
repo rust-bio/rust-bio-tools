@@ -61,10 +61,6 @@ subcommands:
         pd.read_table("variants.txt", header=[0, 1])
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
       args:
-        - genotypes:
-            long: genotypes
-            short: g
-            help: Print genotypes.
         - info:
             long: info
             short: i

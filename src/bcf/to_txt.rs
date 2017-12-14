@@ -56,9 +56,9 @@ const HEADER_COMMON: &'static [u8] = b"VARIANT";
 
 pub fn to_txt(
     info_tags: &[&str],
-    format_tags: &[&str],
-    show_genotypes: bool
+    format_tags: &[&str]
 ) -> Result<(), Box<Error>> {
+    let show_genotypes = true;
     let mut reader = bcf::Reader::from_stdin()?;
     let mut writer = Writer::new(io::BufWriter::new(io::stdout()));
 

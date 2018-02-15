@@ -23,6 +23,15 @@ subcommands:
             multiple: true
             help: Chunks to create.
 
+  - fastq-filter:
+      about: Remove records from a FASTQ file (from STDIN), output to STDOUT.
+      author: Erik Clarke <ecl@pennmedicine.upenn.edu>
+      args:
+        - ids:
+            required: true
+            help: File with list of record IDs to remove, one per line.
+
+
   - bam-depth:
       about: "Print depth of BAM or CRAM file at given positions from STDIN (tab separated: chrom, pos)."
       author: Johannes Köster <johannes.koester@tu-dortmund.de>

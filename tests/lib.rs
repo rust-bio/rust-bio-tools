@@ -22,6 +22,15 @@ fn fastq_split() {
 }
 
 #[test]
+fn fastq_filter() {
+    assert!(Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt fastq-filter tests/ids.txt < tests/test.fastq > tests/filtered.fastq")
+            .spawn().unwrap().wait().unwrap().success());
+    test_output("tests/filtered.fastq", "tests/expected/B.fastq");
+}
+
+#[test]
 fn bam_depth() {
     assert!(Command::new("bash")
             .arg("-c")

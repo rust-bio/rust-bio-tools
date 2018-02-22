@@ -48,6 +48,15 @@ fn main() {
             process::exit(1);
         }
     }
+    else if let Some(matches) = matches.subcommand_matches("fastq-filter") {
+        if let Err(e) = fastq::filter::filter(
+            &matches.value_of("ids").unwrap()
+        ) {
+            error!("{}", e);
+            process::exit(1);
+        }
+    }
+
     else if let Some(matches) = matches.subcommand_matches("bam-depth") {
         if let Err(e) = bam::depth::depth(
             &matches.value_of("bam-path").unwrap(),

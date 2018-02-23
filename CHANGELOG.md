@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.0] - 2018-02-23
+## Added
+- A tool to selectively remove records from a fastq file. 
+- A tool to calculate b-allele frequencies (BAF) from a vcf file.
+
 ## [0.1.3] - 2017-12-05
 ## Changed
 - Adapted to changes in Rust-Htslib.

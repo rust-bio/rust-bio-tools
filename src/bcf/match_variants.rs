@@ -19,12 +19,6 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
         alternative allele separately). For indels, matching is fuzzy: distance of centres <= {}, difference of \
         lengths <= {}\">", max_dist, max_len_diff).as_bytes()
     );
-    header.push_record(
-        format!("##rust-bio-tools={}", env!("CARGO_PKG_VERSION")).as_bytes()
-    );
-    header.push_record(
-        b"##rust-bio-tools-subcommand=vcf-match"
-    );
     let mut outbcf = bcf::Writer::from_path(&"-", &header, false, false)?;
     // TODO switch to bcf::RecordBuffer.
     let mut buffer = RecordBuffer::new(bcf::Reader::from_path(&matchbcf)?, max_dist);

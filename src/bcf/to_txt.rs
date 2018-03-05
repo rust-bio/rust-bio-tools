@@ -56,9 +56,9 @@ const HEADER_COMMON: &'static [u8] = b"VARIANT";
 
 pub fn to_txt(
     info_tags: &[&str],
-    format_tags: &[&str]
+    format_tags: &[&str],
+    show_genotypes: bool
 ) -> Result<(), Box<Error>> {
-    let show_genotypes = true;
     let mut reader = bcf::Reader::from_stdin()?;
     let mut writer = Writer::new(io::BufWriter::new(io::stdout()));
 
@@ -67,10 +67,13 @@ pub fn to_txt(
     for _ in 1..common_n {
         try!(writer.write_field(HEADER_COMMON));
     }
-    for sample in reader.header().samples() {
-        try!(writer.write_field(sample));
-        for _ in 1..format_tags.len() + show_genotypes as usize {
+    let show_samples = show_genotypes || !format_tags.is_empty();
+    if show_samples {
+        for sample in reader.header().samples() {
             try!(writer.write_field(sample));
+            for _ in 1..format_tags.len() + show_genotypes as usize {
+                try!(writer.write_field(sample));
+            }
         }
     }
     try!(writer.newline());
@@ -82,12 +85,14 @@ pub fn to_txt(
     for name in info_tags {
         try!(writer.write_field(name.as_bytes()));
     }
-    for _ in 0..reader.header().sample_count() {
-        if show_genotypes {
-            try!(writer.write_field(b"GT"));
-        }
-        for name in format_tags {
-            try!(writer.write_field(name.as_bytes()));
+    if show_samples {
+        for _ in 0..reader.header().sample_count() {
+            if show_genotypes {
+                try!(writer.write_field(b"GT"));
+            }
+            for name in format_tags {
+                try!(writer.write_field(name.as_bytes()));
+            }
         }
     }
     try!(writer.newline());

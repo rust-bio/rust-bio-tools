@@ -82,6 +82,10 @@ subcommands:
             value_name: NAME
             multiple: true
             help: Select FORMAT tags.
+        - genotypes:
+            long: genotypes
+            short: g
+            help: Display genotypes.
 
   - vcf-match:
       about: |

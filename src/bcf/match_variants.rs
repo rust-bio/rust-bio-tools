@@ -98,14 +98,14 @@ impl Variant {
         let _alleles: Vec<VariantType> = if let Some(svtype) = svtype {
             vec![
                 if svtype == b"INS" {
-                    let svlen = match (svlen, inslen) {
-                        (Some(svlen), _)     => svlen,
-                        (None, Some(inslen)) => inslen,
+                    match (svlen, inslen) {
+                        (Some(svlen), _)     => VariantType::Insertion(svlen),
+                        (None, Some(inslen)) => VariantType::Insertion(inslen),
                         _ => {
-                            return Err(Box::new(MatchError::MissingTag("SVLEN or INSLEN".to_owned())));
+                            warn!("Unsupported variant INS without SVLEN or INSLEN");
+                            VariantType::Unsupported
                         }
-                    };
-                    VariantType::Insertion(svlen)
+                    }
                 } else if svtype == b"DEL" {
                     let svlen = match(svlen, end) {
                         (Some(svlen), _)  => svlen,

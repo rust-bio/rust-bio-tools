@@ -1,5 +1,5 @@
 use std::error::Error;
-use std::collections::{vec_deque, HashMap, BTreeMap, btree_map};
+use std::collections::{HashMap, BTreeMap, btree_map};
 use std::str;
 
 use itertools::Itertools;
@@ -40,10 +40,10 @@ impl VarIndex {
         })
     }
 
-    pub fn range(&self, chrom: &[u8], pos: u32) -> btree_map::Range<u32, Variant> {
-        // TODO error handling
-        let records = self.inner.get(chrom).expect("CHROM name not found in matching VCF.");
-        records.range(pos.saturating_sub(self.max_dist)..pos + self.max_dist)
+    pub fn range(&self, chrom: &[u8], pos: u32) -> Option<btree_map::Range<u32, Variant>> {
+        self.inner.get(chrom).map(
+            |recs| recs.range(pos.saturating_sub(self.max_dist)..pos + self.max_dist)
+        )
     }
 }
 
@@ -81,9 +81,11 @@ pub fn match_variants(
 
             let var = try!(Variant::new(&mut rec, &mut i));
             let matching = var.alleles.iter().map(|a| {
-                for (_, v) in index.range(chrom, pos) {
-                    if let Some(id) = var.matches(v, a, max_dist, max_len_diff) {
-                        return id as i32;
+                if let Some(range) = index.range(chrom, pos) {
+                    for (_, v) in range {
+                        if let Some(id) = var.matches(v, a, max_dist, max_len_diff) {
+                            return id as i32;
+                        }
                     }
                 }
                 -1

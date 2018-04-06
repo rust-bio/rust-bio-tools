@@ -59,6 +59,15 @@ fn vcf_match() {
     test_output("tests/matching.bcf", "tests/expected/matching.bcf");
 }
 
+
+#[test]
+fn vcf_match_same() {
+    assert!(Command::new("bash").arg("-c")
+                                .arg("target/debug/rbt vcf-match -d 50 -l 20 tests/test4.vcf < tests/test4.vcf > tests/matching-same.bcf")
+                                .spawn().unwrap().wait().unwrap().success());
+    test_output("tests/matching-same.bcf", "tests/expected/matching-same.bcf");
+}
+
 #[test]
 fn vcf_baf() {
     assert!(Command::new("bash")

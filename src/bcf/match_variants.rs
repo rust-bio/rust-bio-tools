@@ -7,7 +7,7 @@ use rust_htslib::bcf;
 
 
 pub struct VarIndex {
-    inner: HashMap<Vec<u8>, BTreeMap<u32, Variant>>,
+    inner: HashMap<Vec<u8>, BTreeMap<u32, Vec<Variant>>>,
     max_dist: u32
 }
 
@@ -26,7 +26,8 @@ impl VarIndex {
             if let Some(rid) = rec.rid() {
                 let chrom = reader.header().rid2name(rid);
                 let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
-                recs.insert(rec.pos(), Variant::new(&mut rec, &mut i)?);
+                recs.entry(rec.pos()).or_insert_with(|| Vec::new()).push(Variant::new(&mut rec, &mut i)?);
+                //recs.insert(rec.pos(), Variant::new(&mut rec, &mut i)?);
             } else {
                 // skip records without rid
                 let alt_count = rec.alleles().len() as u32 - 1;
@@ -40,7 +41,7 @@ impl VarIndex {
         })
     }
 
-    pub fn range(&self, chrom: &[u8], pos: u32) -> Option<btree_map::Range<u32, Variant>> {
+    pub fn range(&self, chrom: &[u8], pos: u32) -> Option<btree_map::Range<u32, Vec<Variant>>> {
         self.inner.get(chrom).map(
             |recs| recs.range(pos.saturating_sub(self.max_dist)..pos + self.max_dist)
         )
@@ -79,10 +80,10 @@ pub fn match_variants(
             let chrom = inbcf.header().rid2name(rid);
             let pos = rec.pos();
 
-            let var = try!(Variant::new(&mut rec, &mut i));
+            let var = Variant::new(&mut rec, &mut i)?;
             let matching = var.alleles.iter().map(|a| {
                 if let Some(range) = index.range(chrom, pos) {
-                    for (_, v) in range {
+                    for v in range.map(|(_, idx_vars)| idx_vars).flatten() {
                         if let Some(id) = var.matches(v, a, max_dist, max_len_diff) {
                             return id as i32;
                         }
@@ -91,10 +92,10 @@ pub fn match_variants(
                 -1
             }).collect_vec();
 
-            try!(rec.push_info_integer(b"MATCHING", &matching));
-            try!(outbcf.write(&rec));
+            rec.push_info_integer(b"MATCHING", &matching)?;
+            outbcf.write(&rec)?;
         } else {
-            try!(outbcf.write(&rec));
+            outbcf.write(&rec)?;
         }
 
         if (i) % 1000 == 0 {
@@ -117,7 +118,6 @@ pub struct Variant {
 
 
 impl Variant {
-
     pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self, Box<Error>> {
         let pos = rec.pos();
 
@@ -179,7 +179,6 @@ impl Variant {
             }
             _alleles
         };
-
         let var = Variant {
             id: *id,
             rid: rec.rid().unwrap(),

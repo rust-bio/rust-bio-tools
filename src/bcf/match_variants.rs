@@ -83,7 +83,7 @@ pub fn match_variants(
             let var = Variant::new(&mut rec, &mut i)?;
             let matching = var.alleles.iter().map(|a| {
                 if let Some(range) = index.range(chrom, pos) {
-                    for v in range.map(|(_, idx_vars)| idx_vars).flatten() {
+                    for v in Itertools::flatten(range.map(|(_, idx_vars)| idx_vars)) {
                         if let Some(id) = var.matches(v, a, max_dist, max_len_diff) {
                             return id as i32;
                         }

@@ -129,6 +129,9 @@ pub fn to_txt(
                             bcf::header::TagLength::AltAlleles => {
                                 Ok(i)
                             },
+                            bcf::header::TagLength::Alleles => {
+                                Ok(i + 1)
+                            },
                             bcf::header::TagLength::Variable => {
                                 Ok(i)
                             },
@@ -196,6 +199,9 @@ pub fn to_txt(
                             bcf::header::TagLength::AltAlleles => {
                                 i
                             },
+                            bcf::header::TagLength::Alleles => {
+                                i + 1
+                            },
                             _ => return Err(Box::new(ParseError::UnsupportedTagLength))
                         };
 
@@ -231,7 +237,7 @@ quick_error! {
     #[derive(Debug)]
     pub enum ParseError {
         UnsupportedTagLength {
-            description("currently, only A and 1 are supported multiplicities of tags")
+            description("currently, only R, A, and 1 are supported multiplicities of tags")
         }
 
     }

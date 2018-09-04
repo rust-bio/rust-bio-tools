@@ -46,7 +46,8 @@ fn parse_dbr_pattern(dbr_pattern: &[u8]) -> (u32, u32) {
     for c in dbr_pattern {
         n *= match c {
             b'N' => variable += 1; 4,
-            b'M' => variable += 1; 2,
+            b'M' | b'R' | b'W' | b'S' | b'Y' | b'K' => variable += 1; 2,
+            b'V' | b'H' | b'D' | b'B' => variable += 1; 3,
             b'A' | b'C' | b'G' | b'T' => 1
         }
     }

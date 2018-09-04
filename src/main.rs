@@ -12,6 +12,8 @@ extern crate rust_htslib;
 extern crate quick_error;
 extern crate custom_derive;
 extern crate newtype_derive;
+extern crate rand;
+extern crate cogset;
 
 use std::process;
 

@@ -64,7 +64,7 @@ pub fn group_by_dbr(in_bam: &str, dbr_pattern: &[u8]) -> Result<(), Box<Error>> 
 
     let mut rec = bam::Record::new();
     let mut i = 0;
-    let mut dbrs = Vec::with_capacity(dbr_n);
+    let mut dbrs_and_infix = Vec::with_capacity(dbr_n);
 
     loop {
         if let Err(e) = reader.read(&mut rec) {
@@ -75,9 +75,19 @@ pub fn group_by_dbr(in_bam: &str, dbr_pattern: &[u8]) -> Result<(), Box<Error>> 
             }
         }
 
+        // read DBR sequence from BAM file
         let dbr = rec.aux(b"RX").expect(&format!("Expected tag RX in record {}", i));
-        dbrs.push(encode_seq(dbr[..dbr_len], &mut rng));
+        let dbr = encode_seq(dbr[..dbr_len], &mut rng);
 
+        // extract slice from the midpoint of the read for clustering
+        // for this to work well, the spacers must have been removed beforehand
+        let mid_point = (rec.seq_len / 2);
+        let read_infix = encode_seq(rec.seq[mid_point-4..mid_point+4], &mut rng);
+
+        // combine 32 bits from the dbr with 32 bits from the read infix
+        dbrs_and_infix.push((dbr as u64) << 32 | read_infix as u64);
+
+        
         i += 1;
     }
 

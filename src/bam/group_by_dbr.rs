@@ -91,7 +91,7 @@ pub fn group_by_dbr(in_bam: &str, dbr_pattern: &[u8]) -> Result<(), Box<Error>> 
         i += 1;
     }
 
-    let scanner = BruteScan::new(&dbrs);
+    let scanner = BruteScan::new(&dbrs_and_infix);
     // TODO what to set for epsilon?
     let mut dbscan = Dbscan::new(scanner, 1.0, 1);
     // TODO go on

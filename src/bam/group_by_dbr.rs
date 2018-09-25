@@ -11,7 +11,10 @@ use cogset::{Dbscan, BruteScan, Point};
 
 const BIT: u32 = 1u32;
 
-
+/// Four-bit encode a given DNA sequence. Non-ACGT characters are randomly replaced with A, C, G or T.
+///
+/// Note:
+///     Right now, IUPAC ambiguity codes are not interpreted.
 fn encode_seq(seq: &[u8], rng: &mut Rng) -> u32 {
     let mut enc = 0;
     for c in seq {
@@ -28,11 +31,20 @@ fn encode_seq(seq: &[u8], rng: &mut Rng) -> u32 {
     enc
 }
 
+
+/// Compute hamming distance between two 4bit-encoded k-mers.
+/// 
+/// Note:
+///     Right now this is overestimating the distance. We enforce at most 1 bit per base
+///     -> hamming_dist of 0b_0001 (A) and 0b_0010 (C) yields count_ones(0011) = 2.
+///     This should not inhibit the distance computation in any way, since everything is
+///     scaled by the factor 2, but might leed to unintuitive results.
 fn hamming_dist(a: u32, b: u32) -> u32 {
     (a ^ b).count_ones()
 }
 
 
+/// Implement the cogset Point trait for u32 integers, i.e. 4bit-encoded k-mers.
 impl Point for u32 {
     fn dist(other: u32) -> f64 {
         hamming_dist(self, other) as f64

@@ -95,5 +95,13 @@ fn main() {
             error!("{}", e);
             process::exit(1);
         }
+    } else if let Some(matches) = matches.subcommand_matches("group-by-umi") {
+        if let Err(e) = bcf::group_by_umi::group_by_umi(
+            matches.value_of("bam-path"),
+            value_t!(matches, "max-fingerprint-dist", u64).unwrap()
+        ) {
+            error!("{}", e);
+            process::exit(1);
+        }
     }
 }

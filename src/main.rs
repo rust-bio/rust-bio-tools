@@ -10,7 +10,9 @@ extern crate csv;
 extern crate rust_htslib;
 #[macro_use]
 extern crate quick_error;
+#[macro_use]
 extern crate custom_derive;
+#[macro_use]
 extern crate newtype_derive;
 extern crate rand;
 extern crate cogset;

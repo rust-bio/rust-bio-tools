@@ -76,3 +76,13 @@ fn vcf_baf() {
             .spawn().unwrap().wait().unwrap().success());
     test_output("tests/baf.bcf", "tests/expected/baf.bcf");
 }
+
+#[test]
+fn test_group_by_umi() {
+    assert!(
+        Command::new("bash")
+                .arg("-c")
+                .arg("target/release/rbt group-by-umi tests/test-group-umi.bam > tests/test-grouped-umi.bam")
+                .spawn().unwrap().wait().unwrap().success()
+    );
+}

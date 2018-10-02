@@ -127,17 +127,17 @@ subcommands:
         Group reads by UMI. Reads are grouped together if they from a cluster with
         a given maximum hamming distance. Annotated BAM is printed to STDOUT.
       author: Henning Timm <henning.timm@uni-due.de>, Johannes Köster <johannes.koester@uni-due.de>
-    args:
-      - bam-path:
-        required: true
-        help: Input BAM file with UMI stored in RX tag of each read.
-      - max-seed-dist:
-        long: max-fingerprint-dist
-        short: d
-        default: "2"
-        help: Maximum hamming distance between the fingerprints of any pair of reads in the same cluster.
-      - max-seq-dist:
-        long: max-seq-dist
-        short: D
-        default: "4"
-        help: Maximum hamming distance between the sequences of any pair of reads in the same cluster.
+      args:
+        - bam-path:
+            required: true
+            help: Input BAM file with UMI stored in RX tag of each read.
+        - max-fingerprint-dist:
+            long: max-fingerprint-dist
+            short: d
+            default_value: "2"
+            help: Maximum hamming distance between the fingerprints of any pair of reads in the same cluster.
+        - max-seq-dist:
+            long: max-seq-dist
+            short: D
+            default_value: "4"
+            help: Maximum hamming distance between the sequences of any pair of reads in the same cluster.

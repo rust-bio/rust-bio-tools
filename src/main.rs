@@ -96,8 +96,8 @@ fn main() {
             process::exit(1);
         }
     } else if let Some(matches) = matches.subcommand_matches("group-by-umi") {
-        if let Err(e) = bcf::group_by_umi::group_by_umi(
-            matches.value_of("bam-path"),
+        if let Err(e) = bam::group_by_umi::group_by_umi(
+            matches.value_of("bam-path").unwrap(),
             value_t!(matches, "max-fingerprint-dist", u64).unwrap()
         ) {
             error!("{}", e);

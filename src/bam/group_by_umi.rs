@@ -66,7 +66,7 @@ pub fn group_by_umi(in_bam: &str, max_hamming_dist: u64) -> Result<(), Box<Error
 
     let mut rec = bam::Record::new();
     let mut i = 0;
-    let mut dbrs_and_infix = Vec::new();
+    let mut umis_and_infix = Vec::new();
 
     loop {
         if let Err(e) = reader.read(&mut rec) {
@@ -77,9 +77,9 @@ pub fn group_by_umi(in_bam: &str, max_hamming_dist: u64) -> Result<(), Box<Error
             }
         }
 
-        // read DBR sequence from BAM file
-        let dbr = rec.aux(b"RX").expect(&format!("Expected tag RX in record {}", i)).string();
-        let dbr = encode_seq(&dbr, &mut rng);
+        // read UMI sequence from BAM file
+        let umi = rec.aux(b"RX").expect(&format!("Expected tag RX in record {}", i)).string();
+        let umi = encode_seq(&umi, &mut rng);
 
         // extract slice from the midpoint of the read for clustering
         // for this to work well, the spacers must have been removed beforehand
@@ -87,19 +87,19 @@ pub fn group_by_umi(in_bam: &str, max_hamming_dist: u64) -> Result<(), Box<Error
         let mid_point = seq.len() / 2;
         let read_infix = encode_seq(&seq[mid_point-4..mid_point+4], &mut rng);
 
-        // combine 32 bits from the dbr with 32 bits () from the read infix
-        //    DBR               Read seq
+        // combine 32 bits from the umi with 32 bits () from the read infix
+        //    UMI               Read seq
         // ##########=====================*=====================
         // ##########          mid-4 /....*..../ mid+4
-        // ##########/....*..../  <- dbr + infix
+        // ##########/....*..../  <- umi + infix
         //
-        dbrs_and_infix.push(Fingerprint((dbr as u64) << 32 | read_infix as u64));
+        umis_and_infix.push(Fingerprint((umi as u64) << 32 | read_infix as u64));
 
         //info!("Processing record {}", i);
         i += 1;
     }
 
-    let scanner = BruteScan::new(&dbrs_and_infix);
+    let scanner = BruteScan::new(&umis_and_infix);
     // the only reasonable value for minPTS is 2, because even 1 PCR duplicate shall be recognized
     let mut dbscan = Dbscan::new(scanner, max_hamming_dist as f64, 2);
 

@@ -82,7 +82,7 @@ fn test_group_by_umi() {
     assert!(
         Command::new("bash")
                 .arg("-c")
-                .arg("target/release/rbt group-by-umi tests/test-group-umi.bam > tests/test-grouped-umi.bam")
+                .arg("cargo build --release && target/release/rbt group-by-umi tests/test-group-umi.bam > tests/test-grouped-umi.bam")
                 .spawn().unwrap().wait().unwrap().success()
     );
 }

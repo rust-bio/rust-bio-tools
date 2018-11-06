@@ -103,6 +103,7 @@ pub fn group_by_umi(in_bam: &str, max_hamming_dist: u64) -> Result<(), Box<Error
     // the only reasonable value for minPTS is 2, because even 1 PCR duplicate shall be recognized
     let mut dbscan = Dbscan::new(scanner, max_hamming_dist as f64, 2);
 
+    // count cluster size and assign reads to clusters
     let mut clusters = HashMap::new();
     let mut cluster_sizes = HashMap::new();
     for (cluster_id, cluster) in dbscan.by_ref().enumerate() {
@@ -115,16 +116,23 @@ pub fn group_by_umi(in_bam: &str, max_hamming_dist: u64) -> Result<(), Box<Error
 
     info!("Number of clusters: {}", clusters.len());
     info!("Cluster sizes:");
-    for (size, count) in cluster_sizes {
+
+    let mut cluster_sizes_vec: Vec<_> = cluster_sizes.iter().collect();
+    cluster_sizes_vec.sort_by(|this, other| this.1.cmp(other.1));  // sort by cluster size
+    // cluster_sizes_vec.sort_by(|this, other| this.2.cmp(other.2));  // sort by abundance
+    
+    for (size, count) in cluster_sizes_vec
+    {
         info!("{}: {}", size, count);
     }
 
     for read_id in dbscan.noise_points() {
-        // current size is equivalent to next id
+        // current size of the collected cluster list is equivalent to next id
         let cluster_id = clusters.len();
         clusters.insert(*read_id, cluster_id);
     }
 
+    // Write add cluster ID as aux bam record and write reads back to BAM file
     let mut reader = get_reader()?;
     let mut read_id = 0;
     loop {

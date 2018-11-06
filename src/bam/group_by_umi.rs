@@ -121,12 +121,16 @@ pub fn group_by_umi(in_bam: &str, max_hamming_dist: u64) -> Result<(), Box<Error
         info!("{}: {}", size, count);
     }
 
+    // create 1-element clusters for those reads that are not yet assigned to a cluster
     for read_id in dbscan.noise_points() {
         // current size is equivalent to next id
         let cluster_id = clusters.len();
         clusters.insert(*read_id, cluster_id);
     }
 
+    // TODO split clusters if full sequence differs too much
+
+    // write clusters to BAM
     let mut reader = get_reader()?;
     let mut read_id = 0;
     loop {

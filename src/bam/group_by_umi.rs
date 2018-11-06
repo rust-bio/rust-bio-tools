@@ -113,7 +113,7 @@ pub fn group_by_umi(in_bam: &str, max_hamming_dist: u64) -> Result<(), Box<Error
         }
     }
 
-    info!("Number of clusters: {}", clusters.len());
+    info!("Number of clusters: {}", cluster_sizes.values().sum::<i32>());
     info!("Cluster sizes:");
     for (size, count) in cluster_sizes {
         info!("{}: {}", size, count);

@@ -16,6 +16,7 @@ extern crate custom_derive;
 extern crate newtype_derive;
 extern crate rand;
 extern crate cogset;
+extern crate num_bigint;
 
 use std::process;
 

@@ -5,10 +5,12 @@ use std::str;
 
 use rust_htslib::bam;
 use rust_htslib::bam::Read;
+use bio::alphabets;
 
 use rand;
 use rand::Rng;
 use cogset::{Dbscan, BruteScan, Point};
+use num_bigint::BigUint;
 
 
 /// Four-bit encode a given DNA sequence. Non-ACGT characters are randomly replaced with A, C, G or T.
@@ -54,6 +56,23 @@ impl Fingerprint {
 impl Point for Fingerprint {
     fn dist(&self, other: &Fingerprint) -> f64 {
         self.hamming_dist(other) as f64
+    }
+}
+
+
+pub struct ReadSequence {
+    seq: BigUint,
+}
+
+
+impl ReadSequence {
+    pub fn new(seq: &[u8]) -> ReadSequence {
+        let iupac = alphabets::dna::iupac_alphabet();
+        let encoder = alphabets::RankTransform::new(&iupac);
+        let encoded = encoder.transform(seq);
+        ReadSequence {
+            seq: BigUint::parse_bytes(encoded, 2)
+        }
     }
 }
 
@@ -151,4 +170,17 @@ pub fn group_by_umi(in_bam: &str, max_hamming_dist: u64) -> Result<(), Box<Error
     }
 
     Ok(())
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_read_sequence() {
+        let seq = b"ACGT";
+        let encoded = ReadSequence::new(seq);
+
+        assert!(encoded.seq, 0b11100100);
+    }
 }

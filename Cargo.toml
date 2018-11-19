@@ -20,6 +20,7 @@ newtype_derive = "0.1"
 custom_derive = "0.1"
 rand = "0.4"
 cogset = "0.2"
+num-bigint = "0.2"
 
 [[bin]]
 name = "rbt"

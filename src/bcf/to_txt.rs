@@ -133,7 +133,7 @@ pub fn to_txt(
                                 Ok(i + 1)
                             },
                             bcf::header::TagLength::Variable => {
-                                Ok(i)
+                                Ok(0)
                             },
                             _ => Err(Box::new(ParseError::UnsupportedTagLength))
                         }

@@ -1,7 +1,6 @@
-
-use std::io;
-use std::error::Error;
 use bio::io::fastq;
+use std::error::Error;
+use std::io;
 
 pub fn split(out_paths: &[&str]) -> Result<(), Box<Error>> {
     let mut reader = fastq::Reader::new(io::stdin());

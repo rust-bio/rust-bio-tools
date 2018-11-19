@@ -78,11 +78,11 @@ fn vcf_baf() {
 }
 
 #[test]
-fn test_group_by_umi() {
+fn test_call_consensus_reads() {
     assert!(
         Command::new("bash")
                 .arg("-c")
-                .arg("cargo build --release && target/release/rbt group-by-umi tests/test-group-umi.bam > tests/test-grouped-umi.bam")
+                .arg("target/debug/rbt call-consensus-reads --umi-len 3 --max-umi-dist 2 --max-seq-dist 2 tests/test-consensus.fastq tests/test-consensus.fastq /tmp/test-consensus.1.fastq /tmp/test-consensus.1.fastq > tests/test-grouped-umi.bam")
                 .spawn().unwrap().wait().unwrap().success()
     );
 }

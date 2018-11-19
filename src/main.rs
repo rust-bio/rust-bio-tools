@@ -10,13 +10,18 @@ extern crate csv;
 extern crate rust_htslib;
 #[macro_use]
 extern crate quick_error;
-#[macro_use]
 extern crate custom_derive;
-#[macro_use]
 extern crate newtype_derive;
 extern crate rand;
 extern crate cogset;
 extern crate num_bigint;
+#[macro_use]
+extern crate serde;
+extern crate serde_json;
+extern crate uuid;
+extern crate tempfile;
+extern crate rocksdb;
+extern crate ordered_float;
 
 use std::process;
 
@@ -96,10 +101,15 @@ fn main() {
             error!("{}", e);
             process::exit(1);
         }
-    } else if let Some(matches) = matches.subcommand_matches("group-by-umi") {
-        if let Err(e) = bam::group_by_umi::group_by_umi(
-            matches.value_of("bam-path").unwrap(),
-            value_t!(matches, "max-fingerprint-dist", u64).unwrap()
+    } else if let Some(matches) = matches.subcommand_matches("call-consensus-reads") {
+        if let Err(e) = fastq::call_consensus_reads::call_consensus_reads(
+            matches.value_of("fq1").unwrap(),
+            matches.value_of("fq2").unwrap(),
+            matches.value_of("consensus-fq1").unwrap(),
+            matches.value_of("consensus-fq2").unwrap(),
+            value_t!(matches, "max-seq-dist", usize).unwrap(),
+            value_t!(matches, "max-umi-dist", usize).unwrap(),
+            value_t!(matches, "umi-len", usize).unwrap(),
         ) {
             error!("{}", e);
             process::exit(1);

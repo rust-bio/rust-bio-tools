@@ -74,6 +74,7 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<Error>> {
         .unwrap()?)
 }
 
+#[derive(Debug)]
 pub struct FASTQStorage {
     db: DB,
 }
@@ -206,6 +207,7 @@ pub fn call_consensus_reads(
         seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
         i += 1;
     }
+    eprintln!("Read Storage {:?}", read_storage);
     seq_cluster.stdin.as_mut().unwrap().flush()?;
     drop(seq_cluster.stdin.take());
 
@@ -236,6 +238,7 @@ pub fn call_consensus_reads(
         }
         umi_cluster.stdin.as_mut().unwrap().flush()?;
         drop(umi_cluster.stdin.take());
+        eprintln!("this is reached");
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .has_headers(false)
@@ -257,6 +260,8 @@ pub fn call_consensus_reads(
                 r_recs.push(r_rec);
                 outer_seqids.push(seqid);
             }
+            eprintln!("Even this is reached: {}", f_recs.len());
+            // This is where the ERROR happends:
             if f_recs.len() > 1 {
                 fq1_writer.write_record(&calc_consensus(&f_recs, &outer_seqids))?;
                 fq2_writer.write_record(&calc_consensus(&r_recs, &outer_seqids))?;

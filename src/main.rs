@@ -105,9 +105,9 @@ fn main() {
             matches.value_of("fq2").unwrap(),
             matches.value_of("consensus-fq1").unwrap(),
             matches.value_of("consensus-fq2").unwrap(),
+            value_t!(matches, "umi-len", usize).unwrap(),
             value_t!(matches, "max-seq-dist", usize).unwrap(),
             value_t!(matches, "max-umi-dist", usize).unwrap(),
-            value_t!(matches, "umi-len", usize).unwrap(),
         ) {
             error!("{}", e);
             process::exit(1);

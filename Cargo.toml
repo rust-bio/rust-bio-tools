@@ -27,6 +27,7 @@ uuid = { version = "0.7", features = ["v4"] }
 tempfile = "*"
 rocksdb = "*"
 ordered-float = "0.5"
+flate2 = "1.0.5"
 
 [[bin]]
 name = "rbt"

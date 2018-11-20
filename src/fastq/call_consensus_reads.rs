@@ -14,6 +14,7 @@ use ordered_float::NotNaN;
 use rocksdb::DB;
 use serde_json;
 use uuid::Uuid;
+use flate2::bufread::GzDecoder;
 
 const ALLELES: &'static [u8] = b"ACGT";
 
@@ -139,10 +140,10 @@ pub fn call_consensus_reads(
     seq_dist: usize,
     umi_dist: usize,
 ) -> Result<(), Box<Error>> {
-    let load_fq2 = || fastq::Reader::from_file(fq2);
-
-    let umis = umis(&mut load_fq2()?, umi_len)?;
-
+    let load_fq2 = || fastq::Reader::new(fs::File::open(fq2)
+                                         .map(BufReader::new)
+                                         .map(GzDecoder::new).unwrap());
+    let umis = umis(&mut load_fq2(), umi_len)?;
     // cluster by sequence
     let mut seq_cluster = Command::new("starcode")
         .arg("--dist")
@@ -151,8 +152,10 @@ pub fn call_consensus_reads(
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()?;
-    let mut fq1_reader = fastq::Reader::from_file(fq1)?;
-    let mut fq2_reader = load_fq2()?;
+    let mut fq1_reader = fastq::Reader::new(fs::File::open(fq1)
+                                            .map(BufReader::new)
+                                            .map(GzDecoder::new).unwrap());
+    let mut fq2_reader = load_fq2();
     let mut f_rec = fastq::Record::new();
     let mut r_rec = fastq::Record::new();
 

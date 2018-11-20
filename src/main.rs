@@ -22,6 +22,7 @@ extern crate rocksdb;
 extern crate serde_json;
 extern crate tempfile;
 extern crate uuid;
+extern crate flate2;
 
 use std::process;
 

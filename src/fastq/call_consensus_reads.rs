@@ -18,8 +18,31 @@ use uuid::Uuid;
 use csv;
 use flate2::bufread::GzDecoder;
 
+
 const ALLELES: &'static [u8] = b"ACGT";
 
+
+/// Collects UMIs from a reader on a p7 FASTQ file and returns them in a vector.
+///
+/// This takes the first umi_len characters from each sequence in the file and
+/// hence assumes that the UMI are the first characters in the line.
+/// If the read other sequences before the UMI, these need to be trimmed before
+/// this.
+///
+/// The UMI sequences are cloned into the vector.
+///
+/// # Errors
+/// Passes on errors from bio::io::fastq::Reader i.e. fails if the file cannot
+/// be opened.
+///
+/// # Examples
+///
+/// ```
+/// let p7_fq = fastq::Reader::from_file(fq2);
+/// let umi_len = 13;
+/// let umis = umis(&mut p7_fq, umi_len)?;
+/// ```
+///
 fn umis<R: io::Read>(
     fq_reader: &mut fastq::Reader<R>,
     umi_len: usize,
@@ -38,6 +61,7 @@ fn umis<R: io::Read>(
 
     Ok(umis)
 }
+
 
 fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<Error>> {
     let seqids = &record[2];

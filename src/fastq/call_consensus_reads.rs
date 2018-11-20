@@ -171,6 +171,8 @@ pub fn call_consensus_reads(
                                          .map(GzDecoder::new).unwrap());
     let umis = umis(&mut load_fq2(), umi_len)?;
     // cluster by sequence
+    // if starcode is not installed, this throws a hard to interpret error:
+    // (No such file or directory (os error 2))
     let mut seq_cluster = Command::new("starcode")
         .arg("--dist")
         .arg(format!("{}", seq_dist))

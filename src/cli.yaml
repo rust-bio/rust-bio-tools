@@ -135,10 +135,10 @@ subcommands:
             help: Input FASTQ file with reverse reads.
         - consensus-fq1:
             required: true
-            help: Input FASTQ file with reverse reads.
+            help: Output FASTQ file with forward reads.
         - consensus-fq2:
             required: true
-            help: Input FASTQ file with reverse reads.
+            help: Output FASTQ file with reverse reads.
         - max-umi-dist:
             long: max-umi-dist
             short: d

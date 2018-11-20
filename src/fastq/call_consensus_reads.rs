@@ -117,6 +117,13 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
     let mut consensus_seq = Vec::with_capacity(seq_len);
     let mut consensus_qual = Vec::with_capacity(seq_len);
 
+    for r in recs {
+        eprintln!("{:?}", std::str::from_utf8(r.seq()));
+    }
+    for r in recs {
+        eprintln!("{:?}", std::str::from_utf8(r.qual()));
+    }
+    
     for i in 0..seq_len {
         let likelihood = |allele: &u8| {
             let mut lh = LogProb::ln_one();
@@ -147,9 +154,21 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
         // new qual: (1 - MAP)
         let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
 
+        let truncated_quality: f64;
+        if (*PHREDProb::from(qual)).is_infinite() {
+            truncated_quality = 41.0;
+        } else {
+            truncated_quality = *PHREDProb::from(qual);
+        }
         eprintln!("LL(MAP) - marginal = {:?} - {:?} = {:?}", likelihoods[max_posterior], marginal, likelihoods[max_posterior] - marginal);
-        eprintln!("=> Q{:?}\n", qual);
-        consensus_qual.push(cmp::min(255, (*PHREDProb::from(qual) + 33.0) as u64) as u8);
+        eprintln!("=> Quality: {:?} => {:?}", qual, PHREDProb::from(qual));
+        eprintln!("as u64: {:?}", (*PHREDProb::from(qual) + 33.0) as u64);
+        eprintln!("as u8: {:?}\n", ((*PHREDProb::from(qual) + 33.0) as u64) as u8);
+        eprintln!("truncated_quality {:?}", truncated_quality);
+        consensus_qual.push(cmp::min(74, (truncated_quality + 33.0) as u64) as u8);
+
+        // This is the old code:
+        // consensus_qual.push(cmp::min(255, (*PHREDProb::from(qual) + 33.0) as u64) as u8);
     }
     eprintln!("{:?}", consensus_seq);
     eprintln!("{:?}", consensus_qual);
@@ -174,6 +193,9 @@ pub fn call_consensus_reads(
     seq_dist: usize,
     umi_dist: usize,
 ) -> Result<(), Box<Error>> {
+    // TODO Opening a gz file should be optional.
+    // Right now, this fails for non-gzipped files
+    // Below, opening the p5 file has the same issue.
     let load_fq2 = || fastq::Reader::new(fs::File::open(fq2)
                                          .map(BufReader::new)
                                          .map(GzDecoder::new).unwrap());

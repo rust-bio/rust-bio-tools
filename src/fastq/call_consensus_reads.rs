@@ -15,6 +15,7 @@ use ordered_float::NotNaN;
 use rocksdb::DB;
 use serde_json;
 use uuid::Uuid;
+use csv;
 use flate2::bufread::GzDecoder;
 
 const ALLELES: &'static [u8] = b"ACGT";

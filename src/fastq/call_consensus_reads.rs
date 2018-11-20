@@ -130,8 +130,10 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
             }
             lh
         };
-
+        
         let likelihoods = ALLELES.iter().map(&likelihood).collect_vec();
+        eprintln!("{:?}", likelihoods);
+
         let max_posterior = likelihoods
             .iter()
             .enumerate()
@@ -144,8 +146,13 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
         consensus_seq.push(ALLELES[max_posterior]);
         // new qual: (1 - MAP)
         let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
+
+        eprintln!("LL(MAP) - marginal = {:?} - {:?} = {:?}", likelihoods[max_posterior], marginal, likelihoods[max_posterior] - marginal);
+        eprintln!("=> Q{:?}\n", qual);
         consensus_qual.push(cmp::min(255, (*PHREDProb::from(qual) + 33.0) as u64) as u8);
     }
+    eprintln!("{:?}", consensus_seq);
+    eprintln!("{:?}", consensus_qual);
 
     fastq::Record::with_attrs(
         &Uuid::new_v4().to_hyphenated().to_string(),

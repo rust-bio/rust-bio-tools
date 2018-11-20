@@ -1,10 +1,11 @@
 use std::cmp;
 use std::error::Error;
 use std::io;
-use std::io::Write;
+use std::io::{BufReader, Write};
 use std::mem;
 use std::process::{Command, Stdio};
 use std::str;
+use std::fs;
 use tempfile::tempdir;
 
 use bio::io::fastq;

@@ -184,7 +184,11 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
     )
 }
 
-
+/// Build readers for the given input and output FASTQ files and pass them to
+/// `call_consensus_reads`.
+///
+/// The type of the readers (writers) depends on the file ending.
+/// If the input file names end with '.gz' a gzipped reader (writer) is used.
 pub fn call_consensus_reads_from_paths(
     fq1: &str,
     fq2: &str,
@@ -209,6 +213,7 @@ pub fn call_consensus_reads_from_paths(
     
 }
 
+///
 pub fn call_consensus_reads<R: io::Read, W: io::Write>(
     fq1_reader: &mut fastq::Reader<R>,
     fq2_reader: &mut fastq::Reader<R>,
@@ -229,6 +234,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()?;
+
     let mut f_rec = fastq::Record::new();
     let mut r_rec = fastq::Record::new();
 
@@ -237,8 +243,8 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
     let mut i = 0;
 
     let mut umis = Vec::new();
+
     loop {
-        
         fq1_reader.read(&mut f_rec)?;
         fq2_reader.read(&mut r_rec)?;
         match (f_rec.is_empty(), r_rec.is_empty()) {
@@ -246,6 +252,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
             (false, false) => (),
             _ => panic!("Given FASTQ files have unequal lengths"),
         }
+        // save umis for second (intra cluster) clustering
         let umi = r_rec.seq()[..umi_len].to_owned();
         umis.push(umi);
         
@@ -256,7 +263,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
         i += 1;
     }
-    eprintln!("Read Storage {:?}", read_storage);
+    // eprintln!("Read Storage {:?}", read_storage);
     seq_cluster.stdin.as_mut().unwrap().flush()?;
     drop(seq_cluster.stdin.take());
 
@@ -285,7 +292,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         }
         umi_cluster.stdin.as_mut().unwrap().flush()?;
         drop(umi_cluster.stdin.take());
-        eprintln!("this is reached");
+        // eprintln!("this is reached");
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .has_headers(false)
@@ -298,17 +305,16 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
             let mut f_recs = Vec::new();
             let mut r_recs = Vec::new();
             let mut outer_seqids = Vec::new();
-            eprintln!("{:?}", inner_seqids);
+            // eprintln!("{:?}", inner_seqids);
             for inner_seqid in inner_seqids {
-                eprintln!("{:?} {:?}", seqids, inner_seqid);
+                // eprintln!("{:?} {:?}", seqids, inner_seqid);
                 let seqid = seqids[inner_seqid - 1];
                 let (f_rec, r_rec) = read_storage.get(seqid - 1)?;
                 f_recs.push(f_rec);
                 r_recs.push(r_rec);
                 outer_seqids.push(seqid);
             }
-            eprintln!("Even this is reached: {}", f_recs.len());
-            // This is where the ERROR happends:
+            // eprintln!("Even this is reached: {}", f_recs.len());
             if f_recs.len() > 1 {
                 fq1_writer.write_record(&calc_consensus(&f_recs, &outer_seqids))?;
                 fq2_writer.write_record(&calc_consensus(&r_recs, &outer_seqids))?;

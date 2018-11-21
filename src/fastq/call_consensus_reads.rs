@@ -194,8 +194,8 @@ pub fn call_consensus_reads_from_paths(
     seq_dist: usize,
     umi_dist: usize,
 ) -> Result<(), Box<Error>> {
-    match (fq1.ends_with(".gz"), fq2.ends_with(".gz")) {
-        (true, true) => call_consensus_reads(
+    match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
+        (true, true, false, false) => call_consensus_reads(
             &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).unwrap()),
             &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).unwrap()),
             &mut fastq::Writer::to_file(fq1_out)?,

@@ -17,6 +17,8 @@ use serde_json;
 use uuid::Uuid;
 use csv;
 use flate2::bufread::GzDecoder;
+use flate2::write::GzEncoder;
+use flate2::Compression;
 
 
 const ALLELES: &'static [u8] = b"ACGT";
@@ -158,6 +160,15 @@ pub fn call_consensus_reads_from_paths(
     umi_dist: usize,
 ) -> Result<(), Box<Error>> {
     match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
+        (false, false, false, false) => call_consensus_reads(
+            &mut fastq::Reader::from_file(fq1)?,
+            &mut fastq::Reader::from_file(fq2)?,
+            &mut fastq::Writer::to_file(fq1_out)?,
+            &mut fastq::Writer::to_file(fq2_out)?,
+            umi_len,
+            seq_dist,
+            umi_dist,
+        ),
         (true, true, false, false) => call_consensus_reads(
             &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).unwrap()),
             &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).unwrap()),
@@ -167,9 +178,17 @@ pub fn call_consensus_reads_from_paths(
             seq_dist,
             umi_dist,
         ),
-        _ => panic!("Not implemented")
-    }
-    
+        (true, true, true, true) => call_consensus_reads(
+            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).unwrap()),
+            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).unwrap()),
+            &mut fastq::Writer::new(GzEncoder::new(fs::File::open(fq1_out)?, Compression::default())),
+            &mut fastq::Writer::new(GzEncoder::new(fs::File::open(fq2_out)?, Compression::default())),
+            umi_len,
+            seq_dist,
+            umi_dist,
+        ),
+        _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
+    }   
 }
 
 ///

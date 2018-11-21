@@ -100,7 +100,7 @@ fn main() {
             process::exit(1);
         }
     } else if let Some(matches) = matches.subcommand_matches("call-consensus-reads") {
-        if let Err(e) = fastq::call_consensus_reads::call_consensus_reads(
+        if let Err(e) = fastq::call_consensus_reads::call_consensus_reads_from_paths(
             matches.value_of("fq1").unwrap(),
             matches.value_of("fq2").unwrap(),
             matches.value_of("consensus-fq1").unwrap(),

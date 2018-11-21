@@ -22,45 +22,45 @@ use flate2::bufread::GzDecoder;
 const ALLELES: &'static [u8] = b"ACGT";
 
 
-/// Collects UMIs from a reader on a p7 FASTQ file and returns them in a vector.
-///
-/// This takes the first umi_len characters from each sequence in the file and
-/// hence assumes that the UMI are the first characters in the line.
-/// If the read other sequences before the UMI, these need to be trimmed before
-/// this.
-///
-/// The UMI sequences are cloned into the vector.
-///
-/// # Errors
-/// Passes on errors from bio::io::fastq::Reader i.e. fails if the file cannot
-/// be opened.
-///
-/// # Examples
-///
-/// ```
-/// let p7_fq = fastq::Reader::from_file(fq2);
-/// let umi_len = 13;
-/// let umis = umis(&mut p7_fq, umi_len)?;
-/// ```
-///
-fn umis<R: io::Read>(
-    fq_reader: &mut fastq::Reader<R>,
-    umi_len: usize,
-) -> Result<Vec<Vec<u8>>, Box<Error>> {
-    let mut record = fastq::Record::new();
-    let mut umis = Vec::new();
-    loop {
-        fq_reader.read(&mut record)?;
-        if record.is_empty() {
-            break;
-        }
+// /// Collects UMIs from a reader on a p7 FASTQ file and returns them in a vector.
+// ///
+// /// This takes the first umi_len characters from each sequence in the file and
+// /// hence assumes that the UMI are the first characters in the line.
+// /// If the read other sequences before the UMI, these need to be trimmed before
+// /// this.
+// ///
+// /// The UMI sequences are cloned into the vector.
+// ///
+// /// # Errors
+// /// Passes on errors from bio::io::fastq::Reader i.e. fails if the file cannot
+// /// be opened.
+// ///
+// /// # Examples
+// ///
+// /// ```
+// /// let p7_fq = fastq::Reader::from_file(fq2);
+// /// let umi_len = 13;
+// /// let umis = umis(&mut p7_fq, umi_len)?;
+// /// ```
+// ///
+// fn umis<R: io::Read>(
+//     fq_reader: &mut fastq::Reader<R>,
+//     umi_len: usize,
+// ) -> Result<Vec<Vec<u8>>, Box<Error>> {
+//     let mut record = fastq::Record::new();
+//     let mut umis = Vec::new();
+//     loop {
+//         fq_reader.read(&mut record)?;
+//         if record.is_empty() {
+//             break;
+//         }
 
-        let umi = record.seq()[..umi_len].to_owned();
-        umis.push(umi);
-    }
+//         let umi = record.seq()[..umi_len].to_owned();
+//         umis.push(umi);
+//     }
 
-    Ok(umis)
-}
+//     Ok(umis)
+// }
 
 
 fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<Error>> {
@@ -184,7 +184,8 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
     )
 }
 
-pub fn call_consensus_reads(
+
+pub fn call_consensus_reads_from_paths(
     fq1: &str,
     fq2: &str,
     fq1_out: &str,
@@ -193,13 +194,31 @@ pub fn call_consensus_reads(
     seq_dist: usize,
     umi_dist: usize,
 ) -> Result<(), Box<Error>> {
-    // TODO Opening a gz file should be optional.
-    // Right now, this fails for non-gzipped files
-    // Below, opening the p5 file has the same issue.
-    let load_fq2 = || fastq::Reader::new(fs::File::open(fq2)
-                                         .map(BufReader::new)
-                                         .map(GzDecoder::new).unwrap());
-    let umis = umis(&mut load_fq2(), umi_len)?;
+    match (fq1.ends_with(".gz"), fq2.ends_with(".gz")) {
+        (true, true) => call_consensus_reads(
+            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).unwrap()),
+            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).unwrap()),
+            &mut fastq::Writer::to_file(fq1_out)?,
+            &mut fastq::Writer::to_file(fq2_out)?,
+            umi_len,
+            seq_dist,
+            umi_dist,
+        ),
+        _ => panic!("Not implemented")
+    }
+    
+}
+
+pub fn call_consensus_reads<R: io::Read, W: io::Write>(
+    fq1_reader: &mut fastq::Reader<R>,
+    fq2_reader: &mut fastq::Reader<R>,
+    fq1_writer: &mut fastq::Writer<W>,
+    fq2_writer: &mut fastq::Writer<W>,
+    umi_len: usize,
+    seq_dist: usize,
+    umi_dist: usize,
+) -> Result<(), Box<Error>> {
+    
     // cluster by sequence
     // if starcode is not installed, this throws a hard to interpret error:
     // (No such file or directory (os error 2))
@@ -210,17 +229,16 @@ pub fn call_consensus_reads(
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()?;
-    let mut fq1_reader = fastq::Reader::new(fs::File::open(fq1)
-                                            .map(BufReader::new)
-                                            .map(GzDecoder::new).unwrap());
-    let mut fq2_reader = load_fq2();
     let mut f_rec = fastq::Record::new();
     let mut r_rec = fastq::Record::new();
 
     // init temp storage for reads
     let mut read_storage = FASTQStorage::new()?;
     let mut i = 0;
+
+    let mut umis = Vec::new();
     loop {
+        
         fq1_reader.read(&mut f_rec)?;
         fq2_reader.read(&mut r_rec)?;
         match (f_rec.is_empty(), r_rec.is_empty()) {
@@ -228,7 +246,9 @@ pub fn call_consensus_reads(
             (false, false) => (),
             _ => panic!("Given FASTQ files have unequal lengths"),
         }
-
+        let umi = r_rec.seq()[..umi_len].to_owned();
+        umis.push(umi);
+        
         read_storage.put(i, &f_rec, &r_rec)?;
 
         let seq = [f_rec.seq(), &r_rec.seq()[umi_len..]].concat();
@@ -240,8 +260,6 @@ pub fn call_consensus_reads(
     seq_cluster.stdin.as_mut().unwrap().flush()?;
     drop(seq_cluster.stdin.take());
 
-    let mut fq1_writer = fastq::Writer::to_file(fq1_out)?;
-    let mut fq2_writer = fastq::Writer::to_file(fq2_out)?;
     for record in csv::ReaderBuilder::new()
         .delimiter(b'\t')
         .has_headers(false)

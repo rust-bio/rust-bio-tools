@@ -20,10 +20,9 @@ use flate2::bufread::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 
-
 const ALLELES: &'static [u8] = b"ACGT";
 
-
+/// Interpret a cluster returned by starcode
 fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<Error>> {
     let seqids = &record[2];
     Ok(csv::ReaderBuilder::new()
@@ -35,12 +34,16 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<Error>> {
         .unwrap()?)
 }
 
+/// Used to store a mapping of read index to read sequence
 #[derive(Debug)]
 pub struct FASTQStorage {
     db: DB,
 }
 
 impl FASTQStorage {
+
+    /// Create a new FASTQStorage using a Rocksdb database
+    /// that maps read indices to read seqeunces.
     pub fn new() -> Result<Self, Box<Error>> {
         let storage_dir = tempdir()?;
         Ok(FASTQStorage {
@@ -52,6 +55,7 @@ impl FASTQStorage {
         unsafe { mem::transmute::<u64, [u8; 8]>(i) }
     }
 
+    /// Enter a (read index, read sequence) pair into the database.
     pub fn put(
         &mut self,
         i: usize,
@@ -64,6 +68,7 @@ impl FASTQStorage {
         )?)
     }
 
+    /// Retrieve the read sequence of the read with index `i`.
     pub fn get(&self, i: usize) -> Result<(fastq::Record, fastq::Record), Box<Error>> {
         Ok(serde_json::from_str(
             str::from_utf8(&self.db.get(&Self::as_key(i as u64))?.unwrap()).unwrap(),
@@ -73,17 +78,16 @@ impl FASTQStorage {
 
 const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
 
+/// Compute a consensus sequence for a collection of FASTQ reads.
+///
+/// For each position, compute the likelihood of each allele and
+/// choose the most likely one. Write the most likely allele i.e. base
+/// as sequence into the consensus sequence. The quality value is the
+/// likelihood for this allele, encoded in PHRED+33.
 pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record {
     let seq_len = recs[0].seq().len();
     let mut consensus_seq = Vec::with_capacity(seq_len);
     let mut consensus_qual = Vec::with_capacity(seq_len);
-
-    for r in recs {
-        eprintln!("{:?}", std::str::from_utf8(r.seq()));
-    }
-    for r in recs {
-        eprintln!("{:?}", std::str::from_utf8(r.qual()));
-    }
     
     for i in 0..seq_len {
         let likelihood = |allele: &u8| {
@@ -115,24 +119,16 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
         // new qual: (1 - MAP)
         let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
 
+        // Assume the maximal quality, if the likelihood is infinite
         let truncated_quality: f64;
         if (*PHREDProb::from(qual)).is_infinite() {
             truncated_quality = 41.0;
         } else {
             truncated_quality = *PHREDProb::from(qual);
         }
-        eprintln!("LL(MAP) - marginal = {:?} - {:?} = {:?}", likelihoods[max_posterior], marginal, likelihoods[max_posterior] - marginal);
-        eprintln!("=> Quality: {:?} => {:?}", qual, PHREDProb::from(qual));
-        eprintln!("as u64: {:?}", (*PHREDProb::from(qual) + 33.0) as u64);
-        eprintln!("as u8: {:?}\n", ((*PHREDProb::from(qual) + 33.0) as u64) as u8);
-        eprintln!("truncated_quality {:?}", truncated_quality);
+        // Truncate quality values to PHRED+33 range
         consensus_qual.push(cmp::min(74, (truncated_quality + 33.0) as u64) as u8);
-
-        // This is the old code:
-        // consensus_qual.push(cmp::min(255, (*PHREDProb::from(qual) + 33.0) as u64) as u8);
     }
-    eprintln!("{:?}", consensus_seq);
-    eprintln!("{:?}", consensus_qual);
 
     fastq::Record::with_attrs(
         &Uuid::new_v4().to_hyphenated().to_string(),
@@ -200,7 +196,16 @@ pub fn call_consensus_reads_from_paths(
     }   
 }
 
+/// Cluster reads from fastq readers according to their sequence
+/// and UMI, then compute a consensus sequence.
 ///
+/// Cluster the reads in the input file according to their sequence
+/// (concatenated p5 and p7 reads without UMI). Read the
+/// identified clusters, and cluster all reds in a cluster by UMI,
+/// creating groups of very likely PCR duplicates.
+/// Next, compute a consensus read for each unique read,
+/// i.e. a cluster with similar sequences and identical UMI,
+/// and write it into the output files.
 pub fn call_consensus_reads<R: io::Read, W: io::Write>(
     fq1_reader: &mut fastq::Reader<R>,
     fq2_reader: &mut fastq::Reader<R>,
@@ -210,9 +215,10 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
     seq_dist: usize,
     umi_dist: usize,
 ) -> Result<(), Box<Error>> {
-    
+
     // cluster by sequence
-    // if starcode is not installed, this throws a hard to interpret error:
+    // Note: If starcode is not installed, this throws a
+    // hard to interpret error:
     // (No such file or directory (os error 2))
     let mut seq_cluster = Command::new("starcode")
         .arg("--dist")
@@ -250,10 +256,10 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
         i += 1;
     }
-    // eprintln!("Read Storage {:?}", read_storage);
     seq_cluster.stdin.as_mut().unwrap().flush()?;
     drop(seq_cluster.stdin.take());
 
+    // read clusters identified by the first starcode run
     for record in csv::ReaderBuilder::new()
         .delimiter(b'\t')
         .has_headers(false)
@@ -279,7 +285,8 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         }
         umi_cluster.stdin.as_mut().unwrap().flush()?;
         drop(umi_cluster.stdin.take());
-        // eprintln!("this is reached");
+
+        // handle each potential unique read
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .has_headers(false)
@@ -292,16 +299,15 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
             let mut f_recs = Vec::new();
             let mut r_recs = Vec::new();
             let mut outer_seqids = Vec::new();
-            // eprintln!("{:?}", inner_seqids);
+
             for inner_seqid in inner_seqids {
-                // eprintln!("{:?} {:?}", seqids, inner_seqid);
                 let seqid = seqids[inner_seqid - 1];
                 let (f_rec, r_rec) = read_storage.get(seqid - 1)?;
                 f_recs.push(f_rec);
                 r_recs.push(r_rec);
                 outer_seqids.push(seqid);
             }
-            // eprintln!("Even this is reached: {}", f_recs.len());
+
             if f_recs.len() > 1 {
                 fq1_writer.write_record(&calc_consensus(&f_recs, &outer_seqids))?;
                 fq2_writer.write_record(&calc_consensus(&r_recs, &outer_seqids))?;

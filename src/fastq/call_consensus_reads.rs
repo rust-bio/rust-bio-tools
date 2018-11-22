@@ -88,6 +88,8 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
     let seq_len = recs[0].seq().len();
     let mut consensus_seq = Vec::with_capacity(seq_len);
     let mut consensus_qual = Vec::with_capacity(seq_len);
+
+    // TODO assert that all reads have the same length here
     
     for i in 0..seq_len {
 
@@ -103,6 +105,13 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
             }
             lh
         };
+
+        // Potential workflow for different read lengths
+        // compute consensus of all reads with max len
+        // compute offset of all shorter reads
+        // pad shorter reads
+        // drop first consensus, compute consensus of full length reads and padded reads
+        // ignore padded bases for consensus computation
         
         let likelihoods = ALLELES.iter().map(&likelihood).collect_vec();
         let max_posterior = likelihoods

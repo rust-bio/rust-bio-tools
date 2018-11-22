@@ -10,6 +10,7 @@ use tempfile::tempdir;
 
 use bio::io::fastq;
 use bio::stats::probs::{LogProb, PHREDProb};
+use itertools::all;
 use itertools::Itertools;
 use ordered_float::NotNaN;
 use rocksdb::DB;
@@ -89,8 +90,22 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
     let mut consensus_seq = Vec::with_capacity(seq_len);
     let mut consensus_qual = Vec::with_capacity(seq_len);
 
-    // TODO assert that all reads have the same length here
-    
+    // assert that all reads have the same length here
+    let identical_lengths = || {
+        let reference_length = recs[0].seq().len();
+        recs
+            .iter()
+            .map(|rec| rec.seq().len())
+            .all(|len| len == reference_length)
+    };
+    assert_eq!(indentical_lengths(), true, "Read length of FASTQ records {} differ. Cannot compute consensus sequence.", seqids);
+    // Potential workflow for different read lengths
+    // compute consensus of all reads with max len
+    // compute offset of all shorter reads
+    // pad shorter reads
+    // drop first consensus, compute consensus of full length reads and padded reads
+    // ignore padded bases for consensus computation
+
     for i in 0..seq_len {
 
         let likelihood = |allele: &u8| {
@@ -106,13 +121,6 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
             lh
         };
 
-        // Potential workflow for different read lengths
-        // compute consensus of all reads with max len
-        // compute offset of all shorter reads
-        // pad shorter reads
-        // drop first consensus, compute consensus of full length reads and padded reads
-        // ignore padded bases for consensus computation
-        
         let likelihoods = ALLELES.iter().map(&likelihood).collect_vec();
         let max_posterior = likelihoods
             .iter()

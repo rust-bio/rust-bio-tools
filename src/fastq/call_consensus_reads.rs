@@ -86,13 +86,12 @@ const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
 /// likelihood for this allele, encoded in PHRED+33.
 pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record {
     let seq_len = recs[0].seq().len();
-    eprintln!("Seq len: {}", seq_len);
     let mut consensus_seq = Vec::with_capacity(seq_len);
     let mut consensus_qual = Vec::with_capacity(seq_len);
     
     for i in 0..seq_len {
+
         let likelihood = |allele: &u8| {
-            // TODO the error is somewhere in here
             let mut lh = LogProb::ln_one();
             for rec in recs {
                 let q = LogProb::from(PHREDProb::from((rec.qual()[i] - 33) as f64));
@@ -106,8 +105,6 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
         };
         
         let likelihoods = ALLELES.iter().map(&likelihood).collect_vec();
-        eprintln!("{:?}", likelihoods);
-
         let max_posterior = likelihoods
             .iter()
             .enumerate()

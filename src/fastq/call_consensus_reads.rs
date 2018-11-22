@@ -245,6 +245,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         .arg("--seq-id")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
         .spawn()?;
 
     let mut f_rec = fastq::Record::new();
@@ -293,6 +294,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
             .arg("--seq-id")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .spawn()?;
         for &seqid in &seqids {
             umi_cluster

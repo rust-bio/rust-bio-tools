@@ -125,7 +125,7 @@ subcommands:
   - call-consensus-reads:
       about: |
         Group reads by UMI and calculate consensus.
-      author: Johannes Köster <johannes.koester@uni-due.de>
+      author: Johannes Köster <johannes.koester@uni-due.de>, Henning Timm <henning.timm@tu-dortmund.de>
       args:
         - fq1:
             required: true

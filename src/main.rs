@@ -17,12 +17,12 @@ extern crate num_bigint;
 extern crate rand;
 #[macro_use]
 extern crate serde;
+extern crate flate2;
 extern crate ordered_float;
 extern crate rocksdb;
 extern crate serde_json;
 extern crate tempfile;
 extern crate uuid;
-extern crate flate2;
 
 use std::process;
 

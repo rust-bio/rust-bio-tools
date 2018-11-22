@@ -1,25 +1,25 @@
 use std::cmp;
 use std::error::Error;
+use std::fs;
 use std::io;
 use std::io::{BufReader, Write};
 use std::mem;
 use std::process::{Command, Stdio};
 use std::str;
-use std::fs;
 use tempfile::tempdir;
 
 use bio::io::fastq;
 use bio::stats::probs::{LogProb, PHREDProb};
+use csv;
+use flate2::bufread::GzDecoder;
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use itertools::all;
 use itertools::Itertools;
 use ordered_float::NotNaN;
 use rocksdb::DB;
 use serde_json;
 use uuid::Uuid;
-use csv;
-use flate2::bufread::GzDecoder;
-use flate2::write::GzEncoder;
-use flate2::Compression;
 
 const ALLELES: &'static [u8] = b"ACGT";
 
@@ -42,7 +42,6 @@ pub struct FASTQStorage {
 }
 
 impl FASTQStorage {
-
     /// Create a new FASTQStorage using a Rocksdb database
     /// that maps read indices to read seqeunces.
     pub fn new() -> Result<Self, Box<Error>> {
@@ -93,12 +92,16 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
     // assert that all reads have the same length here
     let identical_lengths = || {
         let reference_length = recs[0].seq().len();
-        recs
-            .iter()
+        recs.iter()
             .map(|rec| rec.seq().len())
             .all(|len| len == reference_length)
     };
-    assert_eq!(indentical_lengths(), true, "Read length of FASTQ records {} differ. Cannot compute consensus sequence.", seqids);
+    assert_eq!(
+        indentical_lengths(),
+        true,
+        "Read length of FASTQ records {} differ. Cannot compute consensus sequence.",
+        seqids
+    );
     // Potential workflow for different read lengths
     // compute consensus of all reads with max len
     // compute offset of all shorter reads
@@ -107,7 +110,6 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
     // ignore padded bases for consensus computation
 
     for i in 0..seq_len {
-
         let likelihood = |allele: &u8| {
             let mut lh = LogProb::ln_one();
             for rec in recs {
@@ -212,7 +214,7 @@ pub fn call_consensus_reads_from_paths(
             umi_dist,
         ),
         _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
-    }   
+    }
 }
 
 /// Cluster reads from fastq readers according to their sequence
@@ -234,7 +236,6 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
     seq_dist: usize,
     umi_dist: usize,
 ) -> Result<(), Box<Error>> {
-
     // cluster by sequence
     // Note: If starcode is not installed, this throws a
     // hard to interpret error:
@@ -267,7 +268,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         // save umis for second (intra cluster) clustering
         let umi = r_rec.seq()[..umi_len].to_owned();
         umis.push(umi);
-        
+
         read_storage.put(i, &f_rec, &r_rec)?;
 
         let seq = [f_rec.seq(), &r_rec.seq()[umi_len..]].concat();

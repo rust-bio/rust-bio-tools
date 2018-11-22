@@ -14,7 +14,6 @@ use csv;
 use flate2::bufread::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use itertools::all;
 use itertools::Itertools;
 use ordered_float::NotNaN;
 use rocksdb::DB;
@@ -97,9 +96,9 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
             .all(|len| len == reference_length)
     };
     assert_eq!(
-        indentical_lengths(),
+        identical_lengths(),
         true,
-        "Read length of FASTQ records {} differ. Cannot compute consensus sequence.",
+        "Read length of FASTQ records {:?} differ. Cannot compute consensus sequence.",
         seqids
     );
     // Potential workflow for different read lengths

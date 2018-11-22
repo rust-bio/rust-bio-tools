@@ -154,6 +154,9 @@ pub fn call_consensus_reads_from_paths(
     seq_dist: usize,
     umi_dist: usize,
 ) -> Result<(), Box<Error>> {
+    eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
+    eprintln!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
+
     match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
         (false, false, false, false) => call_consensus_reads(
             &mut fastq::Reader::from_file(fq1)?,

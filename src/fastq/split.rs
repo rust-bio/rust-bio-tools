@@ -1,4 +1,5 @@
 use bio::io::fastq;
+use bio::io::fastq::FastqRead;
 use std::error::Error;
 use std::io;
 

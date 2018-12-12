@@ -9,6 +9,7 @@ use std::str;
 use tempfile::tempdir;
 
 use bio::io::fastq;
+use bio::io::fastq::FastqRead;
 use bio::stats::probs::{LogProb, PHREDProb};
 use csv;
 use flate2::bufread::GzDecoder;

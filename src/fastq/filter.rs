@@ -1,4 +1,5 @@
 use bio::io::fastq;
+use bio::io::fastq::FastqRead;
 use std::collections::HashSet;
 use std::error::Error;
 use std::fs::File;

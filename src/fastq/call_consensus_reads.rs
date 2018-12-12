@@ -84,7 +84,7 @@ const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
 /// choose the most likely one. Write the most likely allele i.e. base
 /// as sequence into the consensus sequence. The quality value is the
 /// likelihood for this allele, encoded in PHRED+33.
-pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record {
+pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> fastq::Record {
     let seq_len = recs[0].seq().len();
     let mut consensus_seq = Vec::with_capacity(seq_len);
     let mut consensus_qual = Vec::with_capacity(seq_len);
@@ -147,13 +147,14 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize]) -> fastq::Record
         // Truncate quality values to PHRED+33 range
         consensus_qual.push(cmp::min(74, (truncated_quality + 33.0) as u64) as u8);
     }
-
+    let name = format!(
+        "{}_consensus-read-from:{}",
+        uuid,
+        seqids.iter().map(|i| format!("{}", i)).join(",")
+        );
     fastq::Record::with_attrs(
-        &Uuid::new_v4().to_hyphenated().to_string(),
-        Some(&format!(
-            "consensus-read-from: {}",
-            seqids.iter().map(|i| format!("{}", i)).join(",")
-        )),
+        &name,
+        None,
         &consensus_seq,
         &consensus_qual,
     )
@@ -331,8 +332,9 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
             }
 
             if f_recs.len() > 1 {
-                fq1_writer.write_record(&calc_consensus(&f_recs, &outer_seqids))?;
-                fq2_writer.write_record(&calc_consensus(&r_recs, &outer_seqids))?;
+                let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                fq1_writer.write_record(&calc_consensus(&f_recs, &outer_seqids, uuid))?;
+                fq2_writer.write_record(&calc_consensus(&r_recs, &outer_seqids, uuid))?;
             } else {
                 fq1_writer.write_record(&f_recs[0])?;
                 fq2_writer.write_record(&r_recs[0])?;

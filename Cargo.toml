@@ -7,7 +7,7 @@ license-file = "LICENSE.md"
 homepage = "https://github.com/rust-bio/rust-bio-tools"
 
 [dependencies]
-bio = { git = "https://github.com/rust-bio/rust-bio.git", branch = "master" }
+bio = "0.25"
 clap = { version = "2.27", features = ["yaml", "color", "suggestions"]}
 itertools = "0.6"
 log = "0.3"

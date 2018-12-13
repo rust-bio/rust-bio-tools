@@ -1,6 +1,6 @@
 # Rust-Bio-Tools
 
-[![Travis](https://img.shields.io/travis/rust-bio/rust-bio-tools.svg?style=flat-square)](https://travis-ci.org/rust-bio/rust-bio-tools)
+[![Travis](https://img.shields.io/travis/rust-bio/rust-bio-tools/master.svg?style=flat-square)](https://travis-ci.org/rust-bio/rust-bio-tools)
 
 A set of ultra fast and robust command line utilities for bioinformatics tasks based on Rust-Bio.
 Rust-Bio-Tools provides a command `rbt`, which currently supports the following operations:

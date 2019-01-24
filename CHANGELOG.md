@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.3.0] - 2019-01-24
+## Added
+- A tool to create consensus reads from UMI-tagged paired-end reads.
+
 ## [0.2.7] - 2018-12-28
 ## Changed
 - Handle missing values in vcf-to-txt.

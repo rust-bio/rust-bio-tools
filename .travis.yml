@@ -5,6 +5,7 @@ install:
   - chmod +x miniconda.sh
   - bash miniconda.sh -b
   - . ~/miniconda3/etc/profile.d/conda.sh
+  - conda config --set always_yes yes --set changeps1 False
   - conda create -q -n starcode starcode -c bioconda
   - source activate starcode
 

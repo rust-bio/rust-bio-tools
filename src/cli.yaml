@@ -121,3 +121,36 @@ subcommands:
         Example:
         rbt vcf-baf < calls.bcf > annotated.bcf
       author: Johannes Köster <johannes.koester@uni-due.de>, Jan Forster <j.forster@dkfz.de>
+
+  - call-consensus-reads:
+      about: |
+        Group reads by UMI and calculate consensus.
+      author: Johannes Köster <johannes.koester@uni-due.de>, Henning Timm <henning.timm@tu-dortmund.de>
+      args:
+        - fq1:
+            required: true
+            help: Input FASTQ file with forward reads.
+        - fq2:
+            required: true
+            help: Input FASTQ file with reverse reads.
+        - consensus-fq1:
+            required: true
+            help: Output FASTQ file with forward reads.
+        - consensus-fq2:
+            required: true
+            help: Output FASTQ file with reverse reads.
+        - max-umi-dist:
+            long: max-umi-dist
+            short: d
+            default_value: "1"
+            help: Maximum hamming distance between the UMIs of any pair of reads in the same cluster.
+        - umi-len:
+            long: umi-len
+            short: l
+            default_value: "8"
+            help: Length of UMI in reverse read.
+        - max-seq-dist:
+            long: max-seq-dist
+            short: D
+            default_value: "2"
+            help: Maximum hamming distance between the sequences of any pair of reads in the same cluster.

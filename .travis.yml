@@ -7,7 +7,7 @@ install:
   - . ~/miniconda3/etc/profile.d/conda.sh
   - conda config --set always_yes yes --set changeps1 False
   - conda create -q -n starcode starcode -c bioconda
-  - source activate starcode
+  - conda activate starcode
 
 
 cache: cargo

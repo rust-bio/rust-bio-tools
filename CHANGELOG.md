@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.7] - 2018-12-28
+## Changed
+- Handle missing values in vcf-to-txt.
+- Bug fixes.
+
+## [0.2.6] - 2018-07-04
+## Added
+- Support for Number="R" tag in VCF files.
+
 ## [0.2.5] - 2018-04-06
 ## Changed
 - Fixed various small bugs.

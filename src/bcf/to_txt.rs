@@ -21,11 +21,21 @@ impl Writer {
     }
 
     fn write_integer(&mut self, value: i32) -> Result<(), Box<Error>> {
-        self.write_field(format!("{}", value).as_bytes())
+        let fmt = if value.is_missing() {
+            "".to_owned()
+        } else {
+            format!("{}", value)
+        };
+        self.write_field(fmt.as_bytes())
     }
 
     fn write_float(&mut self, value: f32) -> Result<(), Box<Error>> {
-        self.write_field(format!("{}", value).as_bytes())
+        let fmt = if value.is_missing() {
+            "".to_owned()
+        } else {
+            format!("{}", value)
+        };
+        self.write_field(fmt.as_bytes())
     }
 
     fn write_flag(&mut self, value: bool) -> Result<(), Box<Error>> {

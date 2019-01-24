@@ -1,24 +1,22 @@
 use std::error::Error;
 use std::io;
-use std::str;
 use std::io::Write;
+use std::str;
 
 use itertools::Itertools;
 use rust_htslib::bcf;
 use rust_htslib::bcf::record::Numeric;
 
-
 pub struct Writer {
     inner: io::BufWriter<io::Stdout>,
-    field_count: usize
+    field_count: usize,
 }
-
 
 impl Writer {
     fn new(inner: io::BufWriter<io::Stdout>) -> Self {
         Writer {
             inner: inner,
-            field_count: 0
+            field_count: 0,
         }
     }
 
@@ -60,14 +58,12 @@ impl Writer {
     }
 }
 
-
 const HEADER_COMMON: &'static [u8] = b"VARIANT";
-
 
 pub fn to_txt(
     info_tags: &[&str],
     format_tags: &[&str],
-    show_genotypes: bool
+    show_genotypes: bool,
 ) -> Result<(), Box<Error>> {
     let mut reader = bcf::Reader::from_stdin()?;
     let mut writer = Writer::new(io::BufWriter::new(io::stdout()));
@@ -117,7 +113,11 @@ pub fn to_txt(
             }
         }
 
-        let alleles = record.alleles().into_iter().map(|a| a.to_owned()).collect_vec();
+        let alleles = record
+            .alleles()
+            .into_iter()
+            .map(|a| a.to_owned())
+            .collect_vec();
         for (i, allele) in alleles[1..].iter().enumerate() {
             try!(writer.write_field(reader.header().rid2name(record.rid().unwrap())));
             try!(writer.write_integer(record.pos() as i32 + 1));
@@ -125,34 +125,24 @@ pub fn to_txt(
             try!(writer.write_field(allele));
             match record.qual() {
                 q if q.is_missing() => try!(writer.write_field(b"")),
-                q => try!(writer.write_float(q))
+                q => try!(writer.write_float(q)),
             }
 
             for name in info_tags {
                 let _name = name.as_bytes();
                 if let Ok((tag_type, tag_length)) = reader.header().info_type(_name) {
-                    let get_idx = || {
-                        match tag_length {
-                            bcf::header::TagLength::Fixed => {
-                                Ok(0)
-                            },
-                            bcf::header::TagLength::AltAlleles => {
-                                Ok(i)
-                            },
-                            bcf::header::TagLength::Alleles => {
-                                Ok(i + 1)
-                            },
-                            bcf::header::TagLength::Variable => {
-                                Ok(0)
-                            },
-                            _ => Err(Box::new(ParseError::UnsupportedTagLength))
-                        }
+                    let get_idx = || match tag_length {
+                        bcf::header::TagLength::Fixed => Ok(0),
+                        bcf::header::TagLength::AltAlleles => Ok(i),
+                        bcf::header::TagLength::Alleles => Ok(i + 1),
+                        bcf::header::TagLength::Variable => Ok(0),
+                        _ => Err(Box::new(ParseError::UnsupportedTagLength)),
                     };
 
                     match tag_type {
                         bcf::header::TagType::Flag => {
                             try!(writer.write_flag(try!(record.info(_name).flag())));
-                        },
+                        }
                         bcf::header::TagType::Integer => {
                             let i = try!(get_idx());
                             if let Some(values) = try!(record.info(_name).integer()) {
@@ -160,7 +150,7 @@ pub fn to_txt(
                             } else {
                                 try!(writer.write_field(b""));
                             }
-                        },
+                        }
                         bcf::header::TagType::Float => {
                             let i = try!(get_idx());
                             if let Some(values) = try!(record.info(_name).float()) {
@@ -168,7 +158,7 @@ pub fn to_txt(
                             } else {
                                 try!(writer.write_field(b""));
                             }
-                        },
+                        }
                         bcf::header::TagType::String => {
                             let i = try!(get_idx());
                             if let Some(values) = try!(record.info(_name).string()) {
@@ -187,9 +177,9 @@ pub fn to_txt(
             let genotypes = if show_genotypes {
                 let genotypes = try!(record.genotypes());
                 Some(
-                    (0..reader.header().sample_count() as usize).map(|s| {
-                        format!("{}", genotypes.get(s))
-                    }).collect_vec()
+                    (0..reader.header().sample_count() as usize)
+                        .map(|s| format!("{}", genotypes.get(s)))
+                        .collect_vec(),
                 )
             } else {
                 None
@@ -203,28 +193,32 @@ pub fn to_txt(
                     let _name = name.as_bytes();
                     if let Ok((tag_type, tag_length)) = reader.header().format_type(_name) {
                         let i = match tag_length {
-                            bcf::header::TagLength::Fixed => {
-                                0
-                            },
-                            bcf::header::TagLength::AltAlleles => {
-                                i
-                            },
-                            bcf::header::TagLength::Alleles => {
-                                i + 1
-                            },
-                            _ => return Err(Box::new(ParseError::UnsupportedTagLength))
+                            bcf::header::TagLength::Fixed => 0,
+                            bcf::header::TagLength::AltAlleles => i,
+                            bcf::header::TagLength::Alleles => i + 1,
+                            _ => return Err(Box::new(ParseError::UnsupportedTagLength)),
                         };
 
                         match tag_type {
                             bcf::header::TagType::Flag => {
                                 panic!("there is no flag type for format");
-                            },
+                            }
                             bcf::header::TagType::Integer => {
-                                try!(writer.write_field(format!("{}", try!(record.format(_name).integer())[s][i]).as_bytes()));
-                            },
+                                try!(
+                                    writer.write_field(
+                                        format!("{}", try!(record.format(_name).integer())[s][i])
+                                            .as_bytes()
+                                    )
+                                );
+                            }
                             bcf::header::TagType::Float => {
-                                try!(writer.write_field(format!("{}", try!(record.format(_name).float())[s][i]).as_bytes()));
-                            },
+                                try!(
+                                    writer.write_field(
+                                        format!("{}", try!(record.format(_name).float())[s][i])
+                                            .as_bytes()
+                                    )
+                                );
+                            }
                             bcf::header::TagType::String => {
                                 try!(writer.write_field(try!(record.format(_name).string())[s]));
                             }
@@ -241,7 +235,6 @@ pub fn to_txt(
 
     Ok(())
 }
-
 
 quick_error! {
     #[derive(Debug)]

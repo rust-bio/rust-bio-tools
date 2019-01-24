@@ -1,33 +1,37 @@
-use std::io;
 use std::cmp;
 use std::error::Error;
+use std::io;
 
 use csv;
+use serde::Deserialize;
 
 use rust_htslib::bam;
 use rust_htslib::bam::Read;
 
-
-#[derive(RustcDecodable, Debug)]
+#[derive(Deserialize, Debug)]
 struct PosRecord {
     chrom: String,
-    pos: u32
+    pos: u32,
 }
-
 
 pub fn depth(
     bam_path: &str,
     max_read_length: u32,
     include_flags: u16,
     exclude_flags: u16,
-    min_mapq: u8) -> Result<(), Box<Error>>
-{
+    min_mapq: u8,
+) -> Result<(), Box<Error>> {
     let mut bam_reader = bam::IndexedReader::from_path(&bam_path)?;
     let bam_header = bam_reader.header().clone();
-    let mut pos_reader = csv::Reader::from_reader(io::stdin()).has_headers(false).delimiter(b'\t');
-    let mut csv_writer = csv::Writer::from_buffer(io::BufWriter::new(io::stdout())).delimiter(b'\t');
+    let mut pos_reader = csv::ReaderBuilder::new()
+        .has_headers(false)
+        .delimiter(b'\t')
+        .from_reader(io::stdin());
+    let mut csv_writer = csv::WriterBuilder::new()
+        .delimiter(b'\t')
+        .from_writer(io::BufWriter::new(io::stdout()));
 
-    for (i, record) in pos_reader.decode().enumerate() {
+    for (i, record) in pos_reader.deserialize().enumerate() {
         let record: PosRecord = record?;
 
         // jump to correct position
@@ -42,22 +46,24 @@ pub fn depth(
             covered = pileup.pos() == record.pos - 1;
 
             if covered {
-                let depth = pileup.alignments().filter(|alignment| {
-                    let record = alignment.record();
-                    let flags = record.flags();
-                    (!flags) & include_flags == 0 &&
-                    flags & exclude_flags == 0 &&
-                    record.mapq() >= min_mapq
-                }).count();
+                let depth = pileup
+                    .alignments()
+                    .filter(|alignment| {
+                        let record = alignment.record();
+                        let flags = record.flags();
+                        (!flags) & include_flags == 0
+                            && flags & exclude_flags == 0
+                            && record.mapq() >= min_mapq
+                    }).count();
 
-                try!(csv_writer.encode((&record.chrom, record.pos, depth)));
+                try!(csv_writer.serialize((&record.chrom, record.pos, depth)));
                 break;
             } else if pileup.pos() > record.pos {
                 break;
             }
         }
         if !covered {
-            try!(csv_writer.encode((&record.chrom, record.pos, 0)));
+            try!(csv_writer.serialize((&record.chrom, record.pos, 0)));
         }
 
         if (i + 1) % 100 == 0 {

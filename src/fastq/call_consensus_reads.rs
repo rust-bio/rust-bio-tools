@@ -248,7 +248,8 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
-        .spawn()?;
+        .spawn()
+        .expect("Error in starcode call. Starcode might not be installed.");
 
     let mut f_rec = fastq::Record::new();
     let mut r_rec = fastq::Record::new();

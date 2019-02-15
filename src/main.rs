@@ -1,3 +1,4 @@
+//! Documentation for Rust Bio Tools
 use clap::{load_yaml, value_t};
 use log::{error, LevelFilter};
 

@@ -233,6 +233,7 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
     fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual)
 }
 
+
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.
 ///
@@ -261,8 +262,8 @@ pub fn call_consensus_reads_from_paths(
             umi_dist,
         ),
         (true, true, false, false) => call_consensus_reads(
-            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).unwrap()),
-            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).unwrap()),
+            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq1")),
+            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq2")),
             &mut fastq::Writer::to_file(fq1_out)?,
             &mut fastq::Writer::to_file(fq2_out)?,
             umi_len,

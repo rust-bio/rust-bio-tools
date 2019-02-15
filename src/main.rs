@@ -1,3 +1,4 @@
+//! Documentation for Rust Bio Tools
 #[macro_use]
 extern crate log;
 extern crate fern;

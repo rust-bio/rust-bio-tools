@@ -1,3 +1,77 @@
+//! Tool remove PCR duplicates from UMI-tagged reads.
+//!
+//! This tool takes two FASTQ files (forward and reverse)
+//! and returns two FASTQ files in which all PCR duplicates
+//! have been merged into a consensus read.
+//! Duplicates are identified by a Unique Molecular Identifier (UMI).
+//!
+//! ## Requirements:
+//!
+//! * starcode
+//!
+//! 
+//! ## Usage:
+//!
+//! ```bash
+//! $ rbt call-consensus-reads \
+//!   <Path to FASTQ file with forward reads> \
+//!   <Path to FASTQ file with reverse reads> \
+//!   <Path for output forward FASTQ file> \
+//!   <Path for output reverse FASTQ file> \
+//!   -l <Length of UMI sequence> \
+//!   -D <Maximum distance between sequences in a cluster> \  # See step 1 below
+//!   -d <Maximum distance between UMIs in a cluster>   # See step 2 below
+//! ```
+//!
+//! ## Assumptions:
+//!
+//!  - Reads are of equal length
+//!  - UMI is the prefix of the reverse reads
+//!
+//! ## Workflow:
+//!
+//! The three main steps are:
+//!
+//! 1. Cluster all Reads by their sequence  
+//! 
+//!    1. Remove UMI sequence from reverse read (and save it for later use)
+//!    2. Concatenate forward and reverse sequence
+//!    3. Cluster by concatenated sequence using starcode
+//!
+//!        ```
+//!        Forward Read: [================]
+//!        Reverse Read: [(UMI)-----------]
+//!        Sequence for clustering: [================-----------]
+//!        ```
+//!   After this, each cluster contains reads with similar sequences,
+//!   but potentially different UMIs. Hence, each cluster contains candidates
+//!   for merging.
+//!
+//! 2. For each cluster from step one: Cluster all reads within the cluster
+//!    by their UMI (again, using starcode). Each of clusters generated in
+//!    This step contain reads with similar read sequences as well as
+//!    similar UMIs.
+//!    Hence, each (new) cluster contains reads with similar sequence and
+//!    UMI which can be merged into a consensus read as PCR duplicates.
+//!
+//! 3. For each cluster from step two: Compute a consensus sequence.
+//!
+//!    At each position in the read, all bases and quality values are used
+//!    to compute the base with Maximum a-posteriori probability (MAP).
+//!
+//!      1. For one position, compute the likelihood for the four alleles
+//!         A, C, G, and T, incorporating the number of bases as well as
+//!         their quality values.
+//!      2. Choose the allele with the largest likelihood for the consensus read.
+//!      3. Compute the quality value of the consensus read from the maximum posterior
+//!         probability used to select the allele.
+//! 
+//! 4. Write consensus reads to output file.
+//!
+//!
+//!
+// Since this is a binary crate, documentation needs to be compiled with this 'ancient incantation':
+// https://github.com/rust-lang/cargo/issues/1865#issuecomment-394179125
 use std::cmp;
 use std::error::Error;
 use std::fs;
@@ -111,7 +185,7 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
 
     for i in 0..seq_len {
         let likelihood = |allele: &u8| {
-            let mut lh = LogProb::ln_one();
+            let mut lh = LogProb::ln_one(); // posterior: log(P(theta)) = 1
             for rec in recs {
                 let q = LogProb::from(PHREDProb::from((rec.qual()[i] - 33) as f64));
                 lh += if *allele == rec.seq()[i].to_ascii_uppercase() {
@@ -123,14 +197,18 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
             lh
         };
 
+        // Maximum a-posteriori estimate for the consensus base.
+        // Find the allele (theta \in ACGT) with the highest likelihood
+        // given the bases at this position, weighted with their quality values
         let likelihoods = ALLELES.iter().map(&likelihood).collect_vec();
         let max_posterior = likelihoods
             .iter()
             .enumerate()
-            .max_by_key(|&(_, &lh)| NotNaN::new(*lh).unwrap())
+            .max_by_key(|&(_, &lh)| NotNaN::new(*lh).unwrap()) // argmax of MAP
             .unwrap()
             .0;
 
+        // 
         let marginal = LogProb::ln_sum_exp(&likelihoods);
         // new base: MAP
         consensus_seq.push(ALLELES[max_posterior]);

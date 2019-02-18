@@ -184,6 +184,13 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
     // ignore padded bases for consensus computation
 
     for i in 0..seq_len {
+        /// Compute the likelihood for the given allele and read position.
+        /// The allele (A, C, G, or T) is an explicit parameter,
+        /// the position i is captured by the closure.
+        ///
+        /// Likelihoods are managed in log space.
+        /// A matching base is scored with (1 - PHRED score), a mismatch
+        /// with PHRED score + confusion constant.
         let likelihood = |allele: &u8| {
             let mut lh = LogProb::ln_one(); // posterior: log(P(theta)) = 1
             for rec in recs {

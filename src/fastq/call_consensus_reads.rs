@@ -241,6 +241,18 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
 }
 
 
+// /// Return a FASTQ reader, either on a gzipped or on a plain file.
+// /// This would require the following to be implemented in Rust:
+// /// https://internals.rust-lang.org/t/extending-impl-trait-to-allow-multiple-return-types/7921
+// /// However, this will most likely never be the case.
+// pub fn open_reader(fq: &str) -> impl FastqRead {
+//     if fq.ends_with(".gz") {
+//         fastq::Reader::new(fs::File::open(fq).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq file"))
+//     } else {
+//         fastq::Reader::from_file(fq).expect("Couldn't read fq file")
+//     }
+// }
+
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.
 ///
@@ -257,7 +269,7 @@ pub fn call_consensus_reads_from_paths(
 ) -> Result<(), Box<dyn Error>> {
     eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
     eprintln!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
-
+    
     match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
         (false, false, false, false) => call_consensus_reads(
             &mut fastq::Reader::from_file(fq1)?,

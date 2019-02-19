@@ -81,6 +81,7 @@ use std::mem;
 use std::process::{Command, Stdio};
 use std::str;
 use tempfile::tempdir;
+use rand::{thread_rng, Rng};
 
 use bio::io::fastq;
 use bio::io::fastq::FastqRead;
@@ -91,7 +92,7 @@ use flate2::write::GzEncoder;
 use flate2::Compression;
 use itertools::Itertools;
 use ordered_float::NotNaN;
-use rocksdb::DB;
+use rocksdb::{DB, Options};
 use serde_json;
 use uuid::Uuid;
 
@@ -113,15 +114,29 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<Error>> {
 #[derive(Debug)]
 pub struct FASTQStorage {
     db: DB,
+    storage_dir: String,
 }
 
 impl FASTQStorage {
     /// Create a new FASTQStorage using a Rocksdb database
     /// that maps read indices to read seqeunces.
     pub fn new() -> Result<Self, Box<Error>> {
-        let storage_dir = tempdir()?;
+        // tempdir does not play nicely with the rocksdb
+        // for bigger input data sets parts of the index files go missing
+        // resulting in the error:
+        // IO error: While open a file for appending: /tmp/<tmppath>/db/000006.log: No such file or directory
+        // So we have to manage the tempdir outselves
+        let uid = rand::thread_rng()
+            .gen_ascii_chars()
+            .take(20)
+            .collect::<String>();
+        let tmp_path = format!("/tmp/{}", uid.clone());
+        let storage_dir = std::path::Path::new(&tmp_path);
+        // eprintln!("Writing temp files to {}", tmp_path);
+        
         Ok(FASTQStorage {
-            db: DB::open_default(storage_dir.path().join("db"))?,
+            db: DB::open_default(storage_dir.join("db"))?,
+            storage_dir: tmp_path.clone(),
         })
     }
 
@@ -149,6 +164,14 @@ impl FASTQStorage {
         )?)
     }
 }
+
+impl Drop for FASTQStorage {
+    /// Make sure the database files is deleted, when the read storage leaves memory.
+    fn drop(&mut self) {
+        std::fs::remove_dir_all(self.storage_dir.clone()).expect("Failed to delete temporary database");
+    }
+}
+
 
 const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
 
@@ -245,18 +268,6 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
     )
 }
 
-
-// /// Return a FASTQ reader, either on a gzipped or on a plain file.
-// /// This would require the following to be implemented in Rust:
-// /// https://internals.rust-lang.org/t/extending-impl-trait-to-allow-multiple-return-types/7921
-// /// However, this will most likely never be the case.
-// pub fn open_reader(fq: &str) -> impl FastqRead {
-//     if fq.ends_with(".gz") {
-//         fastq::Reader::new(fs::File::open(fq).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq file"))
-//     } else {
-//         fastq::Reader::from_file(fq).expect("Couldn't read fq file")
-//     }
-// }
 
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.

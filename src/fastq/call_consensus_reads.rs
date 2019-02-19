@@ -288,10 +288,10 @@ pub fn call_consensus_reads_from_paths(
     
     match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
         (false, false, false, false) => call_consensus_reads(
-            &mut fastq::Reader::from_file(fq1)?,
-            &mut fastq::Reader::from_file(fq2)?,
-            &mut fastq::Writer::to_file(fq1_out)?,
-            &mut fastq::Writer::to_file(fq2_out)?,
+            &mut fastq::Reader::from_file(fq1).expect("Coulnd't open input fq1"),
+            &mut fastq::Reader::from_file(fq2).expect("Coulnd't open input fq2"),
+            &mut fastq::Writer::to_file(fq1_out).expect("Coulnd't open output fq1"),
+            &mut fastq::Writer::to_file(fq2_out).expect("Coulnd't open output fq2"),
             umi_len,
             seq_dist,
             umi_dist,
@@ -299,15 +299,15 @@ pub fn call_consensus_reads_from_paths(
         (true, true, false, false) => call_consensus_reads(
             &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq1")),
             &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq2")),
-            &mut fastq::Writer::to_file(fq1_out)?,
-            &mut fastq::Writer::to_file(fq2_out)?,
+            &mut fastq::Writer::to_file(fq1_out).expect("Coulnd't open output fq1"),
+            &mut fastq::Writer::to_file(fq2_out).expect("Coulnd't open output fq2"),
             umi_len,
             seq_dist,
             umi_dist,
         ),
         (false, false, true, true) => call_consensus_reads(
-            &mut fastq::Reader::from_file(fq1)?,
-            &mut fastq::Reader::from_file(fq2)?,
+            &mut fastq::Reader::from_file(fq1).expect("Coulnd't open input fq1"),
+            &mut fastq::Reader::from_file(fq2).expect("Coulnd't open input fq2"),
             &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out).expect("Couldn't open fq1_out"), Compression::default())),
             &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out).expect("Couldn't open fq2_out"), Compression::default())),
             umi_len,
@@ -368,7 +368,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
     let mut i = 0;
 
     let mut umis = Vec::new();
-
+    eprintln!("First pass");
     loop {
         fq1_reader.read(&mut f_rec)?;
         fq2_reader.read(&mut r_rec)?;
@@ -382,15 +382,19 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         umis.push(umi);
 
         read_storage.put(i, &f_rec, &r_rec)?;
-
+        
         let seq = [f_rec.seq(), &r_rec.seq()[umi_len..]].concat();
         seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
         seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
         i += 1;
     }
+    eprintln!(" ... ");
     seq_cluster.stdin.as_mut().unwrap().flush()?;
     drop(seq_cluster.stdin.take());
+    eprintln!("  DONE");
 
+    eprint!("Read starcode results");
+    let mut j = 0;
     // read clusters identified by the first starcode run
     for record in csv::ReaderBuilder::new()
         .delimiter(b'\t')
@@ -398,12 +402,15 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         .from_reader(seq_cluster.stdout.as_mut().unwrap())
         .records()
     {
+        if j % 100 == 0 {
+            eprintln!("Processing cluster {}", j);
+        }
         let seqids = parse_cluster(record?)?;
         // cluster within in this cluster by umi
         let mut umi_cluster = Command::new("starcode")
-            .arg("--dist")
+            .arg("--distance")
             .arg(format!("{}", umi_dist))
-            .arg("--seq-id")
+            // .arg("--seq-id")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -450,7 +457,8 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
                 fq2_writer.write_record(&r_recs[0])?;
             }
         }
+        j += 1;
     }
-
+    eprintln!("  DONE");
     Ok(())
 }

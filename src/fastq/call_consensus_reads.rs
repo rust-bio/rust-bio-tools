@@ -408,9 +408,9 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         let seqids = parse_cluster(record?)?;
         // cluster within in this cluster by umi
         let mut umi_cluster = Command::new("starcode")
-            .arg("--distance")
+            .arg("--dist")
             .arg(format!("{}", umi_dist))
-            // .arg("--seq-id")
+            .arg("--seq-id")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())

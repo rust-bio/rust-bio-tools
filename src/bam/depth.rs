@@ -56,14 +56,14 @@ pub fn depth(
                             && record.mapq() >= min_mapq
                     }).count();
 
-                try!(csv_writer.serialize((&record.chrom, record.pos, depth)));
+                r#try!(csv_writer.serialize((&record.chrom, record.pos, depth)));
                 break;
             } else if pileup.pos() > record.pos {
                 break;
             }
         }
         if !covered {
-            try!(csv_writer.serialize((&record.chrom, record.pos, 0)));
+            r#try!(csv_writer.serialize((&record.chrom, record.pos, 0)));
         }
 
         if (i + 1) % 100 == 0 {

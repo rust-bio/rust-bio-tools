@@ -17,12 +17,12 @@ pub fn filter(ids_path: &str) -> Result<(), Box<Error>> {
     let mut record = fastq::Record::new();
 
     loop {
-        try!(reader.read(&mut record));
+        r#try!(reader.read(&mut record));
         if record.is_empty() {
             return Ok(());
         }
         if !ids.contains(record.id()) {
-            try!(writer.write_record(&record));
+            r#try!(writer.write_record(&record));
         }
     }
 }

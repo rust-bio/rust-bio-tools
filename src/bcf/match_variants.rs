@@ -163,7 +163,7 @@ impl Variant {
                 };
                 VariantType::Deletion(svlen)
             } else {
-                warn!("Unsupported variant {}", try!(str::from_utf8(&svtype)));
+                warn!("Unsupported variant {}", r#try!(str::from_utf8(&svtype)));
                 VariantType::Unsupported
             }]
         } else {
@@ -178,8 +178,8 @@ impl Variant {
                 } else {
                     warn!(
                         "Unsupported variant {} -> {}",
-                        try!(str::from_utf8(refallele)),
-                        try!(str::from_utf8(a))
+                        r#try!(str::from_utf8(refallele)),
+                        r#try!(str::from_utf8(a))
                     );
                     VariantType::Unsupported
                 });

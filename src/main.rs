@@ -1,31 +1,14 @@
 #[macro_use]
-extern crate log;
-use fern;
-#[macro_use]
 extern crate clap;
-
-use csv;
-
-
-
 #[macro_use]
 extern crate quick_error;
-
-
-
-
-
 #[macro_use]
 extern crate serde;
 
+use log::{LevelFilter, error};
 
-
-use serde_json;
-
-
-
+use fern;
 use std::process;
-
 use clap::App;
 use itertools::Itertools;
 
@@ -42,9 +25,9 @@ fn main() {
     fern::Dispatch::new()
         .format(|out, message, _| out.finish(format_args!("{}", message)))
         .level(if matches.is_present("verbose") {
-            log::LogLevelFilter::Debug
+            LevelFilter::Debug
         } else {
-            log::LogLevelFilter::Info
+            LevelFilter::Info
         }).chain(std::io::stderr())
         .apply()
         .unwrap();

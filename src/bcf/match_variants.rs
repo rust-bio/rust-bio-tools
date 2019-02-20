@@ -1,6 +1,7 @@
 use std::collections::{btree_map, BTreeMap, HashMap};
 use std::error::Error;
 use std::str;
+use log::{warn, info};
 
 use itertools::Itertools;
 use rust_htslib::bcf;

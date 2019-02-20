@@ -1,6 +1,7 @@
 use std::cmp;
 use std::error::Error;
 use std::io;
+use log::info;
 
 use csv;
 use serde::Deserialize;

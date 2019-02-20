@@ -1,7 +1,7 @@
+use log::info;
 use std::cmp;
 use std::error::Error;
 use std::io;
-use log::info;
 
 use csv;
 use serde::Deserialize;
@@ -55,7 +55,8 @@ pub fn depth(
                         (!flags) & include_flags == 0
                             && flags & exclude_flags == 0
                             && record.mapq() >= min_mapq
-                    }).count();
+                    })
+                    .count();
 
                 r#try!(csv_writer.serialize((&record.chrom, record.pos, depth)));
                 break;

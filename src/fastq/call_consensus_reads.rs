@@ -151,13 +151,8 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
         "{}_consensus-read-from:{}",
         uuid,
         seqids.iter().map(|i| format!("{}", i)).join(",")
-        );
-    fastq::Record::with_attrs(
-        &name,
-        None,
-        &consensus_seq,
-        &consensus_qual,
-    )
+    );
+    fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual)
 }
 
 /// Build readers for the given input and output FASTQ files and pass them to

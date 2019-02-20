@@ -1,8 +1,8 @@
+use log::{info, warn};
+use quick_error::quick_error;
 use std::collections::{btree_map, BTreeMap, HashMap};
 use std::error::Error;
 use std::str;
-use log::{warn, info};
-use quick_error::quick_error;
 
 use itertools::Itertools;
 use rust_htslib::bcf;
@@ -51,7 +51,11 @@ impl VarIndex {
     }
 }
 
-pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Result<(), Box<dyn Error>> {
+pub fn match_variants(
+    matchbcf: &str,
+    max_dist: u32,
+    max_len_diff: u32,
+) -> Result<(), Box<dyn Error>> {
     let mut inbcf = bcf::Reader::from_stdin()?;
     let mut header = bcf::Header::with_template(inbcf.header());
 
@@ -93,7 +97,8 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
                         }
                     }
                     -1
-                }).collect_vec();
+                })
+                .collect_vec();
 
             rec.push_info_integer(b"MATCHING", &matching)?;
             outbcf.write(&rec)?;

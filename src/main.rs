@@ -1,10 +1,10 @@
-use log::{LevelFilter, error};
 use clap::{load_yaml, value_t};
+use log::{error, LevelFilter};
 
-use fern;
-use std::process;
 use clap::App;
+use fern;
 use itertools::Itertools;
+use std::process;
 
 pub mod bam;
 pub mod bcf;
@@ -22,7 +22,8 @@ fn main() {
             LevelFilter::Debug
         } else {
             LevelFilter::Info
-        }).chain(std::io::stderr())
+        })
+        .chain(std::io::stderr())
         .apply()
         .unwrap();
 

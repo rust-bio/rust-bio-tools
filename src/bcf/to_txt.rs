@@ -1,8 +1,8 @@
+use quick_error::quick_error;
 use std::error::Error;
 use std::io;
 use std::io::Write;
 use std::str;
-use quick_error::quick_error;
 
 use itertools::Itertools;
 use rust_htslib::bcf;
@@ -205,20 +205,16 @@ pub fn to_txt(
                                 panic!("there is no flag type for format");
                             }
                             bcf::header::TagType::Integer => {
-                                r#try!(
-                                    writer.write_field(
-                                        format!("{}", r#try!(record.format(_name).integer())[s][i])
-                                            .as_bytes()
-                                    )
-                                );
+                                r#try!(writer.write_field(
+                                    format!("{}", r#try!(record.format(_name).integer())[s][i])
+                                        .as_bytes()
+                                ));
                             }
                             bcf::header::TagType::Float => {
-                                r#try!(
-                                    writer.write_field(
-                                        format!("{}", r#try!(record.format(_name).float())[s][i])
-                                            .as_bytes()
-                                    )
-                                );
+                                r#try!(writer.write_field(
+                                    format!("{}", r#try!(record.format(_name).float())[s][i])
+                                        .as_bytes()
+                                ));
                             }
                             bcf::header::TagType::String => {
                                 r#try!(writer.write_field(r#try!(record.format(_name).string())[s]));

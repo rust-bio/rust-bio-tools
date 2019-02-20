@@ -1,8 +1,8 @@
 use bio::io::fastq;
 use bio::io::fastq::FastqRead;
+use log::info;
 use std::error::Error;
 use std::io;
-use log::info;
 
 pub fn split(out_paths: &[&str]) -> Result<(), Box<dyn Error>> {
     let mut reader = fastq::Reader::new(io::stdin());

@@ -1,8 +1,3 @@
-#[macro_use]
-extern crate quick_error;
-#[macro_use]
-extern crate serde;
-
 use log::{LevelFilter, error};
 use clap::{load_yaml, value_t};
 

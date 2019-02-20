@@ -2,6 +2,7 @@ use std::collections::{btree_map, BTreeMap, HashMap};
 use std::error::Error;
 use std::str;
 use log::{warn, info};
+use quick_error::quick_error;
 
 use itertools::Itertools;
 use rust_htslib::bcf;

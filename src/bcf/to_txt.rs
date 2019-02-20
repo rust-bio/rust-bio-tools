@@ -2,6 +2,7 @@ use std::error::Error;
 use std::io;
 use std::io::Write;
 use std::str;
+use quick_error::quick_error;
 
 use itertools::Itertools;
 use rust_htslib::bcf;

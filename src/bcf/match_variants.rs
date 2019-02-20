@@ -39,8 +39,8 @@ impl VarIndex {
         }
 
         Ok(VarIndex {
-            inner: inner,
-            max_dist: max_dist,
+            inner,
+            max_dist,
         })
     }
 
@@ -196,7 +196,7 @@ impl Variant {
         let var = Variant {
             id: *id,
             rid: rec.rid().unwrap(),
-            pos: pos,
+            pos,
             alleles: _alleles,
         };
         *id += alleles.len() as u32 - 1;

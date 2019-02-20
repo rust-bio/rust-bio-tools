@@ -16,7 +16,7 @@ pub struct Writer {
 impl Writer {
     fn new(inner: io::BufWriter<io::Stdout>) -> Self {
         Writer {
-            inner: inner,
+            inner,
             field_count: 0,
         }
     }

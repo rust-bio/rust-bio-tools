@@ -96,6 +96,9 @@ use rocksdb::{DB, Options};
 use serde_json;
 use uuid::Uuid;
 
+use std::fs::File;
+use std::os::unix::io::{FromRawFd, IntoRawFd};
+
 const ALLELES: &'static [u8] = b"ACGT";
 
 /// Interpret a cluster returned by starcode
@@ -350,12 +353,15 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
     // Note: If starcode is not installed, this throws a
     // hard to interpret error:
     // (No such file or directory (os error 2))
+
+    // let file = File::create("starcode.out").expect("couldn't create file"); // file output for debugging
     let mut seq_cluster = Command::new("starcode")
         .arg("--dist")
         .arg(format!("{}", seq_dist))
         .arg("--seq-id")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        // .stdout(unsafe { Stdio::from_raw_fd(file.into_raw_fd()) }) // file output for debugging
         .stderr(Stdio::piped())
         .spawn()
         .expect("Error in starcode call. Starcode might not be installed.");
@@ -388,11 +394,16 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
         i += 1;
     }
-    eprintln!(" ... ");
+    
     seq_cluster.stdin.as_mut().unwrap().flush()?;
     drop(seq_cluster.stdin.take());
-    eprintln!("  DONE");
 
+    match seq_cluster.wait().expect("process did not even start").code() {
+        Some(0) => println!("Starcode finished successfully."),
+        Some(s) => println!("Failed with error code {}", s),
+        None => println!("Starcode was terminated by signal"),
+    }
+    
     eprint!("Read starcode results");
     let mut j = 0;
     // read clusters identified by the first starcode run

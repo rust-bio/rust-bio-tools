@@ -11,7 +11,7 @@ pub struct VarIndex {
 }
 
 impl VarIndex {
-    pub fn new(mut reader: bcf::Reader, max_dist: u32) -> Result<Self, Box<Error>> {
+    pub fn new(mut reader: bcf::Reader, max_dist: u32) -> Result<Self, Box<dyn Error>> {
         let mut inner = HashMap::new();
         let mut i = 0;
         let mut rec = bcf::Record::new();
@@ -42,14 +42,14 @@ impl VarIndex {
         })
     }
 
-    pub fn range(&self, chrom: &[u8], pos: u32) -> Option<btree_map::Range<u32, Vec<Variant>>> {
+    pub fn range(&self, chrom: &[u8], pos: u32) -> Option<btree_map::Range<'_, u32, Vec<Variant>>> {
         self.inner
             .get(chrom)
             .map(|recs| recs.range(pos.saturating_sub(self.max_dist)..pos + self.max_dist))
     }
 }
 
-pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Result<(), Box<Error>> {
+pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Result<(), Box<dyn Error>> {
     let mut inbcf = bcf::Reader::from_stdin()?;
     let mut header = bcf::Header::with_template(inbcf.header());
 
@@ -117,7 +117,7 @@ pub struct Variant {
 }
 
 impl Variant {
-    pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self, Box<Error>> {
+    pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self, Box<dyn Error>> {
         let pos = rec.pos();
 
         let svlen = if let Ok(Some(svlen)) = rec.info(b"SVLEN").integer() {

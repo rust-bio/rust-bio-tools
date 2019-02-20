@@ -6,7 +6,7 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::iter::FromIterator;
 
-pub fn filter(ids_path: &str) -> Result<(), Box<Error>> {
+pub fn filter(ids_path: &str) -> Result<(), Box<dyn Error>> {
     let mut reader = fastq::Reader::new(io::stdin());
     let mut writer = fastq::Writer::new(io::stdout());
     let f = File::open(ids_path)?;

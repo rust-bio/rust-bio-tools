@@ -3,7 +3,7 @@ use bio::io::fastq::FastqRead;
 use std::error::Error;
 use std::io;
 
-pub fn split(out_paths: &[&str]) -> Result<(), Box<Error>> {
+pub fn split(out_paths: &[&str]) -> Result<(), Box<dyn Error>> {
     let mut reader = fastq::Reader::new(io::stdin());
     let mut writers = Vec::new();
     for path in out_paths {

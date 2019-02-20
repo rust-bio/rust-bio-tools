@@ -5,7 +5,7 @@ use rust_htslib::prelude::*;
 use std::error::Error;
 use std::f32;
 
-pub fn calculate_baf() -> Result<(), Box<Error>> {
+pub fn calculate_baf() -> Result<(), Box<dyn Error>> {
     let mut reader = bcf::Reader::from_stdin()?;
 
     let mut header = bcf::Header::with_template(reader.header());

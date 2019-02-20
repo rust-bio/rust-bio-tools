@@ -20,7 +20,7 @@ pub fn depth(
     include_flags: u16,
     exclude_flags: u16,
     min_mapq: u8,
-) -> Result<(), Box<Error>> {
+) -> Result<(), Box<dyn Error>> {
     let mut bam_reader = bam::IndexedReader::from_path(&bam_path)?;
     let bam_header = bam_reader.header().clone();
     let mut pos_reader = csv::ReaderBuilder::new()

@@ -20,7 +20,7 @@ impl Writer {
         }
     }
 
-    fn write_integer(&mut self, value: i32) -> Result<(), Box<Error>> {
+    fn write_integer(&mut self, value: i32) -> Result<(), Box<dyn Error>> {
         let fmt = if value.is_missing() {
             "".to_owned()
         } else {
@@ -29,7 +29,7 @@ impl Writer {
         self.write_field(fmt.as_bytes())
     }
 
-    fn write_float(&mut self, value: f32) -> Result<(), Box<Error>> {
+    fn write_float(&mut self, value: f32) -> Result<(), Box<dyn Error>> {
         let fmt = if value.is_missing() {
             "".to_owned()
         } else {
@@ -38,11 +38,11 @@ impl Writer {
         self.write_field(fmt.as_bytes())
     }
 
-    fn write_flag(&mut self, value: bool) -> Result<(), Box<Error>> {
+    fn write_flag(&mut self, value: bool) -> Result<(), Box<dyn Error>> {
         self.write_field(format!("{}", value).as_bytes())
     }
 
-    fn write_field(&mut self, value: &[u8]) -> Result<(), Box<Error>> {
+    fn write_field(&mut self, value: &[u8]) -> Result<(), Box<dyn Error>> {
         if self.field_count > 0 {
             r#try!(self.inner.write(b"\t"));
         }
@@ -51,7 +51,7 @@ impl Writer {
         Ok(())
     }
 
-    fn newline(&mut self) -> Result<(), Box<Error>> {
+    fn newline(&mut self) -> Result<(), Box<dyn Error>> {
         r#try!(self.inner.write(b"\n"));
         self.field_count = 0;
         Ok(())
@@ -64,7 +64,7 @@ pub fn to_txt(
     info_tags: &[&str],
     format_tags: &[&str],
     show_genotypes: bool,
-) -> Result<(), Box<Error>> {
+) -> Result<(), Box<dyn Error>> {
     let mut reader = bcf::Reader::from_stdin()?;
     let mut writer = Writer::new(io::BufWriter::new(io::stdout()));
 

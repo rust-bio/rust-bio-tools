@@ -1,28 +1,28 @@
 #[macro_use]
 extern crate log;
-extern crate fern;
+use fern;
 #[macro_use]
 extern crate clap;
-extern crate bio;
-extern crate csv;
-extern crate itertools;
-extern crate rust_htslib;
-extern crate rustc_serialize;
+
+use csv;
+
+
+
 #[macro_use]
 extern crate quick_error;
-extern crate cogset;
-extern crate custom_derive;
-extern crate newtype_derive;
-extern crate num_bigint;
-extern crate rand;
+
+
+
+
+
 #[macro_use]
 extern crate serde;
-extern crate flate2;
-extern crate ordered_float;
-extern crate rocksdb;
-extern crate serde_json;
-extern crate tempfile;
-extern crate uuid;
+
+
+
+use serde_json;
+
+
 
 use std::process;
 

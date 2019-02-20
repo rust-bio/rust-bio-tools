@@ -398,11 +398,11 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
     seq_cluster.stdin.as_mut().unwrap().flush()?;
     drop(seq_cluster.stdin.take());
 
-    match seq_cluster.wait().expect("process did not even start").code() {
-        Some(0) => println!("Starcode finished successfully."),
-        Some(s) => println!("Failed with error code {}", s),
-        None => println!("Starcode was terminated by signal"),
-    }
+    // match seq_cluster.wait().expect("process did not even start").code() {
+    //     Some(0) => println!("Starcode finished successfully."),
+    //     Some(s) => println!("Failed with error code {}", s),
+    //     None => println!("Starcode was terminated by signal"),
+    // }
     
     eprint!("Read starcode results");
     let mut j = 0;

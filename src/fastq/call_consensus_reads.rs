@@ -117,29 +117,19 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<Error>> {
 #[derive(Debug)]
 pub struct FASTQStorage {
     db: DB,
-    storage_dir: String,
+    storage_dir: std::path::PathBuf,
 }
 
 impl FASTQStorage {
     /// Create a new FASTQStorage using a Rocksdb database
     /// that maps read indices to read seqeunces.
     pub fn new() -> Result<Self, Box<Error>> {
-        // tempdir does not play nicely with the rocksdb
-        // for bigger input data sets parts of the index files go missing
-        // resulting in the error:
-        // IO error: While open a file for appending: /tmp/<tmppath>/db/000006.log: No such file or directory
-        // So we have to manage the tempdir outselves
-        let uid = rand::thread_rng()
-            .gen_ascii_chars()
-            .take(20)
-            .collect::<String>();
-        let tmp_path = format!("/tmp/{}", uid.clone());
-        let storage_dir = std::path::Path::new(&tmp_path);
-        // eprintln!("Writing temp files to {}", tmp_path);
-        
+        // Save storage_dir to prevent it from leaving scope and
+        // in turn deleting the tempdir
+        let storage_dir = tempdir()?.path().join("db");
         Ok(FASTQStorage {
-            db: DB::open_default(storage_dir.join("db"))?,
-            storage_dir: tmp_path.clone(),
+            db: DB::open_default(storage_dir.clone())?,
+            storage_dir,
         })
     }
 
@@ -168,12 +158,12 @@ impl FASTQStorage {
     }
 }
 
-impl Drop for FASTQStorage {
-    /// Make sure the database files is deleted, when the read storage leaves memory.
-    fn drop(&mut self) {
-        std::fs::remove_dir_all(self.storage_dir.clone()).expect("Failed to delete temporary database");
-    }
-}
+// impl Drop for FASTQStorage {
+//     /// Make sure the database files is deleted, when the read storage leaves memory.
+//     fn drop(&mut self) {
+//         std::fs::remove_dir_all(self.storage_dir.clone()).expect("Failed to delete temporary database");
+//     }
+// }
 
 
 const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
@@ -469,6 +459,11 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
             }
         }
         j += 1;
+        match umi_cluster.wait().expect("process did not even start").code() {
+            Some(0) => (),
+            Some(s) => println!("Starcode failed with error code {}", s),
+            None => println!("Starcode was terminated by signal"),
+        }
     }
     eprintln!("  DONE");
     Ok(())

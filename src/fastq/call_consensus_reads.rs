@@ -445,6 +445,5 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
             None => println!("Starcode was terminated by signal"),
         }
     }
-    eprintln!("  DONE");
     Ok(())
 }

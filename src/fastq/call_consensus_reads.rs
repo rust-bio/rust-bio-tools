@@ -116,17 +116,19 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
 #[derive(Debug)]
 pub struct FASTQStorage {
     db: DB,
-    storage_dir: String,
+    storage_dir: std::path::PathBuf,
 }
 
 impl FASTQStorage {
     /// Create a new FASTQStorage using a Rocksdb database
     /// that maps read indices to read seqeunces.
-    pub fn new() -> Result<Self, Box<dyn Error>> {
-        let storage_dir = tempdir()?;
+    pub fn new() -> Result<Self, Box<Error>> {
+        // Save storage_dir to prevent it from leaving scope and
+        // in turn deleting the tempdir
+        let storage_dir = tempdir()?.path().join("db");
         Ok(FASTQStorage {
-            db: DB::open_default(storage_dir.join("db"))?,
-            storage_dir: tmp_path.clone(),
+            db: DB::open_default(storage_dir.clone())?,
+            storage_dir,
         })
     }
 
@@ -443,6 +445,11 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
             }
         }
         j += 1;
+        match umi_cluster.wait().expect("process did not even start").code() {
+            Some(0) => (),
+            Some(s) => println!("Starcode failed with error code {}", s),
+            None => println!("Starcode was terminated by signal"),
+        }
     }
     eprintln!("  DONE");
     Ok(())

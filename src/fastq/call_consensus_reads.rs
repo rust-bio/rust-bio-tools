@@ -95,9 +95,6 @@ use rocksdb::DB;
 use serde_json;
 use uuid::Uuid;
 
-use std::fs::File;
-use std::os::unix::io::{FromRawFd, IntoRawFd};
-
 const ALLELES: &'static [u8] = b"ACGT";
 
 /// Interpret a cluster returned by starcode
@@ -361,7 +358,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         umis.push(umi);
 
         read_storage.put(i, &f_rec, &r_rec)?;
-        
+
         let seq = [f_rec.seq(), &r_rec.seq()[umi_len..]].concat();
         seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
         seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
@@ -442,5 +439,6 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
             None => println!("Starcode was terminated by signal"),
         }
     }
+
     Ok(())
 }

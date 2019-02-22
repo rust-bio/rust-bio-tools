@@ -24,7 +24,7 @@ use uuid::Uuid;
 const ALLELES: &'static [u8] = b"ACGT";
 
 /// Interpret a cluster returned by starcode
-fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<Error>> {
+fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>> {
     let seqids = &record[2];
     Ok(csv::ReaderBuilder::new()
         .delimiter(b',')
@@ -44,7 +44,7 @@ pub struct FASTQStorage {
 impl FASTQStorage {
     /// Create a new FASTQStorage using a Rocksdb database
     /// that maps read indices to read seqeunces.
-    pub fn new() -> Result<Self, Box<Error>> {
+    pub fn new() -> Result<Self, Box<dyn Error>> {
         let storage_dir = tempdir()?;
         Ok(FASTQStorage {
             db: DB::open_default(storage_dir.path().join("db"))?,
@@ -61,7 +61,7 @@ impl FASTQStorage {
         i: usize,
         f_rec: &fastq::Record,
         r_rec: &fastq::Record,
-    ) -> Result<(), Box<Error>> {
+    ) -> Result<(), Box<dyn Error>> {
         Ok(self.db.put(
             &Self::as_key(i as u64),
             serde_json::to_string(&(f_rec, r_rec))?.as_bytes(),
@@ -69,7 +69,7 @@ impl FASTQStorage {
     }
 
     /// Retrieve the read sequence of the read with index `i`.
-    pub fn get(&self, i: usize) -> Result<(fastq::Record, fastq::Record), Box<Error>> {
+    pub fn get(&self, i: usize) -> Result<(fastq::Record, fastq::Record), Box<dyn Error>> {
         Ok(serde_json::from_str(
             str::from_utf8(&self.db.get(&Self::as_key(i as u64))?.unwrap()).unwrap(),
         )?)
@@ -151,13 +151,8 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
         "{}_consensus-read-from:{}",
         uuid,
         seqids.iter().map(|i| format!("{}", i)).join(",")
-        );
-    fastq::Record::with_attrs(
-        &name,
-        None,
-        &consensus_seq,
-        &consensus_qual,
-    )
+    );
+    fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual)
 }
 
 /// Build readers for the given input and output FASTQ files and pass them to
@@ -173,7 +168,7 @@ pub fn call_consensus_reads_from_paths(
     umi_len: usize,
     seq_dist: usize,
     umi_dist: usize,
-) -> Result<(), Box<Error>> {
+) -> Result<(), Box<dyn Error>> {
     eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
     eprintln!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
 
@@ -236,7 +231,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
     umi_len: usize,
     seq_dist: usize,
     umi_dist: usize,
-) -> Result<(), Box<Error>> {
+) -> Result<(), Box<dyn Error>> {
     // cluster by sequence
     // Note: If starcode is not installed, this throws a
     // hard to interpret error:

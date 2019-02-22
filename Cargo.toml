@@ -5,13 +5,14 @@ authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>", "Erik Clarke <e
 description = "A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio."
 license-file = "LICENSE.md"
 homepage = "https://github.com/rust-bio/rust-bio-tools"
+edition = "2018"
 
 [dependencies]
 bio = "0.25"
 clap = { version = "2.27", features = ["yaml", "color", "suggestions"]}
 itertools = "0.6"
-log = "0.3"
-fern = "0.4"
+log = "0.4.6"
+fern = "0.5.7"
 rust-htslib = "0.15"
 csv = "1.0.2"
 rustc-serialize = "0.3"

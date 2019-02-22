@@ -369,7 +369,6 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
     drop(seq_cluster.stdin.take());
     
     eprint!("Read starcode results");
-    let mut j = 0;
     // read clusters identified by the first starcode run
     for record in csv::ReaderBuilder::new()
         .delimiter(b'\t')
@@ -377,9 +376,6 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
         .from_reader(seq_cluster.stdout.as_mut().unwrap())
         .records()
     {
-        if j % 100 == 0 {
-            eprintln!("Processing cluster {}", j);
-        }
         let seqids = parse_cluster(record?)?;
         // cluster within in this cluster by umi
         let mut umi_cluster = Command::new("starcode")
@@ -432,7 +428,7 @@ pub fn call_consensus_reads<R: io::Read, W: io::Write>(
                 fq2_writer.write_record(&r_recs[0])?;
             }
         }
-        j += 1;
+
         match umi_cluster.wait().expect("process did not even start").code() {
             Some(0) => (),
             Some(s) => println!("Starcode failed with error code {}", s),

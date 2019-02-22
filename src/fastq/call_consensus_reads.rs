@@ -9,7 +9,7 @@
 //!
 //! * starcode
 //!
-//! 
+//!
 //! ## Usage:
 //!
 //! ```bash
@@ -33,7 +33,7 @@
 //! The three main steps are:
 //!
 //! 1. Cluster all Reads by their sequence  
-//! 
+//!
 //!    1. Remove UMI sequence from reverse read (and save it for later use)
 //!    2. Concatenate forward and reverse sequence
 //!    3. Cluster by concatenated sequence using starcode
@@ -65,7 +65,7 @@
 //!      2. Choose the allele with the largest likelihood for the consensus read.
 //!      3. Compute the quality value of the consensus read from the maximum posterior
 //!         probability used to select the allele.
-//! 
+//!
 //! 4. Write consensus reads to output file.
 //!
 //!
@@ -188,6 +188,7 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
     // ignore padded bases for consensus computation
 
     for i in 0..seq_len {
+        #[allow(unused_doc_comments)]
         /// Compute the likelihood for the given allele and read position.
         /// The allele (A, C, G, or T) is an explicit parameter,
         /// the position i is captured by the closure.
@@ -219,7 +220,7 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
             .unwrap()
             .0;
 
-        // 
+        //
         let marginal = LogProb::ln_sum_exp(&likelihoods);
         // new base: MAP
         consensus_seq.push(ALLELES[max_posterior]);
@@ -243,7 +244,6 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
     );
     fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual)
 }
-
 
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.
@@ -369,60 +369,65 @@ trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             .has_headers(false)
             .from_reader(seq_cluster.stdout.as_mut().unwrap())
             .records()
-            {
-                let seqids = parse_cluster(record?)?;
-                // cluster within in this cluster by umi
-                let mut umi_cluster = Command::new("starcode")
-                    .arg("--dist")
-                    .arg(format!("{}", self.umi_dist()))
-                    .arg("--seq-id")
-                    .stdin(Stdio::piped())
-                    .stdout(Stdio::piped())
-                    .stderr(Stdio::piped())
-                    .spawn()?;
-                for &seqid in &seqids {
-                    umi_cluster
-                        .stdin
-                        .as_mut()
-                        .unwrap()
-                        .write(&umis[seqid - 1])?;
-                    umi_cluster.stdin.as_mut().unwrap().write(b"\n")?;
-                }
-                umi_cluster.stdin.as_mut().unwrap().flush()?;
-                drop(umi_cluster.stdin.take());
-
-                // handle each potential unique read
-                for record in csv::ReaderBuilder::new()
-                    .delimiter(b'\t')
-                    .has_headers(false)
-                    .from_reader(umi_cluster.stdout.as_mut().unwrap())
-                    .records()
-                    {
-                        let inner_seqids = parse_cluster(record?)?;
-                        // this is a proper cluster
-                        // calculate consensus reads and write to output FASTQs
-                        let mut f_recs = Vec::new();
-                        let mut r_recs = Vec::new();
-                        let mut outer_seqids = Vec::new();
-
-                        for inner_seqid in inner_seqids {
-                            let seqid = seqids[inner_seqid - 1];
-                            let (f_rec, r_rec) = read_storage.get(seqid - 1)?;
-                            f_recs.push(f_rec);
-                            r_recs.push(r_rec);
-                            outer_seqids.push(seqid);
-                        }
-                        self.write_records(f_recs, r_recs, outer_seqids)?;
-                    }
-
-                match umi_cluster.wait().expect("process did not even start").code() {
-                    Some(0) => (),
-                    Some(s) => println!("Starcode failed with error code {}", s),
-                    None => println!("Starcode was terminated by signal"),
-                }
+        {
+            let seqids = parse_cluster(record?)?;
+            // cluster within in this cluster by umi
+            let mut umi_cluster = Command::new("starcode")
+                .arg("--dist")
+                .arg(format!("{}", self.umi_dist()))
+                .arg("--seq-id")
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()?;
+            for &seqid in &seqids {
+                umi_cluster
+                    .stdin
+                    .as_mut()
+                    .unwrap()
+                    .write(&umis[seqid - 1])?;
+                umi_cluster.stdin.as_mut().unwrap().write(b"\n")?;
             }
+            umi_cluster.stdin.as_mut().unwrap().flush()?;
+            drop(umi_cluster.stdin.take());
+
+            // handle each potential unique read
+            for record in csv::ReaderBuilder::new()
+                .delimiter(b'\t')
+                .has_headers(false)
+                .from_reader(umi_cluster.stdout.as_mut().unwrap())
+                .records()
+            {
+                let inner_seqids = parse_cluster(record?)?;
+                // this is a proper cluster
+                // calculate consensus reads and write to output FASTQs
+                let mut f_recs = Vec::new();
+                let mut r_recs = Vec::new();
+                let mut outer_seqids = Vec::new();
+
+                for inner_seqid in inner_seqids {
+                    let seqid = seqids[inner_seqid - 1];
+                    let (f_rec, r_rec) = read_storage.get(seqid - 1)?;
+                    f_recs.push(f_rec);
+                    r_recs.push(r_rec);
+                    outer_seqids.push(seqid);
+                }
+                self.write_records(f_recs, r_recs, outer_seqids)?;
+            }
+
+            match umi_cluster
+                .wait()
+                .expect("process did not even start")
+                .code()
+            {
+                Some(0) => (),
+                Some(s) => println!("Starcode failed with error code {}", s),
+                None => println!("Starcode was terminated by signal"),
+            }
+        }
         Ok(())
     }
+
     fn write_records(
         &mut self,
         f_recs: Vec<Record>,
@@ -471,7 +476,7 @@ impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
 }
 
 impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
-for CallNonOverlappingConsensusRead<'a, R, W>
+    for CallNonOverlappingConsensusRead<'a, R, W>
 {
     fn write_records(
         &mut self,

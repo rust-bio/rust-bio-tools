@@ -1,3 +1,4 @@
+use log::info;
 use std::cmp;
 use std::error::Error;
 use std::io;
@@ -20,7 +21,7 @@ pub fn depth(
     include_flags: u16,
     exclude_flags: u16,
     min_mapq: u8,
-) -> Result<(), Box<Error>> {
+) -> Result<(), Box<dyn Error>> {
     let mut bam_reader = bam::IndexedReader::from_path(&bam_path)?;
     let bam_header = bam_reader.header().clone();
     let mut pos_reader = csv::ReaderBuilder::new()
@@ -54,16 +55,17 @@ pub fn depth(
                         (!flags) & include_flags == 0
                             && flags & exclude_flags == 0
                             && record.mapq() >= min_mapq
-                    }).count();
+                    })
+                    .count();
 
-                try!(csv_writer.serialize((&record.chrom, record.pos, depth)));
+                r#try!(csv_writer.serialize((&record.chrom, record.pos, depth)));
                 break;
             } else if pileup.pos() > record.pos {
                 break;
             }
         }
         if !covered {
-            try!(csv_writer.serialize((&record.chrom, record.pos, 0)));
+            r#try!(csv_writer.serialize((&record.chrom, record.pos, 0)));
         }
 
         if (i + 1) % 100 == 0 {

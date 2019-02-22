@@ -1,33 +1,10 @@
-#[macro_use]
-extern crate log;
-extern crate fern;
-#[macro_use]
-extern crate clap;
-extern crate bio;
-extern crate csv;
-extern crate itertools;
-extern crate rust_htslib;
-extern crate rustc_serialize;
-#[macro_use]
-extern crate quick_error;
-extern crate cogset;
-extern crate custom_derive;
-extern crate newtype_derive;
-extern crate num_bigint;
-extern crate rand;
-#[macro_use]
-extern crate serde;
-extern crate flate2;
-extern crate ordered_float;
-extern crate rocksdb;
-extern crate serde_json;
-extern crate tempfile;
-extern crate uuid;
-
-use std::process;
+use clap::{load_yaml, value_t};
+use log::{error, LevelFilter};
 
 use clap::App;
+use fern;
 use itertools::Itertools;
+use std::process;
 
 pub mod bam;
 pub mod bcf;
@@ -42,10 +19,11 @@ fn main() {
     fern::Dispatch::new()
         .format(|out, message, _| out.finish(format_args!("{}", message)))
         .level(if matches.is_present("verbose") {
-            log::LogLevelFilter::Debug
+            LevelFilter::Debug
         } else {
-            log::LogLevelFilter::Info
-        }).chain(std::io::stderr())
+            LevelFilter::Info
+        })
+        .chain(std::io::stderr())
         .apply()
         .unwrap();
 

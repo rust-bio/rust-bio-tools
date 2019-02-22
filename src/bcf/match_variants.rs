@@ -1,3 +1,5 @@
+use log::{info, warn};
+use quick_error::quick_error;
 use std::collections::{btree_map, BTreeMap, HashMap};
 use std::error::Error;
 use std::str;
@@ -11,7 +13,7 @@ pub struct VarIndex {
 }
 
 impl VarIndex {
-    pub fn new(mut reader: bcf::Reader, max_dist: u32) -> Result<Self, Box<Error>> {
+    pub fn new(mut reader: bcf::Reader, max_dist: u32) -> Result<Self, Box<dyn Error>> {
         let mut inner = HashMap::new();
         let mut i = 0;
         let mut rec = bcf::Record::new();
@@ -37,19 +39,23 @@ impl VarIndex {
         }
 
         Ok(VarIndex {
-            inner: inner,
-            max_dist: max_dist,
+            inner,
+            max_dist,
         })
     }
 
-    pub fn range(&self, chrom: &[u8], pos: u32) -> Option<btree_map::Range<u32, Vec<Variant>>> {
+    pub fn range(&self, chrom: &[u8], pos: u32) -> Option<btree_map::Range<'_, u32, Vec<Variant>>> {
         self.inner
             .get(chrom)
             .map(|recs| recs.range(pos.saturating_sub(self.max_dist)..pos + self.max_dist))
     }
 }
 
-pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Result<(), Box<Error>> {
+pub fn match_variants(
+    matchbcf: &str,
+    max_dist: u32,
+    max_len_diff: u32,
+) -> Result<(), Box<dyn Error>> {
     let mut inbcf = bcf::Reader::from_stdin()?;
     let mut header = bcf::Header::with_template(inbcf.header());
 
@@ -91,7 +97,8 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> Resul
                         }
                     }
                     -1
-                }).collect_vec();
+                })
+                .collect_vec();
 
             rec.push_info_integer(b"MATCHING", &matching)?;
             outbcf.write(&rec)?;
@@ -117,7 +124,7 @@ pub struct Variant {
 }
 
 impl Variant {
-    pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self, Box<Error>> {
+    pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self, Box<dyn Error>> {
         let pos = rec.pos();
 
         let svlen = if let Ok(Some(svlen)) = rec.info(b"SVLEN").integer() {
@@ -163,7 +170,7 @@ impl Variant {
                 };
                 VariantType::Deletion(svlen)
             } else {
-                warn!("Unsupported variant {}", try!(str::from_utf8(&svtype)));
+                warn!("Unsupported variant {}", r#try!(str::from_utf8(&svtype)));
                 VariantType::Unsupported
             }]
         } else {
@@ -178,8 +185,8 @@ impl Variant {
                 } else {
                     warn!(
                         "Unsupported variant {} -> {}",
-                        try!(str::from_utf8(refallele)),
-                        try!(str::from_utf8(a))
+                        r#try!(str::from_utf8(refallele)),
+                        r#try!(str::from_utf8(a))
                     );
                     VariantType::Unsupported
                 });
@@ -189,7 +196,7 @@ impl Variant {
         let var = Variant {
             id: *id,
             rid: rec.rid().unwrap(),
-            pos: pos,
+            pos,
             alleles: _alleles,
         };
         *id += alleles.len() as u32 - 1;

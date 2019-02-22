@@ -264,10 +264,10 @@ pub fn call_consensus_reads_from_paths(
 
     match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
         (false, false, false, false) => CallNonOverlappingConsensusRead::new(
-            &mut fastq::Reader::from_file(fq1)?,
-            &mut fastq::Reader::from_file(fq2)?,
-            &mut fastq::Writer::to_file(fq1_out)?,
-            &mut fastq::Writer::to_file(fq2_out)?,
+            &mut fastq::Reader::from_file(fq1).expect("Couldn't open first input file"),
+            &mut fastq::Reader::from_file(fq2).expect("Couldn't open second input file"),
+            &mut fastq::Writer::to_file(fq1_out).expect("Couldn't open first output file"),
+            &mut fastq::Writer::to_file(fq2_out).expect("Couldn't open second output file"),
             umi_len,
             seq_dist,
             umi_dist,
@@ -275,15 +275,15 @@ pub fn call_consensus_reads_from_paths(
         (true, true, false, false) => CallNonOverlappingConsensusRead::new(
             &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).unwrap()),
             &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).unwrap()),
-            &mut fastq::Writer::to_file(fq1_out)?,
-            &mut fastq::Writer::to_file(fq2_out)?,
+            &mut fastq::Writer::to_file(fq1_out).expect("Couldn't open first output file"),
+            &mut fastq::Writer::to_file(fq2_out).expect("Couldn't open second output file"),
             umi_len,
             seq_dist,
             umi_dist,
         ).call_consensus_reads(),
         (false, false, true, true) => CallNonOverlappingConsensusRead::new(
-            &mut fastq::Reader::from_file(fq1)?,
-            &mut fastq::Reader::from_file(fq2)?,
+            &mut fastq::Reader::from_file(fq1).expect("Couldn't open first input file"),
+            &mut fastq::Reader::from_file(fq2).expect("Couldn't open second input file"),
             &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out).expect("Couldn't open fq1_out"), Compression::default())),
             &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out).expect("Couldn't open fq2_out"), Compression::default())),
             umi_len,
@@ -291,8 +291,8 @@ pub fn call_consensus_reads_from_paths(
             umi_dist,
         ).call_consensus_reads(),
         (true, true, true, true) => CallNonOverlappingConsensusRead::new(
-            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq1")),
-            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq2")),
+            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).expect("Couldn't open first input file")),
+            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).expect("Couldn't open second input file")),
             &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out).expect("Couldn't open fq1_out"), Compression::default())),
             &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out).expect("Couldn't open fq2_out"), Compression::default())),
             umi_len,

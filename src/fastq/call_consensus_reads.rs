@@ -83,7 +83,7 @@ use std::str;
 use tempfile::tempdir;
 
 use bio::io::fastq;
-use bio::io::fastq::FastqRead;
+use bio::io::fastq::{FastqRead, Record};
 use bio::stats::probs::{LogProb, PHREDProb};
 use csv;
 use flate2::bufread::GzDecoder;
@@ -261,36 +261,36 @@ pub fn call_consensus_reads_from_paths(
 ) -> Result<(), Box<dyn Error>> {
     eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
     eprintln!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
-    
+
     match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
-        (false, false, false, false) => call_consensus_reads(
-            &mut fastq::Reader::from_file(fq1).expect("Coulnd't open input fq1"),
-            &mut fastq::Reader::from_file(fq2).expect("Coulnd't open input fq2"),
-            &mut fastq::Writer::to_file(fq1_out).expect("Coulnd't open output fq1"),
-            &mut fastq::Writer::to_file(fq2_out).expect("Coulnd't open output fq2"),
+        (false, false, false, false) => CallNonOverlappingConsensusRead::new(
+            &mut fastq::Reader::from_file(fq1)?,
+            &mut fastq::Reader::from_file(fq2)?,
+            &mut fastq::Writer::to_file(fq1_out)?,
+            &mut fastq::Writer::to_file(fq2_out)?,
             umi_len,
             seq_dist,
             umi_dist,
-        ),
-        (true, true, false, false) => call_consensus_reads(
-            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq1")),
-            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq2")),
-            &mut fastq::Writer::to_file(fq1_out).expect("Coulnd't open output fq1"),
-            &mut fastq::Writer::to_file(fq2_out).expect("Coulnd't open output fq2"),
+        ).call_consensus_reads(),
+        (true, true, false, false) => CallNonOverlappingConsensusRead::new(
+            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).unwrap()),
+            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).unwrap()),
+            &mut fastq::Writer::to_file(fq1_out)?,
+            &mut fastq::Writer::to_file(fq2_out)?,
             umi_len,
             seq_dist,
             umi_dist,
-        ),
-        (false, false, true, true) => call_consensus_reads(
-            &mut fastq::Reader::from_file(fq1).expect("Coulnd't open input fq1"),
-            &mut fastq::Reader::from_file(fq2).expect("Coulnd't open input fq2"),
+        ).call_consensus_reads(),
+        (false, false, true, true) => CallNonOverlappingConsensusRead::new(
+            &mut fastq::Reader::from_file(fq1)?,
+            &mut fastq::Reader::from_file(fq2)?,
             &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out).expect("Couldn't open fq1_out"), Compression::default())),
             &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out).expect("Couldn't open fq2_out"), Compression::default())),
             umi_len,
             seq_dist,
             umi_dist,
-        ),
-        (true, true, true, true) => call_consensus_reads(
+        ).call_consensus_reads(),
+        (true, true, true, true) => CallNonOverlappingConsensusRead::new(
             &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq1")),
             &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).expect("Couldn't read fq2")),
             &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out).expect("Couldn't open fq1_out"), Compression::default())),
@@ -298,143 +298,212 @@ pub fn call_consensus_reads_from_paths(
             umi_len,
             seq_dist,
             umi_dist,
-        ),
+        ).call_consensus_reads(),
         _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
     }
 }
 
-/// Cluster reads from fastq readers according to their sequence
-/// and UMI, then compute a consensus sequence.
-///
-/// Cluster the reads in the input file according to their sequence
-/// (concatenated p5 and p7 reads without UMI). Read the
-/// identified clusters, and cluster all reds in a cluster by UMI,
-/// creating groups of very likely PCR duplicates.
-/// Next, compute a consensus read for each unique read,
-/// i.e. a cluster with similar sequences and identical UMI,
-/// and write it into the output files.
-pub fn call_consensus_reads<R: io::Read, W: io::Write>(
-    fq1_reader: &mut fastq::Reader<R>,
-    fq2_reader: &mut fastq::Reader<R>,
-    fq1_writer: &mut fastq::Writer<W>,
-    fq2_writer: &mut fastq::Writer<W>,
-    umi_len: usize,
-    seq_dist: usize,
-    umi_dist: usize,
-) -> Result<(), Box<dyn Error>> {
-    // cluster by sequence
-    // Note: If starcode is not installed, this throws a
-    // hard to interpret error:
-    // (No such file or directory (os error 2))
-    // The expect added below should make this more clear.
-    let mut seq_cluster = Command::new("starcode")
-        .arg("--dist")
-        .arg(format!("{}", seq_dist))
-        .arg("--seq-id")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .expect("Error in starcode call. Starcode might not be installed.");
-
-    let mut f_rec = fastq::Record::new();
-    let mut r_rec = fastq::Record::new();
-
-    // init temp storage for reads
-    let mut read_storage = FASTQStorage::new()?;
-    let mut i = 0;
-
-    let mut umis = Vec::new();
-    loop {
-        fq1_reader.read(&mut f_rec)?;
-        fq2_reader.read(&mut r_rec)?;
-        match (f_rec.is_empty(), r_rec.is_empty()) {
-            (true, true) => break,
-            (false, false) => (),
-            _ => panic!("Given FASTQ files have unequal lengths"),
-        }
-        // save umis for second (intra cluster) clustering
-        let umi = r_rec.seq()[..umi_len].to_owned();
-        umis.push(umi);
-
-        read_storage.put(i, &f_rec, &r_rec)?;
-
-        let seq = [f_rec.seq(), &r_rec.seq()[umi_len..]].concat();
-        seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
-        seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
-        i += 1;
-    }
-    
-    seq_cluster.stdin.as_mut().unwrap().flush()?;
-    drop(seq_cluster.stdin.take());
-    
-    eprint!("Read starcode results");
-    // read clusters identified by the first starcode run
-    for record in csv::ReaderBuilder::new()
-        .delimiter(b'\t')
-        .has_headers(false)
-        .from_reader(seq_cluster.stdout.as_mut().unwrap())
-        .records()
-    {
-        let seqids = parse_cluster(record?)?;
-        // cluster within in this cluster by umi
-        let mut umi_cluster = Command::new("starcode")
+trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
+    /// Cluster reads from fastq readers according to their sequence
+    /// and UMI, then compute a consensus sequence.
+    ///
+    /// Cluster the reads in the input file according to their sequence
+    /// (concatenated p5 and p7 reads without UMI). Read the
+    /// identified clusters, and cluster all reds in a cluster by UMI,
+    /// creating groups of very likely PCR duplicates.
+    /// Next, compute a consensus read for each unique read,
+    /// i.e. a cluster with similar sequences and identical UMI,
+    /// and write it into the output files.
+    fn call_consensus_reads(&'a mut self) -> Result<(), Box<dyn Error>> {
+        // cluster by sequence
+        // Note: If starcode is not installed, this throws a
+        // hard to interpret error:
+        // (No such file or directory (os error 2))
+        // The expect added below should make this more clear.
+        let mut seq_cluster = Command::new("starcode")
             .arg("--dist")
-            .arg(format!("{}", umi_dist))
+            .arg(format!("{}", self.seq_dist()))
             .arg("--seq-id")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .spawn()?;
-        for &seqid in &seqids {
-            umi_cluster
-                .stdin
-                .as_mut()
-                .unwrap()
-                .write(&umis[seqid - 1])?;
-            umi_cluster.stdin.as_mut().unwrap().write(b"\n")?;
-        }
-        umi_cluster.stdin.as_mut().unwrap().flush()?;
-        drop(umi_cluster.stdin.take());
+            .spawn()
+            .expect("Error in starcode call. Starcode might not be installed.");
 
-        // handle each potential unique read
+        let mut f_rec = fastq::Record::new();
+        let mut r_rec = fastq::Record::new();
+
+        // init temp storage for reads
+        let mut read_storage = FASTQStorage::new()?;
+        let mut i = 0;
+
+        let mut umis = Vec::new();
+        loop {
+            self.fq1_reader().read(&mut f_rec)?;
+            self.fq2_reader().read(&mut r_rec)?;
+
+            match (f_rec.is_empty(), r_rec.is_empty()) {
+                (true, true) => break,
+                (false, false) => (),
+                _ => panic!("Given FASTQ files have unequal lengths"),
+            }
+            // save umis for second (intra cluster) clustering
+            let umi = r_rec.seq()[..self.umi_len()].to_owned();
+            umis.push(umi);
+
+            read_storage.put(i, &f_rec, &r_rec)?;
+
+            let seq = [f_rec.seq(), &r_rec.seq()[self.umi_len()..]].concat();
+            seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
+            seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+            i += 1;
+        }
+
+        seq_cluster.stdin.as_mut().unwrap().flush()?;
+        drop(seq_cluster.stdin.take());
+
+        eprint!("Read starcode results");
+        // read clusters identified by the first starcode run
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .has_headers(false)
-            .from_reader(umi_cluster.stdout.as_mut().unwrap())
+            .from_reader(seq_cluster.stdout.as_mut().unwrap())
             .records()
-        {
-            let inner_seqids = parse_cluster(record?)?;
-            // this is a proper cluster
-            // calculate consensus reads and write to output FASTQs
-            let mut f_recs = Vec::new();
-            let mut r_recs = Vec::new();
-            let mut outer_seqids = Vec::new();
+            {
+                let seqids = parse_cluster(record?)?;
+                // cluster within in this cluster by umi
+                let mut umi_cluster = Command::new("starcode")
+                    .arg("--dist")
+                    .arg(format!("{}", self.umi_dist()))
+                    .arg("--seq-id")
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::piped())
+                    .spawn()?;
+                for &seqid in &seqids {
+                    umi_cluster
+                        .stdin
+                        .as_mut()
+                        .unwrap()
+                        .write(&umis[seqid - 1])?;
+                    umi_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+                }
+                umi_cluster.stdin.as_mut().unwrap().flush()?;
+                drop(umi_cluster.stdin.take());
 
-            for inner_seqid in inner_seqids {
-                let seqid = seqids[inner_seqid - 1];
-                let (f_rec, r_rec) = read_storage.get(seqid - 1)?;
-                f_recs.push(f_rec);
-                r_recs.push(r_rec);
-                outer_seqids.push(seqid);
+                // handle each potential unique read
+                for record in csv::ReaderBuilder::new()
+                    .delimiter(b'\t')
+                    .has_headers(false)
+                    .from_reader(umi_cluster.stdout.as_mut().unwrap())
+                    .records()
+                    {
+                        let inner_seqids = parse_cluster(record?)?;
+                        // this is a proper cluster
+                        // calculate consensus reads and write to output FASTQs
+                        let mut f_recs = Vec::new();
+                        let mut r_recs = Vec::new();
+                        let mut outer_seqids = Vec::new();
+
+                        for inner_seqid in inner_seqids {
+                            let seqid = seqids[inner_seqid - 1];
+                            let (f_rec, r_rec) = read_storage.get(seqid - 1)?;
+                            f_recs.push(f_rec);
+                            r_recs.push(r_rec);
+                            outer_seqids.push(seqid);
+                        }
+                        self.write_records(f_recs, r_recs, outer_seqids)?;
+                    }
+
+                match umi_cluster.wait().expect("process did not even start").code() {
+                    Some(0) => (),
+                    Some(s) => println!("Starcode failed with error code {}", s),
+                    None => println!("Starcode was terminated by signal"),
+                }
             }
+        Ok(())
+    }
+    fn write_records(
+        &mut self,
+        f_recs: Vec<Record>,
+        r_recs: Vec<Record>,
+        outer_seqids: Vec<usize>,
+    ) -> Result<(), Box<Error>>;
+    fn fq1_reader(&mut self) -> &mut fastq::Reader<R>;
+    fn fq2_reader(&mut self) -> &mut fastq::Reader<R>;
+    fn umi_len(&self) -> usize;
+    fn seq_dist(&self) -> usize;
+    fn umi_dist(&self) -> usize;
+}
 
-            if f_recs.len() > 1 {
-                let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                fq1_writer.write_record(&calc_consensus(&f_recs, &outer_seqids, uuid))?;
-                fq2_writer.write_record(&calc_consensus(&r_recs, &outer_seqids, uuid))?;
-            } else {
-                fq1_writer.write_record(&f_recs[0])?;
-                fq2_writer.write_record(&r_recs[0])?;
-            }
-        }
+/// Struct for calling non-overlapping consensus reads
+/// Implements CallConsensusReads-Trait
+pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
+    fq1_reader: &'a mut fastq::Reader<R>,
+    fq2_reader: &'a mut fastq::Reader<R>,
+    fq1_writer: &'a mut fastq::Writer<W>,
+    fq2_writer: &'a mut fastq::Writer<W>,
+    umi_len: usize,
+    seq_dist: usize,
+    umi_dist: usize,
+}
 
-        match umi_cluster.wait().expect("process did not even start").code() {
-            Some(0) => (),
-            Some(s) => println!("Starcode failed with error code {}", s),
-            None => println!("Starcode was terminated by signal"),
+impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
+    pub fn new(
+        fq1_reader: &'a mut fastq::Reader<R>,
+        fq2_reader: &'a mut fastq::Reader<R>,
+        fq1_writer: &'a mut fastq::Writer<W>,
+        fq2_writer: &'a mut fastq::Writer<W>,
+        umi_len: usize,
+        seq_dist: usize,
+        umi_dist: usize,
+    ) -> Self {
+        CallNonOverlappingConsensusRead {
+            fq1_reader,
+            fq2_reader,
+            fq1_writer,
+            fq2_writer,
+            umi_len,
+            seq_dist,
+            umi_dist,
         }
     }
+}
 
-    Ok(())
+impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
+for CallNonOverlappingConsensusRead<'a, R, W>
+{
+    fn write_records(
+        &mut self,
+        f_recs: Vec<Record>,
+        r_recs: Vec<Record>,
+        outer_seqids: Vec<usize>,
+    ) -> Result<(), Box<Error>> {
+        if f_recs.len() > 1 {
+            let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+            self.fq1_writer
+                .write_record(&calc_consensus(&f_recs, &outer_seqids, uuid))?;
+            self.fq2_writer
+                .write_record(&calc_consensus(&r_recs, &outer_seqids, uuid))?;
+        } else {
+            self.fq1_writer.write_record(&f_recs[0])?;
+            self.fq2_writer.write_record(&r_recs[0])?;
+        }
+        Ok(())
+    }
+    fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {
+        &mut self.fq1_reader
+    }
+    fn fq2_reader(&mut self) -> &mut fastq::Reader<R> {
+        &mut self.fq2_reader
+    }
+    fn umi_len(&self) -> usize {
+        self.umi_len
+    }
+    fn seq_dist(&self) -> usize {
+        self.seq_dist
+    }
+    fn umi_dist(&self) -> usize {
+        self.umi_dist
+    }
 }

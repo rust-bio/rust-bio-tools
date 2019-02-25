@@ -305,7 +305,7 @@ pub fn call_consensus_reads_from_paths(
         (false, false, true, true) => match CallNonOverlappingConsensusRead::new(
             &mut fastq::Reader::from_file(fq1).context(FastqIOError{ci_parameter: String::from("fq1"), path: String::from(fq1)})?,
             &mut fastq::Reader::from_file(fq2).context(FastqIOError{ci_parameter: String::from("fq2"), path: String::from(fq2)})?,
-            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out).context(FastqIOError{ci_parameter: String::from("fq1_out"), path: String::from(fq2_out)})?, Compression::default())),
+            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out).context(FastqIOError{ci_parameter: String::from("fq1_out"), path: String::from(fq1_out)})?, Compression::default())),
             &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out).context(FastqIOError{ci_parameter: String::from("fq2_out"), path: String::from(fq2_out)})?, Compression::default())),
             umi_len,
             seq_dist,

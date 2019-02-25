@@ -127,8 +127,8 @@ impl Variant {
     pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self, Box<dyn Error>> {
         let pos = rec.pos();
 
-        let svlen = if let Ok(Some(svlen)) = rec.info(b"SVLEN").integer() {
-            Some(svlen[0].abs() as u32)
+        let svlens = if let Ok(Some(svlens)) = rec.info(b"SVLEN").integer() {
+            Some(svlens.into_iter().map(|l| l.abs() as u32).collect_vec())
         } else {
             None
         };
@@ -152,8 +152,8 @@ impl Variant {
 
         let _alleles: Vec<VariantType> = if let Some(svtype) = svtype {
             vec![if svtype == b"INS" {
-                match (svlen, inslen) {
-                    (Some(svlen), _) => VariantType::Insertion(svlen),
+                match (svlens, inslen) {
+                    (Some(svlens), _) => VariantType::Insertion(svlens[0]),
                     (None, Some(inslen)) => VariantType::Insertion(inslen),
                     _ => {
                         warn!("Unsupported variant INS without SVLEN or INSLEN");
@@ -161,8 +161,8 @@ impl Variant {
                     }
                 }
             } else if svtype == b"DEL" {
-                let svlen = match (svlen, end) {
-                    (Some(svlen), _) => svlen,
+                let svlen = match (svlens, end) {
+                    (Some(svlens), _) => svlens[0],
                     (None, Some(end)) => end - 1 - pos,
                     _ => {
                         return Err(Box::new(MatchError::MissingTag("SVLEN or END".to_owned())));
@@ -175,21 +175,30 @@ impl Variant {
             }]
         } else {
             let mut _alleles = Vec::with_capacity(alleles.len() - 1);
-            for a in &alleles[1..] {
-                _alleles.push(if a.len() < refallele.len() {
-                    VariantType::Deletion((refallele.len() - a.len()) as u32)
-                } else if a.len() > refallele.len() {
-                    VariantType::Insertion((a.len() - refallele.len()) as u32)
-                } else if a.len() == 1 {
-                    VariantType::SNV(a[0])
-                } else {
-                    warn!(
-                        "Unsupported variant {} -> {}",
-                        r#try!(str::from_utf8(refallele)),
-                        r#try!(str::from_utf8(a))
-                    );
-                    VariantType::Unsupported
-                });
+            for (i, a) in alleles[1..].iter().enumerate() {
+
+                _alleles.push(
+                    if a == b"<DEL>" {
+                        if let Some(ref svlens) = svlens {
+                            VariantType::Deletion(svlens[i])
+                        } else {
+                            return Err(Box::new(MatchError::MissingTag("SVLEN".to_owned())));
+                        }
+                    } else if a.len() < refallele.len() {
+                        VariantType::Deletion((refallele.len() - a.len()) as u32)
+                    } else if a.len() > refallele.len() {
+                        VariantType::Insertion((a.len() - refallele.len()) as u32)
+                    } else if a.len() == 1 {
+                        VariantType::SNV(a[0])
+                    } else {
+                        warn!(
+                            "Unsupported variant {} -> {}",
+                            r#try!(str::from_utf8(refallele)),
+                            r#try!(str::from_utf8(a))
+                        );
+                        VariantType::Unsupported
+                    }
+                );
             }
             _alleles
         };

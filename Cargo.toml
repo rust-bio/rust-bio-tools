@@ -23,12 +23,14 @@ rand = "0.4"
 cogset = "0.2"
 num-bigint = "0.2"
 serde = "1.0"
+serde_derive = "1.0"
 serde_json = "1.0"
 uuid = { version = "0.7", features = ["v4"] }
 tempfile = "3.0"
 rocksdb = "0.11"
 ordered-float = "0.5"
 flate2 = "1.0.5"
+failure = "0.1.5"
 
 [[bin]]
 name = "rbt"

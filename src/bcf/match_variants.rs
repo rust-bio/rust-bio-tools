@@ -38,10 +38,7 @@ impl VarIndex {
             }
         }
 
-        Ok(VarIndex {
-            inner,
-            max_dist,
-        })
+        Ok(VarIndex { inner, max_dist })
     }
 
     pub fn range(&self, chrom: &[u8], pos: u32) -> Option<btree_map::Range<'_, u32, Vec<Variant>>> {
@@ -176,29 +173,26 @@ impl Variant {
         } else {
             let mut _alleles = Vec::with_capacity(alleles.len() - 1);
             for (i, a) in alleles[1..].iter().enumerate() {
-
-                _alleles.push(
-                    if a == b"<DEL>" {
-                        if let Some(ref svlens) = svlens {
-                            VariantType::Deletion(svlens[i])
-                        } else {
-                            return Err(Box::new(MatchError::MissingTag("SVLEN".to_owned())));
-                        }
-                    } else if a.len() < refallele.len() {
-                        VariantType::Deletion((refallele.len() - a.len()) as u32)
-                    } else if a.len() > refallele.len() {
-                        VariantType::Insertion((a.len() - refallele.len()) as u32)
-                    } else if a.len() == 1 {
-                        VariantType::SNV(a[0])
+                _alleles.push(if a == b"<DEL>" {
+                    if let Some(ref svlens) = svlens {
+                        VariantType::Deletion(svlens[i])
                     } else {
-                        warn!(
-                            "Unsupported variant {} -> {}",
-                            r#try!(str::from_utf8(refallele)),
-                            r#try!(str::from_utf8(a))
-                        );
-                        VariantType::Unsupported
+                        return Err(Box::new(MatchError::MissingTag("SVLEN".to_owned())));
                     }
-                );
+                } else if a.len() < refallele.len() {
+                    VariantType::Deletion((refallele.len() - a.len()) as u32)
+                } else if a.len() > refallele.len() {
+                    VariantType::Insertion((a.len() - refallele.len()) as u32)
+                } else if a.len() == 1 {
+                    VariantType::SNV(a[0])
+                } else {
+                    warn!(
+                        "Unsupported variant {} -> {}",
+                        r#try!(str::from_utf8(refallele)),
+                        r#try!(str::from_utf8(a))
+                    );
+                    VariantType::Unsupported
+                });
             }
             _alleles
         };

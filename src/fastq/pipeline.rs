@@ -28,7 +28,7 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
 
 /// Used to store a mapping of read index to read sequence
 #[derive(Debug)]
-pub struct FASTQStorage {
+struct FASTQStorage {
     db: DB,
     storage_dir: std::path::PathBuf,
 }

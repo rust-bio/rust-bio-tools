@@ -72,6 +72,9 @@
 //!
 // Since this is a binary crate, documentation needs to be compiled with this 'ancient incantation':
 // https://github.com/rust-lang/cargo/issues/1865#issuecomment-394179125
+mod calc_consensus;
+mod pipeline;
+
 use bio::io::fastq;
 use failure::{Context, Fail, ResultExt};
 use flate2::bufread::GzDecoder;
@@ -81,8 +84,8 @@ use std::fs;
 use std::io::BufReader;
 use std::str;
 
-use super::pipeline::CallConsensusReads;
-use super::pipeline::CallNonOverlappingConsensusRead;
+use pipeline::CallConsensusReads;
+use pipeline::CallNonOverlappingConsensusRead;
 
 #[derive(Fail, Debug)]
 #[fail(
@@ -127,7 +130,7 @@ pub fn call_consensus_reads_from_paths(
             // If that would be the case, we could use
             // call_consensus_reads().map_err(Error::from_boxed_compat)?
             // TODO this is a Placeholder Error Type
-            Err(e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
+            Err(_e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
         },
         (true, true, false, false) => match CallNonOverlappingConsensusRead::new(
             &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).context(FastqIOError{ci_parameter: "fq1".to_owned(), path: fq1.to_owned()})?),
@@ -139,7 +142,7 @@ pub fn call_consensus_reads_from_paths(
             umi_dist,
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
-            Err(e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
+            Err(_e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
         },
         (false, false, true, true) => match CallNonOverlappingConsensusRead::new(
             &mut fastq::Reader::from_file(fq1).context(FastqIOError{ci_parameter: "fq1".to_owned(), path: fq1.to_owned()})?,
@@ -151,7 +154,7 @@ pub fn call_consensus_reads_from_paths(
             umi_dist,
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
-            Err(e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
+            Err(_e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
         },
         (true, true, true, true) => match CallNonOverlappingConsensusRead::new(
             &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).context(FastqIOError{ci_parameter: "fq1".to_owned(), path: fq1.to_owned()})?),
@@ -163,7 +166,7 @@ pub fn call_consensus_reads_from_paths(
             umi_dist,
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
-            Err(e) => Err(Context::new(FastqIOError{ci_parameter:"general".to_owned(), path: "general".to_owned()})),
+            Err(_e) => Err(Context::new(FastqIOError{ci_parameter:"general".to_owned(), path: "general".to_owned()})),
         },
         _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
     }

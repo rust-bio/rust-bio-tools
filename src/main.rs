@@ -79,7 +79,7 @@ fn main() {
             process::exit(1);
         }
     } else if let Some(matches) = matches.subcommand_matches("call-consensus-reads") {
-        if let Err(e) = fastq::call_consensus_reads::call_consensus_reads_from_paths(
+        if let Err(e) = fastq::call_consensus_reads::call_nonoverlapping_consensus_reads_from_paths(
             matches.value_of("fq1").unwrap(),
             matches.value_of("fq2").unwrap(),
             matches.value_of("consensus-fq1").unwrap(),
@@ -87,6 +87,21 @@ fn main() {
             value_t!(matches, "umi-len", usize).unwrap(),
             value_t!(matches, "max-seq-dist", usize).unwrap(),
             value_t!(matches, "max-umi-dist", usize).unwrap(),
+        ) {
+            error!("{}", e);
+            process::exit(1);
+        }
+    } else if let Some(matches) = matches.subcommand_matches("call-overlapping-consensus-reads") {
+        if let Err(e) = fastq::call_consensus_reads::call_overlapping_consensus_reads_from_paths(
+            matches.value_of("fq1").unwrap(),
+            matches.value_of("fq2").unwrap(),
+            matches.value_of("consensus-fq").unwrap(),
+            value_t!(matches, "umi-len", usize).unwrap(),
+            value_t!(matches, "max-seq-dist", usize).unwrap(),
+            value_t!(matches, "max-umi-dist", usize).unwrap(),
+            value_t!(matches, "insert-size", usize).unwrap(),
+            value_t!(matches, "std-dev", usize).unwrap(),
+            &value_t!(matches, "seq-string", String).unwrap(),
         ) {
             error!("{}", e);
             process::exit(1);

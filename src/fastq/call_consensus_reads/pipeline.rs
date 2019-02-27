@@ -1,6 +1,7 @@
 use bio::io::fastq;
 use bio::io::fastq::{FastqRead, Record};
 use csv;
+use regex::Regex;
 use rocksdb::DB;
 use serde_json;
 use std::error::Error;
@@ -12,7 +13,7 @@ use std::str;
 use tempfile::tempdir;
 use uuid::Uuid;
 
-use super::calc_consensus::calc_consensus;
+use super::calc_consensus::{calc_consensus, calc_paired_consensus};
 
 /// Interpret a cluster returned by starcode
 fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>> {
@@ -24,6 +25,48 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
         .deserialize()
         .next()
         .unwrap()?)
+}
+
+fn parse_sequence_string(seq_string: &str) -> Result<(usize, usize), &str> {
+    let re = Regex::new(r"(?P<digit>\d+)(?P<char>[A-Z])").unwrap();
+    let mut start = 0;
+    for cap in re.captures_iter(seq_string) {
+        if &cap[2] == "U" {
+            let end = start + cap[1].parse::<usize>().unwrap();
+            return Ok((start, end));
+        } else {
+            start = start + &cap[1].parse::<usize>().unwrap();
+        }
+    }
+    Err("UMI not defined in sequence string")
+}
+
+/// Calculates the median hamming distance for all records by deriving the overlap from insert size
+fn mean_hamming_distance(
+    insert_size: &usize,
+    f_recs: &Vec<fastq::Record>,
+    r_recs: &Vec<fastq::Record>,
+) -> Option<f64> {
+    let mut distances: Vec<f64> = Vec::new();
+
+    for (f_rec, r_rec) in f_recs.into_iter().zip(r_recs).map(|(a, b)| (a, b)) {
+        // check if reads overlap within insert size
+        if (insert_size < &f_rec.seq().len()) | (insert_size < &r_rec.seq().len()) {
+            break;
+        }
+        if insert_size >= &(&f_rec.seq().len() + &r_rec.seq().len()) {
+            break;
+        }
+        let overlap = (f_rec.seq().len() + r_rec.seq().len()) - insert_size;
+        let suffix_start_idx: usize = f_rec.seq().len() - overlap;
+        let mut distance = bio::alignment::distance::hamming(
+            &f_rec.seq()[suffix_start_idx..],
+            &bio::alphabets::dna::revcomp(r_rec.seq())[..overlap],
+        ) as f64;
+        distance = distance / overlap as f64; //Use absolute or relative distance?!
+        distances.push(distance);
+    }
+    stats::median(distances.into_iter())
 }
 
 /// Used to store a mapping of read index to read sequence
@@ -261,6 +304,107 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         } else {
             self.fq1_writer.write_record(&f_recs[0])?;
             self.fq2_writer.write_record(&r_recs[0])?;
+        }
+        Ok(())
+    }
+    fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {
+        &mut self.fq1_reader
+    }
+    fn fq2_reader(&mut self) -> &mut fastq::Reader<R> {
+        &mut self.fq2_reader
+    }
+    fn umi_len(&self) -> usize {
+        self.umi_len
+    }
+    fn seq_dist(&self) -> usize {
+        self.seq_dist
+    }
+    fn umi_dist(&self) -> usize {
+        self.umi_dist
+    }
+}
+
+///Clusters fastq reads by UMIs and calls consensus for overlapping reads
+///
+pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
+    fq1_reader: &'a mut fastq::Reader<R>,
+    fq2_reader: &'a mut fastq::Reader<R>,
+    fq_writer: &'a mut fastq::Writer<W>,
+    umi_len: usize,
+    seq_dist: usize,
+    umi_dist: usize,
+    insert_size: usize,
+    std_dev: usize,
+    seq_string: &'a str,
+}
+
+impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
+    pub fn new(
+        fq1_reader: &'a mut fastq::Reader<R>,
+        fq2_reader: &'a mut fastq::Reader<R>,
+        fq_writer: &'a mut fastq::Writer<W>,
+        umi_len: usize,
+        seq_dist: usize,
+        umi_dist: usize,
+        insert_size: usize,
+        std_dev: usize,
+        seq_string: &'a str,
+    ) -> Self {
+        CallOverlappingConsensusRead {
+            fq1_reader,
+            fq2_reader,
+            fq_writer,
+            umi_len,
+            seq_dist,
+            umi_dist,
+            insert_size,
+            std_dev,
+            seq_string,
+        }
+    }
+}
+
+impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
+    for CallOverlappingConsensusRead<'a, R, W>
+{
+    fn write_records(
+        &mut self,
+        f_recs: Vec<Record>,
+        r_recs: Vec<Record>,
+        outer_seqids: Vec<usize>,
+    ) -> Result<(), Box<Error>> {
+        // Determine hamming distance for different insert sizes
+        let umi_pos = parse_sequence_string(self.seq_string);
+        let (start, end) = match umi_pos {
+            Ok((start, end)) => (start, end),
+            Err(e) => panic!("{}", e),
+        };
+        dbg!(start);
+        dbg!(end);
+        dbg!(&"123456789"[start..end]);
+
+        let mut median_distances: Vec<(f64, usize)> = Vec::new();
+        for insert_size in
+            (self.insert_size - 2 * self.std_dev)..(self.insert_size + 2 * self.std_dev)
+        {
+            let mean_hamming_distance = mean_hamming_distance(&insert_size, &f_recs, &r_recs);
+            match mean_hamming_distance {
+                Some(mean_hamming_distance) => {
+                    median_distances.push((mean_hamming_distance, insert_size))
+                }
+                None => {}
+            }
+        }
+        //This is complete experimental!!!
+        //Choose only most promising overlaps based on distance?!
+        //Write consensus with highest likelihood to fq_writer
+        //calc_paired_consensus needs to return likelihood
+        for (mean_distance, insert_size) in median_distances.iter() {
+            let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
+            let uuid = f_recs[0].id().split(":").collect::<Vec<&str>>()[0];
+            let consensus_record =
+                calc_paired_consensus(&f_recs, &r_recs, &overlap, &outer_seqids, &uuid);
+            self.fq_writer.write_record(&consensus_record)?;
         }
         Ok(())
     }

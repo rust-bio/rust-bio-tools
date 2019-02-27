@@ -154,3 +154,57 @@ subcommands:
             short: D
             default_value: "2"
             help: Maximum hamming distance between the sequences of any pair of reads in the same cluster.
+        - seq-string_fq1:
+            long: seq-string-fq1
+            default_value: "150T"
+            help: String describing position of UMI
+        - seq-string_fq2:
+            long: seq-string-fq2
+            default_value: "150T"
+            help: String describing position of UMI
+
+  - call-overlapping-consensus-reads:
+      about: |
+        Group reads by UMI and calculate consensus for overlapping read pairs.
+      author: Johannes Köster <johannes.koester@uni-due.de>, Felix Mölder <felix.moelder@uni-due.de>
+      args:
+        - fq1:
+            required: true
+            help: Input FASTQ file with forward reads.
+        - fq2:
+            required: true
+            help: Input FASTQ file with reverse reads.
+        - consensus-fq:
+            required: true
+            help: Output FASTQ file with forward reads.
+        - max-umi-dist:
+            long: max-umi-dist
+            short: d
+            default_value: "1"
+            help: Maximum hamming distance between the UMIs of any pair of reads in the same cluster.
+        - umi-len:
+            long: umi-len
+            short: l
+            default_value: "8"
+            help: Length of UMI in reverse read.
+        - max-seq-dist:
+            long: max-seq-dist
+            short: D
+            default_value: "2"
+            help: Maximum hamming distance between the sequences of any pair of reads in the same cluster.
+        - insert-size:
+            long: insert-size
+            short: i
+            default_value: "50"
+            help: Expected insert size of sequenced fragment
+        - std-dev:
+            long: std-dev
+            short: s
+            default_value: "2"
+            help: Standard deviation of expected insert size. Defines search space of the most likely overlap.
+        - seq-string_fq1:
+            long: seq-string-fq1
+            help: String describing position of UMI
+        - seq-string_fq2:
+            long: seq-string-fq2
+            help: String describing position of UMI

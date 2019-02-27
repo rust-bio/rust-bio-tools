@@ -108,6 +108,8 @@ pub fn call_nonoverlapping_consensus_reads_from_paths(
     umi_len: usize,
     seq_dist: usize,
     umi_dist: usize,
+    seq_string_fq1: &str,
+    seq_string_fq2: &str,
 ) -> Result<(), Context<FastqIOError>> {
     eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
     eprintln!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
@@ -121,6 +123,8 @@ pub fn call_nonoverlapping_consensus_reads_from_paths(
             umi_len,
             seq_dist,
             umi_dist,
+            seq_string_fq1,
+            seq_string_fq2,
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
             // TODO the code below requires more elaborate handling
@@ -138,6 +142,8 @@ pub fn call_nonoverlapping_consensus_reads_from_paths(
             umi_len,
             seq_dist,
             umi_dist,
+            seq_string_fq1,
+            seq_string_fq2,
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
             Err(_e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
@@ -150,6 +156,8 @@ pub fn call_nonoverlapping_consensus_reads_from_paths(
             umi_len,
             seq_dist,
             umi_dist,
+            seq_string_fq1,
+            seq_string_fq2,
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
             Err(_e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
@@ -162,6 +170,8 @@ pub fn call_nonoverlapping_consensus_reads_from_paths(
             umi_len,
             seq_dist,
             umi_dist,
+            seq_string_fq1,
+            seq_string_fq2,
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
             Err(_e) => Err(Context::new(FastqIOError{ci_parameter:"general".to_owned(), path: "general".to_owned()})),
@@ -184,7 +194,8 @@ pub fn call_overlapping_consensus_reads_from_paths(
     umi_dist: usize,
     insert_size: usize,
     std_dev: usize,
-    seq_string: &str,
+    seq_string_fq1: &str,
+    seq_string_fq2: &str,
 ) -> Result<(), Context<FastqIOError>> {
     eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
     eprintln!("Writing output to:\n    {}", fq_out);
@@ -199,7 +210,8 @@ pub fn call_overlapping_consensus_reads_from_paths(
             umi_dist,
             insert_size,
             std_dev,
-            seq_string
+            seq_string_fq1,
+            seq_string_fq2
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
             // TODO the code below requires more elaborate handling
@@ -218,7 +230,8 @@ pub fn call_overlapping_consensus_reads_from_paths(
             umi_dist,
             insert_size,
             std_dev,
-            seq_string
+            seq_string_fq1,
+            seq_string_fq2
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
             Err(_e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
@@ -232,7 +245,8 @@ pub fn call_overlapping_consensus_reads_from_paths(
             umi_dist,
             insert_size,
             std_dev,
-            seq_string
+            seq_string_fq1,
+            seq_string_fq2
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
             Err(_e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
@@ -246,7 +260,8 @@ pub fn call_overlapping_consensus_reads_from_paths(
             umi_dist,
             insert_size,
             std_dev,
-            seq_string
+            seq_string_fq1,
+            seq_string_fq2
         ).call_consensus_reads() {
             Ok(()) => Ok(()),
             Err(_e) => Err(Context::new(FastqIOError{ci_parameter:"general".to_owned(), path: "general".to_owned()})),

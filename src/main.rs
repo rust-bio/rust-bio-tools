@@ -87,6 +87,8 @@ fn main() {
             value_t!(matches, "umi-len", usize).unwrap(),
             value_t!(matches, "max-seq-dist", usize).unwrap(),
             value_t!(matches, "max-umi-dist", usize).unwrap(),
+            &value_t!(matches, "seq-string_fq1", String).unwrap(),
+            &value_t!(matches, "seq-string_fq2", String).unwrap(),
         ) {
             error!("{}", e);
             process::exit(1);
@@ -101,7 +103,8 @@ fn main() {
             value_t!(matches, "max-umi-dist", usize).unwrap(),
             value_t!(matches, "insert-size", usize).unwrap(),
             value_t!(matches, "std-dev", usize).unwrap(),
-            &value_t!(matches, "seq-string", String).unwrap(),
+            &value_t!(matches, "seq-string_fq1", String).unwrap(),
+            &value_t!(matches, "seq-string_fq2", String).unwrap(),
         ) {
             error!("{}", e);
             process::exit(1);

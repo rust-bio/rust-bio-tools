@@ -147,7 +147,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         // init temp storage for reads
         let mut read_storage = FASTQStorage::new()?;
         let mut i = 0;
-
+        
         let mut umis = Vec::new();
         loop {
             self.fq1_reader().read(&mut f_rec)?;
@@ -262,6 +262,8 @@ pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     umi_len: usize,
     seq_dist: usize,
     umi_dist: usize,
+    seq_string_fq1: &'a str,
+    seq_string_fq2: &'a str,
 }
 
 impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
@@ -273,6 +275,8 @@ impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
         umi_len: usize,
         seq_dist: usize,
         umi_dist: usize,
+        seq_string_fq1: &'a str,
+        seq_string_fq2: &'a str,
     ) -> Self {
         CallNonOverlappingConsensusRead {
             fq1_reader,
@@ -282,6 +286,8 @@ impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
             umi_len,
             seq_dist,
             umi_dist,
+            seq_string_fq1,
+            seq_string_fq2,
         }
     }
 }
@@ -335,7 +341,8 @@ pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     umi_dist: usize,
     insert_size: usize,
     std_dev: usize,
-    seq_string: &'a str,
+    seq_string_fq1: &'a str,
+    seq_string_fq2: &'a str,
 }
 
 impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
@@ -348,7 +355,8 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
         umi_dist: usize,
         insert_size: usize,
         std_dev: usize,
-        seq_string: &'a str,
+        seq_string_fq1: &'a str,
+        seq_string_fq2: &'a str,
     ) -> Self {
         CallOverlappingConsensusRead {
             fq1_reader,
@@ -359,7 +367,8 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             umi_dist,
             insert_size,
             std_dev,
-            seq_string,
+            seq_string_fq1,
+            seq_string_fq2,
         }
     }
 }
@@ -374,7 +383,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         outer_seqids: Vec<usize>,
     ) -> Result<(), Box<Error>> {
         // Determine hamming distance for different insert sizes
-        let umi_pos = parse_sequence_string(self.seq_string);
+        let umi_pos = parse_sequence_string(self.seq_string_fq1);
         let (start, end) = match umi_pos {
             Ok((start, end)) => (start, end),
             Err(e) => panic!("{}", e),

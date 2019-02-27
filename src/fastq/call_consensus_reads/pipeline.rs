@@ -1,7 +1,6 @@
 use bio::io::fastq;
 use bio::io::fastq::{FastqRead, Record};
 use csv;
-use regex::Regex;
 use rocksdb::DB;
 use serde_json;
 use std::error::Error;
@@ -25,20 +24,6 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
         .deserialize()
         .next()
         .unwrap()?)
-}
-
-fn parse_sequence_string(seq_string: &str) -> Result<(usize, usize), &str> {
-    let re = Regex::new(r"(?P<digit>\d+)(?P<char>[A-Z])").unwrap();
-    let mut start = 0;
-    for cap in re.captures_iter(seq_string) {
-        if &cap[2] == "U" {
-            let end = start + cap[1].parse::<usize>().unwrap();
-            return Ok((start, end));
-        } else {
-            start = start + &cap[1].parse::<usize>().unwrap();
-        }
-    }
-    Err("UMI not defined in sequence string")
 }
 
 /// Calculates the median hamming distance for all records by deriving the overlap from insert size
@@ -147,8 +132,8 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         // init temp storage for reads
         let mut read_storage = FASTQStorage::new()?;
         let mut i = 0;
-        
         let mut umis = Vec::new();
+        dbg!(self.reverse_umi());
         loop {
             self.fq1_reader().read(&mut f_rec)?;
             self.fq2_reader().read(&mut r_rec)?;
@@ -159,12 +144,19 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 _ => panic!("Given FASTQ files have unequal lengths"),
             }
             // save umis for second (intra cluster) clustering
-            let umi = r_rec.seq()[..self.umi_len()].to_owned();
+            let umi = if self.reverse_umi() {
+                r_rec.seq()[..self.umi_len()].to_owned()
+            } else {
+                f_rec.seq()[..self.umi_len()].to_owned()
+            };
             umis.push(umi);
 
             read_storage.put(i, &f_rec, &r_rec)?;
-
-            let seq = [f_rec.seq(), &r_rec.seq()[self.umi_len()..]].concat();
+            let seq = if self.reverse_umi() {
+                [&f_rec.seq()[..], &r_rec.seq()[self.umi_len()..]].concat()
+            } else {
+                [&f_rec.seq()[self.umi_len()..], &r_rec.seq()[..]].concat()
+            };
             seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
             seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
             i += 1;
@@ -250,6 +242,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
     fn umi_len(&self) -> usize;
     fn seq_dist(&self) -> usize;
     fn umi_dist(&self) -> usize;
+    fn reverse_umi(&self) -> bool;
 }
 
 /// Struct for calling non-overlapping consensus reads
@@ -262,8 +255,7 @@ pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     umi_len: usize,
     seq_dist: usize,
     umi_dist: usize,
-    seq_string_fq1: &'a str,
-    seq_string_fq2: &'a str,
+    reverse_umi: bool,
 }
 
 impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
@@ -275,8 +267,7 @@ impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
         umi_len: usize,
         seq_dist: usize,
         umi_dist: usize,
-        seq_string_fq1: &'a str,
-        seq_string_fq2: &'a str,
+        reverse_umi: bool,
     ) -> Self {
         CallNonOverlappingConsensusRead {
             fq1_reader,
@@ -286,8 +277,7 @@ impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
             umi_len,
             seq_dist,
             umi_dist,
-            seq_string_fq1,
-            seq_string_fq2,
+            reverse_umi,
         }
     }
 }
@@ -328,6 +318,9 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
     fn umi_dist(&self) -> usize {
         self.umi_dist
     }
+    fn reverse_umi(&self) -> bool {
+        self.reverse_umi
+    }
 }
 
 ///Clusters fastq reads by UMIs and calls consensus for overlapping reads
@@ -341,8 +334,7 @@ pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     umi_dist: usize,
     insert_size: usize,
     std_dev: usize,
-    seq_string_fq1: &'a str,
-    seq_string_fq2: &'a str,
+    reverse_umi: bool,
 }
 
 impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
@@ -355,8 +347,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
         umi_dist: usize,
         insert_size: usize,
         std_dev: usize,
-        seq_string_fq1: &'a str,
-        seq_string_fq2: &'a str,
+        reverse_umi: bool,
     ) -> Self {
         CallOverlappingConsensusRead {
             fq1_reader,
@@ -367,8 +358,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             umi_dist,
             insert_size,
             std_dev,
-            seq_string_fq1,
-            seq_string_fq2,
+            reverse_umi,
         }
     }
 }
@@ -383,15 +373,6 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         outer_seqids: Vec<usize>,
     ) -> Result<(), Box<Error>> {
         // Determine hamming distance for different insert sizes
-        let umi_pos = parse_sequence_string(self.seq_string_fq1);
-        let (start, end) = match umi_pos {
-            Ok((start, end)) => (start, end),
-            Err(e) => panic!("{}", e),
-        };
-        dbg!(start);
-        dbg!(end);
-        dbg!(&"123456789"[start..end]);
-
         let mut median_distances: Vec<(f64, usize)> = Vec::new();
         for insert_size in
             (self.insert_size - 2 * self.std_dev)..(self.insert_size + 2 * self.std_dev)
@@ -431,5 +412,8 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
     }
     fn umi_dist(&self) -> usize {
         self.umi_dist
+    }
+    fn reverse_umi(&self) -> bool {
+        self.reverse_umi
     }
 }

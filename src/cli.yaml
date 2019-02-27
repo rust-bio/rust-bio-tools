@@ -154,14 +154,10 @@ subcommands:
             short: D
             default_value: "2"
             help: Maximum hamming distance between the sequences of any pair of reads in the same cluster.
-        - seq-string_fq1:
-            long: seq-string-fq1
-            default_value: "150T"
-            help: String describing position of UMI
-        - seq-string_fq2:
-            long: seq-string-fq2
-            default_value: "150T"
-            help: String describing position of UMI
+        - reverse-umi:
+            long: reverse-umi
+            short: u
+            help: Set if UMI is on reverse read
 
   - call-overlapping-consensus-reads:
       about: |
@@ -202,9 +198,7 @@ subcommands:
             short: s
             default_value: "2"
             help: Standard deviation of expected insert size. Defines search space of the most likely overlap.
-        - seq-string_fq1:
-            long: seq-string-fq1
-            help: String describing position of UMI
-        - seq-string_fq2:
-            long: seq-string-fq2
-            help: String describing position of UMI
+        - reverse-umi:
+            long: reverse-umi
+            short: U
+            help: Set if UMI is on reverse read

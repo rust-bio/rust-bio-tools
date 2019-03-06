@@ -1,11 +1,10 @@
 //! Documentation for Rust Bio Tools
 use clap::{load_yaml, value_t};
-use log::{error, LevelFilter};
+use log::LevelFilter;
 
 use clap::App;
 use fern;
 use itertools::Itertools;
-use std::process;
 use std::error::Error;
 
 pub mod bam;
@@ -83,5 +82,4 @@ fn main() -> Result<(), Box<dyn Error>> {
         // clap assures that a avalid subcommand is provided
         Ok(())
     }
-    
 }

@@ -79,32 +79,13 @@ use bio::io::fastq;
 use flate2::bufread::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
+use std::error::Error;
 use std::fs;
 use std::io::BufReader;
-use std::error::Error;
 use std::str;
-use quick_error::quick_error;
-
 
 use pipeline::CallConsensusReads;
 use pipeline::CallNonOverlappingConsensusRead;
-
-
-
-// #[derive(Fail, Debug)]
-// #[fail(
-//     display = "Invalid FASTQ path for parameter {}. Could not open file {}",
-//     _0, _1
-// )]
-// pub struct FastqIOError {
-//     ci_parameter: String,
-//     path: String,
-// }
-
-
-
-
-
 
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.

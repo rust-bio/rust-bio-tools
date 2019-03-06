@@ -110,7 +110,7 @@ pub fn calc_paired_consensus(
     overlap: &usize,
     seqids: &[usize],
     uuid: &str,
-) -> fastq::Record {
+) -> (fastq::Record, LogProb) {
     let seq_len = recs1[0].seq().len() + recs2[0].seq().len() - overlap;
     let mut consensus_seq = Vec::with_capacity(seq_len);
     let mut consensus_qual = Vec::with_capacity(seq_len);
@@ -144,7 +144,7 @@ pub fn calc_paired_consensus(
             q + PROB_CONFUSION
         }
     };
-
+    let mut consensus_lh = LogProb::ln_one();
     for i in 0..seq_len {
         let likelihood = |allele: &u8| {
             let mut lh = LogProb::ln_one();
@@ -163,18 +163,17 @@ pub fn calc_paired_consensus(
         };
 
         let likelihoods = ALLELES.iter().map(&likelihood).collect_vec();
-        let max_posterior = likelihoods
+        let (max_posterior, allele_lh) = likelihoods
             .iter()
             .enumerate()
             .max_by_key(|&(_, &lh)| NotNaN::new(*lh).unwrap())
-            .unwrap()
-            .0;
-
+            .unwrap();
+        consensus_lh += *allele_lh;
         let marginal = LogProb::ln_sum_exp(&likelihoods);
         // new base: MAP
         consensus_seq.push(ALLELES[max_posterior]);
         // new qual: (1 - MAP)
-        let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
+        let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp(); //Is allele_lh indentical to likelihoods[max_posterior]?
 
         // Assume the maximal quality, if the likelihood is infinite
         let truncated_quality: f64;
@@ -191,5 +190,8 @@ pub fn calc_paired_consensus(
         uuid,
         seqids.iter().map(|i| format!("{}", i)).join(",")
     );
-    fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual)
+    (
+        fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual),
+        consensus_lh,
+    )
 }

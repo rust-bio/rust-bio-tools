@@ -1,6 +1,7 @@
 use bio::io::fastq;
 use bio::io::fastq::{FastqRead, Record};
 use csv;
+use ordered_float::NotNaN;
 use rocksdb::DB;
 use serde_json;
 use std::error::Error;
@@ -128,12 +129,10 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
 
         let mut f_rec = fastq::Record::new();
         let mut r_rec = fastq::Record::new();
-
         // init temp storage for reads
         let mut read_storage = FASTQStorage::new()?;
         let mut i = 0;
         let mut umis = Vec::new();
-        dbg!(self.reverse_umi());
         loop {
             self.fq1_reader().read(&mut f_rec)?;
             self.fq2_reader().read(&mut r_rec)?;
@@ -149,6 +148,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             } else {
                 f_rec.seq()[..self.umi_len()].to_owned()
             };
+
             umis.push(umi);
 
             read_storage.put(i, &f_rec, &r_rec)?;
@@ -158,10 +158,12 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 [&f_rec.seq()[self.umi_len()..], &r_rec.seq()[..]].concat()
             };
             seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
+            dbg!(&read_storage);
             seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
             i += 1;
-        }
 
+        }
+        dbg!("Test2");
         seq_cluster.stdin.as_mut().unwrap().flush()?;
         drop(seq_cluster.stdin.take());
 
@@ -385,17 +387,18 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 None => {}
             }
         }
-        //This is complete experimental!!!
-        //Choose only most promising overlaps based on distance?!
-        //Write consensus with highest likelihood to fq_writer
-        //calc_paired_consensus needs to return likelihood
-        for (mean_distance, insert_size) in median_distances.iter() {
-            let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
-            let uuid = f_recs[0].id().split(":").collect::<Vec<&str>>()[0];
-            let consensus_record =
-                calc_paired_consensus(&f_recs, &r_recs, &overlap, &outer_seqids, &uuid);
-            self.fq_writer.write_record(&consensus_record)?;
-        }
+        //ToDO: Need to filter by hamming distance
+        let uuid = f_recs[0].id().split(":").collect::<Vec<&str>>()[0];
+        let consensus_record = median_distances
+            .iter()
+            .map(|(mean_distance, insert_size)| {
+                let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
+                calc_paired_consensus(&f_recs, &r_recs, &overlap, &outer_seqids, &uuid)
+            })
+            .max_by_key(|&(_, lh)| NotNaN::new(*lh).unwrap())
+            .unwrap()
+            .0;
+        self.fq_writer.write_record(&consensus_record)?;
         Ok(())
     }
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {

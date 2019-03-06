@@ -76,26 +76,16 @@ mod calc_consensus;
 mod pipeline;
 
 use bio::io::fastq;
-use failure::{Context, Fail, ResultExt};
 use flate2::bufread::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
+use std::error::Error;
 use std::fs;
 use std::io::BufReader;
 use std::str;
 
 use pipeline::CallConsensusReads;
 use pipeline::CallNonOverlappingConsensusRead;
-
-#[derive(Fail, Debug)]
-#[fail(
-    display = "Invalid FASTQ path for parameter {}. Could not open file {}",
-    _0, _1
-)]
-pub struct FastqIOError {
-    ci_parameter: String,
-    path: String,
-}
 
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.
@@ -110,64 +100,47 @@ pub fn call_consensus_reads_from_paths(
     umi_len: usize,
     seq_dist: usize,
     umi_dist: usize,
-) -> Result<(), Context<FastqIOError>> {
+) -> Result<(), Box<dyn Error>> {
     eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
     eprintln!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
 
     match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
-        (false, false, false, false) => match CallNonOverlappingConsensusRead::new(
-            &mut fastq::Reader::from_file(fq1).context(FastqIOError{ci_parameter: "fq1".to_owned(), path: fq1.to_owned()})?,
-            &mut fastq::Reader::from_file(fq2).context(FastqIOError{ci_parameter: "fq2".to_owned(), path: fq2.to_owned()})?,
-            &mut fastq::Writer::to_file(fq1_out).context(FastqIOError{ci_parameter: "fq1_out".to_owned(), path: fq1_out.to_owned()})?,
-            &mut fastq::Writer::to_file(fq2_out).context(FastqIOError{ci_parameter: "fq2_out".to_owned(), path: fq1_out.to_owned()})?,
+        (false, false, false, false) => CallNonOverlappingConsensusRead::new(
+            &mut fastq::Reader::from_file(fq1)?,
+            &mut fastq::Reader::from_file(fq2)?,
+            &mut fastq::Writer::to_file(fq1_out)?,
+            &mut fastq::Writer::to_file(fq2_out)?,
             umi_len,
             seq_dist,
             umi_dist,
-        ).call_consensus_reads() {
-            Ok(()) => Ok(()),
-            // TODO the code below requires more elaborate handling
-            // The errors returned by rustbio do not implement Sync and Send
-            // If that would be the case, we could use
-            // call_consensus_reads().map_err(Error::from_boxed_compat)?
-            // TODO this is a Placeholder Error Type
-            Err(_e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
-        },
-        (true, true, false, false) => match CallNonOverlappingConsensusRead::new(
-            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).context(FastqIOError{ci_parameter: "fq1".to_owned(), path: fq1.to_owned()})?),
-            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).context(FastqIOError{ci_parameter: "fq2".to_owned(), path: fq2.to_owned()})?),
-            &mut fastq::Writer::to_file(fq1_out).context(FastqIOError{ci_parameter: "fq1_out".to_owned(), path: fq1_out.to_owned()})?,
-            &mut fastq::Writer::to_file(fq2_out).context(FastqIOError{ci_parameter: "fq2_out".to_owned(), path: fq2_out.to_owned()})?,
+        ).call_consensus_reads(),
+        (true, true, false, false) => CallNonOverlappingConsensusRead::new(
+            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new)?),
+            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new)?),
+            &mut fastq::Writer::to_file(fq1_out)?,
+            &mut fastq::Writer::to_file(fq2_out)?,
             umi_len,
             seq_dist,
             umi_dist,
-        ).call_consensus_reads() {
-            Ok(()) => Ok(()),
-            Err(_e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
-        },
-        (false, false, true, true) => match CallNonOverlappingConsensusRead::new(
-            &mut fastq::Reader::from_file(fq1).context(FastqIOError{ci_parameter: "fq1".to_owned(), path: fq1.to_owned()})?,
-            &mut fastq::Reader::from_file(fq2).context(FastqIOError{ci_parameter: "fq2".to_owned(), path: fq2.to_owned()})?,
-            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out).context(FastqIOError{ci_parameter: "fq1_out".to_owned(), path: fq1_out.to_owned()})?, Compression::default())),
-            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out).context(FastqIOError{ci_parameter: "fq2_out".to_owned(), path: fq2_out.to_owned()})?, Compression::default())),
+        ).call_consensus_reads(),
+        (false, false, true, true) => CallNonOverlappingConsensusRead::new(
+            &mut fastq::Reader::from_file(fq1)?,
+            &mut fastq::Reader::from_file(fq2)?,
+            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out)?, Compression::default())),
+            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out)?, Compression::default())),
             umi_len,
             seq_dist,
             umi_dist,
-        ).call_consensus_reads() {
-            Ok(()) => Ok(()),
-            Err(_e) => Err(Context::new(FastqIOError{ci_parameter: "general".to_owned(), path: "general".to_owned()})),
-        },
-        (true, true, true, true) => match CallNonOverlappingConsensusRead::new(
-            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new).context(FastqIOError{ci_parameter: "fq1".to_owned(), path: fq1.to_owned()})?),
-            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new).context(FastqIOError{ci_parameter: "fq2".to_owned(), path: fq2.to_owned()})?),
-            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out).context(FastqIOError{ci_parameter: "fq1_out".to_owned(), path: fq1_out.to_owned()})?, Compression::default())),
-            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out).context(FastqIOError{ci_parameter: "fq2_out".to_owned(), path: fq2_out.to_owned()})?, Compression::default())),
+        ).call_consensus_reads(),
+        (true, true, true, true) => CallNonOverlappingConsensusRead::new(
+            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new)?),
+            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new)?),
+            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out)?, Compression::default())),
+            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out)?, Compression::default())),
             umi_len,
             seq_dist,
             umi_dist,
-        ).call_consensus_reads() {
-            Ok(()) => Ok(()),
-            Err(_e) => Err(Context::new(FastqIOError{ci_parameter:"general".to_owned(), path: "general".to_owned()})),
-        },
+        ).call_consensus_reads(),
         _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
     }
 }

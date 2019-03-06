@@ -161,9 +161,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             dbg!(&read_storage);
             seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
             i += 1;
-
         }
-        dbg!("Test2");
         seq_cluster.stdin.as_mut().unwrap().flush()?;
         drop(seq_cluster.stdin.take());
 
@@ -387,13 +385,23 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 None => {}
             }
         }
-        //ToDO: Need to filter by hamming distance
+        let hamming_threshold = 10.0;
         let uuid = f_recs[0].id().split(":").collect::<Vec<&str>>()[0];
         let consensus_record = median_distances
             .iter()
-            .map(|(mean_distance, insert_size)| {
-                let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
-                calc_paired_consensus(&f_recs, &r_recs, &overlap, &outer_seqids, &uuid)
+            .filter_map(|(mean_distance, insert_size)| {
+                if mean_distance < &hamming_threshold {
+                    let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
+                    Some(calc_paired_consensus(
+                        &f_recs,
+                        &r_recs,
+                        &overlap,
+                        &outer_seqids,
+                        &uuid,
+                    ))
+                } else {
+                    None
+                }
             })
             .max_by_key(|&(_, lh)| NotNaN::new(*lh).unwrap())
             .unwrap()

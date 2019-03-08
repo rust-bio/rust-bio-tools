@@ -107,5 +107,7 @@ fn test_call_consensus_reads() {
                 .arg("-c")
                 .arg("target/debug/rbt call-consensus-reads --umi-len 3 -u --max-umi-dist 2 --max-seq-dist 2 tests/test-consensus.fastq tests/test-consensus.fastq /tmp/test-consensus.1.fastq /tmp/test-consensus.2.fastq")
                 .spawn().unwrap().wait().unwrap().success()
+        test_output("tmp/test-consensus.1.fastq", "/test/test-consensus.1.fastq");
+        test_output("/tmp/test-consensus.2.fastq", "/test/test-consensus.2.fastq");
     );
 }

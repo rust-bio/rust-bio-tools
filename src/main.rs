@@ -76,7 +76,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             value_t!(matches, "max-seq-dist", usize).unwrap(),
             value_t!(matches, "max-umi-dist", usize).unwrap(),
             matches.is_present("reverse-umi"),
-        );
+        )?;
         Ok(())
     } else if let Some(matches) = matches.subcommand_matches("call-overlapping-consensus-reads") {
         fastq::call_consensus_reads::call_overlapping_consensus_reads_from_paths(
@@ -89,6 +89,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             value_t!(matches, "insert-size", usize).unwrap(),
             value_t!(matches, "std-dev", usize).unwrap(),
             matches.is_present("reverse-umi"),
+
         )?;
         Ok(())
     } else {

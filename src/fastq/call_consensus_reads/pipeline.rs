@@ -158,7 +158,6 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 [&f_rec.seq()[self.umi_len()..], &r_rec.seq()[..]].concat()
             };
             seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
-            dbg!(&read_storage);
             seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
             i += 1;
         }
@@ -179,6 +178,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .arg("--dist")
                 .arg(format!("{}", self.umi_dist()))
                 .arg("--seq-id")
+                .arg("-s")
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
@@ -215,6 +215,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                     r_recs.push(r_rec);
                     outer_seqids.push(seqid);
                 }
+                dbg!(&f_recs);
                 self.write_records(f_recs, r_recs, outer_seqids)?;
             }
 
@@ -384,6 +385,10 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 }
                 None => {}
             }
+        }
+        //ToDo How to handle Errors?!
+        if median_distances.is_empty() {
+            eprintln!("No overlapping reads found! Check insert size.");
         }
         let hamming_threshold = 10.0;
         let uuid = f_recs[0].id().split(":").collect::<Vec<&str>>()[0];

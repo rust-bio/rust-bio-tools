@@ -152,6 +152,7 @@ subcommands:
         - max-seq-dist:
             long: max-seq-dist
             short: D
+            possible_values: ["1", "2", "3", "4", "5", "6", "7", "8"]
             default_value: "2"
             help: Maximum hamming distance between the sequences of any pair of reads in the same cluster.
         - reverse-umi:
@@ -186,6 +187,7 @@ subcommands:
         - max-seq-dist:
             long: max-seq-dist
             short: D
+            possible_values: ["1", "2", "3", "4", "5", "6", "7", "8"]
             default_value: "2"
             help: Maximum hamming distance between the sequences of any pair of reads in the same cluster.
         - insert-size:
@@ -200,5 +202,5 @@ subcommands:
             help: Standard deviation of expected insert size. Defines search space of the most likely overlap.
         - reverse-umi:
             long: reverse-umi
-            short: U
+            short: u
             help: Set if UMI is on reverse read

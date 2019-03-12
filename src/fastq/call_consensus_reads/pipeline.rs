@@ -121,6 +121,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             .arg("--dist")
             .arg(format!("{}", self.seq_dist()))
             .arg("--seq-id")
+            .arg("-s")
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -216,6 +217,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                     outer_seqids.push(seqid);
                 }
                 dbg!(&f_recs);
+                dbg!(&r_recs);
                 self.write_records(f_recs, r_recs, outer_seqids)?;
             }
 

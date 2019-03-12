@@ -117,9 +117,10 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         // hard to interpret error:
         // (No such file or directory (os error 2))
         // The expect added below should make this more clear.
-        let mut seq_cluster = Command::new("starcode")
+        // cluster within in this cluster by umi
+        let mut umi_cluster = Command::new("starcode")
             .arg("--dist")
-            .arg(format!("{}", self.seq_dist()))
+            .arg(format!("{}", self.umi_dist()))
             .arg("--seq-id")
             .arg("-s")
             .stdin(Stdio::piped())
@@ -133,7 +134,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         // init temp storage for reads
         let mut read_storage = FASTQStorage::new()?;
         let mut i = 0;
-        let mut umis = Vec::new();
+        let mut seqs = Vec::new();
         loop {
             self.fq1_reader().read(&mut f_rec)?;
             self.fq2_reader().read(&mut r_rec)?;
@@ -149,8 +150,8 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             } else {
                 f_rec.seq()[..self.umi_len()].to_owned()
             };
-
-            umis.push(umi);
+            umi_cluster.stdin.as_mut().unwrap().write(&umi)?;
+            umi_cluster.stdin.as_mut().unwrap().write(b"\n")?;
 
             read_storage.put(i, &f_rec, &r_rec)?;
             let seq = if self.reverse_umi() {
@@ -158,26 +159,25 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             } else {
                 [&f_rec.seq()[self.umi_len()..], &r_rec.seq()[..]].concat()
             };
-            seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
-            seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+            seqs.push(seq);
             i += 1;
         }
-        seq_cluster.stdin.as_mut().unwrap().flush()?;
-        drop(seq_cluster.stdin.take());
+        umi_cluster.stdin.as_mut().unwrap().flush()?;
+        drop(umi_cluster.stdin.take());
 
         eprint!("Read starcode results");
         // read clusters identified by the first starcode run
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .has_headers(false)
-            .from_reader(seq_cluster.stdout.as_mut().unwrap())
+            .from_reader(umi_cluster.stdout.as_mut().unwrap())
             .records()
         {
             let seqids = parse_cluster(record?)?;
             // cluster within in this cluster by umi
-            let mut umi_cluster = Command::new("starcode")
+            let mut seq_cluster = Command::new("starcode")
                 .arg("--dist")
-                .arg(format!("{}", self.umi_dist()))
+                .arg(format!("{}", self.seq_dist()))
                 .arg("--seq-id")
                 .arg("-s")
                 .stdin(Stdio::piped())
@@ -185,21 +185,21 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .stderr(Stdio::piped())
                 .spawn()?;
             for &seqid in &seqids {
-                umi_cluster
+                seq_cluster
                     .stdin
                     .as_mut()
                     .unwrap()
-                    .write(&umis[seqid - 1])?;
-                umi_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+                    .write(&seqs[seqid - 1])?;
+                seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
             }
-            umi_cluster.stdin.as_mut().unwrap().flush()?;
-            drop(umi_cluster.stdin.take());
+            seq_cluster.stdin.as_mut().unwrap().flush()?;
+            drop(seq_cluster.stdin.take());
 
             // handle each potential unique read
             for record in csv::ReaderBuilder::new()
                 .delimiter(b'\t')
                 .has_headers(false)
-                .from_reader(umi_cluster.stdout.as_mut().unwrap())
+                .from_reader(seq_cluster.stdout.as_mut().unwrap())
                 .records()
             {
                 let inner_seqids = parse_cluster(record?)?;
@@ -216,12 +216,10 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                     r_recs.push(r_rec);
                     outer_seqids.push(seqid);
                 }
-                dbg!(&f_recs);
-                dbg!(&r_recs);
                 self.write_records(f_recs, r_recs, outer_seqids)?;
             }
 
-            match umi_cluster
+            match seq_cluster
                 .wait()
                 .expect("process did not even start")
                 .code()

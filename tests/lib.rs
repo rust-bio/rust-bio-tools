@@ -106,8 +106,17 @@ fn test_call_consensus_reads() {
         Command::new("bash")
                 .arg("-c")
                 .arg("target/debug/rbt call-consensus-reads --umi-len 3 -u --max-umi-dist 2 --max-seq-dist 2 tests/test-consensus.fastq tests/test-consensus.fastq /tmp/test-consensus.1.fastq /tmp/test-consensus.2.fastq")
-                .spawn().unwrap().wait().unwrap().success()
-        test_output("tmp/test-consensus.1.fastq", "/test/test-consensus.1.fastq");
-        test_output("/tmp/test-consensus.2.fastq", "/test/test-consensus.2.fastq");
-    );
+                .spawn().unwrap().wait().unwrap().success());
+        test_output("/tmp/test-consensus.1.fastq", "tests/test-consensus.1.fastq");
+        test_output("/tmp/test-consensus.2.fastq", "tests/test-consensus.2.fastq");
+}
+
+#[test]
+fn test_call_overlapping_consensus_reads() {
+    assert!(
+        Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt call-overlapping-consensus-reads --umi-len 10 --max-umi-dist 0 --max-seq-dist 8 --insert-size 450 --std-dev 50  tests/test-overlapping-consensus.1.fastq tests/test-overlapping-consensus.2.fastq /tmp/test-overlapping-consensus.fastq")
+            .spawn().unwrap().wait().unwrap().success());
+    test_output("/tmp/test-overlapping-consensus.fastq", "tests/test-overlapping-cosensus-expected.fastq");
 }

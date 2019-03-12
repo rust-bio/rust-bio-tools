@@ -136,7 +136,7 @@ fn test_call_overlapping_consensus_reads() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt call-overlapping-consensus-reads --umi-len 10 --max-umi-dist 0 --max-seq-dist 8 --insert-size 450 --std-dev 50  tests/test-overlapping-consensus.1.fastq tests/test-overlapping-consensus.2.fastq /tmp/test-overlapping-consensus.fastq")
+            .arg("target/debug/rbt call-overlapping-consensus-reads --umi-len 10 --max-umi-dist 0 --max-seq-dist 8 --insert-size 450 --std-dev 50  tests/overlapping-consensus.1.fastq tests/overlapping-consensus.2.fastq /tmp/overlapping-consensus.fastq")
             .spawn().unwrap().wait().unwrap().success());
-    compare_fastq("/tmp/test-overlapping-consensus.fastq", "tests/test-overlapping-consensus-expected.fastq");
+    compare_fastq("/tmp/overlapping-consensus.fastq", "tests/expected/overlapping-consensus.fastq");
 }

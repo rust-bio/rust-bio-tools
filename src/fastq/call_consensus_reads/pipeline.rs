@@ -411,6 +411,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         {
             self.fq_writer.write_record(&consensus_record.0)?;
         } else {
+            //Replace this by calling non overlapping consensus read in future implementation
             eprintln!("No read pairs with hamming distance < {} found in cluster! No consensus read created. If no read is created at all check insert size.", hamming_threshold);
         }
         Ok(())

@@ -89,7 +89,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             value_t!(matches, "insert-size", usize).unwrap(),
             value_t!(matches, "std-dev", usize).unwrap(),
             matches.is_present("reverse-umi"),
-
         )?;
         Ok(())
     } else {

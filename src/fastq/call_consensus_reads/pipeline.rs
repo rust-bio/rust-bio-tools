@@ -293,7 +293,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         f_recs: Vec<Record>,
         r_recs: Vec<Record>,
         outer_seqids: Vec<usize>,
-    ) -> Result<(), Box<Error>> {
+    ) -> Result<(), Box<dyn Error>> {
         if f_recs.len() > 1 {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
             self.fq1_writer
@@ -388,13 +388,10 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 None => {}
             }
         }
-        //ToDo How to handle Errors?!
-        if median_distances.is_empty() {
-            eprintln!("No overlapping reads found! Check insert size.");
-        }
+
         let hamming_threshold = 10.0;
         let uuid = f_recs[0].id().split(":").collect::<Vec<&str>>()[0];
-        let consensus_record = median_distances
+        if let Some(consensus_record) = median_distances
             .iter()
             .filter_map(|(mean_distance, insert_size)| {
                 if mean_distance < &hamming_threshold {
@@ -411,9 +408,11 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 }
             })
             .max_by_key(|&(_, lh)| NotNaN::new(*lh).unwrap())
-            .unwrap()
-            .0;
-        self.fq_writer.write_record(&consensus_record)?;
+        {
+            self.fq_writer.write_record(&consensus_record.0)?;
+        } else {
+            eprintln!("No read pairs with hamming distance < {} found in cluster! No consensus read created. If no read is created at all check insert size.", hamming_threshold);
+        }
         Ok(())
     }
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {

@@ -388,7 +388,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         }
 
         let hamming_threshold = 10.0;
-        let uuid = f_recs[0].id().split(":").collect::<Vec<&str>>()[0];
+        let uuid = &Uuid::new_v4().to_hyphenated().to_string();
         if let Some(consensus_record) = median_distances
             .iter()
             .filter_map(|(mean_distance, insert_size)| {

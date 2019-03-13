@@ -15,6 +15,9 @@ use uuid::Uuid;
 
 use super::calc_consensus::{calc_consensus, calc_paired_consensus};
 
+
+const HAMMING_THRESHOLD: f64 = 10.0;
+
 /// Interpret a cluster returned by starcode
 fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>> {
     let seqids = &record[2];
@@ -28,7 +31,7 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
 }
 
 /// Calculates the median hamming distance for all records by deriving the overlap from insert size
-fn mean_hamming_distance(
+fn median_hamming_distance(
     insert_size: &usize,
     f_recs: &Vec<fastq::Record>,
     r_recs: &Vec<fastq::Record>,
@@ -38,10 +41,10 @@ fn mean_hamming_distance(
     for (f_rec, r_rec) in f_recs.into_iter().zip(r_recs).map(|(a, b)| (a, b)) {
         // check if reads overlap within insert size
         if (insert_size < &f_rec.seq().len()) | (insert_size < &r_rec.seq().len()) {
-            break;
+            return None;
         }
         if insert_size >= &(&f_rec.seq().len() + &r_rec.seq().len()) {
-            break;
+            return None;
         }
         let overlap = (f_rec.seq().len() + r_rec.seq().len()) - insert_size;
         let suffix_start_idx: usize = f_rec.seq().len() - overlap;
@@ -378,21 +381,18 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         for insert_size in
             (self.insert_size - 2 * self.std_dev)..(self.insert_size + 2 * self.std_dev)
         {
-            let mean_hamming_distance = mean_hamming_distance(&insert_size, &f_recs, &r_recs);
-            match mean_hamming_distance {
-                Some(mean_hamming_distance) => {
-                    median_distances.push((mean_hamming_distance, insert_size))
-                }
-                None => {}
+            let median_hamming_distance = median_hamming_distance(&insert_size, &f_recs, &r_recs);
+            if let Some(median_hamming_distance) = median_hamming_distance {
+                    median_distances.push((median_hamming_distance, insert_size))
             }
         }
 
-        let hamming_threshold = 10.0;
+        //TODO Add deterministic uuid considering read ids
         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
         if let Some(consensus_record) = median_distances
             .iter()
             .filter_map(|(mean_distance, insert_size)| {
-                if mean_distance < &hamming_threshold {
+                if *mean_distance < HAMMING_THRESHOLD {
                     let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
                     Some(calc_paired_consensus(
                         &f_recs,
@@ -410,7 +410,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
             self.fq_writer.write_record(&consensus_record.0)?;
         } else {
             //Replace this by calling non overlapping consensus read in future implementation
-            eprintln!("No read pairs with hamming distance < {} found in cluster! No consensus read created. If no read is created at all check insert size.", hamming_threshold);
+            eprintln!("No read pairs with hamming distance < {} found in cluster! No consensus read created. If no read is created at all check insert size.", HAMMING_THRESHOLD);
         }
         Ok(())
     }

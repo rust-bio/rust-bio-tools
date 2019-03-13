@@ -120,16 +120,27 @@ fn compare_fastq(result: &str, expected: &str) {
 }
 
 #[test]
-fn test_call_consensus_reads() {
+fn test_call_consensus_reads_two_cluster() {
     assert!(
         Command::new("bash")
                 .arg("-c")
-                .arg("target/debug/rbt call-consensus-reads --umi-len 3 -u --max-umi-dist 2 --max-seq-dist 2 tests/test-consensus.fastq tests/test-consensus.fastq /tmp/test-consensus.1.fastq /tmp/test-consensus.2.fastq")
+                .arg("target/debug/rbt call-consensus-reads --umi-len 3 -u --max-umi-dist 0 --max-seq-dist 2 tests/test-consensus.fastq tests/test-consensus.fastq /tmp/test-consensus.1.fastq /tmp/test-consensus.2.fastq")
             .spawn().unwrap().wait().unwrap().success());
-    
-    compare_fastq("/tmp/test-consensus.1.fastq", "tests/test-consensus.1.fastq");
-    compare_fastq("/tmp/test-consensus.2.fastq", "tests/test-consensus.2.fastq");
+    compare_fastq("/tmp/test-consensus.1.fastq", "tests/expected/test-consensus.1.fastq");
+    compare_fastq("/tmp/test-consensus.2.fastq", "tests/expected/test-consensus.2.fastq");
 }
+
+#[test]
+fn test_call_consensus_reads_single_cluster() {
+    assert!(
+        Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt call-consensus-reads --umi-len 3 -u --max-umi-dist 2 --max-seq-dist 2 tests/test-consensus.fastq tests/test-consensus.fastq /tmp/test-consensus_single.1.fastq /tmp/test-consensus_single.2.fastq")
+            .spawn().unwrap().wait().unwrap().success());
+    compare_fastq("/tmp/test-consensus_single.1.fastq", "tests/expected/test-consensus_single.1.fastq");
+    compare_fastq("/tmp/test-consensus_single.2.fastq", "tests/expected/test-consensus_single.2.fastq");
+}
+
 
 #[test]
 fn test_call_overlapping_consensus_reads() {

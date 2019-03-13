@@ -145,6 +145,7 @@ pub fn calc_paired_consensus(
         }
     };
     let mut consensus_lh = LogProb::ln_one();
+
     for i in 0..seq_len {
         let likelihood = |allele: &u8| {
             let mut lh = LogProb::ln_one();
@@ -173,7 +174,7 @@ pub fn calc_paired_consensus(
         // new base: MAP
         consensus_seq.push(ALLELES[max_posterior]);
         // new qual: (1 - MAP)
-        let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp(); //Is allele_lh indentical to likelihoods[max_posterior]?
+        let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
 
         // Assume the maximal quality, if the likelihood is infinite
         let truncated_quality: f64;

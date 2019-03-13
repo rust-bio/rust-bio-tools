@@ -14,7 +14,11 @@ const ALLELES: &'static [u8] = b"ACGT";
 /// choose the most likely one. Write the most likely allele i.e. base
 /// as sequence into the consensus sequence. The quality value is the
 /// likelihood for this allele, encoded in PHRED+33.
-pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> fastq::Record {
+pub fn calc_consensus(
+    recs: &[fastq::Record],
+    seqids: &[usize],
+    uuid: &str,
+) -> (fastq::Record, LogProb) {
     let seq_len = recs[0].seq().len();
     let mut consensus_seq = Vec::with_capacity(seq_len);
     let mut consensus_qual = Vec::with_capacity(seq_len);
@@ -32,12 +36,24 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
         "Read length of FASTQ records {:?} differ. Cannot compute consensus sequence.",
         seqids
     );
+
     // Potential workflow for different read lengths
     // compute consensus of all reads with max len
     // compute offset of all shorter reads
     // pad shorter reads
     // drop first consensus, compute consensus of full length reads and padded reads
     // ignore padded bases for consensus computation
+
+    let allele_likelihood = |allele: &u8, seq: &[u8], qual: &[u8], i: usize| {
+        let q = LogProb::from(PHREDProb::from((qual[i] - 33) as f64));
+        if *allele == seq[i].to_ascii_uppercase() {
+            q.ln_one_minus_exp()
+        } else {
+            q + PROB_CONFUSION
+        }
+    };
+
+    let mut consensus_lh = LogProb::ln_one();
 
     for i in 0..seq_len {
         #[allow(unused_doc_comments)]
@@ -51,12 +67,7 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
         let likelihood = |allele: &u8| {
             let mut lh = LogProb::ln_one(); // posterior: log(P(theta)) = 1
             for rec in recs {
-                let q = LogProb::from(PHREDProb::from((rec.qual()[i] - 33) as f64));
-                lh += if *allele == rec.seq()[i].to_ascii_uppercase() {
-                    q.ln_one_minus_exp()
-                } else {
-                    q + PROB_CONFUSION
-                };
+                lh += allele_likelihood(allele, rec.seq(), rec.qual(), i);
             }
             lh
         };
@@ -65,13 +76,12 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
         // Find the allele (theta \in ACGT) with the highest likelihood
         // given the bases at this position, weighted with their quality values
         let likelihoods = ALLELES.iter().map(&likelihood).collect_vec();
-        let max_posterior = likelihoods
+        let (max_posterior, allele_lh) = likelihoods
             .iter()
             .enumerate()
             .max_by_key(|&(_, &lh)| NotNaN::new(*lh).unwrap()) // argmax of MAP
-            .unwrap()
-            .0;
-
+            .unwrap();
+        consensus_lh += *allele_lh;
         //
         let marginal = LogProb::ln_sum_exp(&likelihoods);
         // new base: MAP
@@ -94,7 +104,10 @@ pub fn calc_consensus(recs: &[fastq::Record], seqids: &[usize], uuid: &str) -> f
         uuid,
         seqids.iter().map(|i| format!("{}", i)).join(",")
     );
-    fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual)
+    (
+        fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual),
+        consensus_lh,
+    )
 }
 
 /// Compute a consensus sequence for a collection of paired-end FASTQ
@@ -195,4 +208,77 @@ pub fn calc_paired_consensus(
         fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual),
         consensus_lh,
     )
+}
+
+pub trait CalcConsensus<'a> {
+    fn seqids(&self) -> &'a [usize];
+    fn uuid(&self) -> &'a str;
+}
+
+pub struct CalcNonOverlappingConsensus<'a> {
+    recs: &'a [fastq::Record],
+    seqids: &'a [usize],
+    uuid: &'a str,
+}
+
+impl<'a> CalcNonOverlappingConsensus<'a> {
+    pub fn new(recs: &'a [fastq::Record], seqids: &'a [usize], uuid: &'a str) -> Self {
+        CalcNonOverlappingConsensus { recs, seqids, uuid }
+    }
+    pub fn recs(&self) -> &[fastq::Record] {
+        self.recs
+    }
+}
+
+impl<'a> CalcConsensus<'a> for CalcNonOverlappingConsensus<'a> {
+    fn seqids(&self) -> &'a [usize] {
+        self.seqids
+    }
+    fn uuid(&self) -> &'a str {
+        self.uuid
+    }
+}
+
+pub struct CalcOverlappingConsensus<'a> {
+    recs1: &'a [fastq::Record],
+    recs2: &'a [fastq::Record],
+    overlap: usize,
+    seqids: &'a [usize],
+    uuid: &'a str,
+}
+
+impl<'a> CalcOverlappingConsensus<'a> {
+    pub fn new(
+        recs1: &'a [fastq::Record],
+        recs2: &'a [fastq::Record],
+        overlap: usize,
+        seqids: &'a [usize],
+        uuid: &'a str,
+    ) -> Self {
+        CalcOverlappingConsensus {
+            recs1,
+            recs2,
+            overlap,
+            seqids,
+            uuid,
+        }
+    }
+    fn recs1(&self) -> &[fastq::Record] {
+        self.recs1
+    }
+    fn recs2(&self) -> &[fastq::Record] {
+        self.recs2
+    }
+    fn overlap(&self) -> usize {
+        self.overlap
+    }
+}
+
+impl<'a> CalcConsensus<'a> for CalcOverlappingConsensus<'a> {
+    fn seqids(&self) -> &'a [usize] {
+        self.seqids
+    }
+    fn uuid(&self) -> &'a str {
+        self.uuid
+    }
 }

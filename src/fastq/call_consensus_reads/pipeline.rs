@@ -297,9 +297,9 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         if f_recs.len() > 1 {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
             self.fq1_writer
-                .write_record(&calc_consensus(&f_recs, &outer_seqids, uuid))?;
+                .write_record(&calc_consensus(&f_recs, &outer_seqids, uuid).0)?;
             self.fq2_writer
-                .write_record(&calc_consensus(&r_recs, &outer_seqids, uuid))?;
+                .write_record(&calc_consensus(&r_recs, &outer_seqids, uuid).0)?;
         } else {
             self.fq1_writer.write_record(&f_recs[0])?;
             self.fq2_writer.write_record(&r_recs[0])?;

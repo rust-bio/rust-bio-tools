@@ -10,6 +10,7 @@ edition = "2018"
 [dependencies]
 bio = "0.25"
 clap = { version = "2.27", features = ["yaml", "color", "suggestions"]}
+indicatif = "0.11"
 itertools = "0.6"
 log = "0.4.6"
 fern = "0.5.7"

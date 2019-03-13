@@ -12,6 +12,7 @@ use std::process::{Command, Stdio};
 use std::str;
 use tempfile::tempdir;
 use uuid::Uuid;
+use indicatif;
 
 use super::calc_consensus::{calc_consensus, calc_paired_consensus};
 
@@ -114,6 +115,10 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
     /// i.e. a cluster with similar sequences and identical UMI,
     /// and write it into the output files.
     fn call_consensus_reads(&'a mut self) -> Result<(), Box<dyn Error>> {
+        let spinner_style = indicatif::ProgressStyle::default_spinner()
+            .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
+            .template("{prefix:.bold.dim} {spinner} {wide_msg}");
+
         // cluster by sequence
         // Note: If starcode is not installed, this throws a
         // hard to interpret error:
@@ -137,7 +142,16 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         let mut read_storage = FASTQStorage::new()?;
         let mut i = 0;
         let mut seqs = Vec::new();
+
+        // prepare spinner for user feedback
+        let pb = indicatif::ProgressBar::new_spinner();
+        pb.set_style(spinner_style.clone());
+        pb.set_prefix(&format!("[1/2] Clustering input reads by UMI using starcode."));
+
         loop {
+            // update spinner
+            pb.set_message(&format!("  Processed {:>10} reads", i));
+            pb.inc(1);
             self.fq1_reader().read(&mut f_rec)?;
             self.fq2_reader().read(&mut r_rec)?;
 
@@ -166,8 +180,14 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         }
         umi_cluster.stdin.as_mut().unwrap().flush()?;
         drop(umi_cluster.stdin.take());
+        pb.finish_with_message(&format!("Done. Analyzed {} reads.", i));
 
-        eprint!("Read starcode results");
+
+        // prepare user feedback
+        let mut j = 0;
+        let pb = indicatif::ProgressBar::new_spinner();
+        pb.set_style(spinner_style.clone());
+        pb.set_prefix(&format!("[2/2] Merge eligable reads within each cluster.    "));
         // read clusters identified by the first starcode run
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
@@ -175,6 +195,9 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             .from_reader(umi_cluster.stdout.as_mut().unwrap())
             .records()
         {
+            // update spinner
+            pb.inc(1);
+            pb.set_message(&format!("Processed {:>10} cluster", j));
             let seqids = parse_cluster(record?)?;
             // cluster within in this cluster by umi
             let mut seq_cluster = Command::new("starcode")
@@ -227,10 +250,12 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .code()
             {
                 Some(0) => (),
-                Some(s) => println!("Starcode failed with error code {}", s),
-                None => println!("Starcode was terminated by signal"),
+                Some(s) => eprintln!("Starcode failed with error code {}", s),
+                None => eprintln!("Starcode was terminated by signal"),
             }
+            j += 1;
         }
+        pb.finish_with_message(&format!("Done. Processed {} cluster.", j));
         Ok(())
     }
 

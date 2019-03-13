@@ -15,7 +15,6 @@ use uuid::Uuid;
 
 use super::calc_consensus::{calc_consensus, calc_paired_consensus};
 
-
 const HAMMING_THRESHOLD: f64 = 10.0;
 
 /// Interpret a cluster returned by starcode
@@ -383,7 +382,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         {
             let median_hamming_distance = median_hamming_distance(&insert_size, &f_recs, &r_recs);
             if let Some(median_hamming_distance) = median_hamming_distance {
-                    median_distances.push((median_hamming_distance, insert_size))
+                median_distances.push((median_hamming_distance, insert_size))
             }
         }
 

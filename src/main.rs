@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ),
         ("vcf-baf", Some(_)) => bcf::baf::calculate_baf(),
         ("call-consensus-reads", Some(matches)) => {
-            fastq::call_consensus_reads::call_consensus_reads_from_paths(
+            fastq::call_consensus_reads::call_nonoverlapping_consensus_reads_from_paths(
                 matches.value_of("fq1").unwrap(),
                 matches.value_of("fq2").unwrap(),
                 matches.value_of("consensus-fq1").unwrap(),
@@ -66,6 +66,20 @@ fn main() -> Result<(), Box<dyn Error>> {
                 value_t!(matches, "umi-len", usize).unwrap(),
                 value_t!(matches, "max-seq-dist", usize).unwrap(),
                 value_t!(matches, "max-umi-dist", usize).unwrap(),
+                matches.is_present("reverse-umi"),
+            )
+        }
+        ("call-overlapping-consensus-reads", Some(matches)) => {
+            fastq::call_consensus_reads::call_overlapping_consensus_reads_from_paths(
+                matches.value_of("fq1").unwrap(),
+                matches.value_of("fq2").unwrap(),
+                matches.value_of("consensus-fq").unwrap(),
+                value_t!(matches, "umi-len", usize).unwrap(),
+                value_t!(matches, "max-seq-dist", usize).unwrap(),
+                value_t!(matches, "max-umi-dist", usize).unwrap(),
+                value_t!(matches, "insert-size", usize).unwrap(),
+                value_t!(matches, "std-dev", usize).unwrap(),
+                matches.is_present("reverse-umi"),
             )
         }
         // This cannot be reached, since the matches step of

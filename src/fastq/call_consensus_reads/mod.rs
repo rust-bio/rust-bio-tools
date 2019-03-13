@@ -79,20 +79,18 @@ use bio::io::fastq;
 use flate2::bufread::GzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
+use pipeline::{CallConsensusReads, CallNonOverlappingConsensusRead, CallOverlappingConsensusRead};
 use std::error::Error;
 use std::fs;
 use std::io::BufReader;
 use std::str;
-
-use pipeline::CallConsensusReads;
-use pipeline::CallNonOverlappingConsensusRead;
 
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.
 ///
 /// The type of the readers (writers) depends on the file ending.
 /// If the input file names end with '.gz' a gzipped reader (writer) is used.
-pub fn call_consensus_reads_from_paths(
+pub fn call_nonoverlapping_consensus_reads_from_paths(
     fq1: &str,
     fq2: &str,
     fq1_out: &str,
@@ -100,6 +98,7 @@ pub fn call_consensus_reads_from_paths(
     umi_len: usize,
     seq_dist: usize,
     umi_dist: usize,
+    reverse_umi: bool,
 ) -> Result<(), Box<dyn Error>> {
     eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
     eprintln!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
@@ -113,6 +112,7 @@ pub fn call_consensus_reads_from_paths(
             umi_len,
             seq_dist,
             umi_dist,
+            reverse_umi,
         ).call_consensus_reads(),
         (true, true, false, false) => CallNonOverlappingConsensusRead::new(
             &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new)?),
@@ -122,6 +122,7 @@ pub fn call_consensus_reads_from_paths(
             umi_len,
             seq_dist,
             umi_dist,
+            reverse_umi,
         ).call_consensus_reads(),
         (false, false, true, true) => CallNonOverlappingConsensusRead::new(
             &mut fastq::Reader::from_file(fq1)?,
@@ -131,6 +132,7 @@ pub fn call_consensus_reads_from_paths(
             umi_len,
             seq_dist,
             umi_dist,
+            reverse_umi,
         ).call_consensus_reads(),
         (true, true, true, true) => CallNonOverlappingConsensusRead::new(
             &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new)?),
@@ -140,6 +142,75 @@ pub fn call_consensus_reads_from_paths(
             umi_len,
             seq_dist,
             umi_dist,
+            reverse_umi,
+        ).call_consensus_reads(),
+        _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
+    }
+}
+
+/// Build readers for the given input and output FASTQ files and pass them to
+/// `call_consensus_reads`.
+///
+/// The type of the readers (writers) depends on the file ending.
+/// If the input file names end with '.gz' a gzipped reader (writer) is used.
+pub fn call_overlapping_consensus_reads_from_paths(
+    fq1: &str,
+    fq2: &str,
+    fq_out: &str,
+    umi_len: usize,
+    seq_dist: usize,
+    umi_dist: usize,
+    insert_size: usize,
+    std_dev: usize,
+    reverse_umi: bool,
+) -> Result<(), Box<dyn Error>> {
+    eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
+    eprintln!("Writing output to:\n    {}", fq_out);
+
+    match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq_out.ends_with(".gz")) {
+        (false, false, false) => CallOverlappingConsensusRead::new(
+            &mut fastq::Reader::from_file(fq1)?,
+            &mut fastq::Reader::from_file(fq2)?,
+            &mut fastq::Writer::to_file(fq_out)?,
+            umi_len,
+            seq_dist,
+            umi_dist,
+            insert_size,
+            std_dev,
+            reverse_umi,
+        ).call_consensus_reads(),
+        (true, true, false) => CallOverlappingConsensusRead::new(
+            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new)?),
+            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new)?),
+            &mut fastq::Writer::to_file(fq_out)?,
+            umi_len,
+            seq_dist,
+            umi_dist,
+            insert_size,
+            std_dev,
+            reverse_umi,
+        ).call_consensus_reads(),
+        (false, false, true) => CallOverlappingConsensusRead::new(
+            &mut fastq::Reader::from_file(fq1)?,
+            &mut fastq::Reader::from_file(fq2)?,
+            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq_out)?, Compression::default())),
+            umi_len,
+            seq_dist,
+            umi_dist,
+            insert_size,
+            std_dev,
+            reverse_umi,
+        ).call_consensus_reads(),
+        (true, true, true) => CallOverlappingConsensusRead::new(
+            &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(GzDecoder::new)?),
+            &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(GzDecoder::new)?),
+            &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq_out)?, Compression::default())),
+            umi_len,
+            seq_dist,
+            umi_dist,
+            insert_size,
+            std_dev,
+            reverse_umi,
         ).call_consensus_reads(),
         _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
     }

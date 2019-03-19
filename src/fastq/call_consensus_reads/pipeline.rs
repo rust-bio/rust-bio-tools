@@ -1,6 +1,7 @@
 use bio::io::fastq;
 use bio::io::fastq::{FastqRead, Record};
 use csv;
+use indicatif;
 use ordered_float::NotNaN;
 use rocksdb::DB;
 use serde_json;
@@ -12,9 +13,8 @@ use std::process::{Command, Stdio};
 use std::str;
 use tempfile::tempdir;
 use uuid::Uuid;
-use indicatif;
 
-use super::calc_consensus::{calc_consensus, calc_paired_consensus};
+use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
 
 const HAMMING_THRESHOLD: f64 = 10.0;
 
@@ -146,7 +146,9 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         // prepare spinner for user feedback
         let pb = indicatif::ProgressBar::new_spinner();
         pb.set_style(spinner_style.clone());
-        pb.set_prefix(&format!("[1/2] Clustering input reads by UMI using starcode."));
+        pb.set_prefix(&format!(
+            "[1/2] Clustering input reads by UMI using starcode."
+        ));
 
         loop {
             // update spinner
@@ -182,12 +184,13 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         drop(umi_cluster.stdin.take());
         pb.finish_with_message(&format!("Done. Analyzed {} reads.", i));
 
-
         // prepare user feedback
         let mut j = 0;
         let pb = indicatif::ProgressBar::new_spinner();
         pb.set_style(spinner_style.clone());
-        pb.set_prefix(&format!("[2/2] Merge eligable reads within each cluster.    "));
+        pb.set_prefix(&format!(
+            "[2/2] Merge eligable reads within each cluster.    "
+        ));
         // read clusters identified by the first starcode run
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
@@ -321,10 +324,16 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
     ) -> Result<(), Box<dyn Error>> {
         if f_recs.len() > 1 {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-            self.fq1_writer
-                .write_record(&calc_consensus(&f_recs, &outer_seqids, uuid))?;
-            self.fq2_writer
-                .write_record(&calc_consensus(&r_recs, &outer_seqids, uuid))?;
+            self.fq1_writer.write_record(
+                &CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid)
+                    .calc_consensus()
+                    .0,
+            )?;
+            self.fq2_writer.write_record(
+                &CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid)
+                    .calc_consensus()
+                    .0,
+            )?;
         } else {
             self.fq1_writer.write_record(&f_recs[0])?;
             self.fq2_writer.write_record(&r_recs[0])?;
@@ -418,13 +427,17 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
             .filter_map(|(mean_distance, insert_size)| {
                 if *mean_distance < HAMMING_THRESHOLD {
                     let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
-                    Some(calc_paired_consensus(
-                        &f_recs,
-                        &r_recs,
-                        &overlap,
-                        &outer_seqids,
-                        &uuid,
-                    ))
+
+                    Some(
+                        CalcOverlappingConsensus::new(
+                            &f_recs,
+                            &r_recs,
+                            overlap,
+                            &outer_seqids,
+                            &uuid,
+                        )
+                        .calc_consensus(),
+                    )
                 } else {
                     None
                 }

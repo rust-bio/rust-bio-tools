@@ -277,7 +277,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
 }
 
 /// Struct for calling non-overlapping consensus reads
-/// Implements CallConsensusReads-Trait
+/// Implements Trait CallConsensusReads
 pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     fq1_reader: &'a mut fastq::Reader<R>,
     fq2_reader: &'a mut fastq::Reader<R>,
@@ -425,7 +425,6 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 median_distances.push((median_hamming_distance, insert_size))
             }
         }
-
         //TODO Add deterministic uuid considering read ids
         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
         if let Some(consensus_record) = median_distances
@@ -452,8 +451,23 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         {
             self.fq3_writer.write_record(&consensus_record.0)?;
         } else {
-            //Replace this by calling non overlapping consensus read in future implementation
-            eprintln!("No read pairs with hamming distance < {} found in cluster! No consensus read created. If no read is created at all check insert size.", HAMMING_THRESHOLD);
+            //This is annoying as it does exactly the same as fn write_records of struct CallNonOverlappingConsensus
+            if f_recs.len() > 1 {
+                let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                self.fq1_writer.write_record(
+                    &CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid)
+                        .calc_consensus()
+                        .0,
+                )?;
+                self.fq2_writer.write_record(
+                    &CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid)
+                        .calc_consensus()
+                        .0,
+                )?;
+            } else {
+                self.fq1_writer.write_record(&f_recs[0])?;
+                self.fq2_writer.write_record(&r_recs[0])?;
+            }
         }
         Ok(())
     }

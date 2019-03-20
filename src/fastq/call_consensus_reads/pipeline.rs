@@ -425,12 +425,14 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 median_distances.push((median_hamming_distance, insert_size))
             }
         }
+        dbg!(&f_recs);
+        dbg!(&median_distances);
         //TODO Add deterministic uuid considering read ids
         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
         if let Some(consensus_record) = median_distances
             .iter()
-            .filter_map(|(mean_distance, insert_size)| {
-                if *mean_distance < HAMMING_THRESHOLD {
+            .filter_map(|(median_distance, insert_size)| {
+                if *median_distance < HAMMING_THRESHOLD {
                     let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
 
                     Some(

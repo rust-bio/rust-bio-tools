@@ -452,6 +452,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         {
             self.fq3_writer.write_record(&consensus_record.0)?;
         } else {
+            //TODO Unlike to reach this case as overlaps below ten will always result in consensus read
             //This is annoying as it does exactly the same as fn write_records of struct CallNonOverlappingConsensus
             if f_recs.len() > 1 {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();

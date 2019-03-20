@@ -48,11 +48,10 @@ fn median_hamming_distance(
         }
         let overlap = (f_rec.seq().len() + r_rec.seq().len()) - insert_size;
         let suffix_start_idx: usize = f_rec.seq().len() - overlap;
-        let mut distance = bio::alignment::distance::hamming(
+        let distance = bio::alignment::distance::hamming(
             &f_rec.seq()[suffix_start_idx..],
             &bio::alphabets::dna::revcomp(r_rec.seq())[..overlap],
         ) as f64;
-        distance = distance / overlap as f64; //Use absolute or relative distance?!
         distances.push(distance);
     }
     stats::median(distances.into_iter())

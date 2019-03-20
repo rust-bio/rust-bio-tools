@@ -365,7 +365,9 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
 pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     fq1_reader: &'a mut fastq::Reader<R>,
     fq2_reader: &'a mut fastq::Reader<R>,
-    fq_writer: &'a mut fastq::Writer<W>,
+    fq1_writer: &'a mut fastq::Writer<W>,
+    fq2_writer: &'a mut fastq::Writer<W>,
+    fq3_writer: &'a mut fastq::Writer<W>,
     umi_len: usize,
     seq_dist: usize,
     umi_dist: usize,
@@ -378,7 +380,9 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
     pub fn new(
         fq1_reader: &'a mut fastq::Reader<R>,
         fq2_reader: &'a mut fastq::Reader<R>,
-        fq_writer: &'a mut fastq::Writer<W>,
+        fq1_writer: &'a mut fastq::Writer<W>,
+        fq2_writer: &'a mut fastq::Writer<W>,
+        fq3_writer: &'a mut fastq::Writer<W>,
         umi_len: usize,
         seq_dist: usize,
         umi_dist: usize,
@@ -389,7 +393,9 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
         CallOverlappingConsensusRead {
             fq1_reader,
             fq2_reader,
-            fq_writer,
+            fq1_writer,
+            fq2_writer,
+            fq3_writer,
             umi_len,
             seq_dist,
             umi_dist,
@@ -444,7 +450,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
             })
             .max_by_key(|&(_, lh)| NotNaN::new(*lh).unwrap())
         {
-            self.fq_writer.write_record(&consensus_record.0)?;
+            self.fq3_writer.write_record(&consensus_record.0)?;
         } else {
             //Replace this by calling non overlapping consensus read in future implementation
             eprintln!("No read pairs with hamming distance < {} found in cluster! No consensus read created. If no read is created at all check insert size.", HAMMING_THRESHOLD);

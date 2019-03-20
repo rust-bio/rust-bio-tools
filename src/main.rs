@@ -63,10 +63,21 @@ fn main() -> Result<(), Box<dyn Error>> {
                 matches.value_of("fq2").unwrap(),
                 matches.value_of("consensus-fq1").unwrap(),
                 matches.value_of("consensus-fq2").unwrap(),
+                matches.value_of("consensus-fq3"),
                 value_t!(matches, "umi-len", usize).unwrap(),
                 value_t!(matches, "max-seq-dist", usize).unwrap(),
                 value_t!(matches, "max-umi-dist", usize).unwrap(),
                 matches.is_present("reverse-umi"),
+                if matches.is_present("insert-size") {
+                    Some(value_t!(matches, "insert-size", usize).unwrap())
+                } else {
+                    None
+                },
+                if matches.is_present("std-dev") {
+                    Some(value_t!(matches, "std-dev", usize).unwrap())
+                } else {
+                    None
+                },
             )
         }
         ("call-overlapping-consensus-reads", Some(matches)) => {

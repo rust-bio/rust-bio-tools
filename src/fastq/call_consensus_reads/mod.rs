@@ -95,14 +95,16 @@ pub fn call_nonoverlapping_consensus_reads_from_paths(
     fq2: &str,
     fq1_out: &str,
     fq2_out: &str,
+    fq3_out: Option<&str>,
     umi_len: usize,
     seq_dist: usize,
     umi_dist: usize,
     reverse_umi: bool,
+    insert_size: Option<usize>,
+    std_dev: Option<usize>,
 ) -> Result<(), Box<dyn Error>> {
     eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
     eprintln!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
-
     match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
         (false, false, false, false) => CallNonOverlappingConsensusRead::new(
             &mut fastq::Reader::from_file(fq1)?,

@@ -424,16 +424,14 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 median_distances.push((median_hamming_distance, insert_size))
             }
         }
-        dbg!(&f_recs);
-        dbg!(&median_distances);
         //TODO Add deterministic uuid considering read ids
         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-        if let Some(consensus_record) = median_distances
+        //Overlapping consensus record is guaranteed as overlaps < threshold are always true
+        let (consensus_record, ol_lh) = median_distances
             .iter()
             .filter_map(|(median_distance, insert_size)| {
                 if *median_distance < HAMMING_THRESHOLD {
                     let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
-
                     Some(
                         CalcOverlappingConsensus::new(
                             &f_recs,
@@ -449,28 +447,21 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 }
             })
             .max_by_key(|&(_, lh)| NotNaN::new(*lh).unwrap())
-        {
-            self.fq3_writer.write_record(&consensus_record.0)?;
+            .unwrap();
+
+        let (f_consensus_rec, f_lh) =
+            &CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid).calc_consensus();
+        let (r_consensus_rec, r_lh) =
+            &CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid).calc_consensus();
+        let nonoverlapping_lh = f_lh + r_lh;
+
+        if ol_lh < nonoverlapping_lh {
+            //TODO Do something
         } else {
-            //TODO Unlike to reach this case as overlaps below ten will always result in consensus read
-            //This is annoying as it does exactly the same as fn write_records of struct CallNonOverlappingConsensus
-            if f_recs.len() > 1 {
-                let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                self.fq1_writer.write_record(
-                    &CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid)
-                        .calc_consensus()
-                        .0,
-                )?;
-                self.fq2_writer.write_record(
-                    &CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid)
-                        .calc_consensus()
-                        .0,
-                )?;
-            } else {
-                self.fq1_writer.write_record(&f_recs[0])?;
-                self.fq2_writer.write_record(&r_recs[0])?;
-            }
+            //TODO Do something else
         }
+        self.fq3_writer.write_record(&consensus_record)?;
+
         Ok(())
     }
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {

@@ -141,7 +141,7 @@ subcommands:
             help: Output FASTQ file with reverse reads.
         - consensus-fq3:
             requires: [insert-size, std-dev]
-            help: Output FASTQ file for overlapping consensus reads
+            help: Output FASTQ file for overlapping consensus reads  (Required for calculating overlapping consensus only)
         - max-umi-dist:
             long: max-umi-dist
             short: d
@@ -167,10 +167,10 @@ subcommands:
             short: i
             takes_value: true
             requires: [consensus-fq3, std-dev]
-            help: Expected insert size of sequenced fragment
+            help: Expected insert size of sequenced fragment (Required for calculating overlapping consensus only)
         - std-dev:
             long: std-dev
             short: s
             takes_value: true
             requires: [consensus-fq3, insert-size]
-            help: Standard deviation of expected insert size. Defines search space of the most likely overlap.
+            help: Standard deviation of expected insert size. Defines search space of the most likely overlap. (Required for calculating overlapping consensus only)

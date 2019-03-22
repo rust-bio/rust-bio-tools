@@ -6,12 +6,16 @@ install:
   - bash miniconda.sh -b
   - . ~/miniconda3/etc/profile.d/conda.sh
   - conda config --set always_yes yes --set changeps1 False
-  - conda create -q -n starcode starcode gsl -c bioconda -c conda-forge
+  - conda create -q -n starcode starcode -c bioconda
   - conda activate starcode
 
 
 cache: cargo
 
+addons:
+  apt:
+    packages:
+      - libgsl0-dev
 rust:
   - stable
   - beta

@@ -411,7 +411,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             reverse_umi,
         }
     }
-    pub fn likeliest_nonoverlapping_consensus(
+    pub fn maximum_likelihood_nonoverlapping_consensus(
         &mut self,
         f_recs: &Vec<Record>,
         r_recs: &Vec<Record>,
@@ -494,7 +494,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 self.std_dev as f64,
             );
         let (f_consensus_rec, r_consensus_rec, nol_lh) =
-            self.likeliest_nonoverlapping_consensus(&f_recs, &r_recs, &outer_seqids, uuid);
+            self.maximum_likelihood_nonoverlapping_consensus(&f_recs, &r_recs, &outer_seqids, uuid);
         match ol_lh > nol_lh {
             true => self.fq3_writer.write_record(&consensus_record)?,
             false => {

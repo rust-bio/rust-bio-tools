@@ -57,7 +57,7 @@ fn median_hamming_distance(
 }
 
 /// as shown in http://www.milefoot.com/math/stat/pdfc-normaldisc.htm
-pub fn isize_pmf(value: f64, mean: f64, sd: f64) -> LogProb {
+fn isize_pmf(value: f64, mean: f64, sd: f64) -> LogProb {
     LogProb((ugaussian_P((value + 0.5 - mean) / sd) - ugaussian_P((value - 0.5 - mean) / sd)).ln())
 }
 
@@ -106,14 +106,30 @@ impl FASTQStorage {
     }
 }
 
-pub struct Consensus {
+pub struct OverlappingConsensus {
     record: Record,
     likelihood: LogProb,
 }
 
-impl Consensus {
+impl OverlappingConsensus {
     pub fn new(record: Record, likelihood: LogProb) -> Self {
-        Consensus { record, likelihood }
+        OverlappingConsensus { record, likelihood }
+    }
+}
+
+pub struct NonOverlappingConsensus {
+    f_record: Record,
+    r_record: Record,
+    likelihood: LogProb,
+}
+
+impl NonOverlappingConsensus {
+    pub fn new(f_record: Record, r_record: Record, likelihood: LogProb) -> Self {
+        NonOverlappingConsensus {
+            f_record,
+            r_record,
+            likelihood,
+        }
     }
 }
 
@@ -418,13 +434,22 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             reverse_umi,
         }
     }
-    pub fn maximum_likelihood_overlapping_consensus(
+    fn isize_highest_probability(&mut self, f_seq_len: usize, r_seq_len: usize) -> f64 {
+        if f_seq_len + f_seq_len < self.insert_size {
+            return self.insert_size as f64;
+        } else if f_seq_len + r_seq_len > self.insert_size + 2 * self.std_dev {
+            return (self.insert_size + 2 * self.std_dev) as f64;
+        } else {
+            return (f_seq_len + r_seq_len) as f64;
+        }
+    }
+     fn maximum_likelihood_overlapping_consensus(
         &mut self,
         f_recs: &Vec<Record>,
         r_recs: &Vec<Record>,
         outer_seqids: &Vec<usize>,
         uuid: &str,
-    ) -> Consensus {
+    ) -> OverlappingConsensus {
         let mut median_distances: Vec<(f64, usize)> = Vec::new();
         // Determine hamming distance for different insert sizes
         for insert_size in
@@ -435,13 +460,15 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
                 median_distances.push((median_hamming_distance, insert_size))
             }
         }
-        //Calculate most likely consensus record
+        //Returns consensus record by filtering overlaps with lowest hamming distance.
+        //For these overlaps(insert sizes) the consensus reads and their likelihoods are calculated.
+        //The read with maximum likelihood will be returned.
         median_distances
             .iter()
             .filter_map(|(median_distance, insert_size)| {
                 if *median_distance < HAMMING_THRESHOLD {
                     let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
-                    let (consensus_record, lh) = CalcOverlappingConsensus::new(
+                    let (consensus_record, lh_isize) = CalcOverlappingConsensus::new(
                         &f_recs,
                         &r_recs,
                         overlap,
@@ -449,13 +476,13 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
                         &uuid,
                     )
                     .calc_consensus();
-                    let ol_lh = lh //Put this calc_consensus?!
+                    let likelihood = lh_isize
                         + isize_pmf(
-                        *insert_size as f64,
-                        self.insert_size as f64,
-                        self.std_dev as f64,
-                    );
-                    Some(Consensus::new(consensus_record, ol_lh))
+                            *insert_size as f64,
+                            self.insert_size as f64,
+                            self.std_dev as f64,
+                        );
+                    Some(OverlappingConsensus::new(consensus_record, likelihood))
                 } else {
                     None
                 }
@@ -463,36 +490,29 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             .max_by_key(|consensus| NotNaN::new(*consensus.likelihood).unwrap())
             .unwrap()
     }
-    pub fn maximum_likelihood_nonoverlapping_consensus(
+    fn maximum_likelihood_nonoverlapping_consensus(
         &mut self,
         f_recs: &Vec<Record>,
         r_recs: &Vec<Record>,
         outer_seqids: &Vec<usize>,
         uuid: &str,
-    ) -> (Record, Record, LogProb) {
+    ) -> NonOverlappingConsensus {
         //Calculate non-overlapping consensus records and shared lh
         let (f_consensus_rec, f_lh) =
             CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid).calc_consensus();
         let (r_consensus_rec, r_lh) =
             CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid).calc_consensus();
-        let lh = f_lh + r_lh;
+        let overall_lh_isize = f_lh + r_lh;
         //Determine insert size with highest probability for non-overlapping records based on expected insert size
-        let likeliest_isize = if f_recs[0].seq().len() + r_recs[0].seq().len() < self.insert_size {
-            self.insert_size
-        } else if f_recs[0].seq().len() + r_recs[0].seq().len()
-            > self.insert_size + 2 * self.std_dev
-        {
-            self.insert_size + 2 * self.std_dev
-        } else {
-            f_recs[0].seq().len() + r_recs[0].seq().len()
-        } as f64;
-        let seq_prob = lh
+        let likeliest_isize =
+            self.isize_highest_probability(f_recs[0].seq().len(), r_recs[0].seq().len());
+        let overall_lh = overall_lh_isize
             + isize_pmf(
                 likeliest_isize,
                 self.insert_size as f64,
                 self.std_dev as f64,
             );
-        (f_consensus_rec, r_consensus_rec, seq_prob)
+        NonOverlappingConsensus::new(f_consensus_rec, r_consensus_rec, overall_lh)
     }
 }
 
@@ -511,16 +531,15 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         let ol_consensus =
             self.maximum_likelihood_overlapping_consensus(&f_recs, &r_recs, &outer_seqids, uuid);
         // Function End
-        let (f_consensus_rec, r_consensus_rec, nol_lh) = //Return struct here
+        let non_ol_consensus = //Return struct here
             self.maximum_likelihood_nonoverlapping_consensus(&f_recs, &r_recs, &outer_seqids, uuid);
-        match ol_consensus.likelihood > nol_lh {
+        match ol_consensus.likelihood > non_ol_consensus.likelihood {
             true => self.fq3_writer.write_record(&ol_consensus.record)?,
             false => {
-                self.fq1_writer.write_record(&f_consensus_rec)?;
-                self.fq2_writer.write_record(&r_consensus_rec)?;
+                self.fq1_writer.write_record(&non_ol_consensus.f_record)?;
+                self.fq2_writer.write_record(&non_ol_consensus.r_record)?;
             }
         }
-
         Ok(())
     }
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {

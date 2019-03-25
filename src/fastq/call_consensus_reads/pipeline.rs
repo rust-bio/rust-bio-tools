@@ -33,12 +33,10 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
 /// Calculates the median hamming distance for all records by deriving the overlap from insert size
 fn median_hamming_distance(
     insert_size: &usize,
-    f_recs: &Vec<fastq::Record>,
-    r_recs: &Vec<fastq::Record>,
+    f_recs: &[fastq::Record],
+    r_recs: &[fastq::Record],
 ) -> Option<f64> {
-    let mut distances: Vec<f64> = Vec::new();
-
-    for (f_rec, r_rec) in f_recs.into_iter().zip(r_recs).map(|(a, b)| (a, b)) {
+    let distances = f_recs.iter().zip(r_recs).filter_map(|(f_rec, r_rec)| {
         // check if reads overlap within insert size
         if (insert_size < &f_rec.seq().len()) | (insert_size < &r_rec.seq().len()) {
             return None;
@@ -48,14 +46,13 @@ fn median_hamming_distance(
         }
         let overlap = (f_rec.seq().len() + r_rec.seq().len()) - insert_size;
         let suffix_start_idx: usize = f_rec.seq().len() - overlap;
-        let mut distance = bio::alignment::distance::hamming(
+        let distance = bio::alignment::distance::hamming(
             &f_rec.seq()[suffix_start_idx..],
             &bio::alphabets::dna::revcomp(r_rec.seq())[..overlap],
         ) as f64;
-        distance = distance / overlap as f64; //Use absolute or relative distance?!
-        distances.push(distance);
-    }
-    stats::median(distances.into_iter())
+        Some(distance / overlap as f64) // Use absolute or relative distance?!
+    });
+    stats::median(distances)
 }
 
 /// Used to store a mapping of read index to read sequence

@@ -48,7 +48,6 @@ pub trait CalcConsensus<'a> {
         consensus_seq.push(ALLELES[max_posterior]);
         // new qual: (1 - MAP)
         let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
-
         // Assume the maximal quality, if the likelihood is infinite
         let truncated_quality: f64;
         if (*PHREDProb::from(qual)).is_infinite() {
@@ -245,7 +244,7 @@ impl<'a> CalcConsensus<'a> for CalcOverlappingConsensus<'a> {
                 let rec2_i = i - (rec1.seq().len() - self.overlap());
                 let rec2_seq = bio::alphabets::dna::revcomp(rec2.seq());
                 let rec2_qual: Vec<u8> = rec2.qual().iter().rev().cloned().collect();
-                lh += Self::allele_likelihood_in_rec(allele, &rec2_seq, &rec2_qual[..], rec2_i);
+                lh += Self::allele_likelihood_in_rec(allele, &rec2_seq, &rec2_qual, rec2_i);
             };
         }
         lh

@@ -32,7 +32,11 @@ rocksdb = "0.11"
 ordered-float = "0.5"
 flate2 = "1.0.5"
 streaming-stats =  "0.2.2"
+GSL = "1.1.0"
 
 [[bin]]
 name = "rbt"
 path = "src/main.rs"
+
+[features]
+default = ["GSL/v2"]

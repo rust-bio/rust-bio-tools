@@ -12,6 +12,11 @@ install:
 
 cache: cargo
 
+addons:
+  apt:
+    packages:
+      - libgsl0-dev
+
 rust:
   - stable
   - beta

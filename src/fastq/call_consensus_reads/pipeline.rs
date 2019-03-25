@@ -111,26 +111,10 @@ pub struct OverlappingConsensus {
     likelihood: LogProb,
 }
 
-impl OverlappingConsensus {
-    pub fn new(record: Record, likelihood: LogProb) -> Self {
-        OverlappingConsensus { record, likelihood }
-    }
-}
-
 pub struct NonOverlappingConsensus {
     f_record: Record,
     r_record: Record,
     likelihood: LogProb,
-}
-
-impl NonOverlappingConsensus {
-    pub fn new(f_record: Record, r_record: Record, likelihood: LogProb) -> Self {
-        NonOverlappingConsensus {
-            f_record,
-            r_record,
-            likelihood,
-        }
-    }
 }
 
 pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
@@ -443,7 +427,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             return (f_seq_len + r_seq_len) as f64;
         }
     }
-     fn maximum_likelihood_overlapping_consensus(
+    fn maximum_likelihood_overlapping_consensus(
         &mut self,
         f_recs: &Vec<Record>,
         r_recs: &Vec<Record>,
@@ -482,7 +466,10 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
                             self.insert_size as f64,
                             self.std_dev as f64,
                         );
-                    Some(OverlappingConsensus::new(consensus_record, likelihood))
+                    Some(OverlappingConsensus {
+                        record: consensus_record,
+                        likelihood,
+                    })
                 } else {
                     None
                 }
@@ -512,7 +499,11 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
                 self.insert_size as f64,
                 self.std_dev as f64,
             );
-        NonOverlappingConsensus::new(f_consensus_rec, r_consensus_rec, overall_lh)
+        NonOverlappingConsensus {
+            f_record: f_consensus_rec,
+            r_record: r_consensus_rec,
+            likelihood: overall_lh,
+        }
     }
 }
 

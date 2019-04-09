@@ -151,7 +151,7 @@ subcommands:
             long: umi-len
             short: l
             default_value: "8"
-            help: Length of UMI in reverse read.
+            help: Length of UMI in read.
         - max-seq-dist:
             long: max-seq-dist
             short: D
@@ -174,3 +174,29 @@ subcommands:
             takes_value: true
             requires: [consensus-fq3, insert-size]
             help: Standard deviation of expected insert size. Defines search space of the most likely overlap. (Required for calculating overlapping consensus only)
+
+
+  - call-consensus-reads-from-bam:
+      about: |
+        Calculate consensus from BAM file with duplicates marked by Picard Tools.
+      author: Felix Mölder <felix.moelder@uni-due.de>
+      args:
+        - bam:
+            required: true
+            help: Input BAM file with marked duplicates
+        - consensus-fq1:
+            required: true
+            help: Output FASTQ file with forward reads.
+        - consensus-fq2:
+            required: true
+            help: Output FASTQ file with reverse reads.
+        - consensus-fq3:
+            requires: true
+            help: Output FASTQ file for overlapping consensus reads  (Required for calculating overlapping consensus only)
+        - max-seq-dist:
+            long: max-seq-dist
+            short: D
+            possible_values: ["1", "2", "3", "4", "5", "6", "7", "8"]
+            default_value: "2"
+            help: Maximum hamming distance between the sequences of any pair of reads in the same cluster.
+

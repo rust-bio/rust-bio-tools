@@ -183,15 +183,9 @@ subcommands:
         - bam:
             required: true
             help: Input BAM file with marked duplicates
-        - consensus-fq1:
+        - consensus-bam:
             required: true
-            help: Output FASTQ file with forward reads.
-        - consensus-fq2:
-            required: true
-            help: Output FASTQ file with reverse reads.
-        - consensus-fq3:
-            required: true
-            help: Output FASTQ file for overlapping consensus reads  (Required for calculating overlapping consensus only)
+            help: Output BAM file with unaligned consensus reads
         - max-seq-dist:
             long: max-seq-dist
             short: D

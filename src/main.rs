@@ -80,6 +80,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                 },
             )
         }
+        ("call-consensus-from-bam", Some(matches)) => {
+            bam::call_consensus_reads::call_consensus_reads_from_paths(
+                matches.value_of("bam").unwrap(),
+                matches.value_of("consensus-fq1").unwrap(),
+                matches.value_of("consensus-fq2").unwrap(),
+                matches.value_of("consensus-fq3").unwrap(),
+                value_t!(matches, "max-seq-dist", usize).unwrap(),
+            )
+        }
         // This cannot be reached, since the matches step of
         // clap assures that a valid subcommand is provided
         _ => unreachable!(),

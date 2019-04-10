@@ -175,8 +175,7 @@ subcommands:
             requires: [consensus-fq3, insert-size]
             help: Standard deviation of expected insert size. Defines search space of the most likely overlap. (Required for calculating overlapping consensus only)
 
-
-  - call-consensus-reads-from-bam:
+  - call-consensus-from-bam:
       about: |
         Calculate consensus from BAM file with duplicates marked by Picard Tools.
       author: Felix Mölder <felix.moelder@uni-due.de>
@@ -191,7 +190,7 @@ subcommands:
             required: true
             help: Output FASTQ file with reverse reads.
         - consensus-fq3:
-            requires: true
+            required: true
             help: Output FASTQ file for overlapping consensus reads  (Required for calculating overlapping consensus only)
         - max-seq-dist:
             long: max-seq-dist

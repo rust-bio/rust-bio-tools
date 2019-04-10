@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.3.1] - 2019-04-10
+## [0.4.0] - 2019-04-10
 ### Changed
 - Consensus reads generated from UMI-tagged reads with `call-consensus-reads` no longer contain the UMI.
 

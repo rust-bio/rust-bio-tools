@@ -184,13 +184,13 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             };
             umi_cluster.stdin.as_mut().unwrap().write(&umi)?;
             umi_cluster.stdin.as_mut().unwrap().write(b"\n")?;
-
-            read_storage.put(i, &f_rec, &r_rec)?;
-            let seq = if self.reverse_umi() {
-                [&f_rec.seq()[..], &r_rec.seq()[self.umi_len()..]].concat()
+            if self.reverse_umi() {
+                r_rec = self.strip_umi_from_record(&r_rec)
             } else {
-                [&f_rec.seq()[self.umi_len()..], &r_rec.seq()[..]].concat()
-            };
+                f_rec = self.strip_umi_from_record(&f_rec)
+            }
+            read_storage.put(i, &f_rec, &r_rec)?;
+            let seq = [&f_rec.seq()[..], &r_rec.seq()[..]].concat();
             seqs.push(seq);
             i += 1;
         }
@@ -275,7 +275,11 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         pb.finish_with_message(&format!("Done. Processed {} cluster.", j));
         Ok(())
     }
-
+    fn strip_umi_from_record(&mut self, record: &Record) -> Record {
+        let rec_seq = &record.seq()[self.umi_len()..];
+        let rec_qual = &record.qual()[self.umi_len()..];
+        Record::with_attrs(record.id(), record.desc(), rec_seq, rec_qual)
+    }
     fn write_records(
         &mut self,
         f_recs: Vec<Record>,
@@ -444,7 +448,6 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
                     .filter(|&median_distance| median_distance < HAMMING_THRESHOLD)
                     .map(|_| insert_size)
             });
-
         insert_sizes
             .map(|insert_size| {
                 let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
@@ -506,11 +509,9 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
     ) -> Result<(), Box<Error>> {
         //TODO Add deterministic uuid considering read ids
         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-        //New Function maximum_likelihood_overlapping_consensus
         let ol_consensus =
             self.maximum_likelihood_overlapping_consensus(&f_recs, &r_recs, &outer_seqids, uuid);
-        // Function End
-        let non_ol_consensus = //Return struct here
+        let non_ol_consensus =
             self.maximum_likelihood_nonoverlapping_consensus(&f_recs, &r_recs, &outer_seqids, uuid);
         match ol_consensus.likelihood > non_ol_consensus.likelihood {
             true => self.fq3_writer.write_record(&ol_consensus.record)?,

@@ -1,27 +1,28 @@
 use rust_htslib::bam;
+use rust_htslib::bam::header::Header;
 use rust_htslib::bam::Read;
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
 
 pub struct CallConsensusRead<'a> {
     bam_reader: &'a mut bam::Reader,
-    bam_writer: &'a mut bam::Writer,
+    bam_out: &'a str,
     seq_dist: usize,
 }
 
 impl<'a> CallConsensusRead<'a> {
-    pub fn new(
-        bam_reader: &'a mut bam::Reader,
-        bam_writer: &'a mut bam::Writer,
-        seq_dist: usize,
-    ) -> Self {
+    pub fn new(bam_reader: &'a mut bam::Reader, bam_out: &'a str, seq_dist: usize) -> Self {
         CallConsensusRead {
             bam_reader,
-            bam_writer,
+            bam_out,
             seq_dist,
         }
     }
     pub fn call_consensus_reads(&'a mut self) -> Result<(), Box<dyn Error>> {
+        let mut bam_writer = bam::Writer::from_path(
+            self.bam_out,
+            &Header::from_template(self.bam_reader.header()),
+        )?;
         let mut group_end_idx: HashMap<i32, HashSet<i32>> = HashMap::new();
         let mut duplicate_groups: HashMap<i32, GroupData> = HashMap::new();
         let mut read_pairs: HashMap<Vec<u8>, PairedReads> = HashMap::new();

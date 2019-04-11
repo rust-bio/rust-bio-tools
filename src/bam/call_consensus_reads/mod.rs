@@ -11,10 +11,6 @@ pub fn call_consensus_reads_from_paths(
 ) -> Result<(), Box<dyn Error>> {
     eprintln!("Reading input files:\n    {}", bam_in);
     eprintln!("Writing output to:\n    {}", bam_out);
-    CallConsensusRead::new(
-        &mut bam::Reader::from_path(bam_in)?,
-        &mut bam::Writer::from_path(bam_out, &bam::Header::new())?, //TODO Handle Header
-        seq_dist,
-    )
-    .call_consensus_reads()
+    CallConsensusRead::new(&mut bam::Reader::from_path(bam_in)?, &bam_out, seq_dist)
+        .call_consensus_reads()
 }

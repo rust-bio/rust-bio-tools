@@ -1,8 +1,7 @@
 use rust_htslib::bam;
 use rust_htslib::bam::Read;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
-use std::str;
 
 pub struct CallConsensusRead<'a> {
     bam_reader: &'a mut bam::Reader,
@@ -23,8 +22,8 @@ impl<'a> CallConsensusRead<'a> {
         }
     }
     pub fn call_consensus_reads(&'a mut self) -> Result<(), Box<dyn Error>> {
-        let index_pos = 0;
-        let mut duplicate_groups: HashMap<i32, Vec<&[u8]>> = HashMap::new();
+        let mut group_end_idx: HashMap<i32, HashSet<i32>> = HashMap::new();
+        let mut duplicate_groups: HashMap<i32, GroupData> = HashMap::new();
         let mut read_pairs: HashMap<Vec<u8>, PairedReads> = HashMap::new();
 
         for result in self.bam_reader.records() {
@@ -34,20 +33,25 @@ impl<'a> CallConsensusRead<'a> {
             //Check if record has duplicate ID
             match duplicate_id_option {
                 // If duplicate ID exists add record to HashMap
-                Some(duplicate_id) => match read_pairs.get_mut(read_id) {
-                    Some(read_pair) => {
-                        read_pair.reverse_record(record);
+                Some(duplicate_id) => {
+                    match read_pairs.get_mut(read_id) {
+                        Some(read_pair) => {
+                            //TODO If reverse read add end pos to group_end_pos
+                            read_pair.reverse_record(record);
+                        }
+                        None => {
+                            //TODO Add read_id to duplicate_groups
+                            read_pairs.insert(
+                                read_id.to_vec(),
+                                PairedReads {
+                                    f_rec: record,
+                                    r_rec: None,
+                                },
+                            );
+                            //TODO If read start pos > group_end_pos calculate overlap for these groups
+                        }
                     }
-                    None => {
-                        read_pairs.insert(
-                            read_id.to_vec(),
-                            PairedReads {
-                                f_rec: record,
-                                r_rec: None,
-                            },
-                        );
-                    }
-                },
+                }
                 //If duplicate ID not existing add record to hashMap if not existing
                 //else calc consensus and write to bam file
                 None => match read_pairs.get_mut(read_id) {
@@ -63,8 +67,8 @@ impl<'a> CallConsensusRead<'a> {
                     Some(read_pair) => {
                         let f_rec = read_pairs.remove(read_id).unwrap().f_rec;
                         let insert_size = record.cigar().end_pos()? - f_rec.pos();
-                        //Calc overlapping consensus
-                        //Write to bam writer
+                        //TODO Calc overlapping consensus
+                        //TODO Write to bam writer
                     }
                 },
             }
@@ -82,4 +86,9 @@ impl PairedReads {
     pub fn reverse_record(&mut self, record: bam::Record) {
         self.r_rec = Some(record)
     }
+}
+
+pub struct GroupData {
+    read_ids: Vec<Vec<u8>>,
+    r_rec: Option<usize>,
 }

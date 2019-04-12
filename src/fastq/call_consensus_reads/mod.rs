@@ -1,4 +1,4 @@
-//! Tool remove PCR duplicates from UMI-tagged reads.
+//! Tool to remove PCR duplicates from UMI-tagged reads.
 //!
 //! This tool takes two FASTQ files (forward and reverse)
 //! and returns two FASTQ files in which all PCR duplicates

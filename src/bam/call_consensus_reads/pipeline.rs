@@ -86,8 +86,6 @@ impl<'a> CallConsensusRead<'a> {
                                     r_rec: None,
                                 },
                             );
-
-                            //TODO If read start pos > group_end_pos calculate overlap for these groups
                         }
                     }
                 }

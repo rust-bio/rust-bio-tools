@@ -145,12 +145,11 @@ pub fn calc_consensus_complete_groups(
         let mut f_recs = Vec::new();
         let mut r_recs = Vec::new();
         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-        for read_ids in duplicate_groups.remove(&group_id) {
-            for read_id in read_ids {
-                let paired_record = read_pairs.remove(&read_id).unwrap();
-                f_recs.push(paired_record.f_rec);
-                r_recs.push(paired_record.r_rec.unwrap());
-            }
+        let read_ids = duplicate_groups.remove(&group_id).unwrap();
+        for read_id in read_ids {
+            let paired_record = read_pairs.remove(&read_id).unwrap();
+            f_recs.push(paired_record.f_rec);
+            r_recs.push(paired_record.r_rec.unwrap());
         }
         //Todo Starcode Clustering
         if f_recs[0].seq().len() + r_recs[0].seq().len() > f_recs[0].insert_size() as usize {

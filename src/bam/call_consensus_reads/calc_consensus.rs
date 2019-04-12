@@ -22,7 +22,7 @@ pub struct CalcNonOverlappingConsensus<'a> {
 }
 
 impl<'a> CalcNonOverlappingConsensus<'a> {
-    pub fn new(recs: &'a [bam::Record], seqids: &'a [usize], uuid: &'a str) -> Self {
+    pub fn new(recs: &'a [bam::Record], uuid: &'a str) -> Self {
         CalcNonOverlappingConsensus { recs, uuid }
     }
     pub fn calc_consensus(&self) -> (bam::Record, LogProb) {

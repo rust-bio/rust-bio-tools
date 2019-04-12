@@ -1,3 +1,4 @@
+mod calc_consensus;
 mod pipeline;
 
 use pipeline::CallConsensusRead;

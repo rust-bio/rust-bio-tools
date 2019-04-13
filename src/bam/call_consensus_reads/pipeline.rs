@@ -61,7 +61,10 @@ impl<'a> CallConsensusRead<'a> {
                                     group_set.insert(duplicate_id.integer());
                                 }
                             }
+                            dbg!(str::from_utf8(&record.qname()));
                             read_pair.r_rec = Some(record);
+                            //TODO What's the issue here?!?!?!? Damn you rust, talk to me!
+                            dbg!(&read_pair.r_rec.clone().unwrap().qname());
                         }
                         //Forward Read
                         //Structure should be done
@@ -134,6 +137,7 @@ impl<'a> CallConsensusRead<'a> {
                 },
             }
         }
+        //TODO Process remaining groups
         Ok(())
     }
 }
@@ -219,13 +223,8 @@ pub fn calc_consensus_complete_groups(
                 )?;
             } else {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                dbg!("Test");
-                dbg!(&f_recs[0].seq().len());
-                dbg!(&r_recs[0].pos());
-                dbg!(&f_recs[0].insert_size());
                 let overlap = f_recs[0].seq().len() + r_recs[0].seq().len()
                     - f_recs[0].insert_size() as usize;
-                dbg!(&overlap);
                 bam_writer.write(
                     &CalcOverlappingConsensus::new(&f_recs, &r_recs, overlap as usize, uuid)
                         .calc_consensus()

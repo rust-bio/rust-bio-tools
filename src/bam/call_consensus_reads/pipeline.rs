@@ -73,7 +73,7 @@ impl<'a> CallConsensusRead<'a> {
                             calc_consensus_complete_groups(
                                 &mut group_end_idx,
                                 &mut duplicate_groups,
-                                &record.pos(),
+                                Some(&record.pos()),
                                 &mut read_pairs,
                                 &mut bam_writer,
                                 self.seq_dist,
@@ -104,7 +104,7 @@ impl<'a> CallConsensusRead<'a> {
                         calc_consensus_complete_groups(
                             &mut group_end_idx,
                             &mut duplicate_groups,
-                            &record.pos(),
+                            Some(&record.pos()),
                             &mut read_pairs,
                             &mut bam_writer,
                             self.seq_dist,
@@ -137,7 +137,15 @@ impl<'a> CallConsensusRead<'a> {
                 },
             }
         }
-        //TODO Process remaining groups
+        //Process remaining groups
+        calc_consensus_complete_groups(
+            &mut group_end_idx,
+            &mut duplicate_groups,
+            None,
+            &mut read_pairs,
+            &mut bam_writer,
+            self.seq_dist,
+        )?;
         Ok(())
     }
 }
@@ -145,7 +153,7 @@ impl<'a> CallConsensusRead<'a> {
 pub fn calc_consensus_complete_groups(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
     duplicate_groups: &mut HashMap<GroupID, ReadIDs>,
-    end_pos: &i32,
+    end_pos: Option<&i32>,
     read_pairs: &mut HashMap<Vec<u8>, PairedReads>,
     bam_writer: &mut bam::Writer,
     seq_dist: usize,
@@ -155,7 +163,7 @@ pub fn calc_consensus_complete_groups(
         .template("{prefix:.bold.dim} {spinner} {wide_msg}");
 
     let group_ids: HashSet<i32> = group_end_idx
-        .range(..end_pos)
+        .range(..end_pos.unwrap_or(&(group_end_idx.len() as i32))) //TODO Check if or-case catches last groups
         .flat_map(|(_, group_ids)| group_ids.clone())
         .collect();
 

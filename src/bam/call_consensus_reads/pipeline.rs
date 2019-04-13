@@ -1,16 +1,13 @@
 use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
-use rocksdb::DB;
+use indicatif;
 use rust_htslib::bam;
 use rust_htslib::bam::header::Header;
 use rust_htslib::bam::Read;
-use serde_json;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::error::Error;
 use std::io::Write;
-use std::mem;
 use std::process::{Command, Stdio};
 use std::str;
-use tempfile::tempdir;
 use uuid::Uuid;
 
 pub struct CallConsensusRead<'a> {
@@ -147,13 +144,25 @@ pub fn calc_consensus_complete_groups(
     bam_writer: &mut bam::Writer,
     seq_dist: usize,
 ) -> Result<(), Box<dyn Error>> {
+    let spinner_style = indicatif::ProgressStyle::default_spinner()
+        .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
+        .template("{prefix:.bold.dim} {spinner} {wide_msg}");
+
     let group_ids: HashSet<i32> = group_end_idx
         .range(..end_pos)
         .flat_map(|(_, group_ids)| group_ids.clone())
         .collect();
+
+    // prepare spinner for user feedback
+    let pb = indicatif::ProgressBar::new_spinner();
+    pb.set_style(spinner_style.clone());
+    pb.set_prefix(&format!(
+        "Clustering duplicated reads by sequence using starcode."
+    ));
+    let mut i = 0;
     for group_id in group_ids {
-        let mut read_storage = BAMStorage::new()?;
-        let mut i = 0;
+        pb.inc(1);
+        let mut read_id_storage = Vec::new();
 
         let mut seq_cluster = Command::new("starcode")
             .arg("--dist")
@@ -167,17 +176,17 @@ pub fn calc_consensus_complete_groups(
 
         let read_ids = duplicate_groups.remove(&group_id).unwrap();
         for read_id in read_ids {
-            let paired_record = read_pairs.remove(&read_id).unwrap();
-            let f_rec = paired_record.f_rec;
-            let r_rec = paired_record.r_rec.unwrap();
-            read_storage.put(i, &f_rec, &r_rec);
+            let paired_record = read_pairs.get(&read_id).unwrap();
+            let f_rec = &paired_record.f_rec;
+            let r_rec = &paired_record.r_rec.clone().unwrap();
             let seq = [&f_rec.seq().as_bytes()[..], &r_rec.seq().as_bytes()[..]].concat();
             seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
             seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
-            i += 1;
+            read_id_storage.push(read_id);
         }
         seq_cluster.stdin.as_mut().unwrap().flush()?;
         drop(seq_cluster.stdin.take());
+        pb.finish_with_message(&format!("Done. Analyzed {} groups.", i));
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .has_headers(false)
@@ -188,12 +197,11 @@ pub fn calc_consensus_complete_groups(
             let mut f_recs = Vec::new();
             let mut r_recs = Vec::new();
             for seqid in seqids {
-                let (f_rec, r_rec) = read_storage.get(seqid - 1)?;
-                f_recs.push(f_rec);
-                r_recs.push(r_rec);
+                let paired_record = read_pairs.remove(&read_id_storage[seqid - 1]).unwrap();
+                f_recs.push(paired_record.f_rec);
+                r_recs.push(paired_record.r_rec.unwrap());
             }
 
-            //Todo Starcode Clustering
             if f_recs[0].seq().len() + r_recs[0].seq().len() > f_recs[0].insert_size() as usize {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                 bam_writer.write(
@@ -216,53 +224,9 @@ pub fn calc_consensus_complete_groups(
                 )?;
             }
         }
+        i += 1;
     }
     Ok(())
-}
-
-/// Used to store a mapping of read index to read sequence
-#[derive(Debug)]
-struct BAMStorage {
-    db: DB,
-    storage_dir: std::path::PathBuf,
-}
-
-impl BAMStorage {
-    /// Create a new FASTQStorage using a Rocksdb database
-    /// that maps read indices to read seqeunces.
-    pub fn new() -> Result<Self, Box<Error>> {
-        // Save storage_dir to prevent it from leaving scope and
-        // in turn deleting the tempdir
-        let storage_dir = tempdir()?.path().join("db");
-        Ok(BAMStorage {
-            db: DB::open_default(storage_dir.clone())?,
-            storage_dir,
-        })
-    }
-
-    fn as_key<'a>(i: u64) -> [u8; 8] {
-        unsafe { mem::transmute::<u64, [u8; 8]>(i) }
-    }
-
-    /// Enter a (read index, read sequence) pair into the database.
-    pub fn put(
-        &mut self,
-        i: usize,
-        f_rec: &bam::Record,
-        r_rec: &bam::Record,
-    ) -> Result<(), Box<dyn Error>> {
-        Ok(self.db.put(
-            &Self::as_key(i as u64),
-            serde_json::to_string(&(f_rec, r_rec))?.as_bytes(),
-        )?)
-    }
-
-    /// Retrieve the read sequence of the read with index `i`.
-    pub fn get(&self, i: usize) -> Result<(bam::Record, bam::Record), Box<dyn Error>> {
-        Ok(serde_json::from_str(
-            str::from_utf8(&self.db.get(&Self::as_key(i as u64))?.unwrap()).unwrap(),
-        )?)
-    }
 }
 
 /// Interpret a cluster returned by starcode

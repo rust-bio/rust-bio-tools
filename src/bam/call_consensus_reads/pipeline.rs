@@ -122,8 +122,10 @@ impl<'a> CallConsensusRead<'a> {
                             bam_writer.write(&record)?;
                         } else {
                             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                            let overlap = f_rec.seq().len() + record.seq().len()
+                                - f_rec.insert_size() as usize;
                             bam_writer.write(
-                                &CalcOverlappingConsensus::new(&[f_rec], &[record], uuid)
+                                &CalcOverlappingConsensus::new(&[f_rec], &[record], overlap, uuid)
                                     .calc_consensus()
                                     .0,
                             )?;
@@ -217,8 +219,15 @@ pub fn calc_consensus_complete_groups(
                 )?;
             } else {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                dbg!("Test");
+                dbg!(&f_recs[0].seq().len());
+                dbg!(&r_recs[0].pos());
+                dbg!(&f_recs[0].insert_size());
+                let overlap = f_recs[0].seq().len() + r_recs[0].seq().len()
+                    - f_recs[0].insert_size() as usize;
+                dbg!(&overlap);
                 bam_writer.write(
-                    &CalcOverlappingConsensus::new(&f_recs, &r_recs, uuid)
+                    &CalcOverlappingConsensus::new(&f_recs, &r_recs, overlap as usize, uuid)
                         .calc_consensus()
                         .0,
                 )?;

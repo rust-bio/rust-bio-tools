@@ -121,7 +121,6 @@ fn vcf_baf() {
     test_output("tests/baf.bcf", "tests/expected/baf.bcf");
 }
 
-
 #[test]
 fn test_call_consensus_reads_two_cluster() {
     assert!(

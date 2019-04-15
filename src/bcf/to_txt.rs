@@ -1,3 +1,10 @@
+//! Create a variant table from a VCF file.
+//!
+//! ## Usage:
+//! ```bash
+//! $ rbt vcf-to-txt --genotypes --fmt S --info T X SOMATIC < tests/test.vcf > tests/variant-table.txt
+//! ```
+//!
 use quick_error::quick_error;
 use std::error::Error;
 use std::io;

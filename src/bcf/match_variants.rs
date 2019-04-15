@@ -1,3 +1,14 @@
+//! Annotate for each variant in a VCF/BCF at STDIN whether it is contained in a given second VCF/BCF.
+//!
+//! The matching is fuzzy for indels and exact for SNVs.
+//! Results are printed as BCF to STDOUT, with an additional INFO tag MATCHING.
+//! The two vcfs do not have to be sorted.
+//!
+//! ## Usage:
+//! ```bash
+//! rbt vcf-match -d 50 -l 20 tests/test3.vcf < tests/test2.vcf > tests/matching.bcf
+//! ```
+//!
 use log::{info, warn};
 use quick_error::quick_error;
 use std::collections::{btree_map, BTreeMap, HashMap};

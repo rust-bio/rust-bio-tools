@@ -17,7 +17,7 @@ pub struct CallConsensusRead<'a> {
 }
 
 type Position = i32;
-type GroupID = i32;
+type GroupID = i64;
 type GroupIDs = HashSet<GroupID>;
 type ReadIDs = Vec<ReadID>;
 type ReadID = Vec<u8>;
@@ -61,10 +61,10 @@ impl<'a> CallConsensusRead<'a> {
                                     group_set.insert(duplicate_id.integer());
                                 }
                             }
-                            dbg!(str::from_utf8(&record.qname()));
+                            dbg!(&record.pos());
                             read_pair.r_rec = Some(record);
                             //TODO What's the issue here?!?!?!? Damn you rust, talk to me!
-                            dbg!(&read_pair.r_rec.clone().unwrap().qname());
+                            dbg!(&read_pair.r_rec.clone().unwrap().pos());
                         }
                         //Forward Read
                         //Structure should be done
@@ -162,7 +162,7 @@ pub fn calc_consensus_complete_groups(
         .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
         .template("{prefix:.bold.dim} {spinner} {wide_msg}");
 
-    let group_ids: HashSet<i32> = group_end_idx
+    let group_ids: HashSet<i64> = group_end_idx
         .range(..end_pos.unwrap_or(&(group_end_idx.len() as i32))) //TODO Check if or-case catches last groups
         .flat_map(|(_, group_ids)| group_ids.clone())
         .collect();

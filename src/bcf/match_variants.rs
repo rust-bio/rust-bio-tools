@@ -1,11 +1,11 @@
+use itertools::Itertools;
 use log::{info, warn};
 use quick_error::quick_error;
+use rust_htslib::bcf;
+use rust_htslib::bcf::Read;
 use std::collections::{btree_map, BTreeMap, HashMap};
 use std::error::Error;
 use std::str;
-
-use itertools::Itertools;
-use rust_htslib::bcf;
 
 pub struct VarIndex {
     inner: HashMap<Vec<u8>, BTreeMap<u32, Vec<Variant>>>,
@@ -54,7 +54,7 @@ pub fn match_variants(
     max_len_diff: u32,
 ) -> Result<(), Box<dyn Error>> {
     let mut inbcf = bcf::Reader::from_stdin()?;
-    let mut header = bcf::Header::with_template(inbcf.header());
+    let mut header = bcf::Header::from_template(inbcf.header());
 
     header.push_record(
         format!("##INFO=<ID=MATCHING,Number=A,Type=Integer,\

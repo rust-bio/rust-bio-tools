@@ -1,4 +1,4 @@
-//! Filter reads matching names in a textfile into a new FASTQ file.
+//! Filter reads matching names in a text file into a new FASTQ file.
 //!
 //! ## Usage:
 //!

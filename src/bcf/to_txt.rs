@@ -104,10 +104,15 @@ pub fn to_txt(
         }
     }
     r#try!(writer.newline());
-
-    let header = reader.header().clone();
-    for result in reader.records() {
-        let mut rec = result?;
+    let mut rec = reader.empty_record();
+    loop {
+        if let Err(e) = reader.read(&mut rec) {
+            if e.is_eof() {
+                break;
+            } else {
+                return Err(Box::new(e));
+            }
+        }
 
         let alleles = rec
             .alleles()
@@ -115,7 +120,7 @@ pub fn to_txt(
             .map(|a| a.to_owned())
             .collect_vec();
         for (i, allele) in alleles[1..].iter().enumerate() {
-            r#try!(writer.write_field(header.rid2name(rec.rid().unwrap())));
+            r#try!(writer.write_field(reader.header().rid2name(rec.rid().unwrap())));
             r#try!(writer.write_integer(rec.pos() as i32 + 1));
             r#try!(writer.write_field(&alleles[0]));
             r#try!(writer.write_field(allele));
@@ -126,7 +131,7 @@ pub fn to_txt(
 
             for name in info_tags {
                 let _name = name.as_bytes();
-                if let Ok((tag_type, tag_length)) = header.info_type(_name) {
+                if let Ok((tag_type, tag_length)) = rec.header().info_type(_name) {
                     let get_idx = || match tag_length {
                         bcf::header::TagLength::Fixed => Ok(0),
                         bcf::header::TagLength::AltAlleles => Ok(i),
@@ -172,8 +177,9 @@ pub fn to_txt(
 
             let genotypes = if show_genotypes {
                 let genotypes = r#try!(rec.genotypes());
+
                 Some(
-                    (0..header.sample_count() as usize)
+                    (0..reader.header().sample_count() as usize)
                         .map(|s| format!("{}", genotypes.get(s)))
                         .collect_vec(),
                 )
@@ -181,13 +187,13 @@ pub fn to_txt(
                 None
             };
 
-            for s in 0..header.sample_count() as usize {
+            for s in 0..reader.header().sample_count() as usize {
                 if let Some(ref genotypes) = genotypes {
                     r#try!(writer.write_field(genotypes[s].as_bytes()));
                 }
                 for name in format_tags {
                     let _name = name.as_bytes();
-                    if let Ok((tag_type, tag_length)) = header.format_type(_name) {
+                    if let Ok((tag_type, tag_length)) = reader.header().format_type(_name) {
                         let i = match tag_length {
                             bcf::header::TagLength::Fixed => 0,
                             bcf::header::TagLength::AltAlleles => i,

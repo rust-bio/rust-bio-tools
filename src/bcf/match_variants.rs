@@ -16,12 +16,16 @@ impl VarIndex {
     pub fn new(mut reader: bcf::Reader, max_dist: u32) -> Result<Self, Box<dyn Error>> {
         let mut inner = HashMap::new();
         let mut i = 0;
-        let header = reader.header().clone();
-        for result in reader.records() {
-            let mut rec = result?;
-
+        let mut rec = reader.empty_record();
+        loop {
+            if let Err(e) = reader.read(&mut rec) {
+                if e.is_eof() {
+                    break;
+                }
+                return Err(Box::new(e));
+            }
             if let Some(rid) = rec.rid() {
-                let chrom = header.rid2name(rid);
+                let chrom = reader.header().rid2name(rid);
                 let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
                 recs.entry(rec.pos())
                     .or_insert_with(|| Vec::new())
@@ -61,15 +65,20 @@ pub fn match_variants(
     );
     let mut outbcf = bcf::Writer::from_path(&"-", &header, false, false)?;
     let index = VarIndex::new(bcf::Reader::from_path(matchbcf)?, max_dist)?;
-    
+
+    let mut rec = inbcf.empty_record();
     let mut i = 0;
-    let header = inbcf.header().clone();
-    for result in inbcf.records() {
-        let mut rec = result?;
+    loop {
+        if let Err(e) = inbcf.read(&mut rec) {
+            if e.is_eof() {
+                break;
+            }
+            return Err(Box::new(e));
+        }
         outbcf.translate(&mut rec);
 
         if let Some(rid) = rec.rid() {
-            let chrom = header.rid2name(rid);
+            let chrom = inbcf.header().rid2name(rid);
             let pos = rec.pos();
 
             let var = Variant::new(&mut rec, &mut i)?;

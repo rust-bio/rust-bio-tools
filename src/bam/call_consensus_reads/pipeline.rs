@@ -117,7 +117,7 @@ impl<'a> CallConsensusRead<'a> {
                     }
                     Some(_read_pair) => {
                         let f_rec = read_pairs.remove(read_id).unwrap().f_rec;
-                        if (record.seq().len() + f_rec.seq().len()) > f_rec.insert_size() as usize {
+                        if (record.seq().len() + f_rec.seq().len()) < f_rec.insert_size() as usize {
                             bam_writer.write(&f_rec)?;
                             bam_writer.write(&record)?;
                         } else {
@@ -170,7 +170,7 @@ pub fn calc_consensus_complete_groups(
     pb.set_prefix(&format!(
         "Clustering duplicated reads by sequence using starcode."
     ));
-    let mut i = 0;
+    let mut i = 1;
     for group_id in group_ids {
         pb.inc(1);
         let mut read_id_storage = Vec::new();
@@ -184,7 +184,6 @@ pub fn calc_consensus_complete_groups(
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()?;
-
         let read_ids = duplicate_groups.remove(&group_id).unwrap();
         for read_id in read_ids {
             let paired_record = read_pairs.get(&read_id).unwrap();
@@ -213,7 +212,7 @@ pub fn calc_consensus_complete_groups(
                 r_recs.push(paired_record.r_rec.unwrap());
             }
 
-            if f_recs[0].seq().len() + r_recs[0].seq().len() > f_recs[0].insert_size() as usize {
+            if f_recs[0].seq().len() + r_recs[0].seq().len() < f_recs[0].insert_size() as usize {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                 bam_writer.write(
                     &CalcNonOverlappingConsensus::new(&f_recs, uuid)

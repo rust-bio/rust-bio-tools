@@ -90,9 +90,12 @@ impl<'a> CalcConsensus<'a> for CalcOverlappingConsensus<'a> {
             };
             if i >= rec1.seq().len() - self.overlap() {
                 let rec2_i = i - (rec1.seq().len() - self.overlap());
-                let rec2_seq = bio::alphabets::dna::revcomp(rec2.seq().as_bytes());
-                let rec2_qual: Vec<u8> = rec2.qual().iter().rev().cloned().collect();
-                lh += Self::allele_likelihood_in_rec(allele, &rec2_seq, &rec2_qual, rec2_i);
+                lh += Self::allele_likelihood_in_rec(
+                    allele,
+                    &rec2.seq().as_bytes(),
+                    &rec2.qual(),
+                    rec2_i,
+                );
             };
         }
         lh

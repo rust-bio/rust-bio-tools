@@ -62,7 +62,12 @@ impl<'a> CalcOverlappingConsensus<'a> {
         }
         //TODO Add seq ids
         let name = format!("{}_consensus-read", self.uuid());
-        (bam::Record::new(), consensus_lh) //TODO Write output
+        let mut cigar_string = seq_len.to_string();
+        cigar_string.push('M');
+        let cigar = bam::record::CigarString::from_str(cigar_string.as_str()).unwrap();
+        let mut consensus_rec = bam::Record::new();
+        consensus_rec.set(name.as_bytes(), &cigar, &consensus_seq, &consensus_qual);
+        (consensus_rec, consensus_lh)
     }
     fn recs1(&self) -> &[bam::Record] {
         self.recs1
@@ -124,7 +129,6 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         // pad shorter reads
         // drop first consensus, compute consensus of full length reads and padded reads
         // ignore padded bases for consensus computation
-
         let mut consensus_lh = LogProb::ln_one();
 
         for i in 0..seq_len {
@@ -144,10 +148,12 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         }
         //TODO Add seq ids
         let name = format!("{}_consensus-read", self.uuid());
-        (
-            bam::Record::new(), //TODO Write output
-            consensus_lh,
-        )
+        let mut cigar_string = seq_len.to_string();
+        cigar_string.push('M');
+        let cigar = bam::record::CigarString::from_str(cigar_string.as_str()).unwrap();
+        let mut consensus_rec = bam::Record::new();
+        consensus_rec.set(name.as_bytes(), &cigar, &consensus_seq, &consensus_qual);
+        (consensus_rec, consensus_lh)
     }
     pub fn recs(&self) -> &[bam::Record] {
         self.recs
@@ -183,7 +189,7 @@ pub trait CalcConsensus<'a> {
     /// A matching base is scored with (1 - PHRED score), a mismatch
     /// with PHRED score + confusion constant.
     fn allele_likelihood_in_rec(allele: &u8, seq: &[u8], qual: &[u8], i: usize) -> LogProb {
-        let q = LogProb::from(PHREDProb::from((qual[i] - 33) as f64));
+        let q = LogProb::from(PHREDProb::from((qual[i]) as f64));
         if *allele == seq[i].to_ascii_uppercase() {
             q.ln_one_minus_exp()
         } else {
@@ -215,7 +221,7 @@ pub trait CalcConsensus<'a> {
             truncated_quality = *PHREDProb::from(qual);
         }
         // Truncate quality values to PHRED+33 range
-        consensus_qual.push(cmp::min(74, (truncated_quality + 33.0) as u64) as u8);
+        consensus_qual.push(cmp::min(41, (truncated_quality) as u64) as u8);
     }
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;
     fn uuid(&self) -> &'a str;

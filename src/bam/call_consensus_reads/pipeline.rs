@@ -61,10 +61,7 @@ impl<'a> CallConsensusRead<'a> {
                                     group_set.insert(duplicate_id.integer());
                                 }
                             }
-                            dbg!(&record.pos());
                             read_pair.r_rec = Some(record);
-                            //TODO What's the issue here?!?!?!? Damn you rust, talk to me!
-                            dbg!(&read_pair.r_rec.clone().unwrap().pos());
                         }
                         //Forward Read
                         //Structure should be done

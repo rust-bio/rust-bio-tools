@@ -105,34 +105,29 @@ pub fn to_txt(
     }
     r#try!(writer.newline());
 
-    let mut record = bcf::Record::new();
-    loop {
-        if let Err(e) = reader.read(&mut record) {
-            if e.is_eof() {
-                break;
-            } else {
-                return Err(Box::new(e));
-            }
-        }
+    //let mut record = bcf::Record::new();
+    let header = reader.header().clone();
+    for result in reader.records() {
+        let mut rec = result?;
 
-        let alleles = record
+        let alleles = rec
             .alleles()
             .into_iter()
             .map(|a| a.to_owned())
             .collect_vec();
         for (i, allele) in alleles[1..].iter().enumerate() {
-            r#try!(writer.write_field(reader.header().rid2name(record.rid().unwrap())));
-            r#try!(writer.write_integer(record.pos() as i32 + 1));
+            r#try!(writer.write_field(header.rid2name(rec.rid().unwrap())));
+            r#try!(writer.write_integer(rec.pos() as i32 + 1));
             r#try!(writer.write_field(&alleles[0]));
             r#try!(writer.write_field(allele));
-            match record.qual() {
+            match rec.qual() {
                 q if q.is_missing() => r#try!(writer.write_field(b"")),
                 q => r#try!(writer.write_float(q)),
             }
 
             for name in info_tags {
                 let _name = name.as_bytes();
-                if let Ok((tag_type, tag_length)) = reader.header().info_type(_name) {
+                if let Ok((tag_type, tag_length)) = header.info_type(_name) {
                     let get_idx = || match tag_length {
                         bcf::header::TagLength::Fixed => Ok(0),
                         bcf::header::TagLength::AltAlleles => Ok(i),
@@ -143,11 +138,11 @@ pub fn to_txt(
 
                     match tag_type {
                         bcf::header::TagType::Flag => {
-                            r#try!(writer.write_flag(r#try!(record.info(_name).flag())));
+                            r#try!(writer.write_flag(r#try!(rec.info(_name).flag())));
                         }
                         bcf::header::TagType::Integer => {
                             let i = r#try!(get_idx());
-                            if let Some(values) = r#try!(record.info(_name).integer()) {
+                            if let Some(values) = r#try!(rec.info(_name).integer()) {
                                 r#try!(writer.write_integer(values[i]));
                             } else {
                                 r#try!(writer.write_field(b""));
@@ -155,7 +150,7 @@ pub fn to_txt(
                         }
                         bcf::header::TagType::Float => {
                             let i = r#try!(get_idx());
-                            if let Some(values) = r#try!(record.info(_name).float()) {
+                            if let Some(values) = r#try!(rec.info(_name).float()) {
                                 r#try!(writer.write_float(values[i]));
                             } else {
                                 r#try!(writer.write_field(b""));
@@ -163,7 +158,7 @@ pub fn to_txt(
                         }
                         bcf::header::TagType::String => {
                             let i = r#try!(get_idx());
-                            if let Some(values) = r#try!(record.info(_name).string()) {
+                            if let Some(values) = r#try!(rec.info(_name).string()) {
                                 r#try!(writer.write_field(values[i]));
                             } else {
                                 r#try!(writer.write_field(b""));
@@ -177,9 +172,9 @@ pub fn to_txt(
             }
 
             let genotypes = if show_genotypes {
-                let genotypes = r#try!(record.genotypes());
+                let genotypes = r#try!(rec.genotypes());
                 Some(
-                    (0..reader.header().sample_count() as usize)
+                    (0..header.sample_count() as usize)
                         .map(|s| format!("{}", genotypes.get(s)))
                         .collect_vec(),
                 )
@@ -187,13 +182,13 @@ pub fn to_txt(
                 None
             };
 
-            for s in 0..reader.header().sample_count() as usize {
+            for s in 0..header.sample_count() as usize {
                 if let Some(ref genotypes) = genotypes {
                     r#try!(writer.write_field(genotypes[s].as_bytes()));
                 }
                 for name in format_tags {
                     let _name = name.as_bytes();
-                    if let Ok((tag_type, tag_length)) = reader.header().format_type(_name) {
+                    if let Ok((tag_type, tag_length)) = header.format_type(_name) {
                         let i = match tag_length {
                             bcf::header::TagLength::Fixed => 0,
                             bcf::header::TagLength::AltAlleles => i,
@@ -207,18 +202,18 @@ pub fn to_txt(
                             }
                             bcf::header::TagType::Integer => {
                                 r#try!(writer.write_field(
-                                    format!("{}", r#try!(record.format(_name).integer())[s][i])
+                                    format!("{}", r#try!(rec.format(_name).integer())[s][i])
                                         .as_bytes()
                                 ));
                             }
                             bcf::header::TagType::Float => {
                                 r#try!(writer.write_field(
-                                    format!("{}", r#try!(record.format(_name).float())[s][i])
+                                    format!("{}", r#try!(rec.format(_name).float())[s][i])
                                         .as_bytes()
                                 ));
                             }
                             bcf::header::TagType::String => {
-                                r#try!(writer.write_field(r#try!(record.format(_name).string())[s]));
+                                r#try!(writer.write_field(r#try!(rec.format(_name).string())[s]));
                             }
                         }
                     } else {

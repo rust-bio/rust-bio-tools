@@ -16,7 +16,6 @@ impl VarIndex {
     pub fn new(mut reader: bcf::Reader, max_dist: u32) -> Result<Self, Box<dyn Error>> {
         let mut inner = HashMap::new();
         let mut i = 0;
-        //let mut rec = bcf::Record::new();
         let header = reader.header().clone();
         for result in reader.records() {
             let mut rec = result?;
@@ -62,8 +61,7 @@ pub fn match_variants(
     );
     let mut outbcf = bcf::Writer::from_path(&"-", &header, false, false)?;
     let index = VarIndex::new(bcf::Reader::from_path(matchbcf)?, max_dist)?;
-
-    //let mut rec = bcf::Record::new();
+    
     let mut i = 0;
     let header = inbcf.header().clone();
     for result in inbcf.records() {

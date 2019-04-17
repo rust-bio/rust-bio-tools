@@ -105,7 +105,6 @@ pub fn to_txt(
     }
     r#try!(writer.newline());
 
-    //let mut record = bcf::Record::new();
     let header = reader.header().clone();
     for result in reader.records() {
         let mut rec = result?;

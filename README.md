@@ -13,6 +13,8 @@ Rust-Bio-Tools provides a command `rbt`, which currently supports the following 
 * a tool to merge FASTQ reads using unique molecular identifiers (UMIs) (`rbt call-consensus-reads`)
 
 Further functionality is added as it is needed by the authors. Any contributions are highly welcome.
+For a list of changes, take a look at the [CHANGELOG](CHANGELOG.md).
+
 
 ## Installation
 

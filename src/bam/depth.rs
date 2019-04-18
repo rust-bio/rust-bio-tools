@@ -12,7 +12,7 @@
 //! 17	39
 //! ```
 //!
-//! Positions are read from stdin, the BAM; file is the first argument.
+//! Positions are read from stdin, the BAM file is the first argument.
 //!
 //! ## Output:
 //! Depth are written to stdout as tab-separated lines, similar to the positions input.

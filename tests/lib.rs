@@ -16,7 +16,7 @@ fn test_output(result: &str, expected: &str) {
 }
 
 /// Compare two fastq files, ignoring the name lines
-/// Reads are sorted by their seqeunce, which is not 100% robust
+/// Reads are sorted by their sequence, which is not 100% robust
 /// if mutations/ sequencing errors are considered.
 fn compare_fastq(result: &str, expected: &str) {
     let result_reader = fastq::Reader::from_file(result).unwrap();

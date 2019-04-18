@@ -2,7 +2,7 @@
 //!
 //! ## Usage:
 //!
-//! Distrubute reads from `test.fastq` into the files `A.fastq` and `B.fastq`.
+//! Distribute reads from `test.fastq` into the files `A.fastq` and `B.fastq`.
 //! ```bash
 //! $ rbt fastq-split A.fastq B.fastq < test.fastq
 //! ```

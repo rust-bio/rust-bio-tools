@@ -9,14 +9,14 @@
 //! rbt vcf-match -d 50 -l 20 tests/test3.vcf < tests/test2.vcf > tests/matching.bcf
 //! ```
 //!
+use itertools::Itertools;
 use log::{info, warn};
 use quick_error::quick_error;
+use rust_htslib::bcf;
+use rust_htslib::bcf::Read;
 use std::collections::{btree_map, BTreeMap, HashMap};
 use std::error::Error;
 use std::str;
-
-use itertools::Itertools;
-use rust_htslib::bcf;
 
 pub struct VarIndex {
     inner: HashMap<Vec<u8>, BTreeMap<u32, Vec<Variant>>>,
@@ -27,7 +27,7 @@ impl VarIndex {
     pub fn new(mut reader: bcf::Reader, max_dist: u32) -> Result<Self, Box<dyn Error>> {
         let mut inner = HashMap::new();
         let mut i = 0;
-        let mut rec = bcf::Record::new();
+        let mut rec = reader.empty_record();
         loop {
             if let Err(e) = reader.read(&mut rec) {
                 if e.is_eof() {
@@ -65,7 +65,7 @@ pub fn match_variants(
     max_len_diff: u32,
 ) -> Result<(), Box<dyn Error>> {
     let mut inbcf = bcf::Reader::from_stdin()?;
-    let mut header = bcf::Header::with_template(inbcf.header());
+    let mut header = bcf::Header::from_template(inbcf.header());
 
     header.push_record(
         format!("##INFO=<ID=MATCHING,Number=A,Type=Integer,\
@@ -77,7 +77,7 @@ pub fn match_variants(
     let mut outbcf = bcf::Writer::from_path(&"-", &header, false, false)?;
     let index = VarIndex::new(bcf::Reader::from_path(matchbcf)?, max_dist)?;
 
-    let mut rec = bcf::Record::new();
+    let mut rec = inbcf.empty_record();
     let mut i = 0;
     loop {
         if let Err(e) = inbcf.read(&mut rec) {

@@ -1,8 +1,8 @@
 use bio::io::fastq;
-use std::fs;
-use std::process::Command;
 use rust_htslib::bam;
 use rust_htslib::bam::Read;
+use std::fs;
+use std::process::Command;
 
 fn test_output(result: &str, expected: &str) {
     assert!(Command::new("cmp")
@@ -122,10 +122,10 @@ fn compare_fastq(result: &str, expected: &str) {
     }
 }
 
-
 fn compare_bam(result: &str, expected: &str) {
     let mut result_reader = bam::Reader::from_path(result).unwrap();
-    let mut result_recs: Vec<bam::Record> = result_reader.records().filter_map(Result::ok).collect();
+    let mut result_recs: Vec<bam::Record> =
+        result_reader.records().filter_map(Result::ok).collect();
     result_recs.sort_by_key(|x| x.seq().as_bytes().to_owned());
     let mut expected_reader = bam::Reader::from_path(expected).unwrap();
     let mut expected_recs: Vec<bam::Record> =
@@ -199,5 +199,8 @@ fn test_call_consensus_from_bam() {
         .arg("-c")
         .arg("target/debug/rbt call-consensus-from-bam --max-seq-dist 8 tests/overlapping_consensus_marked.bam /tmp/overlapping_consensus_marked.bam")
         .spawn().unwrap().wait().unwrap().success());
-    compare_bam("tests/expected/overlapping_consensus_marked.bam", "/tmp/overlapping_consensus_marked.bam");
+    compare_bam(
+        "tests/expected/overlapping_consensus_marked.bam",
+        "/tmp/overlapping_consensus_marked.bam",
+    );
 }

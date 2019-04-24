@@ -37,7 +37,7 @@ impl<'a> CallConsensusRead<'a> {
         )?;
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
         let mut duplicate_groups: HashMap<GroupID, ReadIDs> = HashMap::new();
-        let mut read_pairs: HashMap<ReadID, RecordStorage> = HashMap::new();
+        let mut record_storage: HashMap<ReadID, RecordStorage> = HashMap::new();
 
         for result in self.bam_reader.records() {
             let record = result?;
@@ -47,9 +47,9 @@ impl<'a> CallConsensusRead<'a> {
             match duplicate_id_option {
                 // If duplicate ID exists add record to HashMap
                 Some(duplicate_id) => {
-                    match read_pairs.get_mut(read_id) {
+                    match record_storage.get_mut(read_id) {
                         //Reverse Read
-                        Some(read_pair) => {
+                        Some(record_pair) => {
                             //For reverse read save end position and duplicate group ID
                             match group_end_idx.get_mut(&(&record.cigar().end_pos()? - 1)) {
                                 None => {
@@ -61,11 +61,10 @@ impl<'a> CallConsensusRead<'a> {
                                     group_set.insert(duplicate_id.integer());
                                 }
                             }
-                            let r_rec = match read_pair {
-                                RecordStorage::PairedReads { ref mut r_rec, .. } => r_rec,
+                            match record_pair {
+                                RecordStorage::PairedReads { ref mut r_rec, .. } => r_rec.get_or_insert(record),
                                 RecordStorage::SingleRead { .. } => unreachable!(),
                             };
-                            r_rec.get_or_insert(record);
                         }
                         //Forward read or reverse w/o mate
                         None => {
@@ -74,7 +73,7 @@ impl<'a> CallConsensusRead<'a> {
                                 &mut group_end_idx,
                                 &mut duplicate_groups,
                                 Some(&record.pos()),
-                                &mut read_pairs,
+                                &mut record_storage,
                                 &mut bam_writer,
                                 self.seq_dist,
                             )?;
@@ -101,12 +100,12 @@ impl<'a> CallConsensusRead<'a> {
                                         group_set.insert(duplicate_id.integer());
                                     }
                                 }
-                                read_pairs.insert(
+                                record_storage.insert(
                                     read_id.to_vec(),
                                     RecordStorage::SingleRead { rec: record },
                                 );
                             } else {
-                                read_pairs.insert(
+                                record_storage.insert(
                                     read_id.to_vec(),
                                     RecordStorage::PairedReads {
                                         f_rec: record,
@@ -129,24 +128,24 @@ impl<'a> CallConsensusRead<'a> {
                                 &mut group_end_idx,
                                 &mut duplicate_groups,
                                 Some(&record.pos()),
-                                &mut read_pairs,
+                                &mut record_storage,
                                 &mut bam_writer,
                                 self.seq_dist,
                             )?;
                             bam_writer.write(&record)?;
                         }
-                        _ => match read_pairs.get_mut(read_id) {
+                        _ => match record_storage.get_mut(read_id) {
                             None => {
                                 calc_consensus_complete_groups(
                                     &mut group_end_idx,
                                     &mut duplicate_groups,
                                     Some(&record.pos()),
-                                    &mut read_pairs,
+                                    &mut record_storage,
                                     &mut bam_writer,
                                     self.seq_dist,
                                 )?;
                                 group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
-                                read_pairs.insert(
+                                record_storage.insert(
                                     read_id.to_vec(),
                                     RecordStorage::PairedReads {
                                         f_rec: record,
@@ -154,8 +153,8 @@ impl<'a> CallConsensusRead<'a> {
                                     },
                                 );
                             }
-                            Some(_read_pair) => {
-                                let f_rec = match read_pairs.remove(read_id).unwrap() {
+                            Some(_record_pair) => {
+                                let f_rec = match record_storage.remove(read_id).unwrap() {
                                     RecordStorage::PairedReads { f_rec, .. } => f_rec,
                                     RecordStorage::SingleRead { .. } => unreachable!(),
                                 };
@@ -190,7 +189,7 @@ impl<'a> CallConsensusRead<'a> {
             &mut group_end_idx,
             &mut duplicate_groups,
             None,
-            &mut read_pairs,
+            &mut record_storage,
             &mut bam_writer,
             self.seq_dist,
         )?;

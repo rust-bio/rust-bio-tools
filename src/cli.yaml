@@ -159,7 +159,7 @@ subcommands:
             default_value: "2"
             help: Maximum hamming distance between the sequences of any pair of reads in the same cluster.
         - umi-on-reverse:
-            long: reverse-umi
+            long: umi-on-reverse
             short: u
             help: Set if UMI is on reverse read
         - insert-size:

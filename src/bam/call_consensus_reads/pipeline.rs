@@ -37,7 +37,7 @@ impl<'a> CallConsensusRead<'a> {
         )?;
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
         let mut duplicate_groups: HashMap<GroupID, ReadIDs> = HashMap::new();
-        let mut read_pairs: HashMap<ReadID, PairedReads> = HashMap::new();
+        let mut read_pairs: HashMap<ReadID, RecordStorage> = HashMap::new();
 
         for result in self.bam_reader.records() {
             let record = result?;
@@ -61,7 +61,11 @@ impl<'a> CallConsensusRead<'a> {
                                     group_set.insert(duplicate_id.integer());
                                 }
                             }
-                            read_pair.r_rec = Some(record);
+                            let r_rec = match read_pair {
+                                RecordStorage::PairedReads { ref mut r_rec, .. } => r_rec,
+                                RecordStorage::SingleRead { .. } => unreachable!(),
+                            };
+                            r_rec.get_or_insert(record);
                         }
                         //Forward Read
                         //Structure should be done
@@ -86,7 +90,7 @@ impl<'a> CallConsensusRead<'a> {
                             }
                             read_pairs.insert(
                                 read_id.to_vec(),
-                                PairedReads {
+                                RecordStorage::PairedReads {
                                     f_rec: record,
                                     r_rec: None,
                                 },
@@ -109,14 +113,17 @@ impl<'a> CallConsensusRead<'a> {
                         group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
                         read_pairs.insert(
                             read_id.to_vec(),
-                            PairedReads {
+                            RecordStorage::PairedReads {
                                 f_rec: record,
                                 r_rec: None,
                             },
                         );
                     }
                     Some(_read_pair) => {
-                        let f_rec = read_pairs.remove(read_id).unwrap().f_rec;
+                        let f_rec = match read_pairs.remove(read_id).unwrap() {
+                            RecordStorage::PairedReads { f_rec, .. } => f_rec,
+                            RecordStorage::SingleRead { .. } => unreachable!(),
+                        };
                         if (record.seq().len() + f_rec.seq().len()) < f_rec.insert_size() as usize {
                             bam_writer.write(&f_rec)?;
                             bam_writer.write(&record)?;
@@ -151,7 +158,7 @@ pub fn calc_consensus_complete_groups(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
     duplicate_groups: &mut HashMap<GroupID, ReadIDs>,
     end_pos: Option<&i32>,
-    read_pairs: &mut HashMap<Vec<u8>, PairedReads>,
+    read_pairs: &mut HashMap<Vec<u8>, RecordStorage>,
     bam_writer: &mut bam::Writer,
     seq_dist: usize,
 ) -> Result<(), Box<dyn Error>> {
@@ -187,8 +194,10 @@ pub fn calc_consensus_complete_groups(
         let read_ids = duplicate_groups.remove(&group_id).unwrap();
         for read_id in read_ids {
             let paired_record = read_pairs.get(&read_id).unwrap();
-            let f_rec = &paired_record.f_rec;
-            let r_rec = &paired_record.r_rec.clone().unwrap();
+            let (f_rec, r_rec) = match paired_record {
+                RecordStorage::PairedReads { f_rec, r_rec } => (f_rec, r_rec.clone().unwrap()),
+                RecordStorage::SingleRead { .. } => unreachable!(),
+            };
             let seq = [&f_rec.seq().as_bytes()[..], &r_rec.seq().as_bytes()[..]].concat();
             seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
             seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
@@ -208,8 +217,12 @@ pub fn calc_consensus_complete_groups(
             let mut r_recs = Vec::new();
             for seqid in seqids {
                 let paired_record = read_pairs.remove(&read_id_storage[seqid - 1]).unwrap();
-                f_recs.push(paired_record.f_rec);
-                r_recs.push(paired_record.r_rec.unwrap());
+                let (f_rec, r_rec) = match paired_record {
+                    RecordStorage::PairedReads { f_rec, r_rec } => (f_rec, r_rec.unwrap()),
+                    RecordStorage::SingleRead { .. } => unreachable!(),
+                };
+                f_recs.push(f_rec);
+                r_recs.push(r_rec);
             }
 
             if f_recs[0].seq().len() + r_recs[0].seq().len() < f_recs[0].insert_size() as usize {
@@ -253,7 +266,12 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
         .unwrap()?)
 }
 
-pub struct PairedReads {
-    f_rec: bam::Record,
-    r_rec: Option<bam::Record>,
+pub enum RecordStorage {
+    PairedReads {
+        f_rec: bam::Record,
+        r_rec: Option<bam::Record>,
+    },
+    SingleRead {
+        rec: bam::Record,
+    },
 }

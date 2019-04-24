@@ -67,8 +67,7 @@ impl<'a> CallConsensusRead<'a> {
                             };
                             r_rec.get_or_insert(record);
                         }
-                        //Forward Read
-                        //Structure should be done
+                        //Forward read or reverse w/o mate
                         None => {
                             //Process completed duplicate groups
                             calc_consensus_complete_groups(
@@ -88,57 +87,102 @@ impl<'a> CallConsensusRead<'a> {
                                 }
                                 Some(read_ids) => read_ids.push(read_id.to_vec()),
                             }
-                            read_pairs.insert(
-                                read_id.to_vec(),
-                                RecordStorage::PairedReads {
-                                    f_rec: record,
-                                    r_rec: None,
-                                },
-                            );
+                            //
+                            if !record.is_paired() || record.is_mate_unmapped() {
+                                //For reverse read save end position and duplicate group ID
+                                match group_end_idx.get_mut(&(&record.cigar().end_pos()? - 1)) {
+                                    None => {
+                                        let mut group_set = HashSet::new();
+                                        group_set.insert(duplicate_id.integer());
+                                        group_end_idx
+                                            .insert(&record.cigar().end_pos()? - 1, group_set);
+                                    }
+                                    Some(group_set) => {
+                                        group_set.insert(duplicate_id.integer());
+                                    }
+                                }
+                                read_pairs.insert(
+                                    read_id.to_vec(),
+                                    RecordStorage::SingleRead { rec: record },
+                                );
+                            } else {
+                                read_pairs.insert(
+                                    read_id.to_vec(),
+                                    RecordStorage::PairedReads {
+                                        f_rec: record,
+                                        r_rec: None,
+                                    },
+                                );
+                            }
                         }
                     }
                 }
-                //If duplicate ID not existing add record to hashMap if not existing
-                //else calc consensus and write to bam file
-                None => match read_pairs.get_mut(read_id) {
-                    None => {
-                        calc_consensus_complete_groups(
-                            &mut group_end_idx,
-                            &mut duplicate_groups,
-                            Some(&record.pos()),
-                            &mut read_pairs,
-                            &mut bam_writer,
-                            self.seq_dist,
-                        )?;
-                        group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
-                        read_pairs.insert(
-                            read_id.to_vec(),
-                            RecordStorage::PairedReads {
-                                f_rec: record,
-                                r_rec: None,
-                            },
-                        );
-                    }
-                    Some(_read_pair) => {
-                        let f_rec = match read_pairs.remove(read_id).unwrap() {
-                            RecordStorage::PairedReads { f_rec, .. } => f_rec,
-                            RecordStorage::SingleRead { .. } => unreachable!(),
-                        };
-                        if (record.seq().len() + f_rec.seq().len()) < f_rec.insert_size() as usize {
-                            bam_writer.write(&f_rec)?;
-                            bam_writer.write(&record)?;
-                        } else {
-                            let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                            let overlap = f_rec.seq().len() + record.seq().len()
-                                - f_rec.insert_size() as usize;
-                            bam_writer.write(
-                                &CalcOverlappingConsensus::new(&[f_rec], &[record], overlap, uuid)
-                                    .calc_consensus()
-                                    .0,
+                //Duplicate ID not existing
+                //Record is writen to bam file if read or its mate is unmapped
+                //If Read is reverse and has mate consensus is calculated
+                //Else record is added to hashMap
+                None => {
+                    match (record.is_unmapped(), record.is_mate_unmapped()) {
+                        (true, _) => bam_writer.write(&record)?,
+                        (false, true) => {
+                            calc_consensus_complete_groups(
+                                &mut group_end_idx,
+                                &mut duplicate_groups,
+                                Some(&record.pos()),
+                                &mut read_pairs,
+                                &mut bam_writer,
+                                self.seq_dist,
                             )?;
+                            bam_writer.write(&record)?;
                         }
+                        _ => match read_pairs.get_mut(read_id) {
+                            None => {
+                                calc_consensus_complete_groups(
+                                    &mut group_end_idx,
+                                    &mut duplicate_groups,
+                                    Some(&record.pos()),
+                                    &mut read_pairs,
+                                    &mut bam_writer,
+                                    self.seq_dist,
+                                )?;
+                                group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
+                                read_pairs.insert(
+                                    read_id.to_vec(),
+                                    RecordStorage::PairedReads {
+                                        f_rec: record,
+                                        r_rec: None,
+                                    },
+                                );
+                            }
+                            Some(_read_pair) => {
+                                let f_rec = match read_pairs.remove(read_id).unwrap() {
+                                    RecordStorage::PairedReads { f_rec, .. } => f_rec,
+                                    RecordStorage::SingleRead { .. } => unreachable!(),
+                                };
+                                if (record.seq().len() + f_rec.seq().len())
+                                    < f_rec.insert_size() as usize
+                                {
+                                    bam_writer.write(&f_rec)?;
+                                    bam_writer.write(&record)?;
+                                } else {
+                                    let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                                    let overlap = f_rec.seq().len() + record.seq().len()
+                                        - f_rec.insert_size() as usize;
+                                    bam_writer.write(
+                                        &CalcOverlappingConsensus::new(
+                                            &[f_rec],
+                                            &[record],
+                                            overlap,
+                                            uuid,
+                                        )
+                                        .calc_consensus()
+                                        .0,
+                                    )?;
+                                }
+                            }
+                        },
                     }
-                },
+                }
             }
         }
         //Process remaining groups
@@ -167,7 +211,7 @@ pub fn calc_consensus_complete_groups(
         .template("{prefix:.bold.dim} {spinner} {wide_msg}");
 
     let group_ids: HashSet<i64> = group_end_idx
-        .range(..end_pos.unwrap_or(&(group_end_idx.len() as i32))) //TODO Check if or-case catches last groups
+        .range(..end_pos.unwrap_or(&(group_end_idx.len() as i32)))
         .flat_map(|(_, group_ids)| group_ids.clone())
         .collect();
 
@@ -194,18 +238,29 @@ pub fn calc_consensus_complete_groups(
         let read_ids = duplicate_groups.remove(&group_id).unwrap();
         for read_id in read_ids {
             let paired_record = read_pairs.get(&read_id).unwrap();
-            let (f_rec, r_rec) = match paired_record {
-                RecordStorage::PairedReads { f_rec, r_rec } => (f_rec, r_rec.clone().unwrap()),
-                RecordStorage::SingleRead { .. } => unreachable!(),
+            match paired_record {
+                RecordStorage::PairedReads { f_rec, r_rec } => {
+                    let seq = [
+                        &f_rec.seq().as_bytes()[..],
+                        &r_rec.clone().unwrap().seq().as_bytes()[..],
+                    ]
+                    .concat();
+                    seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
+                }
+                RecordStorage::SingleRead { rec } => {
+                    seq_cluster
+                        .stdin
+                        .as_mut()
+                        .unwrap()
+                        .write(&rec.seq().as_bytes()[..])?;
+                }
             };
-            let seq = [&f_rec.seq().as_bytes()[..], &r_rec.seq().as_bytes()[..]].concat();
-            seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
             seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
             read_id_storage.push(read_id);
         }
         seq_cluster.stdin.as_mut().unwrap().flush()?;
         drop(seq_cluster.stdin.take());
-        pb.finish_with_message(&format!("Done. Analyzed {} groups.", i));
+        pb.finish_with_message(&format!("Done. Analyzed {} group(s).", i));
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .has_headers(false)

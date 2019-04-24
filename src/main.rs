@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 value_t!(matches, "umi-len", usize).unwrap(),
                 value_t!(matches, "max-seq-dist", usize).unwrap(),
                 value_t!(matches, "max-umi-dist", usize).unwrap(),
-                matches.is_present("reverse-umi"),
+                matches.is_present("umi-on-reverse"),
                 if matches.is_present("insert-size") {
                     Some(value_t!(matches, "insert-size", usize).unwrap())
                 } else {

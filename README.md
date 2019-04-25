@@ -33,13 +33,14 @@ Download the source code and issue
 
 from the root directory of the source.
 
-## Usage
+## Usage and Documentation
 
 Rust-Bio-Tools installs a command line utility `rbt`. Issue
 
     rbt --help
 
 for a summary of all options and tools.
+
 
 
 ## Author

@@ -33,7 +33,38 @@ subcommands:
 
 
   - bam-depth:
-      about: "Print depth of BAM or CRAM file at given positions from STDIN (tab separated: chrom, pos)."
+      about: |
+        Print depth of BAM or CRAM file at given positions from STDIN (tab separated: chrom, pos).
+             
+        Input:
+          A BAM file and a positions file.
+          The positions file contains the name of one reference sequence and one position per line (tab separated).
+          Example:
+            
+            16	1
+            17	1
+            17	2
+            17	38
+            17	39
+            
+            
+          Positions are read from stdin, the BAM file is the first argument.
+             
+        Output:
+          Depth are written to stdout as tab-separated lines, similar to the positions input.
+          Example:
+            
+            16	1	0
+            17	1	5
+            17	2	5
+            17	38	14
+            17	39	13
+
+             
+        Usage:
+          $ rbt bam-depth test.bam < pos.txt > depth.txt
+          
+          Where `pos.txt` is a positions file, as described above.
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
       args:
         - bam-path:

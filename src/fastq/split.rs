@@ -1,3 +1,12 @@
+//! Split reads from stdin up into the given files.
+//!
+//! ## Usage:
+//!
+//! Distribute reads from `test.fastq` into the files `A.fastq` and `B.fastq`.
+//! ```bash
+//! $ rbt fastq-split A.fastq B.fastq < test.fastq
+//! ```
+//!
 use bio::io::fastq;
 use bio::io::fastq::FastqRead;
 use log::info;

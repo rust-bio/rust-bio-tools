@@ -1,3 +1,31 @@
+//! Filter reads matching names in a text file into a new FASTQ file.
+//!
+//! ## Usage:
+//!
+//! Extract the read with identifier `A` from `test.fastq` into a new file `filtered.fastq`
+//! ```bash
+//! $ cat ids.txt
+//! A
+//!
+//! $ cat test.fastq
+//! @A
+//! ACTCTATCTA
+//! +
+//! !!!!!!!!!!
+//! @B
+//! CTCTATCTCTA
+//! +
+//! !!!!!!!!!!!
+//!
+//! $ rbt fastq-filter ids.txt < test.fastq > filtered.fastq
+//!
+//! $ cat filtered.fastq
+//! @A
+//! ACTCTATCTA
+//! +
+//! !!!!!!!!!!
+//! ```
+//!
 use bio::io::fastq;
 use bio::io::fastq::FastqRead;
 use std::collections::HashSet;

@@ -6,6 +6,8 @@ description = "A set of fast and robust command line utilities for bioinformatic
 license-file = "LICENSE.md"
 homepage = "https://github.com/rust-bio/rust-bio-tools"
 edition = "2018"
+readme = "README.md"
+
 
 [dependencies]
 bio = "0.25"
@@ -38,5 +40,7 @@ GSL = "1.1.0"
 name = "rbt"
 path = "src/main.rs"
 
+
 [features]
 default = ["GSL/v2"]
+

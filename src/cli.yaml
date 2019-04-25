@@ -16,15 +16,25 @@ args:
 
 subcommands:
   - fastq-split:
-      about: Split FASTQ file from STDIN into N chunks.
+      about: |
+        Split FASTQ file from STDIN into N chunks.
+
+        Example:
+        rbt fastq-split A.fastq B.fastq < test.fastq
+        {n}
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
       args:
         - chunks:
             multiple: true
-            help: Chunks to create.
+            help: File name(s) for the chunks to create.
 
   - fastq-filter:
-      about: Remove records from a FASTQ file (from STDIN), output to STDOUT.
+      about: |
+        Remove records from a FASTQ file (from STDIN), output to STDOUT.
+
+        Example:
+        rbt fastq-filter ids.txt < test.fastq > filtered.fastq
+        {n}
       author: Erik Clarke <ecl@pennmedicine.upenn.edu>
       args:
         - ids:
@@ -35,36 +45,28 @@ subcommands:
   - bam-depth:
       about: |
         Print depth of BAM or CRAM file at given positions from STDIN (tab separated: chrom, pos).
-             
-        Input:
-          A BAM file and a positions file.
-          The positions file contains the name of one reference sequence and one position per line (tab separated).
-          Example:
-            
-            16	1
-            17	1
-            17	2
-            17	38
-            17	39
-            
-            
-          Positions are read from stdin, the BAM file is the first argument.
-             
-        Output:
-          Depth are written to stdout as tab-separated lines, similar to the positions input.
-          Example:
-            
-            16	1	0
-            17	1	5
-            17	2	5
-            17	38	14
-            17	39	13
 
-             
         Usage:
-          $ rbt bam-depth test.bam < pos.txt > depth.txt
-          
-          Where `pos.txt` is a positions file, as described above.
+        $ rbt bam-depth test.bam < pos.txt > depth.txt
+
+        The positions file contains the name of one reference sequence and one position per line (tab separated).
+        Example:
+            
+        16	1
+        17	1
+        17	2
+        17	38
+        17	39            
+
+        Depths are written to stdout as tab-separated lines, similar to the positions input.
+        Example:
+            
+        16	1	0
+        17	1	5
+        17	2	5
+        17	38	14
+        17	39	13
+        {n}
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
       args:
         - bam-path:
@@ -96,9 +98,14 @@ subcommands:
       about: |
         Convert VCF/BCF file from STDIN to tab-separated TXT file at STDOUT.
         INFO and FORMAT tags have to be selected explicitly.
+
+        Example:
+        rbt vcf-to-txt --genotypes --fmt S --info T X SOMATIC < test.vcf > variant-table.txt
+        
         The resulting table can be e.g. parsed with PANDAS in Python:
 
         pd.read_table("variants.txt", header=[0, 1])
+        {n}
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
       args:
         - info:
@@ -127,6 +134,7 @@ subcommands:
 
         Example:
         rbt vcf-match dbsnp.vcf < calls.vcf | bcftools view
+        {n}
       author: Johannes Köster <johannes.koester@tu-dortmund.de>
       args:
         - vcf:
@@ -151,11 +159,32 @@ subcommands:
 
         Example:
         rbt vcf-baf < calls.bcf > annotated.bcf
+        {n}
       author: Johannes Köster <johannes.koester@uni-due.de>, Jan Forster <j.forster@dkfz.de>
 
   - call-consensus-reads:
       about: |
-        Group reads by UMI and calculate consensus.
+        Tool to remove PCR duplicates from UMI-tagged reads.
+               
+        Takes two FASTQ files (forward and reverse) and returns two FASTQ files in which all PCR duplicates have been merged into a consensus read.
+        Duplicates are identified by a Unique Molecular Identifier (UMI).
+        
+        Requirements:  
+          - starcode
+
+        Assumptions:
+          - Reads are of equal length
+          - UMI is the prefix of the reads
+          
+        Example:
+        rbt call-consensus-reads \
+          reads_1.fq reads_2.fq \    # input files
+          merged_1.fq merged_2.fq \  # output files
+          -l 13 \  # length of UMI
+          -d 1 \   # max hamming distance of UMIs within a cluster
+          -D 2 \   # max hamming distance of sequences within a cluster
+          --umi-on-reverse  # UMI is the prefix of the reverse read
+        {n}
       author: Johannes Köster <johannes.koester@uni-due.de>, Henning Timm <henning.timm@tu-dortmund.de>, Felix Mölder <felix.moelder@uni-due.de>
       args:
         - fq1:

@@ -7,7 +7,7 @@
 //!
 //! ## Requirements:
 //!
-//! * starcode
+//!  - starcode
 //!
 //!
 //! ## Usage:

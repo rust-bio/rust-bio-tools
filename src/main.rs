@@ -9,6 +9,7 @@ use std::error::Error;
 
 pub mod bam;
 pub mod bcf;
+pub mod common_functions;
 pub mod fastq;
 
 fn main() -> Result<(), Box<dyn Error>> {

@@ -311,7 +311,7 @@ pub enum RecordStorage {
     },
 }
 
-struct IndexedRecord {
+pub struct IndexedRecord {
     rec: bam::Record,
     rec_id: usize,
 }

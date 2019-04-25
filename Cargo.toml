@@ -14,7 +14,7 @@ indicatif = "0.11"
 itertools = "0.6"
 log = "0.4.6"
 fern = "0.5.7"
-rust-htslib = {git="https://github.com/rust-bio/rust-htslib"}
+rust-htslib = {git="https://github.com/rust-bio/rust-htslib", branch="sequence-read-trait"}
 csv = "1.0.2"
 rustc-serialize = "0.3"
 quick-error = "1.2"
@@ -33,6 +33,7 @@ ordered-float = "0.5"
 flate2 = "1.0.5"
 streaming-stats =  "0.2.2"
 GSL = "1.1.0"
+bio-types = ">=0.5.1"
 
 [[bin]]
 name = "rbt"

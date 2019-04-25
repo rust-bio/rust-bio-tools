@@ -1,10 +1,8 @@
-use bio::stats::probs::{LogProb, PHREDProb};
+use crate::common_functions::CalcConsensus;
+use bio::stats::probs::LogProb;
 use itertools::Itertools;
-use ordered_float::NotNaN;
 use rust_htslib::bam;
-use std::cmp;
 
-const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
 
 const ALLELES: &'static [u8] = b"ACGT";
 
@@ -58,6 +56,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 &mut consensus_lh,
                 &mut consensus_seq,
                 &mut consensus_qual,
+                0.0,
             );
         }
         //TODO Add seq ids
@@ -80,13 +79,18 @@ impl<'a> CalcOverlappingConsensus<'a> {
     }
 }
 
-impl<'a> CalcConsensus<'a> for CalcOverlappingConsensus<'a> {
+impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb {
         let mut lh = LogProb::ln_one();
         for (rec1, rec2) in self.recs1().into_iter().zip(self.recs2()) {
             if i < rec1.seq().len() {
-                lh +=
-                    Self::allele_likelihood_in_rec(allele, &rec1.seq().as_bytes(), rec1.qual(), i);
+                lh += Self::allele_likelihood_in_rec(
+                    allele,
+                    &rec1.seq().as_bytes(),
+                    rec1.qual(),
+                    i,
+                    0,
+                );
             };
             if i >= rec1.seq().len() - self.overlap() {
                 let rec2_i = i - (rec1.seq().len() - self.overlap());
@@ -95,6 +99,7 @@ impl<'a> CalcConsensus<'a> for CalcOverlappingConsensus<'a> {
                     &rec2.seq().as_bytes(),
                     &rec2.qual(),
                     rec2_i,
+                    0,
                 );
             };
         }
@@ -147,6 +152,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 &mut consensus_lh,
                 &mut consensus_seq,
                 &mut consensus_qual,
+                0.0,
             );
         }
         //TODO Add seq ids
@@ -163,69 +169,15 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
     }
 }
 
-impl<'a> CalcConsensus<'a> for CalcNonOverlappingConsensus<'a> {
+impl<'a> CalcConsensus<'a, bam::Record> for CalcNonOverlappingConsensus<'a> {
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb {
         let mut lh = LogProb::ln_one(); // posterior: log(P(theta)) = 1
         for rec in self.recs() {
-            lh += Self::allele_likelihood_in_rec(allele, &rec.seq().as_bytes(), rec.qual(), i);
+            lh += Self::allele_likelihood_in_rec(allele, &rec.seq().as_bytes(), rec.qual(), i, 0);
         }
         lh
     }
     fn uuid(&self) -> &'a str {
         self.uuid
     }
-}
-
-pub trait CalcConsensus<'a> {
-    fn validate_read_lengths(recs: &[bam::Record]) -> bool {
-        let reference_length = recs[0].seq().len();
-        recs.iter()
-            .map(|rec| rec.seq().len())
-            .all(|len| len == reference_length)
-    }
-    #[allow(unused_doc_comments)]
-    /// Compute the likelihood for the given allele and read position.
-    /// The allele (A, C, G, or T) is an explicit parameter,
-    /// the position i is captured by the closure.
-    ///
-    /// Likelihoods are managed in log space.
-    /// A matching base is scored with (1 - PHRED score), a mismatch
-    /// with PHRED score + confusion constant.
-    fn allele_likelihood_in_rec(allele: &u8, seq: &[u8], qual: &[u8], i: usize) -> LogProb {
-        let q = LogProb::from(PHREDProb::from((qual[i]) as f64));
-        if *allele == seq[i].to_ascii_uppercase() {
-            q.ln_one_minus_exp()
-        } else {
-            q + PROB_CONFUSION
-        }
-    }
-    fn build_consensus_sequence(
-        likelihoods: Vec<LogProb>,
-        consensus_lh: &mut LogProb,
-        consensus_seq: &mut Vec<u8>,
-        consensus_qual: &mut Vec<u8>,
-    ) {
-        let (max_posterior, allele_lh) = likelihoods
-            .iter()
-            .enumerate()
-            .max_by_key(|&(_, &lh)| NotNaN::new(*lh).unwrap())
-            .unwrap();
-        *consensus_lh += *allele_lh;
-        let marginal = LogProb::ln_sum_exp(&likelihoods);
-        // new base: MAP
-        consensus_seq.push(ALLELES[max_posterior]);
-        // new qual: (1 - MAP)
-        let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
-        // Assume the maximal quality, if the likelihood is infinite
-        let truncated_quality: f64;
-        if (*PHREDProb::from(qual)).is_infinite() {
-            truncated_quality = 41.0;
-        } else {
-            truncated_quality = *PHREDProb::from(qual);
-        }
-        // Truncate quality values to PHRED+33 range
-        consensus_qual.push(cmp::min(41, (truncated_quality) as u64) as u8);
-    }
-    fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;
-    fn uuid(&self) -> &'a str;
 }

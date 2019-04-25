@@ -9,7 +9,6 @@ use std::io::Write;
 use std::process::{Command, Stdio};
 use std::str;
 use uuid::Uuid;
-use rust_htslib::bam::record::CigarStringView;
 
 pub struct CallConsensusRead<'a> {
     bam_reader: &'a mut bam::Reader,
@@ -63,7 +62,9 @@ impl<'a> CallConsensusRead<'a> {
                                 }
                             }
                             match record_pair {
-                                RecordStorage::PairedReads { ref mut r_rec, .. } => r_rec.get_or_insert(record),
+                                RecordStorage::PairedReads { ref mut r_rec, .. } => {
+                                    r_rec.get_or_insert(record)
+                                }
                                 RecordStorage::SingleRead { .. } => unreachable!(),
                             };
                         }
@@ -135,7 +136,9 @@ impl<'a> CallConsensusRead<'a> {
                             )?;
                             bam_writer.write(&record)?;
                         }
+                        //Case: Is paired
                         _ => match record_storage.get_mut(read_id) {
+                            //Case: Forward record
                             None => {
                                 calc_consensus_complete_groups(
                                     &mut group_end_idx,
@@ -154,29 +157,28 @@ impl<'a> CallConsensusRead<'a> {
                                     },
                                 );
                             }
+                            //Case: Forward record already stored
                             Some(_record_pair) => {
                                 let f_rec = match record_storage.remove(read_id).unwrap() {
                                     RecordStorage::PairedReads { f_rec, .. } => f_rec,
                                     RecordStorage::SingleRead { .. } => unreachable!(),
                                 };
-                                if (record.seq().len() + f_rec.seq().len())
-                                    < f_rec.insert_size() as usize //TODO Check overlap
-                                {
-                                    bam_writer.write(&f_rec)?;
-                                    bam_writer.write(&record)?;
-                                } else {
+                                let overlap = f_rec.cigar().end_pos()? - record.pos();
+                                if overlap > 0 {
                                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                                    let overlap = (f_rec.cigar().end_pos()?- record.pos()) as usize;
                                     bam_writer.write(
                                         &CalcOverlappingConsensus::new(
                                             &[f_rec],
                                             &[record],
-                                            overlap,
+                                            overlap as usize,
                                             uuid,
                                         )
                                         .calc_consensus()
                                         .0,
                                     )?;
+                                } else {
+                                    bam_writer.write(&f_rec)?;
+                                    bam_writer.write(&record)?;
                                 }
                             }
                         },
@@ -278,8 +280,15 @@ pub fn calc_consensus_complete_groups(
                 f_recs.push(f_rec);
                 r_recs.push(r_rec);
             }
-
-            if f_recs[0].seq().len() + r_recs[0].seq().len() < f_recs[0].insert_size() as usize { //TODO Check overlap
+            let overlap = f_recs[0].cigar().end_pos()? - r_recs[0].pos();
+            if overlap > 0 {
+                let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                bam_writer.write(
+                    &CalcOverlappingConsensus::new(&f_recs, &r_recs, overlap as usize, uuid)
+                        .calc_consensus()
+                        .0,
+                )?;
+            } else {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                 bam_writer.write(
                     &CalcNonOverlappingConsensus::new(&f_recs, uuid)
@@ -289,14 +298,6 @@ pub fn calc_consensus_complete_groups(
                 let r_uuid = &Uuid::new_v4().to_hyphenated().to_string();
                 bam_writer.write(
                     &CalcNonOverlappingConsensus::new(&r_recs, r_uuid)
-                        .calc_consensus()
-                        .0,
-                )?;
-            } else {
-                let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                let overlap = (f_recs[0].cigar().end_pos()? - r_recs[0].pos()) as usize;
-                bam_writer.write(
-                    &CalcOverlappingConsensus::new(&f_recs, &r_recs, overlap as usize, uuid)
                         .calc_consensus()
                         .0,
                 )?;

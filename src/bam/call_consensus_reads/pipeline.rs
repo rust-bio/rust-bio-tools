@@ -45,10 +45,10 @@ impl<'a> CallConsensusRead<'a> {
             let read_id = record.qname();
             //Check if record has duplicate ID
             match duplicate_id_option {
-                // If duplicate ID exists add record to HashMap
+                //Case: duplicate ID exists
                 Some(duplicate_id) => {
                     match record_storage.get_mut(read_id) {
-                        //Reverse Read
+                        //Case: Reverse read
                         Some(record_pair) => {
                             //For reverse read save end position and duplicate group ID
                             match group_end_idx.get_mut(&(&record.cigar().end_pos()? - 1)) {
@@ -68,7 +68,7 @@ impl<'a> CallConsensusRead<'a> {
                                 RecordStorage::SingleRead { .. } => unreachable!(),
                             };
                         }
-                        //Forward read or reverse w/o mate
+                        //Case: Forward read or reverse w/o mate
                         None => {
                             //Process completed duplicate groups
                             calc_consensus_complete_groups(
@@ -80,7 +80,6 @@ impl<'a> CallConsensusRead<'a> {
                                 self.seq_dist,
                             )?;
                             group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
-
                             match duplicate_groups.get_mut(&duplicate_id.integer()) {
                                 None => {
                                     duplicate_groups
@@ -88,7 +87,7 @@ impl<'a> CallConsensusRead<'a> {
                                 }
                                 Some(read_ids) => read_ids.push(read_id.to_vec()),
                             }
-                            //
+
                             if !record.is_paired() || record.is_mate_unmapped() {
                                 //For reverse read save end position and duplicate group ID
                                 match group_end_idx.get_mut(&(&record.cigar().end_pos()? - 1)) {

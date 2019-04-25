@@ -5,6 +5,7 @@ use rust_htslib::bam::Read;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::error::Error;
 use std::io::Write;
+use std::ops::Deref;
 use std::process::{Command, Stdio};
 use uuid::Uuid;
 
@@ -33,7 +34,7 @@ impl CallConsensusRead {
         let mut duplicate_groups: HashMap<GroupID, ReadIDs> = HashMap::new();
         let mut record_storage: HashMap<ReadID, RecordStorage> = HashMap::new();
 
-        for result in self.bam_reader.records() {
+        for (i, result) in self.bam_reader.records().into_iter().enumerate() {
             let mut record = result?;
             if !record.is_unmapped() {
                 //Process completed duplicate groups
@@ -70,9 +71,11 @@ impl CallConsensusRead {
                                 .or_insert_with(HashSet::new)
                                 .insert(duplicate_id.integer());
                             match record_pair {
-                                RecordStorage::PairedReads { ref mut r_rec, .. } => {
-                                    r_rec.get_or_insert(record)
-                                }
+                                RecordStorage::PairedReads { ref mut r_rec, .. } => r_rec
+                                    .get_or_insert(IndexedRecord {
+                                        rec: record,
+                                        rec_id: i,
+                                    }),
                                 RecordStorage::SingleRead { .. } => unreachable!(),
                             };
                         }
@@ -90,13 +93,21 @@ impl CallConsensusRead {
                                     .insert(duplicate_id.integer());
                                 record_storage.insert(
                                     read_id.to_vec(),
-                                    RecordStorage::SingleRead { rec: record },
+                                    RecordStorage::SingleRead {
+                                        rec: IndexedRecord {
+                                            rec: record,
+                                            rec_id: i,
+                                        },
+                                    },
                                 );
                             } else {
                                 record_storage.insert(
                                     read_id.to_vec(),
                                     RecordStorage::PairedReads {
-                                        f_rec: record,
+                                        f_rec: IndexedRecord {
+                                            rec: record,
+                                            rec_id: i,
+                                        },
                                         r_rec: None,
                                     },
                                 );
@@ -118,7 +129,10 @@ impl CallConsensusRead {
                                 record_storage.insert(
                                     read_id.to_vec(),
                                     RecordStorage::PairedReads {
-                                        f_rec: record,
+                                        f_rec: IndexedRecord {
+                                            rec: record,
+                                            rec_id: i,
+                                        },
                                         r_rec: None,
                                     },
                                 );
@@ -126,12 +140,14 @@ impl CallConsensusRead {
                             //Case: Left record already stored
                             Some(_record_pair) => {
                                 let f_rec = match record_storage.remove(read_id).unwrap() {
-                                    RecordStorage::PairedReads { f_rec, .. } => f_rec,
+                                    RecordStorage::PairedReads { f_rec, .. } => f_rec.into_rec(),
                                     RecordStorage::SingleRead { .. } => unreachable!(),
                                 };
                                 //TODO Consider softclipping in Overlap
+                                dbg!("Test");
                                 let overlap =
                                     f_rec.cigar_cached().unwrap().end_pos()? - record.pos();
+                                dbg!("Test2");
                                 if overlap > 0 {
                                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                                     self.bam_writer.write(
@@ -207,7 +223,7 @@ pub fn calc_consensus_complete_groups(
             let seq = match record_storage.get(&read_id).unwrap() {
                 RecordStorage::PairedReads { f_rec, r_rec } => [
                     &f_rec.seq().as_bytes()[..],
-                    &r_rec.clone().unwrap().seq().as_bytes()[..],
+                    &r_rec.as_ref().unwrap().seq().as_bytes()[..],
                 ]
                 .concat(),
                 RecordStorage::SingleRead { rec } => rec.seq().as_bytes(),
@@ -231,14 +247,14 @@ pub fn calc_consensus_complete_groups(
             for seqid in seqids {
                 match record_storage.remove(&read_id_storage[seqid - 1]).unwrap() {
                     RecordStorage::PairedReads { f_rec, r_rec } => {
-                        f_recs.push(f_rec);
-                        r_recs.push(r_rec.unwrap());
+                        f_recs.push(f_rec.into_rec());
+                        r_recs.push(r_rec.unwrap().into_rec());
                     }
-                    RecordStorage::SingleRead { rec } => f_recs.push(rec),
+                    RecordStorage::SingleRead { rec } => f_recs.push(rec.into_rec()),
                 };
             }
             if !r_recs.is_empty() {
-                let overlap = f_recs[0].cigar_cached().unwrap().end_pos()? - r_recs[0].pos(); //TODO
+                let overlap = f_recs[0].cigar_cached().unwrap().end_pos()? - r_recs[0].pos(); //TODO See todo above
                 if overlap > 0 {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     bam_writer.write(
@@ -287,10 +303,28 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
 
 pub enum RecordStorage {
     PairedReads {
-        f_rec: bam::Record,
-        r_rec: Option<bam::Record>,
+        f_rec: IndexedRecord,
+        r_rec: Option<IndexedRecord>,
     },
     SingleRead {
-        rec: bam::Record,
+        rec: IndexedRecord,
     },
+}
+
+struct IndexedRecord {
+    rec: bam::Record,
+    rec_id: usize,
+}
+
+impl IndexedRecord {
+    fn into_rec(self) -> bam::Record {
+        self.rec
+    }
+}
+
+impl Deref for IndexedRecord {
+    type Target = bam::Record;
+    fn deref(&self) -> &bam::Record {
+        &self.rec
+    }
 }

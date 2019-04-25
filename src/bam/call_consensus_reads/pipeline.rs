@@ -234,7 +234,7 @@ pub fn calc_consensus_complete_groups(
                         f_recs.push(f_rec);
                         r_recs.push(r_rec.unwrap());
                     }
-                    RecordStorage::SingleRead { rec } => f_recs.push(rec)
+                    RecordStorage::SingleRead { rec } => f_recs.push(rec),
                 };
             }
             if !r_recs.is_empty() {

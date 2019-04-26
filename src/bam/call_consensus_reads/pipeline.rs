@@ -18,8 +18,8 @@ pub struct CallConsensusRead {
 type Position = i32;
 type GroupID = i64;
 type GroupIDs = HashSet<GroupID>;
-type ReadIDs = Vec<ReadID>;
-type ReadID = Vec<u8>;
+type RecordIDS = Vec<RecordID>;
+type RecordID = Vec<u8>;
 
 impl CallConsensusRead {
     pub fn new(bam_reader: bam::Reader, bam_writer: bam::Writer, seq_dist: usize) -> Self {
@@ -31,8 +31,8 @@ impl CallConsensusRead {
     }
     pub fn call_consensus_reads(&mut self) -> Result<(), Box<dyn Error>> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
-        let mut duplicate_groups: HashMap<GroupID, ReadIDs> = HashMap::new();
-        let mut record_storage: HashMap<ReadID, RecordStorage> = HashMap::new();
+        let mut duplicate_groups: HashMap<GroupID, RecordIDS> = HashMap::new();
+        let mut record_storage: HashMap<RecordID, RecordStorage> = HashMap::new();
 
         for (i, result) in self.bam_reader.records().into_iter().enumerate() {
             let mut record = result?;
@@ -57,26 +57,26 @@ impl CallConsensusRead {
             }
             record.cache_cigar();
             let duplicate_id_option = record.aux(b"DI");
-            let read_id = record.qname();
+            let record_id = record.qname();
             //Check if record has duplicate ID
             match duplicate_id_option {
                 //Case: duplicate ID exists
                 Some(duplicate_id) => {
-                    match record_storage.get_mut(read_id) {
+                    match record_storage.get_mut(record_id) {
                         //Case: Right record
                         Some(record_pair) => {
-                            //For reverse read save end position and duplicate group ID
+                            //For right record save end position and duplicate group ID
                             group_end_idx
                                 .entry(record.cigar_cached().unwrap().end_pos()? - 1)
                                 .or_insert_with(HashSet::new)
                                 .insert(duplicate_id.integer());
                             match record_pair {
-                                RecordStorage::PairedReads { ref mut r_rec, .. } => r_rec
+                                RecordStorage::PairedRecords { ref mut r_rec, .. } => r_rec
                                     .get_or_insert(IndexedRecord {
                                         rec: record,
                                         rec_id: i,
                                     }),
-                                RecordStorage::SingleRead { .. } => unreachable!(),
+                                RecordStorage::SingleRecord { .. } => unreachable!(),
                             };
                         }
                         //Case: Left record or record w/o mate
@@ -84,16 +84,16 @@ impl CallConsensusRead {
                             duplicate_groups
                                 .entry(duplicate_id.integer())
                                 .or_insert_with(Vec::new)
-                                .push(read_id.to_vec());
+                                .push(record_id.to_vec());
                             if !record.is_paired() || record.is_mate_unmapped() {
-                                //For reverse read save end position and duplicate group ID
+                                //If right or single record save end position and duplicate group ID
                                 group_end_idx
                                     .entry(record.cigar_cached().unwrap().end_pos()? - 1)
                                     .or_insert_with(HashSet::new)
                                     .insert(duplicate_id.integer());
                                 record_storage.insert(
-                                    read_id.to_vec(),
-                                    RecordStorage::SingleRead {
+                                    record_id.to_vec(),
+                                    RecordStorage::SingleRecord {
                                         rec: IndexedRecord {
                                             rec: record,
                                             rec_id: i,
@@ -102,9 +102,9 @@ impl CallConsensusRead {
                                 );
                             } else {
                                 record_storage.insert(
-                                    read_id.to_vec(),
-                                    RecordStorage::PairedReads {
-                                        f_rec: IndexedRecord {
+                                    record_id.to_vec(),
+                                    RecordStorage::PairedRecords {
+                                        l_rec: IndexedRecord {
                                             rec: record,
                                             rec_id: i,
                                         },
@@ -116,20 +116,20 @@ impl CallConsensusRead {
                     }
                 }
                 //Duplicate ID not existing
-                //Record is writen to bam file if read or its mate is unmapped
-                //If Read is reverse and has mate consensus is calculated
+                //Record is writen to bam file if it or its mate is unmapped
+                //If record is right mate consensus is calculated
                 //Else record is added to hashMap
                 None => {
                     if record.is_mate_unmapped() {
                         self.bam_writer.write(&record)?;
                     } else {
-                        match record_storage.get_mut(read_id) {
+                        match record_storage.get_mut(record_id) {
                             //Case: Left record
                             None => {
                                 record_storage.insert(
-                                    read_id.to_vec(),
-                                    RecordStorage::PairedReads {
-                                        f_rec: IndexedRecord {
+                                    record_id.to_vec(),
+                                    RecordStorage::PairedRecords {
+                                        l_rec: IndexedRecord {
                                             rec: record,
                                             rec_id: i,
                                         },
@@ -139,22 +139,22 @@ impl CallConsensusRead {
                             }
                             //Case: Left record already stored
                             Some(_record_pair) => {
-                                let (rec_id, f_rec) = match record_storage.remove(read_id).unwrap()
+                                let (rec_id, l_rec) = match record_storage.remove(record_id).unwrap()
                                 {
-                                    RecordStorage::PairedReads { f_rec, .. } => {
-                                        (f_rec.rec_id, f_rec.into_rec())
+                                    RecordStorage::PairedRecords { l_rec, .. } => {
+                                        (l_rec.rec_id, l_rec.into_rec())
                                     }
-                                    RecordStorage::SingleRead { .. } => unreachable!(),
+                                    RecordStorage::SingleRecord { .. } => unreachable!(),
                                 };
                                 //TODO Consider softclipping in Overlap
                                 let overlap =
-                                    f_rec.cigar_cached().unwrap().end_pos()? - record.pos();
+                                    l_rec.cigar_cached().unwrap().end_pos()? - record.pos();
                                 if overlap > 0 {
                                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
                                     self.bam_writer.write(
                                         &CalcOverlappingConsensus::new(
-                                            &[f_rec],
+                                            &[l_rec],
                                             &[record],
                                             overlap as usize,
                                             &[rec_id, i],
@@ -164,7 +164,7 @@ impl CallConsensusRead {
                                         .0,
                                     )?;
                                 } else {
-                                    self.bam_writer.write(&f_rec)?;
+                                    self.bam_writer.write(&l_rec)?;
                                     self.bam_writer.write(&record)?;
                                 }
                             }
@@ -188,7 +188,7 @@ impl CallConsensusRead {
 
 pub fn calc_consensus_complete_groups(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
-    duplicate_groups: &mut HashMap<GroupID, ReadIDs>,
+    duplicate_groups: &mut HashMap<GroupID, RecordIDS>,
     end_pos: Option<&i32>,
     record_storage: &mut HashMap<Vec<u8>, RecordStorage>,
     bam_writer: &mut bam::Writer,
@@ -207,7 +207,7 @@ pub fn calc_consensus_complete_groups(
     let pb = indicatif::ProgressBar::new_spinner();
     pb.set_style(spinner_style.clone());
     pb.set_prefix(&format!(
-        "Clustering duplicated reads by sequence using starcode."
+        "Clustering duplicated records by sequence using starcode."
     ));
     for (i, group_id) in group_ids.into_iter().enumerate() {
         pb.inc(1);
@@ -221,19 +221,19 @@ pub fn calc_consensus_complete_groups(
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()?;
-        let read_ids = duplicate_groups.remove(&group_id).unwrap();
-        for read_id in read_ids {
-            let seq = match record_storage.get(&read_id).unwrap() {
-                RecordStorage::PairedReads { f_rec, r_rec } => [
-                    &f_rec.seq().as_bytes()[..],
+        let rec_ids = duplicate_groups.remove(&group_id).unwrap();
+        for rec_id in rec_ids {
+            let seq = match record_storage.get(&rec_id).unwrap() {
+                RecordStorage::PairedRecords { l_rec, r_rec } => [
+                    &l_rec.seq().as_bytes()[..],
                     &r_rec.as_ref().unwrap().seq().as_bytes()[..],
                 ]
                 .concat(),
-                RecordStorage::SingleRead { rec } => rec.seq().as_bytes(),
+                RecordStorage::SingleRecord { rec } => rec.seq().as_bytes(),
             };
             seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
             seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
-            read_id_storage.push(read_id);
+            read_id_storage.push(rec_id);
         }
         seq_cluster.stdin.as_mut().unwrap().flush()?;
         drop(seq_cluster.stdin.take());
@@ -245,29 +245,29 @@ pub fn calc_consensus_complete_groups(
             .records()
         {
             let seqids = parse_cluster(record?)?;
-            let mut f_recs = Vec::new();
+            let mut l_recs = Vec::new();
             let mut r_recs = Vec::new();
             let mut l_seqids = Vec::new();
             let mut r_seqids = Vec::new();
             for seqid in seqids {
                 match record_storage.remove(&read_id_storage[seqid - 1]).unwrap() {
-                    RecordStorage::PairedReads { f_rec, r_rec } => {
-                        l_seqids.push(f_rec.rec_id);
-                        f_recs.push(f_rec.into_rec());
+                    RecordStorage::PairedRecords { l_rec, r_rec } => {
+                        l_seqids.push(l_rec.rec_id);
+                        l_recs.push(l_rec.into_rec());
                         r_seqids.push(r_rec.as_ref().unwrap().rec_id);
                         r_recs.push(r_rec.unwrap().into_rec());
                     }
-                    RecordStorage::SingleRead { rec } => f_recs.push(rec.into_rec()),
+                    RecordStorage::SingleRecord { rec } => l_recs.push(rec.into_rec()),
                 };
             }
             if !r_recs.is_empty() {
-                let overlap = f_recs[0].cigar_cached().unwrap().end_pos()? - r_recs[0].pos(); //TODO See todo above
+                let overlap = l_recs[0].cigar_cached().unwrap().end_pos()? - r_recs[0].pos(); //TODO See todo above
                 if overlap > 0 {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     l_seqids.append(&mut r_seqids);
                     bam_writer.write(
                         &CalcOverlappingConsensus::new(
-                            &f_recs,
+                            &l_recs,
                             &r_recs,
                             overlap as usize,
                             &l_seqids,
@@ -279,7 +279,7 @@ pub fn calc_consensus_complete_groups(
                 } else {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     bam_writer.write(
-                        &CalcNonOverlappingConsensus::new(&f_recs, &l_seqids, uuid)
+                        &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
                             .calc_consensus()
                             .0,
                     )?;
@@ -293,7 +293,7 @@ pub fn calc_consensus_complete_groups(
             } else {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                 bam_writer.write(
-                    &CalcNonOverlappingConsensus::new(&f_recs, &l_seqids, uuid)
+                    &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
                         .calc_consensus()
                         .0,
                 )?;
@@ -316,11 +316,11 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
 }
 
 pub enum RecordStorage {
-    PairedReads {
-        f_rec: IndexedRecord,
+    PairedRecords {
+        l_rec: IndexedRecord,
         r_rec: Option<IndexedRecord>,
     },
-    SingleRead {
+    SingleRecord {
         rec: IndexedRecord,
     },
 }

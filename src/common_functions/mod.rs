@@ -1,7 +1,7 @@
 use bio::stats::probs::{LogProb, PHREDProb};
+use bio_types::sequence::SequenceRead;
 use ordered_float::NotNaN;
 use std::cmp;
-use bio_types::sequence::SequenceRead;
 
 const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
 const ALLELES: &'static [u8] = b"ACGT";

@@ -3,7 +3,6 @@ use bio::stats::probs::LogProb;
 use itertools::Itertools;
 use rust_htslib::bam;
 
-
 const ALLELES: &'static [u8] = b"ACGT";
 
 pub struct CalcOverlappingConsensus<'a> {
@@ -31,7 +30,8 @@ impl<'a> CalcOverlappingConsensus<'a> {
         }
     }
     pub fn calc_consensus(&self) -> (bam::Record, LogProb) {
-        let seq_len = self.recs1()[0].insert_size() as usize;
+        let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap(); //TODO Not tested (Check this if test fails)
+        //let seq_len = self.recs1()[0].insert_size() as usize;
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
 
@@ -39,13 +39,15 @@ impl<'a> CalcOverlappingConsensus<'a> {
         assert_eq!(
             Self::validate_read_lengths(self.recs1()),
             true,
-            "Read length of BAM forward records differ. Cannot compute consensus sequence.",
+            "Read length of FASTQ forward records {:?} differ. Cannot compute consensus sequence.",
+            self.seqids()
         );
 
         assert_eq!(
             Self::validate_read_lengths(self.recs2()),
             true,
-            "Read length of BAM reverse records differ. Cannot compute consensus sequence."
+            "Read length of FASTQ reverse records {:?} differ. Cannot compute consensus sequence.",
+            self.seqids()
         );
         let mut consensus_lh = LogProb::ln_one();
 
@@ -62,8 +64,11 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 0.0,
             );
         }
-        //TODO Add seq ids
-        let name = format!("{}_consensus-read", self.uuid());
+        let name = format!(
+            "{}_consensus-read-from:{}",
+            self.uuid(),
+            self.seqids().iter().map(|i| format!("{}", i)).join(",")
+        );
         let mut cigar_string = seq_len.to_string();
         cigar_string.push('M');
         let cigar = bam::record::CigarString::from_str(cigar_string.as_str()).unwrap();
@@ -135,7 +140,8 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         assert_eq!(
             Self::validate_read_lengths(self.recs()),
             true,
-            "Read length of BAM records differ. Cannot compute consensus sequence.",
+            "Read length of FASTQ records {:?} differ. Cannot compute consensus sequence.",
+            self.seqids()
         );
 
         // Potential workflow for different read lengths
@@ -144,6 +150,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         // pad shorter reads
         // drop first consensus, compute consensus of full length reads and padded reads
         // ignore padded bases for consensus computation
+
         let mut consensus_lh = LogProb::ln_one();
 
         for i in 0..seq_len {
@@ -163,7 +170,11 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             );
         }
         //TODO Add seq ids
-        let name = format!("{}_consensus-read", self.uuid());
+        let name = format!(
+            "{}_consensus-read-from:{}",
+            self.uuid(),
+            self.seqids().iter().map(|i| format!("{}", i)).join(",")
+        );
         let mut cigar_string = seq_len.to_string();
         cigar_string.push('M');
         let cigar = bam::record::CigarString::from_str(cigar_string.as_str()).unwrap();

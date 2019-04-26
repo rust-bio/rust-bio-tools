@@ -139,8 +139,11 @@ impl CallConsensusRead {
                             }
                             //Case: Left record already stored
                             Some(_record_pair) => {
-                                let (rec_id, f_rec )= match record_storage.remove(read_id).unwrap() {
-                                    RecordStorage::PairedReads { f_rec, .. } => (f_rec.rec_id, f_rec.into_rec()),
+                                let (rec_id, f_rec) = match record_storage.remove(read_id).unwrap()
+                                {
+                                    RecordStorage::PairedReads { f_rec, .. } => {
+                                        (f_rec.rec_id, f_rec.into_rec())
+                                    }
                                     RecordStorage::SingleRead { .. } => unreachable!(),
                                 };
                                 //TODO Consider softclipping in Overlap
@@ -263,9 +266,15 @@ pub fn calc_consensus_complete_groups(
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     l_seqids.append(&mut r_seqids);
                     bam_writer.write(
-                        &CalcOverlappingConsensus::new(&f_recs, &r_recs, overlap as usize, &l_seqids, uuid)
-                            .calc_consensus()
-                            .0,
+                        &CalcOverlappingConsensus::new(
+                            &f_recs,
+                            &r_recs,
+                            overlap as usize,
+                            &l_seqids,
+                            uuid,
+                        )
+                        .calc_consensus()
+                        .0,
                     )?;
                 } else {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();

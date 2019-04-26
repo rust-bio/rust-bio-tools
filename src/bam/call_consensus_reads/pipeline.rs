@@ -1,6 +1,7 @@
 use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
 use indicatif;
 use rust_htslib::bam;
+use rust_htslib::bam::record::Cigar;
 use rust_htslib::bam::Read;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::error::Error;
@@ -302,13 +303,28 @@ pub fn calc_consensus_complete_groups(
     Ok(())
 }
 
-//TODO Revisit this and add soft clipping
+//TODO Revisit and test this!
 fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i32, Box<dyn Error>> {
     let l_end_pos = l_rec.cigar_cached().unwrap().end_pos()?;
     let r_start_pos = r_rec.pos();
-    let l_softclips = 0; //Get these
-    let r_softclips = 0; //Get these, too
+    let l_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;
+    let r_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter())?;
     Ok((l_end_pos + l_softclips) - (r_start_pos - r_softclips))
+}
+
+//Gets an Iterator over Cigar-items and returns number of soft-clips at the beginning
+fn count_softclips<'a, I>(cigar: I) -> Result<i32, Box<dyn Error>>
+where
+    I: Iterator<Item = &'a Cigar>,
+{
+    for c in cigar {
+        match c {
+            Cigar::HardClip(_) => {}
+            Cigar::SoftClip(l) => return Ok(*l as i32),
+            _ => return Ok(0),
+        }
+    }
+    unreachable!();
 }
 
 /// Interpret a cluster returned by starcode

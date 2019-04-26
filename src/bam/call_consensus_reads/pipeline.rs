@@ -139,22 +139,22 @@ impl CallConsensusRead {
                             }
                             //Case: Left record already stored
                             Some(_record_pair) => {
-                                let f_rec = match record_storage.remove(read_id).unwrap() {
-                                    RecordStorage::PairedReads { f_rec, .. } => f_rec.into_rec(),
+                                let (rec_id, f_rec )= match record_storage.remove(read_id).unwrap() {
+                                    RecordStorage::PairedReads { f_rec, .. } => (f_rec.rec_id, f_rec.into_rec()),
                                     RecordStorage::SingleRead { .. } => unreachable!(),
                                 };
                                 //TODO Consider softclipping in Overlap
-                                dbg!("Test");
                                 let overlap =
                                     f_rec.cigar_cached().unwrap().end_pos()? - record.pos();
-                                dbg!("Test2");
                                 if overlap > 0 {
                                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+
                                     self.bam_writer.write(
                                         &CalcOverlappingConsensus::new(
                                             &[f_rec],
                                             &[record],
                                             overlap as usize,
+                                            &[rec_id, i],
                                             uuid,
                                         )
                                         .calc_consensus()
@@ -244,10 +244,14 @@ pub fn calc_consensus_complete_groups(
             let seqids = parse_cluster(record?)?;
             let mut f_recs = Vec::new();
             let mut r_recs = Vec::new();
+            let mut l_seqids = Vec::new();
+            let mut r_seqids = Vec::new();
             for seqid in seqids {
                 match record_storage.remove(&read_id_storage[seqid - 1]).unwrap() {
                     RecordStorage::PairedReads { f_rec, r_rec } => {
+                        l_seqids.push(f_rec.rec_id);
                         f_recs.push(f_rec.into_rec());
+                        r_seqids.push(r_rec.as_ref().unwrap().rec_id);
                         r_recs.push(r_rec.unwrap().into_rec());
                     }
                     RecordStorage::SingleRead { rec } => f_recs.push(rec.into_rec()),
@@ -257,21 +261,22 @@ pub fn calc_consensus_complete_groups(
                 let overlap = f_recs[0].cigar_cached().unwrap().end_pos()? - r_recs[0].pos(); //TODO See todo above
                 if overlap > 0 {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                    l_seqids.append(&mut r_seqids);
                     bam_writer.write(
-                        &CalcOverlappingConsensus::new(&f_recs, &r_recs, overlap as usize, uuid)
+                        &CalcOverlappingConsensus::new(&f_recs, &r_recs, overlap as usize, &l_seqids, uuid)
                             .calc_consensus()
                             .0,
                     )?;
                 } else {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     bam_writer.write(
-                        &CalcNonOverlappingConsensus::new(&f_recs, uuid)
+                        &CalcNonOverlappingConsensus::new(&f_recs, &l_seqids, uuid)
                             .calc_consensus()
                             .0,
                     )?;
                     let r_uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     bam_writer.write(
-                        &CalcNonOverlappingConsensus::new(&r_recs, r_uuid)
+                        &CalcNonOverlappingConsensus::new(&r_recs, &r_seqids, r_uuid)
                             .calc_consensus()
                             .0,
                     )?;
@@ -279,7 +284,7 @@ pub fn calc_consensus_complete_groups(
             } else {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                 bam_writer.write(
-                    &CalcNonOverlappingConsensus::new(&f_recs, uuid)
+                    &CalcNonOverlappingConsensus::new(&f_recs, &l_seqids, uuid)
                         .calc_consensus()
                         .0,
                 )?;

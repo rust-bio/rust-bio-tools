@@ -65,6 +65,6 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
     }
 
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;
-    //fn seqids(&self) -> &'a [usize];
+    fn seqids(&self) -> &'a [usize];
     fn uuid(&self) -> &'a str;
 }

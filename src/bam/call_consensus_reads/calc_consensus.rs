@@ -10,6 +10,7 @@ pub struct CalcOverlappingConsensus<'a> {
     recs1: &'a [bam::Record],
     recs2: &'a [bam::Record],
     overlap: usize,
+    seqids: &'a [usize],
     uuid: &'a str,
 }
 
@@ -18,12 +19,14 @@ impl<'a> CalcOverlappingConsensus<'a> {
         recs1: &'a [bam::Record],
         recs2: &'a [bam::Record],
         overlap: usize,
+        seqids: &'a [usize],
         uuid: &'a str,
     ) -> Self {
         CalcOverlappingConsensus {
             recs1,
             recs2,
             overlap,
+            seqids,
             uuid,
         }
     }
@@ -108,16 +111,20 @@ impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
     fn uuid(&self) -> &'a str {
         self.uuid
     }
+    fn seqids(&self) -> &'a [usize] {
+        self.seqids
+    }
 }
 
 pub struct CalcNonOverlappingConsensus<'a> {
     recs: &'a [bam::Record],
+    seqids: &'a [usize],
     uuid: &'a str,
 }
 
 impl<'a> CalcNonOverlappingConsensus<'a> {
-    pub fn new(recs: &'a [bam::Record], uuid: &'a str) -> Self {
-        CalcNonOverlappingConsensus { recs, uuid }
+    pub fn new(recs: &'a [bam::Record], seqids: &'a [usize], uuid: &'a str) -> Self {
+        CalcNonOverlappingConsensus { recs, seqids, uuid }
     }
     pub fn calc_consensus(&self) -> (bam::Record, LogProb) {
         let seq_len = self.recs()[0].seq().len();
@@ -179,5 +186,8 @@ impl<'a> CalcConsensus<'a, bam::Record> for CalcNonOverlappingConsensus<'a> {
     }
     fn uuid(&self) -> &'a str {
         self.uuid
+    }
+    fn seqids(&self) -> &'a [usize] {
+        self.seqids
     }
 }

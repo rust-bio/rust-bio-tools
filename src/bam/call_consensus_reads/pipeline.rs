@@ -147,8 +147,7 @@ impl CallConsensusRead {
                                         RecordStorage::SingleRecord { .. } => unreachable!(),
                                     };
                                 //TODO Consider softclipping in Overlap
-                                let overlap =
-                                    l_rec.cigar_cached().unwrap().end_pos()? - record.pos();
+                                let overlap = calc_overlap(&l_rec, &record)?;
                                 if overlap > 0 {
                                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
@@ -261,7 +260,7 @@ pub fn calc_consensus_complete_groups(
                 };
             }
             if !r_recs.is_empty() {
-                let overlap = l_recs[0].cigar_cached().unwrap().end_pos()? - r_recs[0].pos(); //TODO See todo above
+                let overlap = calc_overlap(&l_recs[0], &r_recs[0])?; //TODO See todo above
                 if overlap > 0 {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     l_seqids.append(&mut r_seqids);
@@ -301,6 +300,15 @@ pub fn calc_consensus_complete_groups(
         }
     }
     Ok(())
+}
+
+//TODO Revisit this and add soft clipping
+fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i32, Box<dyn Error>> {
+    let l_end_pos = l_rec.cigar_cached().unwrap().end_pos()?;
+    let r_start_pos = r_rec.pos();
+    let l_softclips = 0; //Get these
+    let r_softclips = 0; //Get these, too
+    Ok((l_end_pos + l_softclips) - (r_start_pos - r_softclips))
 }
 
 /// Interpret a cluster returned by starcode

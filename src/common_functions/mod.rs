@@ -61,7 +61,8 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
             truncated_quality = *PHREDProb::from(qual);
         }
         // Truncate quality values to PHRED+33 range
-        consensus_qual.push(cmp::min(74, (truncated_quality + offset) as u64) as u8);
+        consensus_qual
+            .push(cmp::min(41 + offset as u64, (truncated_quality + offset) as u64) as u8);
     }
 
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;

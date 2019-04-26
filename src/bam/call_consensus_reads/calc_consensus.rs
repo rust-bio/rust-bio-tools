@@ -69,13 +69,12 @@ impl<'a> CalcOverlappingConsensus<'a> {
             self.uuid(),
             self.seqids().iter().map(|i| format!("{}", i)).join(",")
         );
+        //TODO Create unavailable cigar
+        let mut cigar_string = seq_len.to_string();
+        cigar_string.push('M');
+        let cigar = bam::record::CigarString::from_str(cigar_string.as_str()).unwrap();
         let mut consensus_rec = bam::Record::new();
-        consensus_rec.set(
-            name.as_bytes(),
-            &bam::record::CigarString::from_str("*").unwrap(),
-            &consensus_seq,
-            &consensus_qual,
-        );
+        consensus_rec.set(name.as_bytes(), &cigar, &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)
     }
     fn recs1(&self) -> &[bam::Record] {
@@ -115,11 +114,11 @@ impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
         }
         lh
     }
-    fn uuid(&self) -> &'a str {
-        self.uuid
-    }
     fn seqids(&self) -> &'a [usize] {
         self.seqids
+    }
+    fn uuid(&self) -> &'a str {
+        self.uuid
     }
 }
 
@@ -171,19 +170,17 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 0.0,
             );
         }
-        //TODO Add seq ids
         let name = format!(
             "{}_consensus-read-from:{}",
             self.uuid(),
             self.seqids().iter().map(|i| format!("{}", i)).join(",")
         );
+        //TODO Create unavailable cigar
+        let mut cigar_string = seq_len.to_string();
+        cigar_string.push('M');
+        let cigar = bam::record::CigarString::from_str(cigar_string.as_str()).unwrap();
         let mut consensus_rec = bam::Record::new();
-        consensus_rec.set(
-            name.as_bytes(),
-            &bam::record::CigarString::from_str("*").unwrap(),
-            &consensus_seq,
-            &consensus_qual,
-        );
+        consensus_rec.set(name.as_bytes(), &cigar, &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)
     }
     pub fn recs(&self) -> &[bam::Record] {
@@ -199,10 +196,10 @@ impl<'a> CalcConsensus<'a, bam::Record> for CalcNonOverlappingConsensus<'a> {
         }
         lh
     }
-    fn uuid(&self) -> &'a str {
-        self.uuid
-    }
     fn seqids(&self) -> &'a [usize] {
         self.seqids
+    }
+    fn uuid(&self) -> &'a str {
+        self.uuid
     }
 }

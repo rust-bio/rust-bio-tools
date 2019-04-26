@@ -1,4 +1,4 @@
-//! Tool remove PCR duplicates from UMI-tagged reads.
+//! Tool to remove PCR duplicates from UMI-tagged reads.
 //!
 //! This tool takes two FASTQ files (forward and reverse)
 //! and returns two FASTQ files in which all PCR duplicates
@@ -7,7 +7,7 @@
 //!
 //! ## Requirements:
 //!
-//! * starcode
+//!  - starcode
 //!
 //!
 //! ## Usage:
@@ -20,41 +20,41 @@
 //!   <Path for output reverse FASTQ file> \
 //!   -l <Length of UMI sequence> \
 //!   -D <Maximum distance between sequences in a cluster> \  # See step 1 below
-//!   -d <Maximum distance between UMIs in a cluster>   # See step 2 below
+//!   -d <Maximum distance between UMIs in a cluster> \  # See step 2 below
+//!   --umi-on-reverse  # if the UMIs are part of the reverse reads
 //! ```
 //!
 //! ## Assumptions:
 //!
 //!  - Reads are of equal length
-//!  - UMI is the prefix of the reverse reads
+//!  - UMI is the prefix of the reads
 //!
 //! ## Workflow:
 //!
-//! The three main steps are:
+//! The main steps are:
 //!
-//! 1. Cluster all Reads by their sequence
-//!
-//!    1. Remove UMI sequence from reverse read (and save it for later use)
-//!    2. Concatenate forward and reverse sequence
-//!    3. Cluster by concatenated sequence using starcode
-//!
-//!        ```
+//! 1. Preparation
+//!    1. Remove UMI sequence from read (and save it for later use).
+//!    2. Concatenate forward and reverse sequence.
+//!        ```text
 //!        Forward Read: [================]
 //!        Reverse Read: [(UMI)-----------]
-//!        Sequence for clustering: [================-----------]
+//!        Sequence for clustering in step 3: [================-----------]
 //!        ```
-//!   After this, each cluster contains reads with similar sequences,
-//!   but potentially different UMIs. Hence, each cluster contains candidates
-//!   for merging.
 //!
-//! 2. For each cluster from step one: Cluster all reads within the cluster
-//!    by their UMI (again, using starcode). Each of clusters generated in
-//!    This step contain reads with similar read sequences as well as
-//!    similar UMIs.
-//!    Hence, each (new) cluster contains reads with similar sequence and
-//!    UMI which can be merged into a consensus read as PCR duplicates.
+//! 2. Cluster all reads by their UMIs using starcode.
+//!    Each cluster generated in this step contains reads with similar UMIs.
+//!    However, all PCR duplicates of a read are within one cluster, since they
+//!    share a UMI sequence.
+//!    The size of these clusters highly depends on the length of the used UMI.
 //!
-//! 3. For each cluster from step two: Compute a consensus sequence.
+//! 2. For each cluster from step two:
+//!    1. Cluster reads by their concatenated sequences (without UMI) using starcode.
+//!    2. Each new cluster contains reads that have a similar UMI (from step 2)
+//!       as well as similar sequences. Consequently, these sets of reads are
+//!       likely to be PCR duplicates of each other.
+//!
+//! 3. For each cluster from step three: Compute a consensus sequence.
 //!
 //!    At each position in the read, all bases and quality values are used
 //!    to compute the base with Maximum a-posteriori probability (MAP).

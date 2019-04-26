@@ -1,3 +1,10 @@
+//! Compute the B-allele frequencies for a given VCF file.
+//!
+//! ## Usage:
+//! ```bash
+//! $ rbt vcf-baf < tests/test-freebayes.vcf > tests/baf.
+//! ```
+//!
 use itertools::repeat_n;
 use itertools::Itertools;
 use rust_htslib::bcf;

@@ -1,3 +1,38 @@
+//! Compute the depth of coverage in a BAM file for a list of reference sequences and positions.
+//!
+//! ## Input:
+//! A BAM file and a positions file.
+//! The positions file contains the name of one reference sequence and one position per line (tab separated).
+//! Example:
+//! ```
+//! 16	1
+//! 17	1
+//! 17	2
+//! 17	38
+//! 17	39
+//! ```
+//!
+//! Positions are read from stdin, the BAM file is the first argument.
+//!
+//! ## Output:
+//! Depth are written to stdout as tab-separated lines, similar to the positions input.
+//! Example:
+//! ```
+//! 16	1	0
+//! 17	1	5
+//! 17	2	5
+//! 17	38	14
+//! 17	39	13
+//! ```
+//!
+//! ## Usage:
+//!
+//! ```bash
+//! $ rbt bam-depth tests/test.bam < tests/pos.txt > tests/depth.txt
+//! ```
+//! Where `pos.txt` is a positions file, as described above.
+//!
+//!
 use log::info;
 use std::cmp;
 use std::error::Error;

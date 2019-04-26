@@ -139,13 +139,13 @@ impl CallConsensusRead {
                             }
                             //Case: Left record already stored
                             Some(_record_pair) => {
-                                let (rec_id, l_rec) = match record_storage.remove(record_id).unwrap()
-                                {
-                                    RecordStorage::PairedRecords { l_rec, .. } => {
-                                        (l_rec.rec_id, l_rec.into_rec())
-                                    }
-                                    RecordStorage::SingleRecord { .. } => unreachable!(),
-                                };
+                                let (rec_id, l_rec) =
+                                    match record_storage.remove(record_id).unwrap() {
+                                        RecordStorage::PairedRecords { l_rec, .. } => {
+                                            (l_rec.rec_id, l_rec.into_rec())
+                                        }
+                                        RecordStorage::SingleRecord { .. } => unreachable!(),
+                                    };
                                 //TODO Consider softclipping in Overlap
                                 let overlap =
                                     l_rec.cigar_cached().unwrap().end_pos()? - record.pos();

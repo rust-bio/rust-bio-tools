@@ -170,11 +170,18 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             pb.inc(1);
             self.fq1_reader().read(&mut f_rec)?;
             self.fq2_reader().read(&mut r_rec)?;
-
+            
             match (f_rec.is_empty(), r_rec.is_empty()) {
                 (true, true) => break,
                 (false, false) => (),
-                _ => panic!("Given FASTQ files have unequal lengths"),
+                (true, false) => {
+                    let error_message = format!("Given FASTQ files have unequal lengths. Forward file returned record {} as empty, reverse record is not: id:'{}' seq:'{:?}'.", i, r_rec.id(), str::from_utf8(r_rec.seq()));
+                    panic!(error_message);
+                },
+                (false, true) => {
+                    let error_message = format!("Given FASTQ files have unequal lengths. Reverse file returned record {} as empty, forward record is not: id:'{}' seq:'{:?}'.", i, f_rec.id(), str::from_utf8(f_rec.seq()));
+                    panic!(error_message);
+                }
             }
             // save umis for second (intra cluster) clustering
             let umi = if self.reverse_umi() {

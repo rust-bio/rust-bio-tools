@@ -218,9 +218,9 @@ subcommands:
             long: umi-on-reverse
             short: u
             help: Set if UMI is on reverse read
-        - short-read-names:
-            long: short-read-names
-            help: Only keep the number of reads from which a consensus read was generated in the read name.
+        - verbose-read-names:
+            long: verbose-read-names
+            help: Add list of reads that were merged for each consensus read. Note that this can yield very long FASTQ name lines which cannot be handled by some tools.
         - insert-size:
             long: insert-size
             short: i

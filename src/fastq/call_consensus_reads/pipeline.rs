@@ -312,7 +312,7 @@ pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     seq_dist: usize,
     umi_dist: usize,
     reverse_umi: bool,
-    short_read_names: bool,
+    verbose_read_names: bool,
 }
 
 impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
@@ -325,7 +325,7 @@ impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
         seq_dist: usize,
         umi_dist: usize,
         reverse_umi: bool,
-        short_read_names: bool,
+        verbose_read_names: bool,
     ) -> Self {
         CallNonOverlappingConsensusRead {
             fq1_reader,
@@ -336,7 +336,7 @@ impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
             seq_dist,
             umi_dist,
             reverse_umi,
-            short_read_names,
+            verbose_read_names,
         }
     }
 }
@@ -357,7 +357,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                     &f_recs,
                     &outer_seqids,
                     uuid,
-                    self.short_read_names,
+                    self.verbose_read_names,
                 )
                 .calc_consensus()
                 .0,
@@ -367,7 +367,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                     &r_recs,
                     &outer_seqids,
                     uuid,
-                    self.short_read_names,
+                    self.verbose_read_names,
                 )
                 .calc_consensus()
                 .0,
@@ -418,7 +418,7 @@ pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     insert_size: usize,
     std_dev: usize,
     reverse_umi: bool,
-    short_read_names: bool,
+    verbose_read_names: bool,
 }
 
 impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
@@ -434,7 +434,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
         insert_size: usize,
         std_dev: usize,
         reverse_umi: bool,
-        short_read_names: bool,
+        verbose_read_names: bool,
     ) -> Self {
         CallOverlappingConsensusRead {
             fq1_reader,
@@ -448,7 +448,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             insert_size,
             std_dev,
             reverse_umi,
-            short_read_names,
+            verbose_read_names,
         }
     }
 
@@ -509,10 +509,10 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
     ) -> NonOverlappingConsensus {
         //Calculate non-overlapping consensus records and shared lh
         let (f_consensus_rec, f_lh) =
-            CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid, self.short_read_names)
+            CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid, self.verbose_read_names)
                 .calc_consensus();
         let (r_consensus_rec, r_lh) =
-            CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid, self.short_read_names)
+            CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid, self.verbose_read_names)
                 .calc_consensus();
         let overall_lh_isize = f_lh + r_lh;
         //Determine insert size with highest probability for non-overlapping records based on expected insert size

@@ -74,11 +74,12 @@ pub struct CalcNonOverlappingConsensus<'a> {
     recs: &'a [fastq::Record],
     seqids: &'a [usize],
     uuid: &'a str,
+    short_read_names: bool,
 }
 
 impl<'a> CalcNonOverlappingConsensus<'a> {
-    pub fn new(recs: &'a [fastq::Record], seqids: &'a [usize], uuid: &'a str) -> Self {
-        CalcNonOverlappingConsensus { recs, seqids, uuid }
+    pub fn new(recs: &'a [fastq::Record], seqids: &'a [usize], uuid: &'a str, short_read_names: bool) -> Self {
+        CalcNonOverlappingConsensus { recs, seqids, uuid, short_read_names }
     }
     pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
         let seq_len = self.recs()[0].seq().len();
@@ -117,11 +118,20 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 &mut consensus_qual,
             );
         }
-        let name = format!(
-            "{}_consensus-read-from:{}",
-            self.uuid(),
-            self.seqids().iter().map(|i| format!("{}", i)).join(",")
-        );
+
+        let name = match self.short_read_names {
+            true => format!(
+                "{}_consensus-read-from:{}_reads",
+                self.uuid(),
+                self.seqids().len(),
+            ),
+            false => format!(
+                "{}_consensus-read-from:{}",
+                self.uuid(),
+                self.seqids().iter().map(|i| format!("{}", i)).join(",")
+            )
+        };
+
         (
             fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual),
             consensus_lh,

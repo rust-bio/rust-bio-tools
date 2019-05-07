@@ -100,6 +100,7 @@ pub fn call_consensus_reads_from_paths(
     seq_dist: usize,
     umi_dist: usize,
     reverse_umi: bool,
+    short_read_names: bool,
     insert_size: Option<usize>,
     std_dev: Option<usize>,
 ) -> Result<(), Box<dyn Error>> {
@@ -117,6 +118,7 @@ pub fn call_consensus_reads_from_paths(
                     seq_dist,
                     umi_dist,
                     reverse_umi,
+                    short_read_names,
                 ).call_consensus_reads(),
                 (true, true, false, false) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new)?),
@@ -127,6 +129,7 @@ pub fn call_consensus_reads_from_paths(
                     seq_dist,
                     umi_dist,
                     reverse_umi,
+                    short_read_names,
                 ).call_consensus_reads(),
                 (false, false, true, true) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::from_file(fq1)?,
@@ -137,6 +140,7 @@ pub fn call_consensus_reads_from_paths(
                     seq_dist,
                     umi_dist,
                     reverse_umi,
+                    short_read_names,
                 ).call_consensus_reads(),
                 (true, true, true, true) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new)?),
@@ -147,6 +151,7 @@ pub fn call_consensus_reads_from_paths(
                     seq_dist,
                     umi_dist,
                     reverse_umi,
+                    short_read_names,
                 ).call_consensus_reads(),
                 _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
             }
@@ -170,6 +175,7 @@ pub fn call_consensus_reads_from_paths(
                     insert_size.unwrap(),
                     std_dev.unwrap(),
                     reverse_umi,
+                    short_read_names,
                 ).call_consensus_reads(),
                 (true, true, false, false, false) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new)?),
@@ -183,6 +189,7 @@ pub fn call_consensus_reads_from_paths(
                     insert_size.unwrap(),
                     std_dev.unwrap(),
                     reverse_umi,
+                    short_read_names,
                 ).call_consensus_reads(),
                 (false, false, true, true, true) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::from_file(fq1)?,
@@ -196,6 +203,7 @@ pub fn call_consensus_reads_from_paths(
                     insert_size.unwrap(),
                     std_dev.unwrap(),
                     reverse_umi,
+                    short_read_names,
                 ).call_consensus_reads(),
                 (true, true, true, true, true) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new)?),
@@ -209,6 +217,7 @@ pub fn call_consensus_reads_from_paths(
                     insert_size.unwrap(),
                     std_dev.unwrap(),
                     reverse_umi,
+                    short_read_names,
                 ).call_consensus_reads(),
                 _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
             }

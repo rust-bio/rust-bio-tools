@@ -15,6 +15,7 @@ pub trait CalcConsensus<'a> {
             .map(|rec| rec.seq().len())
             .all(|len| len == reference_length)
     }
+
     #[allow(unused_doc_comments)]
     /// Compute the likelihood for the given allele and read position.
     /// The allele (A, C, G, or T) is an explicit parameter,
@@ -31,6 +32,7 @@ pub trait CalcConsensus<'a> {
             q + PROB_CONFUSION
         }
     }
+
     fn build_consensus_sequence(
         likelihoods: Vec<LogProb>,
         consensus_lh: &mut LogProb,
@@ -78,9 +80,20 @@ pub struct CalcNonOverlappingConsensus<'a> {
 }
 
 impl<'a> CalcNonOverlappingConsensus<'a> {
-    pub fn new(recs: &'a [fastq::Record], seqids: &'a [usize], uuid: &'a str, short_read_names: bool) -> Self {
-        CalcNonOverlappingConsensus { recs, seqids, uuid, short_read_names }
+    pub fn new(
+        recs: &'a [fastq::Record],
+        seqids: &'a [usize],
+        uuid: &'a str,
+        short_read_names: bool,
+    ) -> Self {
+        CalcNonOverlappingConsensus {
+            recs,
+            seqids,
+            uuid,
+            short_read_names,
+        }
     }
+
     pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
         let seq_len = self.recs()[0].seq().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
@@ -129,7 +142,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 "{}_consensus-read-from:{}",
                 self.uuid(),
                 self.seqids().iter().map(|i| format!("{}", i)).join(",")
-            )
+            ),
         };
 
         (
@@ -137,6 +150,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             consensus_lh,
         )
     }
+
     pub fn recs(&self) -> &[fastq::Record] {
         self.recs
     }
@@ -150,9 +164,11 @@ impl<'a> CalcConsensus<'a> for CalcNonOverlappingConsensus<'a> {
         }
         lh
     }
+
     fn seqids(&self) -> &'a [usize] {
         self.seqids
     }
+
     fn uuid(&self) -> &'a str {
         self.uuid
     }
@@ -189,6 +205,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
             uuid,
         }
     }
+
     pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
         let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
@@ -232,12 +249,15 @@ impl<'a> CalcOverlappingConsensus<'a> {
             consensus_lh,
         )
     }
+
     fn recs1(&self) -> &[fastq::Record] {
         self.recs1
     }
+
     fn recs2(&self) -> &[fastq::Record] {
         self.recs2
     }
+
     fn overlap(&self) -> usize {
         self.overlap
     }
@@ -259,9 +279,11 @@ impl<'a> CalcConsensus<'a> for CalcOverlappingConsensus<'a> {
         }
         lh
     }
+
     fn seqids(&self) -> &'a [usize] {
         self.seqids
     }
+
     fn uuid(&self) -> &'a str {
         self.uuid
     }

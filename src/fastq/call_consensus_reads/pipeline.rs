@@ -170,14 +170,14 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             pb.inc(1);
             self.fq1_reader().read(&mut f_rec)?;
             self.fq2_reader().read(&mut r_rec)?;
-            
+
             match (f_rec.is_empty(), r_rec.is_empty()) {
                 (true, true) => break,
                 (false, false) => (),
                 (true, false) => {
                     let error_message = format!("Given FASTQ files have unequal lengths. Forward file returned record {} as empty, reverse record is not: id:'{}' seq:'{:?}'.", i, r_rec.id(), str::from_utf8(r_rec.seq()));
                     panic!(error_message);
-                },
+                }
                 (false, true) => {
                     let error_message = format!("Given FASTQ files have unequal lengths. Reverse file returned record {} as empty, forward record is not: id:'{}' seq:'{:?}'.", i, f_rec.id(), str::from_utf8(f_rec.seq()));
                     panic!(error_message);
@@ -353,14 +353,24 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         if f_recs.len() > 1 {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
             self.fq1_writer.write_record(
-                &CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid, self.short_read_names)
-                    .calc_consensus()
-                    .0,
+                &CalcNonOverlappingConsensus::new(
+                    &f_recs,
+                    &outer_seqids,
+                    uuid,
+                    self.short_read_names,
+                )
+                .calc_consensus()
+                .0,
             )?;
             self.fq2_writer.write_record(
-                &CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid, self.short_read_names)
-                    .calc_consensus()
-                    .0,
+                &CalcNonOverlappingConsensus::new(
+                    &r_recs,
+                    &outer_seqids,
+                    uuid,
+                    self.short_read_names,
+                )
+                .calc_consensus()
+                .0,
             )?;
         } else {
             self.fq1_writer.write_record(&f_recs[0])?;
@@ -368,21 +378,27 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         }
         Ok(())
     }
+
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {
         &mut self.fq1_reader
     }
+
     fn fq2_reader(&mut self) -> &mut fastq::Reader<R> {
         &mut self.fq2_reader
     }
+
     fn umi_len(&self) -> usize {
         self.umi_len
     }
+
     fn seq_dist(&self) -> usize {
         self.seq_dist
     }
+
     fn umi_dist(&self) -> usize {
         self.umi_dist
     }
+
     fn reverse_umi(&self) -> bool {
         self.reverse_umi
     }
@@ -435,6 +451,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             short_read_names,
         }
     }
+
     fn isize_highest_probability(&mut self, f_seq_len: usize, r_seq_len: usize) -> f64 {
         if f_seq_len + f_seq_len < self.insert_size {
             return self.insert_size as f64;
@@ -444,6 +461,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             return (f_seq_len + r_seq_len) as f64;
         }
     }
+
     fn maximum_likelihood_overlapping_consensus(
         &mut self,
         f_recs: &Vec<Record>,
@@ -481,6 +499,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             .max_by_key(|consensus| NotNaN::new(*consensus.likelihood).unwrap())
             .unwrap()
     }
+
     fn maximum_likelihood_nonoverlapping_consensus(
         &mut self,
         f_recs: &Vec<Record>,
@@ -490,9 +509,11 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
     ) -> NonOverlappingConsensus {
         //Calculate non-overlapping consensus records and shared lh
         let (f_consensus_rec, f_lh) =
-            CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid, self.short_read_names).calc_consensus();
+            CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid, self.short_read_names)
+                .calc_consensus();
         let (r_consensus_rec, r_lh) =
-            CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid, self.short_read_names).calc_consensus();
+            CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid, self.short_read_names)
+                .calc_consensus();
         let overall_lh_isize = f_lh + r_lh;
         //Determine insert size with highest probability for non-overlapping records based on expected insert size
         let likeliest_isize =
@@ -535,21 +556,27 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         }
         Ok(())
     }
+
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {
         &mut self.fq1_reader
     }
+
     fn fq2_reader(&mut self) -> &mut fastq::Reader<R> {
         &mut self.fq2_reader
     }
+
     fn umi_len(&self) -> usize {
         self.umi_len
     }
+
     fn seq_dist(&self) -> usize {
         self.seq_dist
     }
+
     fn umi_dist(&self) -> usize {
         self.umi_dist
     }
+
     fn reverse_umi(&self) -> bool {
         self.reverse_umi
     }

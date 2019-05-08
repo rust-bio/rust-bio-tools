@@ -155,7 +155,6 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         // init temp storage for reads
         let mut read_storage = FASTQStorage::new()?;
         let mut i = 0;
-        let mut seqs = Vec::new();
 
         // prepare spinner for user feedback
         let pb = indicatif::ProgressBar::new_spinner();
@@ -197,8 +196,6 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 f_rec = self.strip_umi_from_record(&f_rec)
             }
             read_storage.put(i, &f_rec, &r_rec)?;
-            let seq = [&f_rec.seq()[..], &r_rec.seq()[..]].concat();
-            seqs.push(seq);
             i += 1;
         }
         umi_cluster.stdin.as_mut().unwrap().flush()?;
@@ -234,11 +231,14 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .stderr(Stdio::piped())
                 .spawn()?;
             for &seqid in &seqids {
+                // get sequences from rocksdb
+                let (f_rec, r_rec) = read_storage.get(seqid - 1).unwrap();
+
                 seq_cluster
                     .stdin
                     .as_mut()
                     .unwrap()
-                    .write(&seqs[seqid - 1])?;
+                    .write(&[&f_rec.seq()[..], &r_rec.seq()[..]].concat())?;
                 seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
             }
             seq_cluster.stdin.as_mut().unwrap().flush()?;

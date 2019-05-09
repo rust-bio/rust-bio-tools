@@ -17,6 +17,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Fixed a bug in `call-consensus-reads` where BGZF-compressed files terminated early (after the first block).
 - Extended documentation of CLI.
 - Updated used versions of rust-htslib and rocksdb.
+- Renamed the `--reverse-umi` parameter of `call-consensus-reads` to `--umi-on-reverse`.
 
 ## [0.4.0] - 2019-04-10
 ### Changed

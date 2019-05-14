@@ -128,6 +128,7 @@ pub struct CalcOverlappingConsensus<'a> {
     overlap: usize,
     seqids: &'a [usize],
     uuid: &'a str,
+    verbose_read_names: bool,
 }
 
 //TODO Generalize as this is identical to BAM except Offset and cigar/writing to record
@@ -138,6 +139,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         overlap: usize,
         seqids: &'a [usize],
         uuid: &'a str,
+        verbose_read_names: bool,
     ) -> Self {
         CalcOverlappingConsensus {
             recs1,
@@ -145,6 +147,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
             overlap,
             seqids,
             uuid,
+            verbose_read_names,
         }
     }
 
@@ -182,11 +185,18 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 33.0,
             );
         }
-        let name = format!(
-            "{}_consensus-read-from:{}",
-            self.uuid(),
-            self.seqids().iter().map(|i| format!("{}", i)).join(",")
-        );
+        let name = match self.verbose_read_names {
+            true => format!(
+                "{}_consensus-read-from:{}",
+                self.uuid(),
+                self.seqids().iter().map(|i| format!("{}", i)).join(",")
+            ),
+            false => format!(
+                "{}_consensus-read-from:{}_reads",
+                self.uuid(),
+                self.seqids().len(),
+            ),
+        };
         (
             fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual),
             consensus_lh,

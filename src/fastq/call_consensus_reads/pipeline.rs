@@ -482,9 +482,15 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
         insert_sizes
             .map(|insert_size| {
                 let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
-                let (consensus_record, lh_isize) =
-                    CalcOverlappingConsensus::new(&f_recs, &r_recs, overlap, &outer_seqids, &uuid)
-                        .calc_consensus();
+                let (consensus_record, lh_isize) = CalcOverlappingConsensus::new(
+                    &f_recs,
+                    &r_recs,
+                    overlap,
+                    &outer_seqids,
+                    &uuid,
+                    self.verbose_read_names,
+                )
+                .calc_consensus();
                 let likelihood = lh_isize
                     + isize_pmf(
                         insert_size as f64,

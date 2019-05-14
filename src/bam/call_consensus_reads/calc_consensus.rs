@@ -11,6 +11,7 @@ pub struct CalcOverlappingConsensus<'a> {
     overlap: usize,
     seqids: &'a [usize],
     uuid: &'a str,
+    verbose_read_names: bool,
 }
 
 impl<'a> CalcOverlappingConsensus<'a> {
@@ -20,6 +21,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         overlap: usize,
         seqids: &'a [usize],
         uuid: &'a str,
+        verbose_read_names: bool,
     ) -> Self {
         CalcOverlappingConsensus {
             recs1,
@@ -27,6 +29,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
             overlap,
             seqids,
             uuid,
+            verbose_read_names,
         }
     }
     pub fn calc_consensus(&self) -> (bam::Record, LogProb) {
@@ -64,11 +67,18 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 0.0,
             );
         }
-        let name = format!(
-            "{}_consensus-read-from:{}",
-            self.uuid(),
-            self.seqids().iter().map(|i| format!("{}", i)).join(",")
-        );
+        let name = match self.verbose_read_names {
+            true => format!(
+                "{}_consensus-read-from:{}",
+                self.uuid(),
+                self.seqids().iter().map(|i| format!("{}", i)).join(",")
+            ),
+            false => format!(
+                "{}_consensus-read-from:{}_reads",
+                self.uuid(),
+                self.seqids().len(),
+            ),
+        };
         //TODO Create unavailable cigar
         let mut cigar_string = seq_len.to_string();
         cigar_string.push('M');
@@ -126,11 +136,22 @@ pub struct CalcNonOverlappingConsensus<'a> {
     recs: &'a [bam::Record],
     seqids: &'a [usize],
     uuid: &'a str,
+    verbose_read_names: bool,
 }
 
 impl<'a> CalcNonOverlappingConsensus<'a> {
-    pub fn new(recs: &'a [bam::Record], seqids: &'a [usize], uuid: &'a str) -> Self {
-        CalcNonOverlappingConsensus { recs, seqids, uuid }
+    pub fn new(
+        recs: &'a [bam::Record],
+        seqids: &'a [usize],
+        uuid: &'a str,
+        verbose_read_names: bool,
+    ) -> Self {
+        CalcNonOverlappingConsensus {
+            recs,
+            seqids,
+            uuid,
+            verbose_read_names,
+        }
     }
     pub fn calc_consensus(&self) -> (bam::Record, LogProb) {
         let seq_len = self.recs()[0].seq().len();
@@ -170,11 +191,18 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 0.0,
             );
         }
-        let name = format!(
-            "{}_consensus-read-from:{}",
-            self.uuid(),
-            self.seqids().iter().map(|i| format!("{}", i)).join(",")
-        );
+        let name = match self.verbose_read_names {
+            true => format!(
+                "{}_consensus-read-from:{}",
+                self.uuid(),
+                self.seqids().iter().map(|i| format!("{}", i)).join(",")
+            ),
+            false => format!(
+                "{}_consensus-read-from:{}_reads",
+                self.uuid(),
+                self.seqids().len(),
+            ),
+        };
         //TODO Create unavailable cigar
         let mut cigar_string = seq_len.to_string();
         cigar_string.push('M');

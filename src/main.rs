@@ -87,6 +87,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 matches.value_of("bam").unwrap(),
                 matches.value_of("consensus-bam").unwrap(),
                 value_t!(matches, "max-seq-dist", usize).unwrap(),
+                matches.is_present("verbose-read-names"),
             )
         }
         // This cannot be reached, since the matches step of

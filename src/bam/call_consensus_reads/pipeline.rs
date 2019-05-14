@@ -14,6 +14,7 @@ pub struct CallConsensusRead {
     bam_reader: bam::Reader,
     bam_writer: bam::Writer,
     seq_dist: usize,
+    verbose_read_names: bool,
 }
 
 type Position = i32;
@@ -23,11 +24,17 @@ type RecordIDS = Vec<RecordID>;
 type RecordID = Vec<u8>;
 
 impl CallConsensusRead {
-    pub fn new(bam_reader: bam::Reader, bam_writer: bam::Writer, seq_dist: usize) -> Self {
+    pub fn new(
+        bam_reader: bam::Reader,
+        bam_writer: bam::Writer,
+        seq_dist: usize,
+        verbose_read_names: bool,
+    ) -> Self {
         CallConsensusRead {
             bam_reader,
             bam_writer,
             seq_dist,
+            verbose_read_names,
         }
     }
     pub fn call_consensus_reads(&mut self) -> Result<(), Box<dyn Error>> {
@@ -46,6 +53,7 @@ impl CallConsensusRead {
                     &mut record_storage,
                     &mut self.bam_writer,
                     self.seq_dist,
+                    self.verbose_read_names,
                 )?;
                 group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
             } else {
@@ -159,6 +167,7 @@ impl CallConsensusRead {
                                             overlap as usize,
                                             &[rec_id, i],
                                             uuid,
+                                            self.verbose_read_names,
                                         )
                                         .calc_consensus()
                                         .0,
@@ -181,6 +190,7 @@ impl CallConsensusRead {
             &mut record_storage,
             &mut self.bam_writer,
             self.seq_dist,
+            self.verbose_read_names,
         )?;
         Ok(())
     }
@@ -193,6 +203,7 @@ pub fn calc_consensus_complete_groups(
     record_storage: &mut HashMap<Vec<u8>, RecordStorage>,
     bam_writer: &mut bam::Writer,
     seq_dist: usize,
+    verbose_read_names: bool,
 ) -> Result<(), Box<dyn Error>> {
     let spinner_style = indicatif::ProgressStyle::default_spinner()
         .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
@@ -272,6 +283,7 @@ pub fn calc_consensus_complete_groups(
                             overlap as usize,
                             &l_seqids,
                             uuid,
+                            verbose_read_names,
                         )
                         .calc_consensus()
                         .0,
@@ -279,21 +291,31 @@ pub fn calc_consensus_complete_groups(
                 } else {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     bam_writer.write(
-                        &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
-                            .calc_consensus()
-                            .0,
+                        &CalcNonOverlappingConsensus::new(
+                            &l_recs,
+                            &l_seqids,
+                            uuid,
+                            verbose_read_names,
+                        )
+                        .calc_consensus()
+                        .0,
                     )?;
                     let r_uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     bam_writer.write(
-                        &CalcNonOverlappingConsensus::new(&r_recs, &r_seqids, r_uuid)
-                            .calc_consensus()
-                            .0,
+                        &CalcNonOverlappingConsensus::new(
+                            &r_recs,
+                            &r_seqids,
+                            r_uuid,
+                            verbose_read_names,
+                        )
+                        .calc_consensus()
+                        .0,
                     )?;
                 }
             } else {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                 bam_writer.write(
-                    &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
+                    &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid, verbose_read_names)
                         .calc_consensus()
                         .0,
                 )?;

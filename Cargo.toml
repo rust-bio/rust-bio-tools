@@ -10,7 +10,7 @@ readme = "README.md"
 
 
 [dependencies]
-bio = {git="https://github.com/rust-bio/rust-bio", branch="sequence-read-trait"}
+bio = {git="https://github.com/rust-bio/rust-bio"}
 clap = { version = "2.27", features = ["yaml", "color", "suggestions"]}
 indicatif = "0.11"
 itertools = "0.6"

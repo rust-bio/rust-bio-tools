@@ -5,7 +5,6 @@ use itertools::Itertools;
 
 const ALLELES: &'static [u8] = b"ACGT";
 
-
 /// Compute a consensus sequence for a collection of FASTQ reads.
 ///
 /// For each position, compute the likelihood of each allele and

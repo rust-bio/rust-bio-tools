@@ -155,7 +155,6 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         // init temp storage for reads
         let mut read_storage = FASTQStorage::new()?;
         let mut i = 0;
-        let mut seqs = Vec::new();
 
         // prepare spinner for user feedback
         let pb = indicatif::ProgressBar::new_spinner();
@@ -174,7 +173,14 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             match (f_rec.is_empty(), r_rec.is_empty()) {
                 (true, true) => break,
                 (false, false) => (),
-                _ => panic!("Given FASTQ files have unequal lengths"),
+                (true, false) => {
+                    let error_message = format!("Given FASTQ files have unequal lengths. Forward file returned record {} as empty, reverse record is not: id:'{}' seq:'{:?}'.", i, r_rec.id(), str::from_utf8(r_rec.seq()));
+                    panic!(error_message);
+                }
+                (false, true) => {
+                    let error_message = format!("Given FASTQ files have unequal lengths. Reverse file returned record {} as empty, forward record is not: id:'{}' seq:'{:?}'.", i, f_rec.id(), str::from_utf8(f_rec.seq()));
+                    panic!(error_message);
+                }
             }
             // save umis for second (intra cluster) clustering
             let umi = if self.reverse_umi() {
@@ -190,8 +196,6 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 f_rec = self.strip_umi_from_record(&f_rec)
             }
             read_storage.put(i, &f_rec, &r_rec)?;
-            let seq = [&f_rec.seq()[..], &r_rec.seq()[..]].concat();
-            seqs.push(seq);
             i += 1;
         }
         umi_cluster.stdin.as_mut().unwrap().flush()?;
@@ -227,11 +231,14 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .stderr(Stdio::piped())
                 .spawn()?;
             for &seqid in &seqids {
+                // get sequences from rocksdb
+                let (f_rec, r_rec) = read_storage.get(seqid - 1).unwrap();
+
                 seq_cluster
                     .stdin
                     .as_mut()
                     .unwrap()
-                    .write(&seqs[seqid - 1])?;
+                    .write(&[&f_rec.seq()[..], &r_rec.seq()[..]].concat())?;
                 seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
             }
             seq_cluster.stdin.as_mut().unwrap().flush()?;
@@ -305,6 +312,7 @@ pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     seq_dist: usize,
     umi_dist: usize,
     reverse_umi: bool,
+    verbose_read_names: bool,
 }
 
 impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
@@ -317,6 +325,7 @@ impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
         seq_dist: usize,
         umi_dist: usize,
         reverse_umi: bool,
+        verbose_read_names: bool,
     ) -> Self {
         CallNonOverlappingConsensusRead {
             fq1_reader,
@@ -327,6 +336,7 @@ impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
             seq_dist,
             umi_dist,
             reverse_umi,
+            verbose_read_names,
         }
     }
 }
@@ -343,14 +353,24 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         if f_recs.len() > 1 {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
             self.fq1_writer.write_record(
-                &CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid)
-                    .calc_consensus()
-                    .0,
+                &CalcNonOverlappingConsensus::new(
+                    &f_recs,
+                    &outer_seqids,
+                    uuid,
+                    self.verbose_read_names,
+                )
+                .calc_consensus()
+                .0,
             )?;
             self.fq2_writer.write_record(
-                &CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid)
-                    .calc_consensus()
-                    .0,
+                &CalcNonOverlappingConsensus::new(
+                    &r_recs,
+                    &outer_seqids,
+                    uuid,
+                    self.verbose_read_names,
+                )
+                .calc_consensus()
+                .0,
             )?;
         } else {
             self.fq1_writer.write_record(&f_recs[0])?;
@@ -358,21 +378,27 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         }
         Ok(())
     }
+
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {
         &mut self.fq1_reader
     }
+
     fn fq2_reader(&mut self) -> &mut fastq::Reader<R> {
         &mut self.fq2_reader
     }
+
     fn umi_len(&self) -> usize {
         self.umi_len
     }
+
     fn seq_dist(&self) -> usize {
         self.seq_dist
     }
+
     fn umi_dist(&self) -> usize {
         self.umi_dist
     }
+
     fn reverse_umi(&self) -> bool {
         self.reverse_umi
     }
@@ -392,6 +418,7 @@ pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     insert_size: usize,
     std_dev: usize,
     reverse_umi: bool,
+    verbose_read_names: bool,
 }
 
 impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
@@ -407,6 +434,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
         insert_size: usize,
         std_dev: usize,
         reverse_umi: bool,
+        verbose_read_names: bool,
     ) -> Self {
         CallOverlappingConsensusRead {
             fq1_reader,
@@ -420,8 +448,10 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             insert_size,
             std_dev,
             reverse_umi,
+            verbose_read_names,
         }
     }
+
     fn isize_highest_probability(&mut self, f_seq_len: usize, r_seq_len: usize) -> f64 {
         if f_seq_len + f_seq_len < self.insert_size {
             return self.insert_size as f64;
@@ -431,6 +461,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             return (f_seq_len + r_seq_len) as f64;
         }
     }
+
     fn maximum_likelihood_overlapping_consensus(
         &mut self,
         f_recs: &Vec<Record>,
@@ -468,6 +499,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             .max_by_key(|consensus| NotNaN::new(*consensus.likelihood).unwrap())
             .unwrap()
     }
+
     fn maximum_likelihood_nonoverlapping_consensus(
         &mut self,
         f_recs: &Vec<Record>,
@@ -477,9 +509,11 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
     ) -> NonOverlappingConsensus {
         //Calculate non-overlapping consensus records and shared lh
         let (f_consensus_rec, f_lh) =
-            CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid).calc_consensus();
+            CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid, self.verbose_read_names)
+                .calc_consensus();
         let (r_consensus_rec, r_lh) =
-            CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid).calc_consensus();
+            CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid, self.verbose_read_names)
+                .calc_consensus();
         let overall_lh_isize = f_lh + r_lh;
         //Determine insert size with highest probability for non-overlapping records based on expected insert size
         let likeliest_isize =
@@ -522,21 +556,27 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         }
         Ok(())
     }
+
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {
         &mut self.fq1_reader
     }
+
     fn fq2_reader(&mut self) -> &mut fastq::Reader<R> {
         &mut self.fq2_reader
     }
+
     fn umi_len(&self) -> usize {
         self.umi_len
     }
+
     fn seq_dist(&self) -> usize {
         self.seq_dist
     }
+
     fn umi_dist(&self) -> usize {
         self.umi_dist
     }
+
     fn reverse_umi(&self) -> bool {
         self.reverse_umi
     }

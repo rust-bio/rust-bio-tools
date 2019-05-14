@@ -1,6 +1,6 @@
 [package]
 name = "rust-bio-tools"
-version = "0.4.1-alpha.0"
+version = "0.5.1-alpha.0"
 authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>", "Erik Clarke <ecl@pennmedicine.upenn.edu>"]
 description = "A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio."
 license-file = "LICENSE.md"
@@ -16,7 +16,7 @@ indicatif = "0.11"
 itertools = "0.6"
 log = "0.4.6"
 fern = "0.5.7"
-rust-htslib = {git="https://github.com/rust-bio/rust-htslib", branch="sequence-read-trait"}
+rust-htslib = "0.23.0"
 csv = "1.0.2"
 rustc-serialize = "0.3"
 quick-error = "1.2"

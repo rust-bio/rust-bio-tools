@@ -2,6 +2,23 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.5.0] - 2019-05-08
+### Changed
+- Fixed a bug in `call-consensus-reads` where read sequences were kept in memory.
+  This significantly reduces memory footprint.
+- `call-consensus-reads` now writes shorter name lines for consensus reads.
+  Name lines of consensus reads now only contain a random uuid and the number of
+  reads they were created from. To get the old behavior, i.e. a list of reads
+  that were merged into this consensus read, the `--verbose-read-names` can be used.
+
+
+## [0.4.1] - 2019-05-02
+### Changed
+- Fixed a bug in `call-consensus-reads` where BGZF-compressed files terminated early (after the first block).
+- Extended documentation of CLI.
+- Updated used versions of rust-htslib and rocksdb.
+- Renamed the `--reverse-umi` parameter of `call-consensus-reads` to `--umi-on-reverse`.
+
 ## [0.4.0] - 2019-04-10
 ### Changed
 - Consensus reads generated from UMI-tagged reads with `call-consensus-reads` no longer contain the UMI.

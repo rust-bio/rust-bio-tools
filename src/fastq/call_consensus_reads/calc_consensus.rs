@@ -1,6 +1,7 @@
 use crate::common_functions::CalcConsensus;
 use bio::io::fastq;
 use bio::stats::probs::LogProb;
+use derive_new::new;
 use itertools::Itertools;
 
 const ALLELES: &'static [u8] = b"ACGT";
@@ -12,6 +13,7 @@ const ALLELES: &'static [u8] = b"ACGT";
 /// as sequence into the consensus sequence. The quality value is the
 /// likelihood for this allele, encoded in PHRED+33.
 /// //TODO Generalize as this is identical to BAM except Offset and cigar/writing to record
+#[derive(new)]
 pub struct CalcNonOverlappingConsensus<'a> {
     recs: &'a [fastq::Record],
     seqids: &'a [usize],
@@ -19,20 +21,6 @@ pub struct CalcNonOverlappingConsensus<'a> {
     verbose_read_names: bool,
 }
 impl<'a> CalcNonOverlappingConsensus<'a> {
-    pub fn new(
-        recs: &'a [fastq::Record],
-        seqids: &'a [usize],
-        uuid: &'a str,
-        verbose_read_names: bool,
-    ) -> Self {
-        CalcNonOverlappingConsensus {
-            recs,
-            seqids,
-            uuid,
-            verbose_read_names,
-        }
-    }
-
     pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
         let seq_len = self.recs()[0].seq().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
@@ -122,6 +110,7 @@ impl<'a> CalcConsensus<'a, fastq::Record> for CalcNonOverlappingConsensus<'a> {
 /// choose the most likely one. Write the most likely allele i.e. base
 /// as sequence into the consensus sequence. The quality value is the
 /// likelihood for this allele, encoded in PHRED+33.
+#[derive(new)]
 pub struct CalcOverlappingConsensus<'a> {
     recs1: &'a [fastq::Record],
     recs2: &'a [fastq::Record],
@@ -133,24 +122,6 @@ pub struct CalcOverlappingConsensus<'a> {
 
 //TODO Generalize as this is identical to BAM except Offset and cigar/writing to record
 impl<'a> CalcOverlappingConsensus<'a> {
-    pub fn new(
-        recs1: &'a [fastq::Record],
-        recs2: &'a [fastq::Record],
-        overlap: usize,
-        seqids: &'a [usize],
-        uuid: &'a str,
-        verbose_read_names: bool,
-    ) -> Self {
-        CalcOverlappingConsensus {
-            recs1,
-            recs2,
-            overlap,
-            seqids,
-            uuid,
-            verbose_read_names,
-        }
-    }
-
     pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
         let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);

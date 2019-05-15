@@ -5,30 +5,25 @@
 //! $ rbt vcf-to-txt --genotypes --fmt S --info T X SOMATIC < tests/test.vcf > tests/variant-table.txt
 //! ```
 //!
+use derive_new::new;
+use itertools::Itertools;
 use quick_error::quick_error;
+use rust_htslib::bcf;
+use rust_htslib::bcf::record::Numeric;
+use rust_htslib::bcf::Read;
 use std::error::Error;
 use std::io;
 use std::io::Write;
 use std::str;
 
-use itertools::Itertools;
-use rust_htslib::bcf;
-use rust_htslib::bcf::record::Numeric;
-use rust_htslib::bcf::Read;
-
+#[derive(new)]
 pub struct Writer {
     inner: io::BufWriter<io::Stdout>,
+    #[new(value = "0")]
     field_count: usize,
 }
 
 impl Writer {
-    fn new(inner: io::BufWriter<io::Stdout>) -> Self {
-        Writer {
-            inner,
-            field_count: 0,
-        }
-    }
-
     fn write_integer(&mut self, value: i32) -> Result<(), Box<dyn Error>> {
         let fmt = if value.is_missing() {
             "".to_owned()

@@ -1,10 +1,12 @@
 use crate::common_functions::CalcConsensus;
 use bio::stats::probs::LogProb;
+use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
 
 const ALLELES: &'static [u8] = b"ACGT";
 
+#[derive(new)]
 pub struct CalcOverlappingConsensus<'a> {
     recs1: &'a [bam::Record],
     recs2: &'a [bam::Record],
@@ -15,23 +17,6 @@ pub struct CalcOverlappingConsensus<'a> {
 }
 
 impl<'a> CalcOverlappingConsensus<'a> {
-    pub fn new(
-        recs1: &'a [bam::Record],
-        recs2: &'a [bam::Record],
-        overlap: usize,
-        seqids: &'a [usize],
-        uuid: &'a str,
-        verbose_read_names: bool,
-    ) -> Self {
-        CalcOverlappingConsensus {
-            recs1,
-            recs2,
-            overlap,
-            seqids,
-            uuid,
-            verbose_read_names,
-        }
-    }
     pub fn calc_consensus(&self) -> (bam::Record, LogProb) {
         let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap(); //TODO Not tested (Check this if test fails)
                                                                                                   //let seq_len = self.recs1()[0].insert_size() as usize;
@@ -132,6 +117,7 @@ impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
     }
 }
 
+#[derive(new)]
 pub struct CalcNonOverlappingConsensus<'a> {
     recs: &'a [bam::Record],
     seqids: &'a [usize],
@@ -140,19 +126,6 @@ pub struct CalcNonOverlappingConsensus<'a> {
 }
 
 impl<'a> CalcNonOverlappingConsensus<'a> {
-    pub fn new(
-        recs: &'a [bam::Record],
-        seqids: &'a [usize],
-        uuid: &'a str,
-        verbose_read_names: bool,
-    ) -> Self {
-        CalcNonOverlappingConsensus {
-            recs,
-            seqids,
-            uuid,
-            verbose_read_names,
-        }
-    }
     pub fn calc_consensus(&self) -> (bam::Record, LogProb) {
         let seq_len = self.recs()[0].seq().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);

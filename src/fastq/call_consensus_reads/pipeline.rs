@@ -2,6 +2,7 @@ use bio::io::fastq;
 use bio::io::fastq::{FastqRead, Record};
 use bio::stats::probs::LogProb;
 use csv;
+use derive_new::new;
 use indicatif;
 use ordered_float::NotNaN;
 use rgsl::randist::gaussian::ugaussian_P;
@@ -303,6 +304,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
 
 /// Struct for calling non-overlapping consensus reads
 /// Implements Trait CallConsensusReads
+#[derive(new)]
 pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     fq1_reader: &'a mut fastq::Reader<R>,
     fq2_reader: &'a mut fastq::Reader<R>,
@@ -313,32 +315,6 @@ pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     umi_dist: usize,
     reverse_umi: bool,
     verbose_read_names: bool,
-}
-
-impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
-    pub fn new(
-        fq1_reader: &'a mut fastq::Reader<R>,
-        fq2_reader: &'a mut fastq::Reader<R>,
-        fq1_writer: &'a mut fastq::Writer<W>,
-        fq2_writer: &'a mut fastq::Writer<W>,
-        umi_len: usize,
-        seq_dist: usize,
-        umi_dist: usize,
-        reverse_umi: bool,
-        verbose_read_names: bool,
-    ) -> Self {
-        CallNonOverlappingConsensusRead {
-            fq1_reader,
-            fq2_reader,
-            fq1_writer,
-            fq2_writer,
-            umi_len,
-            seq_dist,
-            umi_dist,
-            reverse_umi,
-            verbose_read_names,
-        }
-    }
 }
 
 impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
@@ -405,7 +381,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
 }
 
 ///Clusters fastq reads by UMIs and calls consensus for overlapping reads
-///
+#[derive(new)]
 pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     fq1_reader: &'a mut fastq::Reader<R>,
     fq2_reader: &'a mut fastq::Reader<R>,
@@ -422,36 +398,6 @@ pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
 }
 
 impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
-    pub fn new(
-        fq1_reader: &'a mut fastq::Reader<R>,
-        fq2_reader: &'a mut fastq::Reader<R>,
-        fq1_writer: &'a mut fastq::Writer<W>,
-        fq2_writer: &'a mut fastq::Writer<W>,
-        fq3_writer: &'a mut fastq::Writer<W>,
-        umi_len: usize,
-        seq_dist: usize,
-        umi_dist: usize,
-        insert_size: usize,
-        std_dev: usize,
-        reverse_umi: bool,
-        verbose_read_names: bool,
-    ) -> Self {
-        CallOverlappingConsensusRead {
-            fq1_reader,
-            fq2_reader,
-            fq1_writer,
-            fq2_writer,
-            fq3_writer,
-            umi_len,
-            seq_dist,
-            umi_dist,
-            insert_size,
-            std_dev,
-            reverse_umi,
-            verbose_read_names,
-        }
-    }
-
     fn isize_highest_probability(&mut self, f_seq_len: usize, r_seq_len: usize) -> f64 {
         if f_seq_len + f_seq_len < self.insert_size {
             return self.insert_size as f64;

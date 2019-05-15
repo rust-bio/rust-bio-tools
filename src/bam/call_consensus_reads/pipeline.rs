@@ -1,4 +1,5 @@
 use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
+use derive_new::new;
 use indicatif;
 use rust_htslib::bam;
 use rust_htslib::bam::record::Cigar;
@@ -10,6 +11,7 @@ use std::ops::Deref;
 use std::process::{Command, Stdio};
 use uuid::Uuid;
 
+#[derive(new)]
 pub struct CallConsensusRead {
     bam_reader: bam::Reader,
     bam_writer: bam::Writer,
@@ -24,19 +26,6 @@ type RecordIDS = Vec<RecordID>;
 type RecordID = Vec<u8>;
 
 impl CallConsensusRead {
-    pub fn new(
-        bam_reader: bam::Reader,
-        bam_writer: bam::Writer,
-        seq_dist: usize,
-        verbose_read_names: bool,
-    ) -> Self {
-        CallConsensusRead {
-            bam_reader,
-            bam_writer,
-            seq_dist,
-            verbose_read_names,
-        }
-    }
     pub fn call_consensus_reads(&mut self) -> Result<(), Box<dyn Error>> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
         let mut duplicate_groups: HashMap<GroupID, RecordIDS> = HashMap::new();

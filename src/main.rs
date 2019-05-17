@@ -79,7 +79,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 } else {
                     None
                 },
-            )
+            )?;
+            Ok(())
         }
         // This cannot be reached, since the matches step of
         // clap assures that a valid subcommand is provided

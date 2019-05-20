@@ -58,7 +58,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ),
         ("vcf-baf", Some(_)) => bcf::baf::calculate_baf(),
         ("call-consensus-reads", Some(matches)) => {
-            fastq::call_consensus_reads::call_consensus_reads_from_paths(
+            match fastq::call_consensus_reads::call_consensus_reads_from_paths(
                 matches.value_of("fq1").unwrap(),
                 matches.value_of("fq2").unwrap(),
                 matches.value_of("consensus-fq1").unwrap(),
@@ -79,8 +79,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                 } else {
                     None
                 },
-            )?;
-            Ok(())
+            ) {
+                Ok(()) => Ok(()),
+                Err(e) => {
+                    eprintln!("{}", e);
+                    Err(Box::new(e))
+                }
+            }
+
         }
         // This cannot be reached, since the matches step of
         // clap assures that a valid subcommand is provided

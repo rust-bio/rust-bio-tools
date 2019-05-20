@@ -80,24 +80,32 @@ use flate2::bufread::MultiGzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use pipeline::{CallConsensusReads, CallNonOverlappingConsensusRead, CallOverlappingConsensusRead};
+use snafu::{Backtrace, ErrorCompat, ResultExt, Snafu};
 use std::error::Error;
 use std::fs;
 use std::io::BufReader;
 use std::str;
-use snafu::{Snafu, ResultExt, Backtrace, ErrorCompat};
-
 
 #[derive(Debug, Snafu)]
 pub enum SnafuError {
     #[snafu(display("Could not open input file {}: {:?}", filename, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
-    ReaderError {filename: String, source: std::io::Error},
+    ReaderError {
+        filename: String,
+        source: std::io::Error,
+    },
     #[snafu(display("Could not open output file {}: {:?}", filename, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
-    WriterError {filename: String, source: std::io::Error},
+    WriterError {
+        filename: String,
+        source: std::io::Error,
+    },
     #[snafu(display("Pipeline Error with {}: {}", params, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
-    PipelineError {params: String, source: Box<std::error::Error>},
+    PipelineError {
+        params: String,
+        source: Box<std::error::Error>,
+    },
 }
 
 /// Build readers for the given input and output FASTQ files and pass them to
@@ -204,13 +212,13 @@ pub fn call_consensus_reads_from_paths(
                 _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
             }
         }
-        Some(fq3_path) => {
+        Some(fq3_out) => {
             eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
             eprintln!(
                 "Writing output to:\n    {}\n    {}\n    {}",
-                fq1_out, fq2_out, fq3_path
+                fq1_out, fq2_out, fq3_out
             );
-            match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz"), fq3_path.ends_with(".gz")) {
+            match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz"), fq3_out.ends_with(".gz")) {
                 (false, false, false, false, false) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::from_file(fq1).context(
                             ReaderError{filename: String::from(fq1)}
@@ -224,8 +232,8 @@ pub fn call_consensus_reads_from_paths(
                     &mut fastq::Writer::to_file(fq2_out).context(
                             ReaderError{filename: String::from(fq2_out)}
                         )?,
-                    &mut fastq::Writer::to_file(fq3_path).context(
-                            ReaderError{filename: String::from(fq3_path)}
+                    &mut fastq::Writer::to_file(fq3_out).context(
+                            ReaderError{filename: String::from(fq3_out)}
                         )?,
                     umi_len,
                     seq_dist,
@@ -248,8 +256,8 @@ pub fn call_consensus_reads_from_paths(
                     &mut fastq::Writer::to_file(fq2_out).context(
                             ReaderError{filename: String::from(fq2_out)}
                         )?,
-                    &mut fastq::Writer::to_file(fq3_path).context(
-                            ReaderError{filename: String::from(fq3_path)}
+                    &mut fastq::Writer::to_file(fq3_out).context(
+                            ReaderError{filename: String::from(fq3_out)}
                         )?,
                     umi_len,
                     seq_dist,
@@ -272,8 +280,8 @@ pub fn call_consensus_reads_from_paths(
                     &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out).context(
                             ReaderError{filename: String::from(fq2_out)}
                         )?, Compression::default())),
-                    &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq3_path).context(
-                            ReaderError{filename: String::from(fq3_path)}
+                    &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq3_out).context(
+                            ReaderError{filename: String::from(fq3_out)}
                         )?, Compression::default())),
                     umi_len,
                     seq_dist,
@@ -296,8 +304,8 @@ pub fn call_consensus_reads_from_paths(
                     &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out).context(
                             ReaderError{filename: String::from(fq2_out)}
                         )?, Compression::default())),
-                    &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq3_path).context(
-                            ReaderError{filename: String::from(fq3_path)}
+                    &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq3_out).context(
+                            ReaderError{filename: String::from(fq3_out)}
                         )?, Compression::default())),
                     umi_len,
                     seq_dist,

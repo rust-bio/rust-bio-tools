@@ -33,7 +33,6 @@ use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensu
 //     },
 // }
 
-
 const HAMMING_THRESHOLD: f64 = 10.0;
 
 /// Interpret a cluster returned by starcode

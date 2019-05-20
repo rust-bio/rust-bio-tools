@@ -108,6 +108,46 @@ pub enum SnafuError {
     },
 }
 
+/// Format parameters into a string to provide error context for the
+/// call to `call_consensus_reads()`
+fn format_pipeline_params(
+    umi_len: usize,
+    seq_dist: usize,
+    umi_dist: usize,
+    reverse_umi: bool,
+    verbose_read_names: bool,
+    insert_size: Option<usize>,
+    std_dev: Option<usize>,
+) -> String {
+    let umi_pos = match reverse_umi {
+        true => format!(
+            "UMIs are the first {} characters of the reverse read.",
+            umi_len
+        ),
+        false => format!(
+            "UMIs are the first {} characters of the forward read.",
+            umi_len
+        ),
+    };
+    let verbose_reads = match verbose_read_names {
+        true => "Read names are written in verbose format.",
+        false => "Read names are written in short format.",
+    };
+    let mode = match (insert_size, std_dev) {
+        (Some(is), Some(sd)) => format!(
+            "Run in overlap mode with insert size {} and std deviation {}.",
+            is, sd
+        ),
+        (None, None) => String::from("Run in normal mode without overlaps."),
+        _ => String::from("Invalid mode."), // This cannot occur due to the clap configuration.
+    };
+    String::from(format!(
+        "Pipeline did not finish correctly. It was run with \
+         sequence distance {} and UMI distance {}.\n{}\n{}\n{}",
+        seq_dist, umi_dist, umi_pos, verbose_reads, mode,
+    ))
+}
+
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.
 ///
@@ -151,7 +191,7 @@ pub fn call_consensus_reads_from_paths(
                         reverse_umi,
                         verbose_read_names,
                     ).call_consensus_reads()
-                        .eager_context(PipelineError{params: String::from("bam")}),
+                        .eager_context(PipelineError{params: format_pipeline_params(umi_len, seq_dist, umi_dist, reverse_umi, verbose_read_names, insert_size, std_dev)}),
                 (true, true, false, false) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new).context(
                             ReaderError{filename: String::from(fq1)}
@@ -170,7 +210,7 @@ pub fn call_consensus_reads_from_paths(
                     umi_dist,
                     reverse_umi,
                     verbose_read_names,
-                ).call_consensus_reads().eager_context(PipelineError{params: String::from("bam")}),
+                ).call_consensus_reads().eager_context(PipelineError{params: format_pipeline_params(umi_len, seq_dist, umi_dist, reverse_umi, verbose_read_names, insert_size, std_dev)}),
                 (false, false, true, true) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::from_file(fq1).context(
                             ReaderError{filename: String::from(fq1)}
@@ -189,7 +229,7 @@ pub fn call_consensus_reads_from_paths(
                     umi_dist,
                     reverse_umi,
                     verbose_read_names,
-                ).call_consensus_reads().eager_context(PipelineError{params: String::from("bam")}),
+                ).call_consensus_reads().eager_context(PipelineError{params: format_pipeline_params(umi_len, seq_dist, umi_dist, reverse_umi, verbose_read_names, insert_size, std_dev)}),
                 (true, true, true, true) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new).context(
                             ReaderError{filename: String::from(fq1)}
@@ -208,7 +248,7 @@ pub fn call_consensus_reads_from_paths(
                     umi_dist,
                     reverse_umi,
                     verbose_read_names,
-                ).call_consensus_reads().eager_context(PipelineError{params: String::from("bam")}),
+                ).call_consensus_reads().eager_context(PipelineError{params: format_pipeline_params(umi_len, seq_dist, umi_dist, reverse_umi, verbose_read_names, insert_size, std_dev)}),
                 _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
             }
         }
@@ -242,7 +282,7 @@ pub fn call_consensus_reads_from_paths(
                     std_dev.unwrap(),
                     reverse_umi,
                     verbose_read_names,
-                ).call_consensus_reads().eager_context(PipelineError{params: String::from("bam")}),
+                ).call_consensus_reads().eager_context(PipelineError{params: format_pipeline_params(umi_len, seq_dist, umi_dist, reverse_umi, verbose_read_names, insert_size, std_dev)}),
                 (true, true, false, false, false) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new).context(
                             ReaderError{filename: String::from(fq1)}
@@ -266,7 +306,7 @@ pub fn call_consensus_reads_from_paths(
                     std_dev.unwrap(),
                     reverse_umi,
                     verbose_read_names,
-                ).call_consensus_reads().eager_context(PipelineError{params: String::from("bam")}),
+                ).call_consensus_reads().eager_context(PipelineError{params: format_pipeline_params(umi_len, seq_dist, umi_dist, reverse_umi, verbose_read_names, insert_size, std_dev)}),
                 (false, false, true, true, true) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::from_file(fq1).context(
                             ReaderError{filename: String::from(fq1)}
@@ -290,7 +330,7 @@ pub fn call_consensus_reads_from_paths(
                     std_dev.unwrap(),
                     reverse_umi,
                     verbose_read_names,
-                ).call_consensus_reads().eager_context(PipelineError{params: String::from("bam")}),
+                ).call_consensus_reads().eager_context(PipelineError{params: format_pipeline_params(umi_len, seq_dist, umi_dist, reverse_umi, verbose_read_names, insert_size, std_dev)}),
                 (true, true, true, true, true) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new).context(
                             ReaderError{filename: String::from(fq1)}
@@ -314,7 +354,7 @@ pub fn call_consensus_reads_from_paths(
                     std_dev.unwrap(),
                     reverse_umi,
                     verbose_read_names,
-                ).call_consensus_reads().eager_context(PipelineError{params: String::from("bam")}),
+                ).call_consensus_reads().eager_context(PipelineError{params: format_pipeline_params(umi_len, seq_dist, umi_dist, reverse_umi, verbose_read_names, insert_size, std_dev)}),
                 _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
             }
         }

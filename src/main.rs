@@ -10,6 +10,7 @@ use std::error::Error;
 pub mod bam;
 pub mod bcf;
 pub mod fastq;
+pub mod errors;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let yaml = load_yaml!("cli.yaml");

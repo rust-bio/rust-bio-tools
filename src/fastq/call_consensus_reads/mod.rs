@@ -75,37 +75,17 @@
 mod calc_consensus;
 mod pipeline;
 
+use crate::errors::{self, Result, Error};
+
 use bio::io::fastq;
 use flate2::bufread::MultiGzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use pipeline::{CallConsensusReads, CallNonOverlappingConsensusRead, CallOverlappingConsensusRead};
-use snafu::{ResultExt, Snafu};
+use snafu::{ResultExt};
 use std::fs;
 use std::io::BufReader;
 use std::str;
-
-#[derive(Debug, Snafu)]
-pub enum SnafuError {
-    #[snafu(display("Could not open input file {}: {:?}", filename, source))]
-    #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
-    ReaderError {
-        filename: String,
-        source: std::io::Error,
-    },
-    #[snafu(display("Could not open output file {}: {:?}", filename, source))]
-    #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
-    WriterError {
-        filename: String,
-        source: std::io::Error,
-    },
-    #[snafu(display("Pipeline Error with {}: {}", params, source))]
-    #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
-    PipelineError {
-        params: String,
-        source: Box<std::error::Error>,
-    },
-}
 
 /// Format parameters into a string to provide error context for the
 /// call to `call_consensus_reads()`

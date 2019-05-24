@@ -7,13 +7,13 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[snafu(display("Could not open input file {}: {:?}", filename, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
-    ReaderError {
+    FastqReaderError {
         filename: String,
         source: std::io::Error,
     },
     #[snafu(display("Could not open output file {}: {:?}", filename, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
-    WriterError {
+    FastqWriterError {
         filename: String,
         source: std::io::Error,
     },

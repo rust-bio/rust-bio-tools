@@ -1,4 +1,4 @@
-use snafu::{ResultExt, Snafu};
+use snafu::Snafu;
 
 pub type Result<T> = std::result::Result<T, Error>;
 

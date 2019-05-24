@@ -75,7 +75,7 @@
 mod calc_consensus;
 mod pipeline;
 
-use crate::errors::{self, Result, Error};
+use crate::errors::{self};
 
 use bio::io::fastq;
 use flate2::bufread::MultiGzDecoder;

@@ -35,7 +35,7 @@ ordered-float = "0.5"
 flate2 = "1.0.5"
 streaming-stats =  "0.2.2"
 GSL = "1.1.0"
-snafu = "0.3.1"
+snafu = "0.4.1"
 
 [[bin]]
 name = "rbt"

@@ -196,7 +196,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads()
-                .eager_context(PipelineError {
+                .context(PipelineError {
                     params: format_pipeline_params(
                         umi_len,
                         seq_dist,
@@ -237,7 +237,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads()
-                .eager_context(PipelineError {
+                .context(PipelineError {
                     params: format_pipeline_params(
                         umi_len,
                         seq_dist,
@@ -274,7 +274,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads()
-                .eager_context(PipelineError {
+                .context(PipelineError {
                     params: format_pipeline_params(
                         umi_len,
                         seq_dist,
@@ -321,7 +321,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads()
-                .eager_context(PipelineError {
+                .context(PipelineError {
                     params: format_pipeline_params(
                         umi_len,
                         seq_dist,
@@ -377,7 +377,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads()
-                .eager_context(PipelineError {
+                .context(PipelineError {
                     params: format_pipeline_params(
                         umi_len,
                         seq_dist,
@@ -423,7 +423,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads()
-                .eager_context(PipelineError {
+                .context(PipelineError {
                     params: format_pipeline_params(
                         umi_len,
                         seq_dist,
@@ -468,7 +468,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads()
-                .eager_context(PipelineError {
+                .context(PipelineError {
                     params: format_pipeline_params(
                         umi_len,
                         seq_dist,
@@ -523,7 +523,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads()
-                .eager_context(PipelineError {
+                .context(PipelineError {
                     params: format_pipeline_params(
                         umi_len,
                         seq_dist,

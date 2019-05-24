@@ -15,28 +15,17 @@ use std::process::{Command, Stdio};
 use std::str;
 use tempfile::tempdir;
 use uuid::Uuid;
-// use snafu::{Snafu, ResultExt, Backtrace, ErrorCompat};
+
+use snafu::{ResultExt};
+use crate::errors::{self};
 
 use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
 
-// #[derive(Debug, Snafu)]
-// enum CallError {
-//     #[snafu(display("Call error, call consensus failed. {:?}", source))]
-//     #[snafu(source(from(std::error::Error, Box::new)))]
-//     CallConsensusError {
-//         source: Box<dyn std::error::Error>,
-//     },
-//     #[snafu(display("Call error, IOError. {:?}", source))]
-//     #[snafu(source(from(std::error::Error, Box::new)))]
-//     IOError {
-//         source: Box<std::io::Error>,
-//     },
-// }
 
 const HAMMING_THRESHOLD: f64 = 10.0;
 
 /// Interpret a cluster returned by starcode
-fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>> {
+fn parse_cluster(record: csv::StringRecord) -> errors::Result<Vec<usize>> {
     let seqids = &record[2];
     Ok(csv::ReaderBuilder::new()
         .delimiter(b',')
@@ -44,7 +33,11 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
         .from_reader(seqids.as_bytes())
         .deserialize()
         .next()
-        .unwrap()?)
+       .unwrap().context(
+           errors::StarcodeClusterParseError{
+               record: record
+           }
+       )?)
 }
 
 /// Calculates the median hamming distance for all records by deriving the overlap from insert size

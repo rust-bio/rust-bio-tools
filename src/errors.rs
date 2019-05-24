@@ -23,4 +23,10 @@ pub enum Error {
         params: String,
         source: Box<std::error::Error>,
     },
+
+    #[snafu(display("Error parsing the following Starcode cluster in csv format {:?}: {}", record, source))]
+    StarcodeClusterParseError {
+        record: csv::StringRecord,
+        source: csv::Error,
+    },
 }

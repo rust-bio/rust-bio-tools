@@ -48,6 +48,12 @@ pub enum Error {
         source: rocksdb::Error,
     },
 
+    #[snafu(display("Failed to get read nr {} from the rocksDB.: {:?}", read_nr, source))]
+    FastqStorageGetError{
+        read_nr: usize,
+        source: rocksdb::Error,
+    },
+
     // TODO Would we like to also return the read name here?
     // If so, forward, reverse, or both?
     #[snafu(display("Serde failed to encode read pair nr {}.: {:?}", read_nr, source))]
@@ -56,5 +62,11 @@ pub enum Error {
         source: serde_json::error::Error,
     },
 
-
+    // TODO Would we like to also return the read name here?
+    // If so, forward, reverse, or both?
+    #[snafu(display("Serde failed to decode read pair nr {}.: {:?}", read_nr, source))]
+    ReadDeserializationError{
+        read_nr: usize,
+        source: serde_json::error::Error,
+    },
 }

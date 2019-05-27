@@ -121,9 +121,19 @@ impl FASTQStorage {
     }
 
     /// Retrieve the read sequence of the read with index `i`.
-    pub fn get(&self, i: usize) -> Result<(fastq::Record, fastq::Record), Box<dyn Error>> {
+    pub fn get(&self, i: usize) -> errors::Result<(fastq::Record, fastq::Record)> {
         Ok(serde_json::from_str(
-            str::from_utf8(&self.db.get(&Self::as_key(i as u64))?.unwrap()).unwrap(),
+            str::from_utf8(
+                &self.db.get(&Self::as_key(i as u64)).context(
+                    errors::FastqStorageGetError{
+                        read_nr: i,
+                    }
+                )?.unwrap()
+            ).unwrap(),
+        ).context(
+            errors::ReadDeserializationError{
+                read_nr: i
+            }
         )?)
     }
 }

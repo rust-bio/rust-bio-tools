@@ -105,10 +105,18 @@ impl FASTQStorage {
         i: usize,
         f_rec: &fastq::Record,
         r_rec: &fastq::Record,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> errors::Result<()> {
         Ok(self.db.put(
             &Self::as_key(i as u64),
-            serde_json::to_string(&(f_rec, r_rec))?.as_bytes(),
+            serde_json::to_string(&(f_rec, r_rec)).context(
+                errors::ReadSerializationError{
+                    read_nr: i
+                }
+            )?.as_bytes(),
+        ).context(
+            errors::FastqStoragePutError{
+                read_nr: i,
+            }
         )?)
     }
 

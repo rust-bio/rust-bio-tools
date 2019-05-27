@@ -40,7 +40,21 @@ pub enum Error {
     FastqStorageCreationError{
         filename: String,
         source: rocksdb::Error,
-    }
+    },
 
-    
+    #[snafu(display("Failed to put read nr {} into the rocksDB.: {:?}", read_nr, source))]
+    FastqStoragePutError{
+        read_nr: usize,
+        source: rocksdb::Error,
+    },
+
+    // TODO Would we like to also return the read name here?
+    // If so, forward, reverse, or both?
+    #[snafu(display("Serde failed to encode read pair nr {}.: {:?}", read_nr, source))]
+    ReadSerializationError{
+        read_nr: usize,
+        source: serde_json::error::Error,
+    },
+
+
 }

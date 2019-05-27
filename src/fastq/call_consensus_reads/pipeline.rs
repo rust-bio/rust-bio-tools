@@ -79,12 +79,18 @@ struct FASTQStorage {
 impl FASTQStorage {
     /// Create a new FASTQStorage using a Rocksdb database
     /// that maps read indices to read seqeunces.
-    pub fn new() -> Result<Self, Box<Error>> {
+    pub fn new() -> errors::Result<Self> {
         // Save storage_dir to prevent it from leaving scope and
         // in turn deleting the tempdir
-        let storage_dir = tempdir()?.path().join("db");
+        let storage_dir = tempdir().context(
+            errors::TempdirCreationError{}
+        )?.path().join("db");
         Ok(FASTQStorage {
-            db: DB::open_default(storage_dir.clone())?,
+            db: DB::open_default(storage_dir.clone()).context(
+                errors::FastqStorageCreationError{
+                    filename: String::from(format!("{:?}", storage_dir.as_path()))
+                }
+            )?,
             storage_dir,
         })
     }

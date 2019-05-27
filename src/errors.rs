@@ -29,4 +29,18 @@ pub enum Error {
         record: csv::StringRecord,
         source: csv::Error,
     },
+
+    #[snafu(display("Failed to create a temporary directory for RocksDB: {:?}", source))]
+    #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
+    TempdirCreationError{
+        source: std::io::Error,
+    },
+
+    #[snafu(display("Failed to create a RocksDB at location {}: {:?}", filename, source))]
+    FastqStorageCreationError{
+        filename: String,
+        source: rocksdb::Error,
+    }
+
+    
 }

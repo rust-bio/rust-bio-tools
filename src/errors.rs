@@ -17,6 +17,11 @@ pub enum Error {
         filename: String,
         source: std::io::Error,
     },
+    #[snafu(display("Could not write record {:?}: {:?}", record, source))]
+    FastqWriteError {
+        record: Option<bio::io::fastq::Record>,
+        source: std::io::Error,
+    },
     #[snafu(display("Pipeline Error with {}: {}", params, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
     PipelineError {

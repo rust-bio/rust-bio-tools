@@ -324,7 +324,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         f_recs: Vec<Record>,
         r_recs: Vec<Record>,
         outer_seqids: Vec<usize>,
-    ) -> Result<(), Box<Error>>;
+    ) -> errors::Result<()>;
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R>;
     fn fq2_reader(&mut self) -> &mut fastq::Reader<R>;
     fn umi_len(&self) -> usize;
@@ -381,7 +381,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         f_recs: Vec<Record>,
         r_recs: Vec<Record>,
         outer_seqids: Vec<usize>,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> errors::Result<()> {
         if f_recs.len() > 1 {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
             self.fq1_writer.write_record(
@@ -393,6 +393,10 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 )
                 .calc_consensus()
                 .0,
+            ).context(
+                errors::FastqWriteError{
+                        record: None,
+                    }
             )?;
             self.fq2_writer.write_record(
                 &CalcNonOverlappingConsensus::new(
@@ -403,10 +407,22 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                 )
                 .calc_consensus()
                 .0,
+            ).context(
+                errors::FastqWriteError{
+                        record: None,
+                    }
             )?;
         } else {
-            self.fq1_writer.write_record(&f_recs[0])?;
-            self.fq2_writer.write_record(&r_recs[0])?;
+            self.fq1_writer.write_record(&f_recs[0]).context(
+                    errors::FastqWriteError{
+                        record: Some(f_recs[0].clone()),
+                    }
+                )?;
+            self.fq2_writer.write_record(&r_recs[0]).context(
+                    errors::FastqWriteError{
+                        record: Some(f_recs[0].clone()),
+                    }
+                )?;
         }
         Ok(())
     }
@@ -572,7 +588,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         f_recs: Vec<Record>,
         r_recs: Vec<Record>,
         outer_seqids: Vec<usize>,
-    ) -> Result<(), Box<Error>> {
+    ) -> errors::Result<()> {
         //TODO Add deterministic uuid considering read ids
         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
         let ol_consensus =
@@ -580,10 +596,23 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         let non_ol_consensus =
             self.maximum_likelihood_nonoverlapping_consensus(&f_recs, &r_recs, &outer_seqids, uuid);
         match ol_consensus.likelihood > non_ol_consensus.likelihood {
-            true => self.fq3_writer.write_record(&ol_consensus.record)?,
+            true => self.fq3_writer.write_record(&ol_consensus.record)
+                .context(
+                    errors::FastqWriteError{
+                        record: Some(ol_consensus.record),
+                    }
+                )?,
             false => {
-                self.fq1_writer.write_record(&non_ol_consensus.f_record)?;
-                self.fq2_writer.write_record(&non_ol_consensus.r_record)?;
+                self.fq1_writer.write_record(&non_ol_consensus.f_record).context(
+                    errors::FastqWriteError{
+                        record: Some(ol_consensus.record),
+                    }
+                )?;
+                self.fq2_writer.write_record(&non_ol_consensus.r_record).context(
+                    errors::FastqWriteError{
+                        record: Some(non_ol_consensus.r_record),
+                    }
+                )?;
             }
         }
         Ok(())

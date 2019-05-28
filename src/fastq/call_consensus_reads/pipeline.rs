@@ -133,12 +133,11 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
             .template("{prefix:.bold.dim} {spinner} {wide_msg}");
 
-        // cluster by sequence
+        // cluster by umi
         // Note: If starcode is not installed, this throws a
         // hard to interpret error:
         // (No such file or directory (os error 2))
         // The expect added below should make this more clear.
-        // cluster within in this cluster by umi
         let mut umi_cluster = Command::new("starcode")
             .arg("--dist")
             .arg(format!("{}", self.umi_dist()))
@@ -182,7 +181,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                     panic!(error_message);
                 }
             }
-            // save umis for second (intra cluster) clustering
+            // extract umi for clustering
             let umi = if self.reverse_umi() {
                 r_rec.seq()[..self.umi_len()].to_owned()
             } else {
@@ -190,11 +189,13 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             };
             umi_cluster.stdin.as_mut().unwrap().write(&umi)?;
             umi_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+            // remove umi from read sequence for all further clustering steps
             if self.reverse_umi() {
                 r_rec = self.strip_umi_from_record(&r_rec)
             } else {
                 f_rec = self.strip_umi_from_record(&f_rec)
             }
+            // store read sequences in an on-disk key value store for random access
             read_storage.put(i, &f_rec, &r_rec)?;
             i += 1;
         }
@@ -210,6 +211,8 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             "[2/2] Merge eligable reads within each cluster.    "
         ));
         // read clusters identified by the first starcode run
+        // the first run clustered by UMI, hence all reads in
+        // the clusters handled here had similar UMIs
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .has_headers(false)
@@ -220,7 +223,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             pb.inc(1);
             pb.set_message(&format!("Processed {:>10} cluster", j));
             let seqids = parse_cluster(record?)?;
-            // cluster within in this cluster by umi
+            // cluster within in this cluster by read sequence
             let mut seq_cluster = Command::new("starcode")
                 .arg("--dist")
                 .arg(format!("{}", self.seq_dist()))
@@ -231,9 +234,10 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .stderr(Stdio::piped())
                 .spawn()?;
             for &seqid in &seqids {
-                // get sequences from rocksdb
+                // get sequences from rocksdb (key value store)
                 let (f_rec, r_rec) = read_storage.get(seqid - 1).unwrap();
-
+                // perform clustering using the concatenated read sequences
+                // without the UMIs (remove in the first clustering step)
                 seq_cluster
                     .stdin
                     .as_mut()
@@ -244,7 +248,8 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             seq_cluster.stdin.as_mut().unwrap().flush()?;
             drop(seq_cluster.stdin.take());
 
-            // handle each potential unique read
+            // handle each potential unique read, i.e. clusters with similar
+            // UMI and similar sequence
             for record in csv::ReaderBuilder::new()
                 .delimiter(b'\t')
                 .has_headers(false)

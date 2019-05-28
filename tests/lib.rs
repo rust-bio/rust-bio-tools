@@ -201,7 +201,7 @@ fn test_call_consensus_from_bam() {
         .arg("target/debug/rbt call-consensus-from-bam --max-seq-dist 8 tests/overlapping_consensus_marked.bam /tmp/overlapping_consensus_marked.bam")
         .spawn().unwrap().wait().unwrap().success());
     compare_bam(
-        "tests/expected/overlapping_consensus_marked.bam",
         "/tmp/overlapping_consensus_marked.bam",
+        "tests/expected/overlapping_consensus_marked.bam",
     );
 }

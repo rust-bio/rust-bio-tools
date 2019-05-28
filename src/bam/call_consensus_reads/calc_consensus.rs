@@ -18,8 +18,7 @@ pub struct CalcOverlappingConsensus<'a> {
 
 impl<'a> CalcOverlappingConsensus<'a> {
     pub fn calc_consensus(&self) -> (bam::Record, LogProb) {
-        let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap(); //TODO Not tested (Check this if test fails)
-                                                                                                  //let seq_len = self.recs1()[0].insert_size() as usize;
+        let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
 
@@ -64,12 +63,10 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 self.seqids().len(),
             ),
         };
-        //TODO Create unavailable cigar
-        let mut cigar_string = seq_len.to_string();
-        cigar_string.push('M');
-        let cigar = bam::record::CigarString::from_str(cigar_string.as_str()).unwrap();
         let mut consensus_rec = bam::Record::new();
-        consensus_rec.set(name.as_bytes(), &cigar, &consensus_seq, &consensus_qual);
+        consensus_rec.set(name.as_bytes(), None, &consensus_seq, &consensus_qual);
+        //Set flag to unmapped
+        consensus_rec.set_flags(4);
         (consensus_rec, consensus_lh)
     }
     fn recs1(&self) -> &[bam::Record] {
@@ -176,12 +173,10 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 self.seqids().len(),
             ),
         };
-        //TODO Create unavailable cigar
-        let mut cigar_string = seq_len.to_string();
-        cigar_string.push('M');
-        let cigar = bam::record::CigarString::from_str(cigar_string.as_str()).unwrap();
         let mut consensus_rec = bam::Record::new();
-        consensus_rec.set(name.as_bytes(), &cigar, &consensus_seq, &consensus_qual);
+        consensus_rec.set(name.as_bytes(), None, &consensus_seq, &consensus_qual);
+        //Set flag to unmapped
+        consensus_rec.set_flags(4);
         (consensus_rec, consensus_lh)
     }
     pub fn recs(&self) -> &[bam::Record] {

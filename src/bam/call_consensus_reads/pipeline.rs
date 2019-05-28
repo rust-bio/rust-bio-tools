@@ -144,7 +144,6 @@ impl CallConsensusRead {
                                         }
                                         RecordStorage::SingleRecord { .. } => unreachable!(),
                                     };
-                                //TODO Consider softclipping in Overlap
                                 let overlap = calc_overlap(&l_rec, &record)?;
                                 if overlap > 0 {
                                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
@@ -261,7 +260,7 @@ pub fn calc_consensus_complete_groups(
                 };
             }
             if !r_recs.is_empty() {
-                let overlap = calc_overlap(&l_recs[0], &r_recs[0])?; //TODO See todo above
+                let overlap = calc_overlap(&l_recs[0], &r_recs[0])?;
                 if overlap > 0 {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     l_seqids.append(&mut r_seqids);
@@ -314,7 +313,6 @@ pub fn calc_consensus_complete_groups(
     Ok(())
 }
 
-//TODO Revisit and test this!
 fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i32, Box<dyn Error>> {
     let l_end_pos = l_rec.cigar_cached().unwrap().end_pos()?;
     let r_start_pos = r_rec.pos();

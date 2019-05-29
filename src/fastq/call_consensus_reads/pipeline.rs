@@ -35,16 +35,16 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
 
 /// Calculates the median hamming distance for all records by deriving the overlap from insert size
 fn median_hamming_distance(
-    insert_size: &usize,
+    insert_size: usize,
     f_recs: &[fastq::Record],
     r_recs: &[fastq::Record],
 ) -> Option<f64> {
     let distances = f_recs.iter().zip(r_recs).filter_map(|(f_rec, r_rec)| {
         // check if reads overlap within insert size
-        if (insert_size < &f_rec.seq().len()) | (insert_size < &r_rec.seq().len()) {
+        if (insert_size < f_rec.seq().len()) | (insert_size < r_rec.seq().len()) {
             return None;
         }
-        if insert_size >= &(&f_rec.seq().len() + &r_rec.seq().len()) {
+        if insert_size >= (&f_rec.seq().len() + &r_rec.seq().len()) {
             return None;
         }
         let overlap = (f_rec.seq().len() + r_rec.seq().len()) - insert_size;
@@ -426,7 +426,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
         let insert_sizes = ((self.insert_size - 2 * self.std_dev)
             ..(self.insert_size + 2 * self.std_dev))
             .filter_map(|insert_size| {
-                median_hamming_distance(&insert_size, &f_recs, &r_recs)
+                median_hamming_distance(insert_size, &f_recs, &r_recs)
                     .filter(|&median_distance| median_distance < HAMMING_THRESHOLD)
                     .map(|_| insert_size)
             });

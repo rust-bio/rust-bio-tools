@@ -26,6 +26,32 @@ pub enum Error {
         source: std::io::Error,
     },
 
+    #[snafu(display("Could not read record: {:?}", source))]
+    FastqReadError {
+        source: std::io::Error,
+    },
+
+    // TODO rewrite this to make the forward reverse part of display a function
+    // format!("Given FASTQ files have unequal lengths. Reverse file returned record {} as empty, forward record is not: id:'{}' seq:'{:?}'.", i, f_rec.id(), str::from_utf8(f_rec.seq()));
+    #[snafu(display("Given FASTQ files have unequal lengths. Forward file returned record {} as empty, reverse record is not: id:'{}' seq:'{:?}'.", nr, name, seq))]
+    OrphanPairedEndReadError {
+        nr: usize,
+        name: String,
+        seq: String,
+        forward_orphan: bool,
+    },
+
+    #[snafu(display("Failed to write {} to starcode via stdin: {:?}", payload, source))]
+    StarcodeWriteError {
+        payload: String,
+        source: std::io::Error,
+    },
+
+    #[snafu(display("Failed to flush pipeline: {:?}", source))]
+    WriteFlushError {
+        source: std::io::Error,
+    },
+
     #[snafu(display("Pipeline Error with {}: {}", params, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
     PipelineError {

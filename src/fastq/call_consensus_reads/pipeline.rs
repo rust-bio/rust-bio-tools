@@ -199,19 +199,31 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             // update spinner
             pb.set_message(&format!("  Processed {:>10} reads", i));
             pb.inc(1);
-            self.fq1_reader().read(&mut f_rec)?;
-            self.fq2_reader().read(&mut r_rec)?;
+            self.fq1_reader().read(&mut f_rec).context(errors::FastqReadError{})?;
+            self.fq2_reader().read(&mut r_rec).context(errors::FastqReadError{})?;
 
             match (f_rec.is_empty(), r_rec.is_empty()) {
                 (true, true) => break,
                 (false, false) => (),
                 (true, false) => {
-                    let error_message = format!("Given FASTQ files have unequal lengths. Forward file returned record {} as empty, reverse record is not: id:'{}' seq:'{:?}'.", i, r_rec.id(), str::from_utf8(r_rec.seq()));
-                    panic!(error_message);
+                    return Err(Box::new(
+                        errors::Error::OrphanPairedEndReadError{
+                            nr: i,
+                            name: r_rec.id().to_string(),
+                            seq: String::from_utf8(r_rec.seq().to_vec()).unwrap(),
+                            forward_orphan: false
+                        }
+                    ))
                 }
                 (false, true) => {
-                    let error_message = format!("Given FASTQ files have unequal lengths. Reverse file returned record {} as empty, forward record is not: id:'{}' seq:'{:?}'.", i, f_rec.id(), str::from_utf8(f_rec.seq()));
-                    panic!(error_message);
+                     return Err(Box::new(
+                        errors::Error::OrphanPairedEndReadError{
+                            nr: i,
+                            name: r_rec.id().to_string(),
+                            seq: String::from_utf8(r_rec.seq().to_vec()).unwrap(),
+                            forward_orphan: true
+                        }
+                    ))
                 }
             }
             // save umis for second (intra cluster) clustering
@@ -220,8 +232,10 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             } else {
                 f_rec.seq()[..self.umi_len()].to_owned()
             };
-            umi_cluster.stdin.as_mut().unwrap().write(&umi)?;
-            umi_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+            umi_cluster.stdin.as_mut().unwrap().write_all(&umi)
+                .context(errors::StarcodeWriteError{payload: String::from_utf8(umi).unwrap()})?;
+            umi_cluster.stdin.as_mut().unwrap().write_all(b"\n")
+                .context(errors::StarcodeWriteError{payload: String::from("\n")})?;
             if self.reverse_umi() {
                 r_rec = self.strip_umi_from_record(&r_rec)
             } else {
@@ -230,7 +244,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             read_storage.put(i, &f_rec, &r_rec)?;
             i += 1;
         }
-        umi_cluster.stdin.as_mut().unwrap().flush()?;
+        umi_cluster.stdin.as_mut().unwrap().flush().context(errors::WriteFlushError{})?;
         drop(umi_cluster.stdin.take());
         pb.finish_with_message(&format!("Done. Analyzed {} reads.", i));
 
@@ -261,7 +275,12 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .stdin(Stdio::piped())
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
-                .spawn()?;
+                .spawn()
+                .context(
+                    errors::PipelineError{
+                        params: String::from("Failed to run UMI clustering with starcode."),
+                    }
+                )?;
             for &seqid in &seqids {
                 // get sequences from rocksdb
                 let (f_rec, r_rec) = read_storage.get(seqid - 1).unwrap();

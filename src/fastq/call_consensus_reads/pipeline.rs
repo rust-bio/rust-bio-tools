@@ -7,7 +7,6 @@ use ordered_float::NotNaN;
 use rgsl::randist::gaussian::ugaussian_P;
 use rocksdb::DB;
 use serde_json;
-use std::error::Error;
 use std::io;
 use std::io::Write;
 use std::mem;
@@ -16,11 +15,10 @@ use std::str;
 use tempfile::tempdir;
 use uuid::Uuid;
 
-use snafu::{ResultExt};
-use crate::errors::{self};
+use crate::errors;
+use snafu::ResultExt;
 
 use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
-
 
 const HAMMING_THRESHOLD: f64 = 10.0;
 
@@ -33,11 +31,8 @@ fn parse_cluster(record: csv::StringRecord) -> errors::Result<Vec<usize>> {
         .from_reader(seqids.as_bytes())
         .deserialize()
         .next()
-       .unwrap().context(
-           errors::StarcodeClusterParseError{
-               record: record
-           }
-       )?)
+        .unwrap()
+        .context(errors::StarcodeClusterParseError { record: record })?)
 }
 
 /// Calculates the median hamming distance for all records by deriving the overlap from insert size
@@ -82,14 +77,15 @@ impl FASTQStorage {
     pub fn new() -> errors::Result<Self> {
         // Save storage_dir to prevent it from leaving scope and
         // in turn deleting the tempdir
-        let storage_dir = tempdir().context(
-            errors::TempdirCreationError{}
-        )?.path().join("db");
+        let storage_dir = tempdir()
+            .context(errors::TempdirCreationError {})?
+            .path()
+            .join("db");
         Ok(FASTQStorage {
             db: DB::open_default(storage_dir.clone()).context(
-                errors::FastqStorageCreationError{
-                    filename: String::from(format!("{:?}", storage_dir.as_path()))
-                }
+                errors::FastqStorageCreationError {
+                    filename: String::from(format!("{:?}", storage_dir.as_path())),
+                },
             )?,
             storage_dir,
         })
@@ -106,35 +102,30 @@ impl FASTQStorage {
         f_rec: &fastq::Record,
         r_rec: &fastq::Record,
     ) -> errors::Result<()> {
-        Ok(self.db.put(
-            &Self::as_key(i as u64),
-            serde_json::to_string(&(f_rec, r_rec)).context(
-                errors::ReadSerializationError{
-                    read_nr: i
-                }
-            )?.as_bytes(),
-        ).context(
-            errors::FastqStoragePutError{
-                read_nr: i,
-            }
-        )?)
+        Ok(self
+            .db
+            .put(
+                &Self::as_key(i as u64),
+                serde_json::to_string(&(f_rec, r_rec))
+                    .context(errors::ReadSerializationError { read_nr: i })?
+                    .as_bytes(),
+            )
+            .context(errors::FastqStoragePutError { read_nr: i })?)
     }
 
     /// Retrieve the read sequence of the read with index `i`.
     pub fn get(&self, i: usize) -> errors::Result<(fastq::Record, fastq::Record)> {
         Ok(serde_json::from_str(
             str::from_utf8(
-                &self.db.get(&Self::as_key(i as u64)).context(
-                    errors::FastqStorageGetError{
-                        read_nr: i,
-                    }
-                )?.unwrap()
-            ).unwrap(),
-        ).context(
-            errors::ReadDeserializationError{
-                read_nr: i
-            }
-        )?)
+                &self
+                    .db
+                    .get(&Self::as_key(i as u64))
+                    .context(errors::FastqStorageGetError { read_nr: i })?
+                    .unwrap(),
+            )
+            .unwrap(),
+        )
+        .context(errors::ReadDeserializationError { read_nr: i })?)
     }
 }
 
@@ -199,31 +190,31 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             // update spinner
             pb.set_message(&format!("  Processed {:>10} reads", i));
             pb.inc(1);
-            self.fq1_reader().read(&mut f_rec).context(errors::FastqReadError{})?;
-            self.fq2_reader().read(&mut r_rec).context(errors::FastqReadError{})?;
+            self.fq1_reader()
+                .read(&mut f_rec)
+                .context(errors::FastqReadError {})?;
+            self.fq2_reader()
+                .read(&mut r_rec)
+                .context(errors::FastqReadError {})?;
 
             match (f_rec.is_empty(), r_rec.is_empty()) {
                 (true, true) => break,
                 (false, false) => (),
                 (true, false) => {
-                    return Err(
-                        errors::Error::OrphanPairedEndReadError{
-                            nr: i,
-                            name: r_rec.id().to_string(),
-                            seq: String::from_utf8(r_rec.seq().to_vec()).unwrap(),
-                            forward_orphan: false
-                        }
-                    )
+                    return Err(errors::Error::OrphanPairedEndReadError {
+                        nr: i,
+                        name: r_rec.id().to_string(),
+                        seq: String::from_utf8(r_rec.seq().to_vec()).unwrap(),
+                        forward_orphan: false,
+                    })
                 }
                 (false, true) => {
-                     return Err(
-                        errors::Error::OrphanPairedEndReadError{
-                            nr: i,
-                            name: r_rec.id().to_string(),
-                            seq: String::from_utf8(r_rec.seq().to_vec()).unwrap(),
-                            forward_orphan: true
-                        }
-                    )
+                    return Err(errors::Error::OrphanPairedEndReadError {
+                        nr: i,
+                        name: r_rec.id().to_string(),
+                        seq: String::from_utf8(r_rec.seq().to_vec()).unwrap(),
+                        forward_orphan: true,
+                    })
                 }
             }
             // save umis for second (intra cluster) clustering
@@ -232,10 +223,22 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             } else {
                 f_rec.seq()[..self.umi_len()].to_owned()
             };
-            umi_cluster.stdin.as_mut().unwrap().write_all(&umi)
-                .context(errors::StarcodeWriteError{payload: String::from_utf8(umi).unwrap()})?;
-            umi_cluster.stdin.as_mut().unwrap().write_all(b"\n")
-                .context(errors::StarcodeWriteError{payload: String::from("\n")})?;
+            umi_cluster
+                .stdin
+                .as_mut()
+                .unwrap()
+                .write_all(&umi)
+                .context(errors::StarcodeWriteError {
+                    payload: String::from_utf8(umi).unwrap(),
+                })?;
+            umi_cluster
+                .stdin
+                .as_mut()
+                .unwrap()
+                .write_all(b"\n")
+                .context(errors::StarcodeWriteError {
+                    payload: String::from("\n"),
+                })?;
             if self.reverse_umi() {
                 r_rec = self.strip_umi_from_record(&r_rec)
             } else {
@@ -244,7 +247,12 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             read_storage.put(i, &f_rec, &r_rec)?;
             i += 1;
         }
-        umi_cluster.stdin.as_mut().unwrap().flush().context(errors::WriteFlushError{})?;
+        umi_cluster
+            .stdin
+            .as_mut()
+            .unwrap()
+            .flush()
+            .context(errors::WriteFlushError {})?;
         drop(umi_cluster.stdin.take());
         pb.finish_with_message(&format!("Done. Analyzed {} reads.", i));
 
@@ -276,7 +284,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .spawn()
-                .context(errors::StarcodeCallError{})?;
+                .context(errors::StarcodeCallError {})?;
             for &seqid in &seqids {
                 // get sequences from rocksdb
                 let (f_rec, r_rec) = read_storage.get(seqid - 1).unwrap();
@@ -286,10 +294,22 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                     .as_mut()
                     .unwrap()
                     .write(&[&f_rec.seq()[..], &r_rec.seq()[..]].concat())
-                   .context(errors::StarcodeWriteError{payload: String::from_utf8([&f_rec.seq()[..], &r_rec.seq()[..]].concat()).unwrap()})?;
-                seq_cluster.stdin.as_mut().unwrap().write(b"\n").context(errors::StarcodeWriteError{payload: String::from("\n")})?;
+                    .context(errors::StarcodeWriteError {
+                        payload: String::from_utf8([&f_rec.seq()[..], &r_rec.seq()[..]].concat())
+                            .unwrap(),
+                    })?;
+                seq_cluster.stdin.as_mut().unwrap().write(b"\n").context(
+                    errors::StarcodeWriteError {
+                        payload: String::from("\n"),
+                    },
+                )?;
             }
-            seq_cluster.stdin.as_mut().unwrap().flush().context(errors::WriteFlushError{})?;
+            seq_cluster
+                .stdin
+                .as_mut()
+                .unwrap()
+                .flush()
+                .context(errors::WriteFlushError {})?;
             drop(seq_cluster.stdin.take());
 
             // handle each potential unique read
@@ -400,45 +420,41 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
     ) -> errors::Result<()> {
         if f_recs.len() > 1 {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-            self.fq1_writer.write_record(
-                &CalcNonOverlappingConsensus::new(
-                    &f_recs,
-                    &outer_seqids,
-                    uuid,
-                    self.verbose_read_names,
+            self.fq1_writer
+                .write_record(
+                    &CalcNonOverlappingConsensus::new(
+                        &f_recs,
+                        &outer_seqids,
+                        uuid,
+                        self.verbose_read_names,
+                    )
+                    .calc_consensus()
+                    .0,
                 )
-                .calc_consensus()
-                .0,
-            ).context(
-                errors::FastqWriteError{
-                        record: None,
-                    }
-            )?;
-            self.fq2_writer.write_record(
-                &CalcNonOverlappingConsensus::new(
-                    &r_recs,
-                    &outer_seqids,
-                    uuid,
-                    self.verbose_read_names,
+                .context(errors::FastqWriteError { record: None })?;
+            self.fq2_writer
+                .write_record(
+                    &CalcNonOverlappingConsensus::new(
+                        &r_recs,
+                        &outer_seqids,
+                        uuid,
+                        self.verbose_read_names,
+                    )
+                    .calc_consensus()
+                    .0,
                 )
-                .calc_consensus()
-                .0,
-            ).context(
-                errors::FastqWriteError{
-                        record: None,
-                    }
-            )?;
+                .context(errors::FastqWriteError { record: None })?;
         } else {
-            self.fq1_writer.write_record(&f_recs[0]).context(
-                    errors::FastqWriteError{
-                        record: Some(f_recs[0].clone()),
-                    }
-                )?;
-            self.fq2_writer.write_record(&r_recs[0]).context(
-                    errors::FastqWriteError{
-                        record: Some(f_recs[0].clone()),
-                    }
-                )?;
+            self.fq1_writer
+                .write_record(&f_recs[0])
+                .context(errors::FastqWriteError {
+                    record: Some(f_recs[0].clone()),
+                })?;
+            self.fq2_writer
+                .write_record(&r_recs[0])
+                .context(errors::FastqWriteError {
+                    record: Some(f_recs[0].clone()),
+                })?;
         }
         Ok(())
     }
@@ -612,23 +628,22 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         let non_ol_consensus =
             self.maximum_likelihood_nonoverlapping_consensus(&f_recs, &r_recs, &outer_seqids, uuid);
         match ol_consensus.likelihood > non_ol_consensus.likelihood {
-            true => self.fq3_writer.write_record(&ol_consensus.record)
-                .context(
-                    errors::FastqWriteError{
-                        record: Some(ol_consensus.record),
-                    }
-                )?,
+            true => self.fq3_writer.write_record(&ol_consensus.record).context(
+                errors::FastqWriteError {
+                    record: Some(ol_consensus.record),
+                },
+            )?,
             false => {
-                self.fq1_writer.write_record(&non_ol_consensus.f_record).context(
-                    errors::FastqWriteError{
+                self.fq1_writer
+                    .write_record(&non_ol_consensus.f_record)
+                    .context(errors::FastqWriteError {
                         record: Some(ol_consensus.record),
-                    }
-                )?;
-                self.fq2_writer.write_record(&non_ol_consensus.r_record).context(
-                    errors::FastqWriteError{
+                    })?;
+                self.fq2_writer
+                    .write_record(&non_ol_consensus.r_record)
+                    .context(errors::FastqWriteError {
                         record: Some(non_ol_consensus.r_record),
-                    }
-                )?;
+                    })?;
             }
         }
         Ok(())

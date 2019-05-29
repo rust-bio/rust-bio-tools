@@ -5,7 +5,6 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Snafu)]
 #[snafu(visibility(pub))]
 pub enum Error {
-
     #[snafu(display("Could not open input file {}: {:?}", filename, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
     FastqReaderError {
@@ -27,9 +26,7 @@ pub enum Error {
     },
 
     #[snafu(display("Could not read record: {:?}", source))]
-    FastqReadError {
-        source: std::io::Error,
-    },
+    FastqReadError { source: std::io::Error },
 
     // TODO rewrite this to make the forward reverse part of display a function
     // format!("Given FASTQ files have unequal lengths. Reverse file returned record {} as empty, forward record is not: id:'{}' seq:'{:?}'.", i, f_rec.id(), str::from_utf8(f_rec.seq()));
@@ -42,9 +39,7 @@ pub enum Error {
     },
 
     #[snafu(display("Failed to run UMI clustering with starcode: {:?}", source))]
-    StarcodeCallError {
-        source: std::io::Error,        
-    },
+    StarcodeCallError { source: std::io::Error },
 
     #[snafu(display("Failed to write {} to starcode via stdin: {:?}", payload, source))]
     StarcodeWriteError {
@@ -52,21 +47,21 @@ pub enum Error {
         source: std::io::Error,
     },
 
-    #[snafu(display("Error parsing the following Starcode cluster in csv format {:?}: {}", record, source))]
+    #[snafu(display(
+        "Error parsing the following Starcode cluster in csv format {:?}: {}",
+        record,
+        source
+    ))]
     StarcodeClusterParseError {
         record: csv::StringRecord,
         source: csv::Error,
     },
 
     #[snafu(display("Error parsing csv record: {}", source))]
-    CsvRecordParseError{
-        source: csv::Error,
-    },
+    CsvRecordParseError { source: csv::Error },
 
     #[snafu(display("Failed to flush pipeline: {:?}", source))]
-    WriteFlushError {
-        source: std::io::Error,
-    },
+    WriteFlushError { source: std::io::Error },
 
     #[snafu(display("Pipeline Error with {}: {}", params, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
@@ -77,24 +72,22 @@ pub enum Error {
 
     #[snafu(display("Failed to create a temporary directory for RocksDB: {:?}", source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
-    TempdirCreationError{
-        source: std::io::Error,
-    },
+    TempdirCreationError { source: std::io::Error },
 
     #[snafu(display("Failed to create a RocksDB at location {}: {:?}", filename, source))]
-    FastqStorageCreationError{
+    FastqStorageCreationError {
         filename: String,
         source: rocksdb::Error,
     },
 
     #[snafu(display("Failed to put read nr {} into the rocksDB.: {:?}", read_nr, source))]
-    FastqStoragePutError{
+    FastqStoragePutError {
         read_nr: usize,
         source: rocksdb::Error,
     },
 
     #[snafu(display("Failed to get read nr {} from the rocksDB.: {:?}", read_nr, source))]
-    FastqStorageGetError{
+    FastqStorageGetError {
         read_nr: usize,
         source: rocksdb::Error,
     },
@@ -102,7 +95,7 @@ pub enum Error {
     // TODO Would we like to also return the read name here?
     // If so, forward, reverse, or both?
     #[snafu(display("Serde failed to encode read pair nr {}.: {:?}", read_nr, source))]
-    ReadSerializationError{
+    ReadSerializationError {
         read_nr: usize,
         source: serde_json::error::Error,
     },
@@ -110,7 +103,7 @@ pub enum Error {
     // TODO Would we like to also return the read name here?
     // If so, forward, reverse, or both?
     #[snafu(display("Serde failed to decode read pair nr {}.: {:?}", read_nr, source))]
-    ReadDeserializationError{
+    ReadDeserializationError {
         read_nr: usize,
         source: serde_json::error::Error,
     },

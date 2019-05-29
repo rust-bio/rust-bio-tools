@@ -9,8 +9,8 @@ use std::error::Error;
 
 pub mod bam;
 pub mod bcf;
-pub mod fastq;
 pub mod errors;
+pub mod fastq;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let yaml = load_yaml!("cli.yaml");
@@ -87,7 +87,6 @@ fn main() -> Result<(), Box<dyn Error>> {
                     Err(Box::new(e))
                 }
             }
-
         }
         // This cannot be reached, since the matches step of
         // clap assures that a valid subcommand is provided

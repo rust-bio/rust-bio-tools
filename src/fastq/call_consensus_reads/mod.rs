@@ -75,14 +75,14 @@
 mod calc_consensus;
 mod pipeline;
 
-use crate::errors::{self};
+use crate::errors;
 
 use bio::io::fastq;
 use flate2::bufread::MultiGzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use pipeline::{CallConsensusReads, CallNonOverlappingConsensusRead, CallOverlappingConsensusRead};
-use snafu::{ResultExt};
+use snafu::ResultExt;
 use std::fs;
 use std::io::BufReader;
 use std::str;

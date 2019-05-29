@@ -41,10 +41,26 @@ pub enum Error {
         forward_orphan: bool,
     },
 
+    #[snafu(display("Failed to run UMI clustering with starcode: {:?}", source))]
+    StarcodeCallError {
+        source: std::io::Error,        
+    },
+
     #[snafu(display("Failed to write {} to starcode via stdin: {:?}", payload, source))]
     StarcodeWriteError {
         payload: String,
         source: std::io::Error,
+    },
+
+    #[snafu(display("Error parsing the following Starcode cluster in csv format {:?}: {}", record, source))]
+    StarcodeClusterParseError {
+        record: csv::StringRecord,
+        source: csv::Error,
+    },
+
+    #[snafu(display("Error parsing csv record: {}", source))]
+    CsvRecordParseError{
+        source: csv::Error,
     },
 
     #[snafu(display("Failed to flush pipeline: {:?}", source))]
@@ -57,12 +73,6 @@ pub enum Error {
     PipelineError {
         params: String,
         source: Box<std::error::Error>,
-    },
-
-    #[snafu(display("Error parsing the following Starcode cluster in csv format {:?}: {}", record, source))]
-    StarcodeClusterParseError {
-        record: csv::StringRecord,
-        source: csv::Error,
     },
 
     #[snafu(display("Failed to create a temporary directory for RocksDB: {:?}", source))]

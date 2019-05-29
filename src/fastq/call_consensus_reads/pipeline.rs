@@ -160,7 +160,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
     /// Next, compute a consensus read for each unique read,
     /// i.e. a cluster with similar sequences and identical UMI,
     /// and write it into the output files.
-    fn call_consensus_reads(&'a mut self) -> Result<(), Box<dyn Error>> {
+    fn call_consensus_reads(&'a mut self) -> errors::Result<()> {
         let spinner_style = indicatif::ProgressStyle::default_spinner()
             .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
             .template("{prefix:.bold.dim} {spinner} {wide_msg}");
@@ -206,24 +206,24 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 (true, true) => break,
                 (false, false) => (),
                 (true, false) => {
-                    return Err(Box::new(
+                    return Err(
                         errors::Error::OrphanPairedEndReadError{
                             nr: i,
                             name: r_rec.id().to_string(),
                             seq: String::from_utf8(r_rec.seq().to_vec()).unwrap(),
                             forward_orphan: false
                         }
-                    ))
+                    )
                 }
                 (false, true) => {
-                     return Err(Box::new(
+                     return Err(
                         errors::Error::OrphanPairedEndReadError{
                             nr: i,
                             name: r_rec.id().to_string(),
                             seq: String::from_utf8(r_rec.seq().to_vec()).unwrap(),
                             forward_orphan: true
                         }
-                    ))
+                    )
                 }
             }
             // save umis for second (intra cluster) clustering
@@ -265,7 +265,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             // update spinner
             pb.inc(1);
             pb.set_message(&format!("Processed {:>10} cluster", j));
-            let seqids = parse_cluster(record?)?;
+            let seqids = parse_cluster(record.context(errors::CsvRecordParseError {})?)?;
             // cluster within in this cluster by umi
             let mut seq_cluster = Command::new("starcode")
                 .arg("--dist")
@@ -276,11 +276,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .spawn()
-                .context(
-                    errors::PipelineError{
-                        params: String::from("Failed to run UMI clustering with starcode."),
-                    }
-                )?;
+                .context(errors::StarcodeCallError{})?;
             for &seqid in &seqids {
                 // get sequences from rocksdb
                 let (f_rec, r_rec) = read_storage.get(seqid - 1).unwrap();
@@ -289,10 +285,11 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                     .stdin
                     .as_mut()
                     .unwrap()
-                    .write(&[&f_rec.seq()[..], &r_rec.seq()[..]].concat())?;
-                seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+                    .write(&[&f_rec.seq()[..], &r_rec.seq()[..]].concat())
+                   .context(errors::StarcodeWriteError{payload: String::from_utf8([&f_rec.seq()[..], &r_rec.seq()[..]].concat()).unwrap()})?;
+                seq_cluster.stdin.as_mut().unwrap().write(b"\n").context(errors::StarcodeWriteError{payload: String::from("\n")})?;
             }
-            seq_cluster.stdin.as_mut().unwrap().flush()?;
+            seq_cluster.stdin.as_mut().unwrap().flush().context(errors::WriteFlushError{})?;
             drop(seq_cluster.stdin.take());
 
             // handle each potential unique read
@@ -302,7 +299,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .from_reader(seq_cluster.stdout.as_mut().unwrap())
                 .records()
             {
-                let inner_seqids = parse_cluster(record?)?;
+                let inner_seqids = parse_cluster(record.context(errors::CsvRecordParseError {})?)?;
                 // this is a proper cluster
                 // calculate consensus reads and write to output FASTQs
                 let mut f_recs = Vec::new();

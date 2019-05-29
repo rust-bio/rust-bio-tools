@@ -87,45 +87,45 @@ use std::fs;
 use std::io::BufReader;
 use std::str;
 
-/// Format parameters into a string to provide error context for the
-/// call to `call_consensus_reads()`
-fn format_pipeline_params(
-    umi_len: usize,
-    seq_dist: usize,
-    umi_dist: usize,
-    reverse_umi: bool,
-    verbose_read_names: bool,
-    insert_size: Option<usize>,
-    std_dev: Option<usize>,
-) -> String {
-    let umi_pos = match reverse_umi {
-        true => format!(
-            "UMIs are the first {} characters of the reverse read.",
-            umi_len
-        ),
-        false => format!(
-            "UMIs are the first {} characters of the forward read.",
-            umi_len
-        ),
-    };
-    let verbose_reads = match verbose_read_names {
-        true => "Read names are written in verbose format.",
-        false => "Read names are written in short format.",
-    };
-    let mode = match (insert_size, std_dev) {
-        (Some(is), Some(sd)) => format!(
-            "Run in overlap mode with insert size {} and std deviation {}.",
-            is, sd
-        ),
-        (None, None) => String::from("Run in normal mode without overlaps."),
-        _ => String::from("Invalid mode."), // This cannot occur due to the clap configuration.
-    };
-    format!(
-        "Pipeline did not finish correctly. It was run with \
-         sequence distance {} and UMI distance {}.\n{}\n{}\n{}",
-        seq_dist, umi_dist, umi_pos, verbose_reads, mode,
-    )
-}
+// /// Format parameters into a string to provide error context for the
+// /// call to `call_consensus_reads()`
+// pub fn format_pipeline_params(
+//     umi_len: usize,
+//     seq_dist: usize,
+//     umi_dist: usize,
+//     reverse_umi: bool,
+//     verbose_read_names: bool,
+//     insert_size: Option<usize>,
+//     std_dev: Option<usize>,
+// ) -> String {
+//     let umi_pos = match reverse_umi {
+//         true => format!(
+//             "UMIs are the first {} characters of the reverse read.",
+//             umi_len
+//         ),
+//         false => format!(
+//             "UMIs are the first {} characters of the forward read.",
+//             umi_len
+//         ),
+//     };
+//     let verbose_reads = match verbose_read_names {
+//         true => "Read names are written in verbose format.",
+//         false => "Read names are written in short format.",
+//     };
+//     let mode = match (insert_size, std_dev) {
+//         (Some(is), Some(sd)) => format!(
+//             "Run in overlap mode with insert size {} and std deviation {}.",
+//             is, sd
+//         ),
+//         (None, None) => String::from("Run in normal mode without overlaps."),
+//         _ => String::from("Invalid mode."), // This cannot occur due to the clap configuration.
+//     };
+//     format!(
+//         "Pipeline did not finish correctly. It was run with \
+//          sequence distance {} and UMI distance {}.\n{}\n{}\n{}",
+//         seq_dist, umi_dist, umi_pos, verbose_reads, mode,
+//     )
+// }
 
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.
@@ -175,18 +175,7 @@ pub fn call_consensus_reads_from_paths(
                     reverse_umi,
                     verbose_read_names,
                 )
-                .call_consensus_reads()
-                .context(errors::PipelineError {
-                    params: format_pipeline_params(
-                        umi_len,
-                        seq_dist,
-                        umi_dist,
-                        reverse_umi,
-                        verbose_read_names,
-                        insert_size,
-                        std_dev,
-                    ),
-                }),
+                .call_consensus_reads(),
                 (true, true, false, false) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(
                         fs::File::open(fq1)
@@ -216,18 +205,7 @@ pub fn call_consensus_reads_from_paths(
                     reverse_umi,
                     verbose_read_names,
                 )
-                .call_consensus_reads()
-                .context(errors::PipelineError {
-                    params: format_pipeline_params(
-                        umi_len,
-                        seq_dist,
-                        umi_dist,
-                        reverse_umi,
-                        verbose_read_names,
-                        insert_size,
-                        std_dev,
-                    ),
-                }),
+                .call_consensus_reads(),
                 (false, false, true, true) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::from_file(fq1).context(errors::FastqReaderError {
                         filename: String::from(fq1),
@@ -253,18 +231,7 @@ pub fn call_consensus_reads_from_paths(
                     reverse_umi,
                     verbose_read_names,
                 )
-                .call_consensus_reads()
-                .context(errors::PipelineError {
-                    params: format_pipeline_params(
-                        umi_len,
-                        seq_dist,
-                        umi_dist,
-                        reverse_umi,
-                        verbose_read_names,
-                        insert_size,
-                        std_dev,
-                    ),
-                }),
+                .call_consensus_reads(),
                 (true, true, true, true) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(
                         fs::File::open(fq1)
@@ -300,18 +267,7 @@ pub fn call_consensus_reads_from_paths(
                     reverse_umi,
                     verbose_read_names,
                 )
-                .call_consensus_reads()
-                .context(errors::PipelineError {
-                    params: format_pipeline_params(
-                        umi_len,
-                        seq_dist,
-                        umi_dist,
-                        reverse_umi,
-                        verbose_read_names,
-                        insert_size,
-                        std_dev,
-                    ),
-                }),
+                .call_consensus_reads(),
                 _ => panic!(
                     "Invalid combination of files. Each pair of files \
                      (input and output) need to be both gzipped or \
@@ -356,18 +312,7 @@ pub fn call_consensus_reads_from_paths(
                     reverse_umi,
                     verbose_read_names,
                 )
-                .call_consensus_reads()
-                .context(errors::PipelineError {
-                    params: format_pipeline_params(
-                        umi_len,
-                        seq_dist,
-                        umi_dist,
-                        reverse_umi,
-                        verbose_read_names,
-                        insert_size,
-                        std_dev,
-                    ),
-                }),
+                .call_consensus_reads(),
                 (true, true, false, false, false) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(
                         fs::File::open(fq1)
@@ -402,18 +347,7 @@ pub fn call_consensus_reads_from_paths(
                     reverse_umi,
                     verbose_read_names,
                 )
-                .call_consensus_reads()
-                .context(errors::PipelineError {
-                    params: format_pipeline_params(
-                        umi_len,
-                        seq_dist,
-                        umi_dist,
-                        reverse_umi,
-                        verbose_read_names,
-                        insert_size,
-                        std_dev,
-                    ),
-                }),
+                .call_consensus_reads(),
                 (false, false, true, true, true) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::from_file(fq1).context(errors::FastqReaderError {
                         filename: String::from(fq1),
@@ -447,18 +381,7 @@ pub fn call_consensus_reads_from_paths(
                     reverse_umi,
                     verbose_read_names,
                 )
-                .call_consensus_reads()
-                .context(errors::PipelineError {
-                    params: format_pipeline_params(
-                        umi_len,
-                        seq_dist,
-                        umi_dist,
-                        reverse_umi,
-                        verbose_read_names,
-                        insert_size,
-                        std_dev,
-                    ),
-                }),
+                .call_consensus_reads(),
                 (true, true, true, true, true) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(
                         fs::File::open(fq1)
@@ -502,19 +425,7 @@ pub fn call_consensus_reads_from_paths(
                     reverse_umi,
                     verbose_read_names,
                 )
-                .call_consensus_reads()
-                .context(errors::PipelineError {
-                    params: format_pipeline_params(
-                        umi_len,
-                        seq_dist,
-                        umi_dist,
-                        reverse_umi,
-                        verbose_read_names,
-                        insert_size,
-                        std_dev,
-                    ),
-                    
-                }),
+                .call_consensus_reads(),
                 _ => panic!(
                     "Invalid combination of files. Each pair of files \
                      (input and output) need to be both gzipped or \

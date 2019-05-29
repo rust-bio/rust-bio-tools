@@ -32,7 +32,7 @@ fn parse_cluster(record: csv::StringRecord) -> errors::Result<Vec<usize>> {
         .deserialize()
         .next()
         .unwrap()
-        .context(errors::StarcodeClusterParseError { record: record })?)
+        .context(errors::StarcodeClusterParseError { record })?)
 }
 
 /// Calculates the median hamming distance for all records by deriving the overlap from insert size
@@ -84,7 +84,7 @@ impl FASTQStorage {
         Ok(FASTQStorage {
             db: DB::open_default(storage_dir.clone()).context(
                 errors::FastqStorageCreationError {
-                    filename: String::from(format!("{:?}", storage_dir.as_path())),
+                    filename: format!("{:?}", storage_dir.as_path()),
                 },
             )?,
             storage_dir,

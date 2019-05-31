@@ -10,13 +10,13 @@ readme = "README.md"
 
 
 [dependencies]
-bio = {git="https://github.com/rust-bio/rust-bio"}
+bio = "0.27"
 clap = { version = "2.27", features = ["yaml", "color", "suggestions"]}
 indicatif = "0.11"
 itertools = "0.6"
 log = "0.4.6"
 fern = "0.5.7"
-rust-htslib = {git="https://github.com/rust-bio/rust-htslib", branch="option_unmapped_bam"}
+rust-htslib = "0.24"
 csv = "1.0.2"
 rustc-serialize = "0.3"
 quick-error = "1.2"

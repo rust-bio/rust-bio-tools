@@ -122,7 +122,7 @@ pub fn to_txt(
             .map(|a| a.to_owned())
             .collect_vec();
         for (i, allele) in alleles[1..].iter().enumerate() {
-            r#try!(writer.write_field(reader.header().rid2name(rec.rid().unwrap())));
+            r#try!(writer.write_field(reader.header().rid2name(rec.rid().unwrap())?));
             r#try!(writer.write_integer(rec.pos() as i32 + 1));
             r#try!(writer.write_field(&alleles[0]));
             r#try!(writer.write_field(allele));
@@ -135,7 +135,7 @@ pub fn to_txt(
                 let _name = name.as_bytes();
                 if let Ok((tag_type, tag_length)) = rec.header().info_type(_name) {
                     let get_idx = || match tag_length {
-                        bcf::header::TagLength::Fixed => Ok(0),
+                        bcf::header::TagLength::Fixed(_) => Ok(0),
                         bcf::header::TagLength::AltAlleles => Ok(i),
                         bcf::header::TagLength::Alleles => Ok(i + 1),
                         bcf::header::TagLength::Variable => Ok(0),
@@ -197,7 +197,7 @@ pub fn to_txt(
                     let _name = name.as_bytes();
                     if let Ok((tag_type, tag_length)) = reader.header().format_type(_name) {
                         let i = match tag_length {
-                            bcf::header::TagLength::Fixed => 0,
+                            bcf::header::TagLength::Fixed(_) => 0,
                             bcf::header::TagLength::AltAlleles => i,
                             bcf::header::TagLength::Alleles => i + 1,
                             _ => return Err(Box::new(ParseError::UnsupportedTagLength)),

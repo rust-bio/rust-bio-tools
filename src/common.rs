@@ -13,8 +13,6 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
             .map(|rec| rec.len())
             .all(|len| len == reference_length)
     }
-
-    #[allow(unused_doc_comments)]
     /// Compute the likelihood for the given allele and read position.
     /// The allele (A, C, G, or T) is an explicit parameter,
     /// the position i is captured by the closure.

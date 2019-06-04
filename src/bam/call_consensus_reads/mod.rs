@@ -1,11 +1,11 @@
 mod calc_consensus;
 mod pipeline;
 
+use log::info;
 use pipeline::CallConsensusRead;
 use rust_htslib::bam;
 use rust_htslib::bam::{Header, Read};
 use std::error::Error;
-use log::info;
 
 pub fn call_consensus_reads_from_paths(
     bam_in: &str,

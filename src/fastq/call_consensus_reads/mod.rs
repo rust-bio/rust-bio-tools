@@ -79,12 +79,12 @@ use bio::io::fastq;
 use flate2::bufread::MultiGzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
+use log::info;
 use pipeline::{CallConsensusReads, CallNonOverlappingConsensusRead, CallOverlappingConsensusRead};
 use std::error::Error;
 use std::fs;
 use std::io::BufReader;
 use std::str;
-use log::info;
 
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.

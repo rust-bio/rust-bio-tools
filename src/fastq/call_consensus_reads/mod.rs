@@ -84,6 +84,7 @@ use std::error::Error;
 use std::fs;
 use std::io::BufReader;
 use std::str;
+use log::info;
 
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.
@@ -106,8 +107,8 @@ pub fn call_consensus_reads_from_paths(
 ) -> Result<(), Box<dyn Error>> {
     match fq3_out {
         None => {
-            eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
-            eprintln!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
+            info!("Reading input files:\n    {}\n    {}", fq1, fq2);
+            info!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
             match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
                 (false, false, false, false) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::from_file(fq1)?,

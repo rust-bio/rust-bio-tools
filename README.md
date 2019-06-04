@@ -10,8 +10,7 @@ Rust-Bio-Tools provides a command `rbt`, which currently supports the following 
 * a linear time round-robin FASTQ splitter that splits a given FASTQ files into a given number of chunks (`rbt fastq-split`)
 * a linear time extraction of depth information from BAMs at given loci (`rbt bam-depth`)
 * a utility to quickly filter records from a FASTQ file (`rbt fastq-filter`)
-* a tool to merge FASTQ reads using unique molecular identifiers (UMIs) (`rbt call-consensus-reads`)
-* a tool to merge BAM reads based on duplicates marked by [Picards Tools](https://broadinstitute.github.io/picard/) (`rbt call-consensus-from-bam`)
+* a tool to merge BAM or FASTQ reads using marked duplicates respectively unique molecular identifiers (UMIs) (`rbt call-consensus-reads bam|fastq`)
 
 Further functionality is added as it is needed by the authors. Any contributions are highly welcome.
 For a list of changes, take a look at the [CHANGELOG](CHANGELOG.md).

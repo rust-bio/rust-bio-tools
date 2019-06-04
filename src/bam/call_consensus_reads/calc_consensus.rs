@@ -1,4 +1,4 @@
-use crate::common_functions::CalcConsensus;
+use crate::common::CalcConsensus;
 use bio::stats::probs::LogProb;
 use derive_new::new;
 use itertools::Itertools;

@@ -164,10 +164,6 @@ subcommands:
 
         Requirements:
           - starcode
-
-        Assumptions:
-          - Reads are of equal length
-          - UMI is the prefix of the reads
         {n}
       author: Johannes Köster <johannes.koester@uni-due.de>, Henning Timm <henning.timm@tu-dortmund.de>, Felix Mölder <felix.moelder@uni-due.de>
       subcommands:

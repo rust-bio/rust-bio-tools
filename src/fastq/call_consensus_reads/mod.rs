@@ -79,6 +79,7 @@ use bio::io::fastq;
 use flate2::bufread::MultiGzDecoder;
 use flate2::write::GzEncoder;
 use flate2::Compression;
+use log::info;
 use pipeline::{CallConsensusReads, CallNonOverlappingConsensusRead, CallOverlappingConsensusRead};
 use std::error::Error;
 use std::fs;
@@ -106,8 +107,8 @@ pub fn call_consensus_reads_from_paths(
 ) -> Result<(), Box<dyn Error>> {
     match fq3_out {
         None => {
-            eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
-            eprintln!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
+            info!("Reading input files:\n    {}\n    {}", fq1, fq2);
+            info!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
             match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
                 (false, false, false, false) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::from_file(fq1)?,

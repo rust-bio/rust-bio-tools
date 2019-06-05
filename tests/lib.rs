@@ -1,4 +1,6 @@
 use bio::io::fastq;
+use rust_htslib::bam;
+use rust_htslib::bam::Read;
 use std::fs;
 use std::process::Command;
 
@@ -30,6 +32,21 @@ fn compare_fastq(result: &str, expected: &str) {
 
     for (result, expected) in result_recs.iter().zip(expected_recs.iter()) {
         assert_eq!(result.seq(), expected.seq());
+        assert_eq!(result.qual(), expected.qual());
+    }
+}
+
+fn compare_bam(result: &str, expected: &str) {
+    let mut result_reader = bam::Reader::from_path(result).unwrap();
+    let mut result_recs: Vec<bam::Record> =
+        result_reader.records().filter_map(Result::ok).collect();
+    result_recs.sort_by_key(|x| x.seq().as_bytes().to_owned());
+    let mut expected_reader = bam::Reader::from_path(expected).unwrap();
+    let mut expected_recs: Vec<bam::Record> =
+        expected_reader.records().filter_map(Result::ok).collect();
+    expected_recs.sort_by_key(|x| x.seq().as_bytes().to_owned());
+    for (result, expected) in result_recs.iter().zip(expected_recs.iter()) {
+        assert_eq!(result.seq().as_bytes(), expected.seq().as_bytes());
         assert_eq!(result.qual(), expected.qual());
     }
 }
@@ -126,7 +143,7 @@ fn test_call_consensus_reads_two_cluster() {
     assert!(
         Command::new("bash")
                 .arg("-c")
-                .arg("target/debug/rbt call-consensus-reads --umi-len 3 -u --max-umi-dist 0 --max-seq-dist 2 tests/test-consensus.fastq tests/test-consensus.fastq /tmp/test-consensus.1.fastq /tmp/test-consensus.2.fastq")
+                .arg("target/debug/rbt call-consensus-reads fastq --umi-len 3 -u --max-umi-dist 0 --max-seq-dist 2 tests/test-consensus.fastq tests/test-consensus.fastq /tmp/test-consensus.1.fastq /tmp/test-consensus.2.fastq")
             .spawn().unwrap().wait().unwrap().success());
     compare_fastq(
         "/tmp/test-consensus.1.fastq",
@@ -143,7 +160,7 @@ fn test_call_consensus_reads_single_cluster() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt call-consensus-reads --umi-len 3 -u --max-umi-dist 2 --max-seq-dist 2 tests/test-consensus.fastq tests/test-consensus.fastq /tmp/test-consensus_single.1.fastq /tmp/test-consensus_single.2.fastq")
+            .arg("target/debug/rbt call-consensus-reads fastq --umi-len 3 -u --max-umi-dist 2 --max-seq-dist 2 tests/test-consensus.fastq tests/test-consensus.fastq /tmp/test-consensus_single.1.fastq /tmp/test-consensus_single.2.fastq")
             .spawn().unwrap().wait().unwrap().success());
     compare_fastq(
         "/tmp/test-consensus_single.1.fastq",
@@ -160,7 +177,7 @@ fn test_call_overlapping_consensus_reads() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt call-consensus-reads --umi-len 10 --max-umi-dist 0 --max-seq-dist 8 --insert-size 450 --std-dev 50  tests/overlapping-consensus.1.fastq tests/overlapping-consensus.2.fastq /tmp/test_overlapping-consensus.1.fastq /tmp/test_overlapping-consensus.2.fastq /tmp/test_overlapping-consensus.3.fastq")
+            .arg("target/debug/rbt call-consensus-reads fastq --umi-len 10 --max-umi-dist 0 --max-seq-dist 8 --insert-size 450 --std-dev 50  tests/overlapping-consensus.1.fastq tests/overlapping-consensus.2.fastq /tmp/test_overlapping-consensus.1.fastq /tmp/test_overlapping-consensus.2.fastq /tmp/test_overlapping-consensus.3.fastq")
             .spawn().unwrap().wait().unwrap().success());
     compare_fastq(
         "/tmp/test_overlapping-consensus.1.fastq",
@@ -173,5 +190,18 @@ fn test_call_overlapping_consensus_reads() {
     compare_fastq(
         "/tmp/test_overlapping-consensus.3.fastq",
         "tests/expected/test_overlapping-consensus.3.fastq",
+    );
+}
+
+#[test]
+fn test_call_consensus_from_bam() {
+    assert!(
+    Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt call-consensus-reads bam --max-seq-dist 8 tests/overlapping_consensus_marked.bam /tmp/overlapping_consensus_marked.bam")
+        .spawn().unwrap().wait().unwrap().success());
+    compare_bam(
+        "/tmp/overlapping_consensus_marked.bam",
+        "tests/expected/overlapping_consensus_marked.bam",
     );
 }

@@ -9,8 +9,8 @@ use std::error::Error;
 
 pub mod bam;
 pub mod bcf;
-pub mod errors;
 pub mod common;
+pub mod errors;
 pub mod fastq;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -90,12 +90,20 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                 }
             }
-            ("bam", Some(matches)) => bam::call_consensus_reads::call_consensus_reads_from_paths(
-                matches.value_of("bam").unwrap(),
-                matches.value_of("consensus-bam").unwrap(),
-                value_t!(matches, "max-seq-dist", usize).unwrap(),
-                matches.is_present("verbose-read-names"),
-            ),
+            ("bam", Some(matches)) => {
+                match bam::call_consensus_reads::call_consensus_reads_from_paths(
+                    matches.value_of("bam").unwrap(),
+                    matches.value_of("consensus-bam").unwrap(),
+                    value_t!(matches, "max-seq-dist", usize).unwrap(),
+                    matches.is_present("verbose-read-names"),
+                ) {
+                    Ok(()) => Ok(()),
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        Err(Box::new(e))
+                    }
+                }
+            }
             _ => unreachable!(),
         },
         // This cannot be reached, since the matches step of

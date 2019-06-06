@@ -7,9 +7,23 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[snafu(display("Could not open input file {}: {:?}", filename, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
+    BamReaderError {
+        filename: String,
+        source: rust_htslib::bam::ReaderPathError,
+    },
+
+    #[snafu(display("Could not open input file {}: {:?}", filename, source))]
+    #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
     FastqReaderError {
         filename: String,
         source: std::io::Error,
+    },
+
+    #[snafu(display("Could not open output file {}: {:?}", filename, source))]
+    #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
+    BamWriterError {
+        filename: String,
+        source: rust_htslib::bam::WriterPathError,
     },
 
     #[snafu(display("Could not open output file {}: {:?}", filename, source))]
@@ -20,10 +34,19 @@ pub enum Error {
     },
 
     #[snafu(display("Could not write record {:?}: {:?}", record, source))]
+    BamWriteError {
+        record: Option<rust_htslib::bam::record::Record>,
+        source: rust_htslib::bam::WriteError,
+    },
+
+    #[snafu(display("Could not write record {:?}: {:?}", record, source))]
     FastqWriteError {
         record: Option<bio::io::fastq::Record>,
         source: std::io::Error,
     },
+
+    #[snafu(display("Could not read record: {:?}", source))]
+    BamReadError { source: rust_htslib::bam::ReadError },
 
     #[snafu(display("Could not read record: {:?}", source))]
     FastqReadError { source: std::io::Error },
@@ -106,5 +129,15 @@ pub enum Error {
     ReadDeserializationError {
         read_nr: usize,
         source: serde_json::error::Error,
+    },
+
+    #[snafu(display(
+        "Record {:?} contains unsupported Cigar operation.: {:?}",
+        record,
+        source
+    ))]
+    BamCigarError {
+        record: rust_htslib::bam::record::Record,
+        source: rust_htslib::bam::record::CigarError,
     },
 }

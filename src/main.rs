@@ -58,7 +58,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             value_t!(matches, "max-dist", u32).unwrap_or(20),
             value_t!(matches, "max-len-diff", u32).unwrap_or(10),
         ),
-        ("vcf-baf", Some(_)) => bcf::baf::calculate_baf(),
+        ("vcf-baf", Some(_)) => match bcf::baf::calculate_baf() {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                eprintln!("{}", e);
+                Err(Box::new(e))
+            }
+        },
         ("call-consensus-reads", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {
                 match fastq::call_consensus_reads::call_consensus_reads_from_paths(

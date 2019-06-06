@@ -10,30 +10,35 @@ use itertools::Itertools;
 use rust_htslib::bcf;
 use rust_htslib::bcf::Read;
 use rust_htslib::prelude::*;
-use std::error::Error;
 use std::f32;
 
-pub fn calculate_baf() -> Result<(), Box<dyn Error>> {
-    let mut reader = bcf::Reader::from_stdin()?;
+use crate::errors;
+use snafu::ResultExt;
+
+pub fn calculate_baf() -> errors::Result<()> {
+    let mut reader = bcf::Reader::from_stdin()
+        .context(errors::BCFReaderStdinError{})?;
 
     let mut header = bcf::Header::from_template(reader.header());
     header.push_record(b"##FORMAT=<ID=BAF,Number=A,Type=Float,Description=\"b-allele frequency\">");
 
-    let mut writer = bcf::Writer::from_stdout(&header, false, false)?;
+    let mut writer = bcf::Writer::from_stdout(&header, false, false)
+        .context(errors::BCFWriterStdoutError{header})?;
 
     for record in reader.records() {
-        let mut record = record?;
+        let mut record = record.context(errors::BCFReadError{header})?;
 
         let allele_lens = record.alleles().iter().map(|a| a.len()).collect_vec();
         let mut bafs = Vec::new();
         {
             let ref_depths = record
                 .format(b"RO")
-                .integer()?
+                .integer()
+                .context(errors::BCFFormatReadError{record, fd: String::from("RO")})?
                 .into_iter()
                 .map(|d| d.to_owned())
                 .collect_vec();
-            let alt_depths = record.format(b"AO").integer()?;
+            let alt_depths = record.format(b"AO").integer().context(errors::BCFFormatReadError{record, fd: String::from("AO")})?;
 
             for (sample_ref_depth, sample_alt_depth) in ref_depths.iter().zip(alt_depths.iter()) {
                 if allele_lens[0] != 1 || sample_ref_depth[0].is_missing() {
@@ -55,8 +60,8 @@ pub fn calculate_baf() -> Result<(), Box<dyn Error>> {
         }
 
         writer.translate(&mut record);
-        record.push_format_float(b"BAF", &bafs)?;
-        writer.write(&record)?;
+        record.push_format_float(b"BAF", &bafs).context(errors::BCFTagWriteError{bafs: bafs, fd: String::from("BAF")})?;
+        writer.write(&record).context(errors::BCFWriteError{record})?;
     }
 
     Ok(())

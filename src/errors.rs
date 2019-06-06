@@ -107,4 +107,42 @@ pub enum Error {
         read_nr: usize,
         source: serde_json::error::Error,
     },
+
+    #[snafu(display("Failed to read BCF file from stdin: {:?}", source))]
+    BCFReaderStdinError {
+        source: rust_htslib::bcf::BCFError,
+    },
+
+    #[snafu(display("Failed to open BCF writer for stdout with header {:?}: {:?}", header, source))]
+    BCFWriterStdoutError {
+        header: rust_htslib::bcf::Header,
+        source: rust_htslib::bcf::BCFError,
+    },
+
+    #[snafu(display("Failed to interpret data as integer with format {:?} in BCF record {:?}: {:?}", fd, record, source))]
+    BCFFormatReadError {
+        record: rust_htslib::bcf::Record,
+        fd: String,
+        source: rust_htslib::bcf::record::FormatReadError,
+    },
+
+    #[snafu(display("Failed to format {:?} as {:?}: {:?}", bafs, fd, source))]
+    BCFTagWriteError {
+        bafs: Vec<f32>,
+        fd: String,
+        source: rust_htslib::bcf::record::TagWriteError,
+    },
+
+    #[snafu(display("Failed write record {:?} to BCF file: {:?}", record, source))]
+    BCFWriteError {
+        record: rust_htslib::bcf::Record,
+        source: rust_htslib::bcf::WriteError,
+    },
+
+    #[snafu(display("Failed to read BCF file with header {:?}: {:?}", header, source))]
+    BCFReadError {
+        header: rust_htslib::bcf::Header,
+        source: rust_htslib::bcf::ReadError,
+    },    
+
 }

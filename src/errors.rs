@@ -5,6 +5,13 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Snafu)]
 #[snafu(visibility(pub))]
 pub enum Error {
+    #[snafu(display("Could not open input file from path {}: {:?}", filepath, source))]
+    #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
+    BamIndexedReaderError {
+        filepath: String,
+        source: rust_htslib::bam::IndexedReaderPathError,
+    },
+
     #[snafu(display("Could not open input file {}: {:?}", filename, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
     BamReaderError {
@@ -47,6 +54,12 @@ pub enum Error {
 
     #[snafu(display("Could not read record: {:?}", source))]
     BamReadError { source: rust_htslib::bam::ReadError },
+
+    #[snafu(display("Could not read csv record: {:?}", source))]
+    CsvReadError { source: csv::Error },
+
+    #[snafu(display("Could not write to csv record: {:?}", source))]
+    CsvWriteError { source: csv::Error },
 
     #[snafu(display("Could not read record: {:?}", source))]
     FastqReadError { source: std::io::Error },
@@ -139,5 +152,17 @@ pub enum Error {
     BamCigarError {
         record: rust_htslib::bam::record::Record,
         source: rust_htslib::bam::record::CigarError,
+    },
+
+    //TODO What is fetched here?!
+    #[snafu(display("Could not fetch ...: {:?}", source))]
+    BamFetchError {
+        source: rust_htslib::bam::FetchError,
+    },
+
+    //TODO Should be a file path returned here?!
+    #[snafu(display("Could not read pileup: {:?}", source))]
+    BamPileupError {
+        source: rust_htslib::bam::pileup::PileupError,
     },
 }

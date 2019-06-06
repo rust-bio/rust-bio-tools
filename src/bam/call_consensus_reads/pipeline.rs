@@ -1,11 +1,12 @@
 use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
+use crate::errors;
 use derive_new::new;
 use indicatif;
 use rust_htslib::bam;
 use rust_htslib::bam::record::Cigar;
 use rust_htslib::bam::Read;
+use snafu::ResultExt;
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::error::Error;
 use std::io::Write;
 use std::ops::Deref;
 use std::process::{Command, Stdio};
@@ -26,13 +27,13 @@ type RecordIDS = Vec<RecordID>;
 type RecordID = Vec<u8>;
 
 impl CallConsensusRead {
-    pub fn call_consensus_reads(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn call_consensus_reads(&mut self) -> errors::Result<()> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
         let mut duplicate_groups: HashMap<GroupID, RecordIDS> = HashMap::new();
         let mut record_storage: HashMap<RecordID, RecordStorage> = HashMap::new();
 
         for (i, result) in self.bam_reader.records().into_iter().enumerate() {
-            let mut record = result?;
+            let mut record = result.context(errors::BamReadError {})?;
             if !record.is_unmapped() {
                 //Process completed duplicate groups
                 calc_consensus_complete_groups(
@@ -46,7 +47,11 @@ impl CallConsensusRead {
                 )?;
                 group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
             } else {
-                self.bam_writer.write(&record)?;
+                self.bam_writer
+                    .write(&record)
+                    .context(errors::BamWriteError {
+                        record: Some(record),
+                    })?;
                 continue;
             }
             if record.is_supplementary() {
@@ -65,7 +70,13 @@ impl CallConsensusRead {
                         Some(record_pair) => {
                             //For right record save end position and duplicate group ID
                             group_end_idx
-                                .entry(record.cigar_cached().unwrap().end_pos()? - 1)
+                                .entry(
+                                    record.cigar_cached().unwrap().end_pos().context(
+                                        errors::BamCigarError {
+                                            record: record.clone(),
+                                        },
+                                    )? - 1,
+                                )
                                 .or_insert_with(HashSet::new)
                                 .insert(duplicate_id.integer());
                             match record_pair {
@@ -86,7 +97,13 @@ impl CallConsensusRead {
                             if !record.is_paired() || record.is_mate_unmapped() {
                                 //If right or single record save end position and duplicate group ID
                                 group_end_idx
-                                    .entry(record.cigar_cached().unwrap().end_pos()? - 1)
+                                    .entry(
+                                        record.cigar_cached().unwrap().end_pos().context(
+                                            errors::BamCigarError {
+                                                record: record.clone(),
+                                            },
+                                        )? - 1,
+                                    )
                                     .or_insert_with(HashSet::new)
                                     .insert(duplicate_id.integer());
                                 record_storage.insert(
@@ -119,7 +136,11 @@ impl CallConsensusRead {
                 //Else record is added to hashMap
                 None => {
                     if record.is_mate_unmapped() {
-                        self.bam_writer.write(&record)?;
+                        self.bam_writer
+                            .write(&record)
+                            .context(errors::BamWriteError {
+                                record: Some(record),
+                            })?;
                     } else {
                         match record_storage.get_mut(record_id) {
                             //Case: Left record
@@ -148,21 +169,31 @@ impl CallConsensusRead {
                                 if overlap > 0 {
                                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
-                                    self.bam_writer.write(
-                                        &CalcOverlappingConsensus::new(
-                                            &[l_rec],
-                                            &[record],
-                                            overlap as usize,
-                                            &[rec_id, i],
-                                            uuid,
-                                            self.verbose_read_names,
+                                    self.bam_writer
+                                        .write(
+                                            &CalcOverlappingConsensus::new(
+                                                &[l_rec],
+                                                &[record],
+                                                overlap as usize,
+                                                &[rec_id, i],
+                                                uuid,
+                                                self.verbose_read_names,
+                                            )
+                                            .calc_consensus()
+                                            .0,
                                         )
-                                        .calc_consensus()
-                                        .0,
-                                    )?;
+                                        .context(errors::BamWriteError { record: None })?;
                                 } else {
-                                    self.bam_writer.write(&l_rec)?;
-                                    self.bam_writer.write(&record)?;
+                                    self.bam_writer.write(&l_rec).context(
+                                        errors::BamWriteError {
+                                            record: Some(l_rec),
+                                        },
+                                    )?;
+                                    self.bam_writer.write(&record).context(
+                                        errors::BamWriteError {
+                                            record: Some(record),
+                                        },
+                                    )?;
                                 }
                             }
                         }
@@ -192,7 +223,7 @@ pub fn calc_consensus_complete_groups(
     bam_writer: &mut bam::Writer,
     seq_dist: usize,
     verbose_read_names: bool,
-) -> Result<(), Box<dyn Error>> {
+) -> errors::Result<()> {
     let spinner_style = indicatif::ProgressStyle::default_spinner()
         .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
         .template("{prefix:.bold.dim} {spinner} {wide_msg}");
@@ -219,7 +250,8 @@ pub fn calc_consensus_complete_groups(
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .spawn()?;
+            .spawn()
+            .context(errors::StarcodeCallError {})?;
         let rec_ids = duplicate_groups.remove(&group_id).unwrap();
         for rec_id in rec_ids {
             let seq = match record_storage.get(&rec_id).unwrap() {
@@ -230,11 +262,24 @@ pub fn calc_consensus_complete_groups(
                 .concat(),
                 RecordStorage::SingleRecord { rec } => rec.seq().as_bytes(),
             };
-            seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
-            seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+            seq_cluster.stdin.as_mut().unwrap().write(&seq).context(
+                errors::StarcodeWriteError {
+                    payload: String::from_utf8(seq).unwrap(),
+                },
+            )?;
+            seq_cluster.stdin.as_mut().unwrap().write(b"\n").context(
+                errors::StarcodeWriteError {
+                    payload: String::from("\n"),
+                },
+            )?;
             read_id_storage.push(rec_id);
         }
-        seq_cluster.stdin.as_mut().unwrap().flush()?;
+        seq_cluster
+            .stdin
+            .as_mut()
+            .unwrap()
+            .flush()
+            .context(errors::WriteFlushError {})?;
         drop(seq_cluster.stdin.take());
         pb.finish_with_message(&format!("Done. Analyzed {} group(s).", i));
         for record in csv::ReaderBuilder::new()
@@ -243,7 +288,7 @@ pub fn calc_consensus_complete_groups(
             .from_reader(seq_cluster.stdout.as_mut().unwrap())
             .records()
         {
-            let seqids = parse_cluster(record?)?;
+            let seqids = parse_cluster(record.context(errors::CsvRecordParseError {})?)?;
             let mut l_recs = Vec::new();
             let mut r_recs = Vec::new();
             let mut l_seqids = Vec::new();
@@ -264,57 +309,76 @@ pub fn calc_consensus_complete_groups(
                 if overlap > 0 {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     l_seqids.append(&mut r_seqids);
-                    bam_writer.write(
-                        &CalcOverlappingConsensus::new(
-                            &l_recs,
-                            &r_recs,
-                            overlap as usize,
-                            &l_seqids,
-                            uuid,
-                            verbose_read_names,
+                    bam_writer
+                        .write(
+                            &CalcOverlappingConsensus::new(
+                                &l_recs,
+                                &r_recs,
+                                overlap as usize,
+                                &l_seqids,
+                                uuid,
+                                verbose_read_names,
+                            )
+                            .calc_consensus()
+                            .0,
                         )
-                        .calc_consensus()
-                        .0,
-                    )?;
+                        .context(errors::BamWriteError { record: None })?;
                 } else {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                    bam_writer.write(
-                        &CalcNonOverlappingConsensus::new(
-                            &l_recs,
-                            &l_seqids,
-                            uuid,
-                            verbose_read_names,
+                    bam_writer
+                        .write(
+                            &CalcNonOverlappingConsensus::new(
+                                &l_recs,
+                                &l_seqids,
+                                uuid,
+                                verbose_read_names,
+                            )
+                            .calc_consensus()
+                            .0,
                         )
-                        .calc_consensus()
-                        .0,
-                    )?;
+                        .context(errors::BamWriteError { record: None })?;
                     let r_uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                    bam_writer.write(
-                        &CalcNonOverlappingConsensus::new(
-                            &r_recs,
-                            &r_seqids,
-                            r_uuid,
-                            verbose_read_names,
+                    bam_writer
+                        .write(
+                            &CalcNonOverlappingConsensus::new(
+                                &r_recs,
+                                &r_seqids,
+                                r_uuid,
+                                verbose_read_names,
+                            )
+                            .calc_consensus()
+                            .0,
                         )
-                        .calc_consensus()
-                        .0,
-                    )?;
+                        .context(errors::BamWriteError { record: None })?;
                 }
             } else {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                bam_writer.write(
-                    &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid, verbose_read_names)
+                bam_writer
+                    .write(
+                        &CalcNonOverlappingConsensus::new(
+                            &l_recs,
+                            &l_seqids,
+                            uuid,
+                            verbose_read_names,
+                        )
                         .calc_consensus()
                         .0,
-                )?;
+                    )
+                    .context(errors::BamWriteError { record: None })?;
             }
         }
     }
     Ok(())
 }
 
-fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i32, Box<dyn Error>> {
-    let l_end_pos = l_rec.cigar_cached().unwrap().end_pos()?;
+fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> errors::Result<i32> {
+    let l_end_pos = l_rec
+        .cigar_cached()
+        .unwrap()
+        .end_pos()
+        .context(errors::BamCigarError {
+            record: l_rec.clone(),
+        })?;
     let r_start_pos = r_rec.pos();
     let l_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;
     let r_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter())?;
@@ -322,7 +386,7 @@ fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i32, Box<dyn
 }
 
 //Gets an Iterator over Cigar-items and returns number of soft-clips at the beginning
-fn count_softclips<'a, I>(cigar: I) -> Result<i32, Box<dyn Error>>
+fn count_softclips<'a, I>(cigar: I) -> errors::Result<i32>
 where
     I: Iterator<Item = &'a Cigar>,
 {
@@ -337,7 +401,7 @@ where
 }
 
 /// Interpret a cluster returned by starcode
-fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>> {
+fn parse_cluster(record: csv::StringRecord) -> errors::Result<Vec<usize>> {
     let seqids = &record[2];
     Ok(csv::ReaderBuilder::new()
         .delimiter(b',')
@@ -345,7 +409,8 @@ fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>
         .from_reader(seqids.as_bytes())
         .deserialize()
         .next()
-        .unwrap()?)
+        .unwrap()
+        .context(errors::StarcodeClusterParseError { record })?)
 }
 
 pub enum RecordStorage {

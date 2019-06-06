@@ -35,14 +35,15 @@
 //!
 use log::info;
 use std::cmp;
-use std::error::Error;
 use std::io;
 
 use csv;
-use serde::Deserialize;
-
 use rust_htslib::bam;
 use rust_htslib::bam::Read;
+use serde::Deserialize;
+use snafu::ResultExt;
+
+use crate::errors;
 
 #[derive(Deserialize, Debug)]
 struct PosRecord {
@@ -56,8 +57,9 @@ pub fn depth(
     include_flags: u16,
     exclude_flags: u16,
     min_mapq: u8,
-) -> Result<(), Box<dyn Error>> {
-    let mut bam_reader = bam::IndexedReader::from_path(&bam_path)?;
+) -> errors::Result<()> {
+    let mut bam_reader = bam::IndexedReader::from_path(&bam_path)
+        .context(errors::BamIndexedReaderError { filepath: bam_path })?;
     let bam_header = bam_reader.header().clone();
     let mut pos_reader = csv::ReaderBuilder::new()
         .has_headers(false)
@@ -68,17 +70,19 @@ pub fn depth(
         .from_writer(io::BufWriter::new(io::stdout()));
 
     for (i, record) in pos_reader.deserialize().enumerate() {
-        let record: PosRecord = record?;
+        let record: PosRecord = record.context(errors::CsvReadError)?;
 
         // jump to correct position
         let tid = bam_header.tid(record.chrom.as_bytes()).unwrap();
         let start = cmp::max(record.pos as i32 - max_read_length as i32 - 1, 0) as u32;
-        bam_reader.fetch(tid, start, start + max_read_length * 2)?;
+        bam_reader
+            .fetch(tid, start, start + max_read_length * 2)
+            .context(errors::BamFetchError)?;
 
         // iterate over pileups
         let mut covered = false;
         for pileup in bam_reader.pileup() {
-            let pileup = pileup?;
+            let pileup = pileup.context(errors::BamPileupError)?;
             covered = pileup.pos() == record.pos - 1;
 
             if covered {
@@ -93,14 +97,18 @@ pub fn depth(
                     })
                     .count();
 
-                r#try!(csv_writer.serialize((&record.chrom, record.pos, depth)));
+                r#try!(csv_writer
+                    .serialize((&record.chrom, record.pos, depth))
+                    .context(errors::CsvWriteError));
                 break;
             } else if pileup.pos() > record.pos {
                 break;
             }
         }
         if !covered {
-            r#try!(csv_writer.serialize((&record.chrom, record.pos, 0)));
+            r#try!(csv_writer
+                .serialize((&record.chrom, record.pos, 0))
+                .context(errors::CsvWriteError));
         }
 
         if (i + 1) % 100 == 0 {

@@ -9,8 +9,8 @@ use std::error::Error;
 
 pub mod bam;
 pub mod bcf;
-pub mod errors;
 pub mod common;
+pub mod errors;
 pub mod fastq;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -35,13 +35,21 @@ fn main() -> Result<(), Box<dyn Error>> {
             fastq::split::split(&matches.values_of("chunks").unwrap().collect_vec())
         }
         ("fastq-filter", Some(matches)) => fastq::filter::filter(&matches.value_of("ids").unwrap()),
-        ("bam-depth", Some(matches)) => bam::depth::depth(
-            &matches.value_of("bam-path").unwrap(),
-            value_t!(matches, "max-read-length", u32).unwrap_or(1000),
-            value_t!(matches, "include-flags", u16).unwrap_or(0),
-            value_t!(matches, "exclude-flags", u16).unwrap_or(4 | 256 | 512 | 1024),
-            value_t!(matches, "min-mapq", u8).unwrap_or(0),
-        ),
+        ("bam-depth", Some(matches)) => {
+            match bam::depth::depth(
+                &matches.value_of("bam-path").unwrap(),
+                value_t!(matches, "max-read-length", u32).unwrap_or(1000),
+                value_t!(matches, "include-flags", u16).unwrap_or(0),
+                value_t!(matches, "exclude-flags", u16).unwrap_or(4 | 256 | 512 | 1024),
+                value_t!(matches, "min-mapq", u8).unwrap_or(0),
+            ) {
+                Ok(()) => Ok(()),
+                Err(e) => {
+                    eprintln!("{}", e);
+                    Err(Box::new(e))
+                }
+            }
+        }
         ("vcf-to-txt", Some(matches)) => bcf::to_txt::to_txt(
             &matches
                 .values_of("info")
@@ -96,12 +104,20 @@ fn main() -> Result<(), Box<dyn Error>> {
                     }
                 }
             }
-            ("bam", Some(matches)) => bam::call_consensus_reads::call_consensus_reads_from_paths(
-                matches.value_of("bam").unwrap(),
-                matches.value_of("consensus-bam").unwrap(),
-                value_t!(matches, "max-seq-dist", usize).unwrap(),
-                matches.is_present("verbose-read-names"),
-            ),
+            ("bam", Some(matches)) => {
+                match bam::call_consensus_reads::call_consensus_reads_from_paths(
+                    matches.value_of("bam").unwrap(),
+                    matches.value_of("consensus-bam").unwrap(),
+                    value_t!(matches, "max-seq-dist", usize).unwrap(),
+                    matches.is_present("verbose-read-names"),
+                ) {
+                    Ok(()) => Ok(()),
+                    Err(e) => {
+                        eprintln!("{}", e);
+                        Err(Box::new(e))
+                    }
+                }
+            }
             _ => unreachable!(),
         },
         // This cannot be reached, since the matches step of

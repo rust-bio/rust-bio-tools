@@ -2,6 +2,7 @@ use bio::io::fastq;
 use bio::io::fastq::{FastqRead, Record};
 use bio::stats::probs::LogProb;
 use csv;
+use derive_new::new;
 use indicatif;
 use ordered_float::NotNaN;
 use rgsl::randist::gaussian::ugaussian_P;
@@ -37,16 +38,16 @@ fn parse_cluster(record: csv::StringRecord) -> errors::Result<Vec<usize>> {
 
 /// Calculates the median hamming distance for all records by deriving the overlap from insert size
 fn median_hamming_distance(
-    insert_size: &usize,
+    insert_size: usize,
     f_recs: &[fastq::Record],
     r_recs: &[fastq::Record],
 ) -> Option<f64> {
     let distances = f_recs.iter().zip(r_recs).filter_map(|(f_rec, r_rec)| {
         // check if reads overlap within insert size
-        if (insert_size < &f_rec.seq().len()) | (insert_size < &r_rec.seq().len()) {
+        if (insert_size < f_rec.seq().len()) | (insert_size < r_rec.seq().len()) {
             return None;
         }
-        if insert_size >= &(&f_rec.seq().len() + &r_rec.seq().len()) {
+        if insert_size >= (&f_rec.seq().len() + &r_rec.seq().len()) {
             return None;
         }
         let overlap = (f_rec.seq().len() + r_rec.seq().len()) - insert_size;
@@ -156,12 +157,11 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
             .template("{prefix:.bold.dim} {spinner} {wide_msg}");
 
-        // cluster by sequence
+        // cluster by umi
         // Note: If starcode is not installed, this throws a
         // hard to interpret error:
         // (No such file or directory (os error 2))
         // The expect added below should make this more clear.
-        // cluster within in this cluster by umi
         let mut umi_cluster = Command::new("starcode")
             .arg("--dist")
             .arg(format!("{}", self.umi_dist()))
@@ -217,7 +217,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                     })
                 }
             }
-            // save umis for second (intra cluster) clustering
+            // extract umi for clustering
             let umi = if self.reverse_umi() {
                 r_rec.seq()[..self.umi_len()].to_owned()
             } else {
@@ -244,6 +244,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             } else {
                 f_rec = self.strip_umi_from_record(&f_rec)
             }
+            // store read sequences in an on-disk key value store for random access
             read_storage.put(i, &f_rec, &r_rec)?;
             i += 1;
         }
@@ -264,6 +265,8 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             "[2/2] Merge eligable reads within each cluster.    "
         ));
         // read clusters identified by the first starcode run
+        // the first run clustered by UMI, hence all reads in
+        // the clusters handled here had similar UMIs
         for record in csv::ReaderBuilder::new()
             .delimiter(b'\t')
             .has_headers(false)
@@ -286,9 +289,10 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .spawn()
                 .context(errors::StarcodeCallError {})?;
             for &seqid in &seqids {
-                // get sequences from rocksdb
+                // get sequences from rocksdb (key value store)
                 let (f_rec, r_rec) = read_storage.get(seqid - 1).unwrap();
-
+                // perform clustering using the concatenated read sequences
+                // without the UMIs (remove in the first clustering step)
                 seq_cluster
                     .stdin
                     .as_mut()
@@ -312,7 +316,8 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 .context(errors::WriteFlushError {})?;
             drop(seq_cluster.stdin.take());
 
-            // handle each potential unique read
+            // handle each potential unique read, i.e. clusters with similar
+            // UMI and similar sequence
             for record in csv::ReaderBuilder::new()
                 .delimiter(b'\t')
                 .has_headers(false)
@@ -371,6 +376,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
 
 /// Struct for calling non-overlapping consensus reads
 /// Implements Trait CallConsensusReads
+#[derive(new)]
 pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     fq1_reader: &'a mut fastq::Reader<R>,
     fq2_reader: &'a mut fastq::Reader<R>,
@@ -381,32 +387,6 @@ pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     umi_dist: usize,
     reverse_umi: bool,
     verbose_read_names: bool,
-}
-
-impl<'a, R: io::Read, W: io::Write> CallNonOverlappingConsensusRead<'a, R, W> {
-    pub fn new(
-        fq1_reader: &'a mut fastq::Reader<R>,
-        fq2_reader: &'a mut fastq::Reader<R>,
-        fq1_writer: &'a mut fastq::Writer<W>,
-        fq2_writer: &'a mut fastq::Writer<W>,
-        umi_len: usize,
-        seq_dist: usize,
-        umi_dist: usize,
-        reverse_umi: bool,
-        verbose_read_names: bool,
-    ) -> Self {
-        CallNonOverlappingConsensusRead {
-            fq1_reader,
-            fq2_reader,
-            fq1_writer,
-            fq2_writer,
-            umi_len,
-            seq_dist,
-            umi_dist,
-            reverse_umi,
-            verbose_read_names,
-        }
-    }
 }
 
 impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
@@ -485,7 +465,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
 }
 
 ///Clusters fastq reads by UMIs and calls consensus for overlapping reads
-///
+#[derive(new)]
 pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     fq1_reader: &'a mut fastq::Reader<R>,
     fq2_reader: &'a mut fastq::Reader<R>,
@@ -502,36 +482,6 @@ pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
 }
 
 impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
-    pub fn new(
-        fq1_reader: &'a mut fastq::Reader<R>,
-        fq2_reader: &'a mut fastq::Reader<R>,
-        fq1_writer: &'a mut fastq::Writer<W>,
-        fq2_writer: &'a mut fastq::Writer<W>,
-        fq3_writer: &'a mut fastq::Writer<W>,
-        umi_len: usize,
-        seq_dist: usize,
-        umi_dist: usize,
-        insert_size: usize,
-        std_dev: usize,
-        reverse_umi: bool,
-        verbose_read_names: bool,
-    ) -> Self {
-        CallOverlappingConsensusRead {
-            fq1_reader,
-            fq2_reader,
-            fq1_writer,
-            fq2_writer,
-            fq3_writer,
-            umi_len,
-            seq_dist,
-            umi_dist,
-            insert_size,
-            std_dev,
-            reverse_umi,
-            verbose_read_names,
-        }
-    }
-
     fn isize_highest_probability(&mut self, f_seq_len: usize, r_seq_len: usize) -> f64 {
         if f_seq_len + f_seq_len < self.insert_size {
             return self.insert_size as f64;
@@ -555,16 +505,22 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
         let insert_sizes = ((self.insert_size - 2 * self.std_dev)
             ..(self.insert_size + 2 * self.std_dev))
             .filter_map(|insert_size| {
-                median_hamming_distance(&insert_size, &f_recs, &r_recs)
+                median_hamming_distance(insert_size, &f_recs, &r_recs)
                     .filter(|&median_distance| median_distance < HAMMING_THRESHOLD)
                     .map(|_| insert_size)
             });
         insert_sizes
             .map(|insert_size| {
                 let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
-                let (consensus_record, lh_isize) =
-                    CalcOverlappingConsensus::new(&f_recs, &r_recs, overlap, &outer_seqids, &uuid)
-                        .calc_consensus();
+                let (consensus_record, lh_isize) = CalcOverlappingConsensus::new(
+                    &f_recs,
+                    &r_recs,
+                    overlap,
+                    &outer_seqids,
+                    &uuid,
+                    self.verbose_read_names,
+                )
+                .calc_consensus();
                 let likelihood = lh_isize
                     + isize_pmf(
                         insert_size as f64,

@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `call-consensus-reads` now writes shorter name lines for consensus reads.
   Name lines of consensus reads now only contain a random uuid and the number of
   reads they were created from. To get the old behavior, i.e. a list of reads
-  that were merged into this consensus read, the `--verbose-read-names` can be used.
+  that were merged into this consensus read,http://semver.org/ the `--verbose-read-names` can be used.
 
 
 ## [0.4.1] - 2019-05-02

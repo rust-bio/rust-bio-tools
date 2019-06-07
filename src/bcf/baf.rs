@@ -23,10 +23,10 @@ pub fn calculate_baf() -> errors::Result<()> {
     header.push_record(b"##FORMAT=<ID=BAF,Number=A,Type=Float,Description=\"b-allele frequency\">");
 
     let mut writer = bcf::Writer::from_stdout(&header, false, false)
-        .context(errors::BCFWriterStdoutError{header})?;
+        .context(errors::BCFWriterStdoutError{header: format!("{:?}", header)})?;
 
     for record in reader.records() {
-        let mut record = record.context(errors::BCFReadError{header})?;
+        let mut record = record.context(errors::BCFReadError{header: format!("{:?}", header)})?;
 
         let allele_lens = record.alleles().iter().map(|a| a.len()).collect_vec();
         let mut bafs = Vec::new();
@@ -34,11 +34,11 @@ pub fn calculate_baf() -> errors::Result<()> {
             let ref_depths = record
                 .format(b"RO")
                 .integer()
-                .context(errors::BCFFormatReadError{record, fd: String::from("RO")})?
+                .context(errors::BCFFormatReadError{fd: String::from("RO")})?
                 .into_iter()
                 .map(|d| d.to_owned())
                 .collect_vec();
-            let alt_depths = record.format(b"AO").integer().context(errors::BCFFormatReadError{record, fd: String::from("AO")})?;
+            let alt_depths = record.format(b"AO").integer().context(errors::BCFFormatReadError{fd: String::from("AO")})?;
 
             for (sample_ref_depth, sample_alt_depth) in ref_depths.iter().zip(alt_depths.iter()) {
                 if allele_lens[0] != 1 || sample_ref_depth[0].is_missing() {
@@ -61,7 +61,7 @@ pub fn calculate_baf() -> errors::Result<()> {
 
         writer.translate(&mut record);
         record.push_format_float(b"BAF", &bafs).context(errors::BCFTagWriteError{bafs: bafs, fd: String::from("BAF")})?;
-        writer.write(&record).context(errors::BCFWriteError{record})?;
+        writer.write(&record).context(errors::BCFWriteError{record: format!("{:?}", record)})?;
     }
 
     Ok(())

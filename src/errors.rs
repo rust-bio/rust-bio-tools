@@ -173,13 +173,12 @@ pub enum Error {
 
     #[snafu(display("Failed to open BCF writer for stdout with header {:?}: {:?}", header, source))]
     BCFWriterStdoutError {
-        header: rust_htslib::bcf::Header,
+        header: String,
         source: rust_htslib::bcf::BCFError,
     },
 
-    #[snafu(display("Failed to interpret data as integer with format {:?} in BCF record {:?}: {:?}", fd, record, source))]
+    #[snafu(display("Failed to interpret data as integer with format {:?} in BCF record: {:?}", fd, source))]
     BCFFormatReadError {
-        record: rust_htslib::bcf::Record,
         fd: String,
         source: rust_htslib::bcf::record::FormatReadError,
     },
@@ -191,15 +190,15 @@ pub enum Error {
         source: rust_htslib::bcf::record::TagWriteError,
     },
 
-    #[snafu(display("Failed write record {:?} to BCF file: {:?}", record, source))]
+    #[snafu(display("Failed write record {} to BCF file: {:?}", record, source))]
     BCFWriteError {
-        record: rust_htslib::bcf::Record,
+        record: String,
         source: rust_htslib::bcf::WriteError,
     },
 
-    #[snafu(display("Failed to read BCF file with header {:?}: {:?}", header, source))]
+    #[snafu(display("Failed to read BCF file with header {}: {:?}", header, source))]
     BCFReadError {
-        header: rust_htslib::bcf::Header,
+        header: String,
         source: rust_htslib::bcf::ReadError,
     },    
 

@@ -167,17 +167,23 @@ pub enum Error {
     },
 
     #[snafu(display("Failed to read BCF file from stdin: {:?}", source))]
-    BCFReaderStdinError {
-        source: rust_htslib::bcf::BCFError,
-    },
+    BCFReaderStdinError { source: rust_htslib::bcf::BCFError },
 
-    #[snafu(display("Failed to open BCF writer for stdout with header {:?}: {:?}", header, source))]
+    #[snafu(display(
+        "Failed to open BCF writer for stdout with header {:?}: {:?}",
+        header,
+        source
+    ))]
     BCFWriterStdoutError {
         header: String,
         source: rust_htslib::bcf::BCFError,
     },
 
-    #[snafu(display("Failed to interpret data as integer with format {:?} in BCF record: {:?}", fd, source))]
+    #[snafu(display(
+        "Failed to interpret data as integer with format {:?} in BCF record: {:?}",
+        fd,
+        source
+    ))]
     BCFFormatReadError {
         fd: String,
         source: rust_htslib::bcf::record::FormatReadError,
@@ -200,6 +206,5 @@ pub enum Error {
     BCFReadError {
         header: String,
         source: rust_htslib::bcf::ReadError,
-    },    
-
+    },
 }

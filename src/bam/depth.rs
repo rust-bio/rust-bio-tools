@@ -77,12 +77,12 @@ pub fn depth(
         let start = cmp::max(record.pos as i32 - max_read_length as i32 - 1, 0) as u32;
         bam_reader
             .fetch(tid, start, start + max_read_length * 2)
-            .context(errors::BamFetchError)?;
+            .context(errors::BamFetchError { tid })?;
 
         // iterate over pileups
         let mut covered = false;
         for pileup in bam_reader.pileup() {
-            let pileup = pileup.context(errors::BamPileupError)?;
+            let pileup = pileup.context(errors::BamPileupError { path: bam_path })?;
             covered = pileup.pos() == record.pos - 1;
 
             if covered {

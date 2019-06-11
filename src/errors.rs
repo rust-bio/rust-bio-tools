@@ -154,15 +154,15 @@ pub enum Error {
         source: rust_htslib::bam::record::CigarError,
     },
 
-    //TODO What is fetched here?!
-    #[snafu(display("Could not fetch ...: {:?}", source))]
+    #[snafu(display("Could not fetch record {}: {:?}", tid, source))]
     BamFetchError {
+        tid: u32,
         source: rust_htslib::bam::FetchError,
     },
 
-    //TODO Should be a file path returned here?!
-    #[snafu(display("Could not read pileup: {:?}", source))]
+    #[snafu(display("Could not read pileup from {}: {:?}", path, source))]
     BamPileupError {
+        path: String,
         source: rust_htslib::bam::pileup::PileupError,
     },
 

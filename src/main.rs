@@ -61,11 +61,17 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .unwrap_or(vec![]),
             matches.is_present("genotypes"),
         ),
-        ("vcf-match", Some(matches)) => bcf::match_variants::match_variants(
+        ("vcf-match", Some(matches)) => match bcf::match_variants::match_variants(
             matches.value_of("vcf").unwrap(),
             value_t!(matches, "max-dist", u32).unwrap_or(20),
             value_t!(matches, "max-len-diff", u32).unwrap_or(10),
-        ),
+        ) {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                eprintln!("{}", e);
+                Err(Box::new(e))
+            }
+        },
         ("vcf-baf", Some(_)) => match bcf::baf::calculate_baf() {
             Ok(()) => Ok(()),
             Err(e) => {

@@ -189,9 +189,9 @@ pub enum Error {
         source: rust_htslib::bcf::record::FormatReadError,
     },
 
-    #[snafu(display("Failed to format {:?} as {:?}: {:?}", bafs, fd, source))]
+    #[snafu(display("Failed to format {:?} as {:?}: {:?}", data, fd, source))]
     BCFTagWriteError {
-        bafs: Vec<f32>,
+        data: String,
         fd: String,
         source: rust_htslib::bcf::record::TagWriteError,
     },
@@ -207,4 +207,33 @@ pub enum Error {
         header: String,
         source: rust_htslib::bcf::ReadError,
     },
+
+    #[snafu(display(
+        "Failed to find record id {} in BCF with header {}: {:?}",
+        rid,
+        header,
+        source
+    ))]
+    BCFReadIdError {
+        rid: u32,
+        header: String,
+        source: rust_htslib::bcf::header::RidIndexError,
+    },
+
+    #[snafu(display("Failed to create new BCF reader from {}: {:?}", path, source))]
+    BCFReaderFromPathError {
+        path: String,
+        source: rust_htslib::bcf::BCFPathError,
+    },
+
+    //TODO This should be more clear
+    #[snafu(display("Missing tag {}", tag))]
+    MissingTagError { tag: String },
+
+    //TODO This should be more clear
+    #[snafu(display("Unsupported variant"))]
+    UnsupportedVariantError,
+
+    #[snafu(display("{:?}", source))]
+    StdStrUtf8Error { source: std::str::Utf8Error },
 }

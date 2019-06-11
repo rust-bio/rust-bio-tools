@@ -74,7 +74,7 @@ pub fn calculate_baf() -> errors::Result<()> {
         record
             .push_format_float(b"BAF", &bafs)
             .context(errors::BCFTagWriteError {
-                bafs: bafs,
+                data: format!("{:?}", bafs),
                 fd: String::from("BAF"),
             })?;
         writer.write(&record).context(errors::BCFWriteError {

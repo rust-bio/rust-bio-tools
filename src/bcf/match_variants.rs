@@ -11,12 +11,13 @@
 //!
 use itertools::Itertools;
 use log::{info, warn};
-use quick_error::quick_error;
 use rust_htslib::bcf;
 use rust_htslib::bcf::Read;
 use std::collections::{btree_map, BTreeMap, HashMap};
-use std::error::Error;
 use std::str;
+
+use crate::errors;
+use snafu::ResultExt;
 
 pub struct VarIndex {
     inner: HashMap<Vec<u8>, BTreeMap<u32, Vec<Variant>>>,
@@ -24,7 +25,7 @@ pub struct VarIndex {
 }
 
 impl VarIndex {
-    pub fn new(mut reader: bcf::Reader, max_dist: u32) -> Result<Self, Box<dyn Error>> {
+    pub fn new(mut reader: bcf::Reader, max_dist: u32) -> errors::Result<Self> {
         let mut inner = HashMap::new();
         let mut i = 0;
         let mut rec = reader.empty_record();
@@ -33,10 +34,18 @@ impl VarIndex {
                 if e.is_eof() {
                     break;
                 }
-                return Err(Box::new(e));
+                return Err(e).context(errors::BCFReadError {
+                    header: format!("{:?}", reader.header()),
+                });
             }
             if let Some(rid) = rec.rid() {
-                let chrom = reader.header().rid2name(rid)?;
+                let chrom = reader
+                    .header()
+                    .rid2name(rid)
+                    .context(errors::BCFReadIdError {
+                        rid,
+                        header: format!("{:?}", reader.header()),
+                    })?;
                 let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
                 recs.entry(rec.pos())
                     .or_insert_with(|| Vec::new())
@@ -59,12 +68,8 @@ impl VarIndex {
     }
 }
 
-pub fn match_variants(
-    matchbcf: &str,
-    max_dist: u32,
-    max_len_diff: u32,
-) -> Result<(), Box<dyn Error>> {
-    let mut inbcf = bcf::Reader::from_stdin()?;
+pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> errors::Result<()> {
+    let mut inbcf = bcf::Reader::from_stdin().context(errors::BCFReaderStdinError {})?;
     let mut header = bcf::Header::from_template(inbcf.header());
 
     header.push_record(
@@ -74,8 +79,15 @@ pub fn match_variants(
         alternative allele separately). For indels, matching is fuzzy: distance of centres <= {}, difference of \
         lengths <= {}\">", max_dist, max_len_diff).as_bytes()
     );
-    let mut outbcf = bcf::Writer::from_path(&"-", &header, false, false)?;
-    let index = VarIndex::new(bcf::Reader::from_path(matchbcf)?, max_dist)?;
+    let mut outbcf =
+        bcf::Writer::from_stdout(&header, false, false).context(errors::BCFWriterStdoutError {
+            header: format!("{:?}", header),
+        })?;
+    let index = VarIndex::new(
+        bcf::Reader::from_path(matchbcf)
+            .context(errors::BCFReaderFromPathError { path: matchbcf })?,
+        max_dist,
+    )?;
 
     let mut rec = inbcf.empty_record();
     let mut i = 0;
@@ -84,34 +96,54 @@ pub fn match_variants(
             if e.is_eof() {
                 break;
             }
-            return Err(Box::new(e));
+            return Err(e).context(errors::BCFReadError {
+                header: format!("{:?}", header),
+            });
         }
         outbcf.translate(&mut rec);
 
         if let Some(rid) = rec.rid() {
-            let chrom = inbcf.header().rid2name(rid)?;
+            let chrom = inbcf
+                .header()
+                .rid2name(rid)
+                .context(errors::BCFReadIdError {
+                    rid,
+                    header: format!("{:?}", inbcf.header()),
+                })?;;
             let pos = rec.pos();
 
             let var = Variant::new(&mut rec, &mut i)?;
-            let matching = var
-                .alleles
-                .iter()
-                .map(|a| {
-                    if let Some(range) = index.range(chrom, pos) {
+
+            //Test
+            let mut matching = Vec::new();
+            for allele in var.alleles.iter() {
+                match index.range(chrom, pos) {
+                    None => matching.push(-1),
+                    Some(range) => {
                         for v in Itertools::flatten(range.map(|(_, idx_vars)| idx_vars)) {
-                            if let Some(id) = var.matches(v, a, max_dist, max_len_diff) {
-                                return id as i32;
+                            match var.matches(v, allele, max_dist, max_len_diff)? {
+                                None => continue,
+                                Some(id) => matching.push(id as i32),
                             }
                         }
                     }
-                    -1
-                })
-                .collect_vec();
+                }
+            }
+            dbg!(&matching);
+            //TestEnd
 
-            rec.push_info_integer(b"MATCHING", &matching)?;
-            outbcf.write(&rec)?;
+            rec.push_info_integer(b"MATCHING", &matching)
+                .context(errors::BCFTagWriteError {
+                    data: format!("{:?}", matching),
+                    fd: String::from("MATCHING"),
+                })?;
+            outbcf.write(&rec).context(errors::BCFWriteError {
+                record: format!("{:?}", rec),
+            })?;
         } else {
-            outbcf.write(&rec)?;
+            outbcf.write(&rec).context(errors::BCFWriteError {
+                record: format!("{:?}", rec),
+            })?;
         }
 
         if (i) % 1000 == 0 {
@@ -132,7 +164,7 @@ pub struct Variant {
 }
 
 impl Variant {
-    pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self, Box<dyn Error>> {
+    pub fn new(rec: &mut bcf::Record, id: &mut u32) -> errors::Result<Self> {
         let pos = rec.pos();
 
         let svlens = if let Ok(Some(svlens)) = rec.info(b"SVLEN").integer() {
@@ -173,12 +205,17 @@ impl Variant {
                     (Some(svlens), _) => svlens[0],
                     (None, Some(end)) => end - 1 - pos,
                     _ => {
-                        return Err(Box::new(MatchError::MissingTag("SVLEN or END".to_owned())));
+                        return Err(errors::Error::MissingTagError {
+                            tag: "SVLEN or END".to_string(),
+                        });
                     }
                 };
                 VariantType::Deletion(svlen)
             } else {
-                warn!("Unsupported variant {}", r#try!(str::from_utf8(&svtype)));
+                warn!(
+                    "Unsupported variant {}",
+                    str::from_utf8(&svtype).context(errors::StdStrUtf8Error)?
+                );
                 VariantType::Unsupported
             }]
         } else {
@@ -188,7 +225,9 @@ impl Variant {
                     if let Some(ref svlens) = svlens {
                         VariantType::Deletion(svlens[i])
                     } else {
-                        return Err(Box::new(MatchError::MissingTag("SVLEN".to_owned())));
+                        return Err(errors::Error::MissingTagError {
+                            tag: "SVLEN".to_string(),
+                        });
                     }
                 } else if a.len() < refallele.len() {
                     VariantType::Deletion((refallele.len() - a.len()) as u32)
@@ -199,8 +238,8 @@ impl Variant {
                 } else {
                     warn!(
                         "Unsupported variant {} -> {}",
-                        r#try!(str::from_utf8(refallele)),
-                        r#try!(str::from_utf8(a))
+                        str::from_utf8(refallele).context(errors::StdStrUtf8Error)?,
+                        str::from_utf8(a).context(errors::StdStrUtf8Error)?
                     );
                     VariantType::Unsupported
                 });
@@ -217,12 +256,12 @@ impl Variant {
         Ok(var)
     }
 
-    pub fn centerpoint(&self, allele: &VariantType) -> u32 {
+    pub fn centerpoint(&self, allele: &VariantType) -> errors::Result<u32> {
         match allele {
-            &VariantType::SNV(_) => self.pos,
-            &VariantType::Insertion(_) => self.pos,
-            &VariantType::Deletion(len) => (self.pos as f64 + len as f64 / 2.0) as u32,
-            &VariantType::Unsupported => panic!("Unsupported variant."),
+            &VariantType::SNV(_) => Ok(self.pos),
+            &VariantType::Insertion(_) => Ok(self.pos),
+            &VariantType::Deletion(len) => Ok((self.pos as f64 + len as f64 / 2.0) as u32),
+            &VariantType::Unsupported => Err(errors::Error::UnsupportedVariantError),
         }
     }
 
@@ -232,32 +271,33 @@ impl Variant {
         allele: &VariantType,
         max_dist: u32,
         max_len_diff: u32,
-    ) -> Option<u32> {
+    ) -> errors::Result<Option<u32>> {
         if allele.is_unsupported() {
-            return None;
+            return Ok(None);
         }
         for (j, b) in other.alleles.iter().enumerate() {
             if b.is_unsupported() {
                 continue;
             }
-            let dist = (self.centerpoint(allele) as i32 - other.centerpoint(b) as i32).abs() as u32;
+            let dist =
+                (self.centerpoint(allele)? as i32 - other.centerpoint(b)? as i32).abs() as u32;
             match (allele, b) {
                 (&VariantType::SNV(a), &VariantType::SNV(b)) => {
                     if a == b && dist == 0 {
-                        return Some(other.id(j));
+                        return Ok(Some(other.id(j)));
                     }
                 }
                 (&VariantType::Insertion(l1), &VariantType::Insertion(l2))
                 | (&VariantType::Deletion(l1), &VariantType::Deletion(l2)) => {
                     if (l1 as i32 - l2 as i32).abs() as u32 <= max_len_diff && dist <= max_dist {
-                        return Some(other.id(j));
+                        return Ok(Some(other.id(j)));
                     }
                 }
                 // TODO: for now, ignore complex variants
                 _ => continue,
             }
         }
-        None
+        Ok(None)
     }
 
     pub fn id(&self, allele: usize) -> u32 {
@@ -278,16 +318,6 @@ impl VariantType {
         match self {
             &VariantType::Unsupported => true,
             _ => false,
-        }
-    }
-}
-
-quick_error! {
-    #[derive(Debug)]
-    pub enum MatchError {
-        MissingTag(tag: String) {
-            description("missing tag")
-            display("missing tag {}", tag)
         }
     }
 }

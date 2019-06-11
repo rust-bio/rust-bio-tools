@@ -52,8 +52,11 @@ pub enum Error {
         source: std::io::Error,
     },
 
-    #[snafu(display("Could not read record: {:?}", source))]
-    BamReadError { source: rust_htslib::bam::ReadError },
+    #[snafu(display("Could not read record {:?}: {:?}", record, source))]
+    BamReadError {
+        record: Option<rust_htslib::bam::record::Record>,
+        source: rust_htslib::bam::ReadError,
+    },
 
     #[snafu(display("Could not read csv record: {:?}", source))]
     CsvReadError { source: csv::Error },
@@ -61,8 +64,11 @@ pub enum Error {
     #[snafu(display("Could not write to csv record: {:?}", source))]
     CsvWriteError { source: csv::Error },
 
-    #[snafu(display("Could not read record: {:?}", source))]
-    FastqReadError { source: std::io::Error },
+    #[snafu(display("Could not read record {:?}: {:?}", record, source))]
+    FastqReadError {
+        record: Option<bio::io::fastq::Record>,
+        source: std::io::Error,
+    },
 
     // TODO rewrite this to make the forward reverse part of display a function
     // format!("Given FASTQ files have unequal lengths. Reverse file returned record {} as empty, forward record is not: id:'{}' seq:'{:?}'.", i, f_rec.id(), str::from_utf8(f_rec.seq()));
@@ -236,4 +242,10 @@ pub enum Error {
 
     #[snafu(display("{:?}", source))]
     StdStrUtf8Error { source: std::str::Utf8Error },
+
+    #[snafu(display("Failed to create new BCF reader from {}: {:?}", path, source))]
+    FileOpenError {
+        path: String,
+        source: std::io::Error,
+    },
 }

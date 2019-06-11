@@ -33,7 +33,7 @@ impl CallConsensusRead {
         let mut record_storage: HashMap<RecordID, RecordStorage> = HashMap::new();
 
         for (i, result) in self.bam_reader.records().into_iter().enumerate() {
-            let mut record = result.context(errors::BamReadError {})?;
+            let mut record = result.context(errors::BamReadError { record: None })?;
             if !record.is_unmapped() {
                 //Process completed duplicate groups
                 calc_consensus_complete_groups(

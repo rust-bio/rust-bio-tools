@@ -192,10 +192,10 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             pb.inc(1);
             self.fq1_reader()
                 .read(&mut f_rec)
-                .context(errors::FastqReadError {})?;
+                .context(errors::FastqReadError { record: None })?;
             self.fq2_reader()
                 .read(&mut r_rec)
-                .context(errors::FastqReadError {})?;
+                .context(errors::FastqReadError { record: None })?;
 
             match (f_rec.is_empty(), r_rec.is_empty()) {
                 (true, true) => break,

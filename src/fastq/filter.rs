@@ -26,18 +26,19 @@
 //! !!!!!!!!!!
 //! ```
 //!
+use crate::errors;
 use bio::io::fastq;
 use bio::io::fastq::FastqRead;
+use snafu::ResultExt;
 use std::collections::HashSet;
-use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::iter::FromIterator;
 
-pub fn filter(ids_path: &str) -> Result<(), Box<dyn Error>> {
+pub fn filter(ids_path: &str) -> errors::Result<()> {
     let mut reader = fastq::Reader::new(io::stdin());
     let mut writer = fastq::Writer::new(io::stdout());
-    let f = File::open(ids_path)?;
+    let f = File::open(ids_path).context(errors::FileOpenError { path: ids_path })?;
     let f = BufReader::new(f);
     let ids =
         HashSet::<String>::from_iter(f.lines().filter_map(Result::ok).collect::<Vec<String>>());
@@ -45,12 +46,18 @@ pub fn filter(ids_path: &str) -> Result<(), Box<dyn Error>> {
     let mut record = fastq::Record::new();
 
     loop {
-        r#try!(reader.read(&mut record));
+        reader.read(&mut record).context(errors::FastqReadError {
+            record: Some(record.clone()),
+        })?;
         if record.is_empty() {
             return Ok(());
         }
         if !ids.contains(record.id()) {
-            r#try!(writer.write_record(&record));
+            writer
+                .write_record(&record)
+                .context(errors::FastqWriteError {
+                    record: Some(record.clone()),
+                })?;
         }
     }
 }

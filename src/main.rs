@@ -34,7 +34,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         ("fastq-split", Some(matches)) => {
             fastq::split::split(&matches.values_of("chunks").unwrap().collect_vec())
         }
-        ("fastq-filter", Some(matches)) => fastq::filter::filter(&matches.value_of("ids").unwrap()),
+        ("fastq-filter", Some(matches)) => {
+            match fastq::filter::filter(&matches.value_of("ids").unwrap()) {
+                Ok(()) => Ok(()),
+                Err(e) => {
+                    eprintln!("{}", e);
+                    Err(Box::new(e))
+                }
+            }
+        }
         ("bam-depth", Some(matches)) => {
             match bam::depth::depth(
                 &matches.value_of("bam-path").unwrap(),

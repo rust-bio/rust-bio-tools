@@ -7,27 +7,38 @@
 //! $ rbt fastq-split A.fastq B.fastq < test.fastq
 //! ```
 //!
+use crate::errors;
 use bio::io::fastq;
 use bio::io::fastq::FastqRead;
 use log::info;
-use std::error::Error;
+use snafu::ResultExt;
 use std::io;
 
-pub fn split(out_paths: &[&str]) -> Result<(), Box<dyn Error>> {
+pub fn split(out_paths: &[&str]) -> errors::Result<()> {
     let mut reader = fastq::Reader::new(io::stdin());
     let mut writers = Vec::new();
     for path in out_paths {
-        writers.push(r#try!(fastq::Writer::to_file(path)));
+        writers.push(
+            fastq::Writer::to_file(path).context(errors::FastqWriterError {
+                filename: String::from(*path),
+            })?,
+        );
     }
     let mut record = fastq::Record::new();
     let mut i = 0;
     let mut j = 0;
     loop {
-        r#try!(reader.read(&mut record));
+        reader.read(&mut record).context(errors::FastqReadError {
+            record: Some(record.clone()),
+        })?;
         if record.is_empty() {
             return Ok(());
         }
-        r#try!(writers[i].write_record(&record));
+        writers[i]
+            .write_record(&record)
+            .context(errors::FastqWriteError {
+                record: Some(record.clone()),
+            })?;
         i = (i + 1) % writers.len();
         j += 1;
         if j % 1000 == 0 {

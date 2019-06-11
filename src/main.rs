@@ -32,7 +32,13 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match matches.subcommand() {
         ("fastq-split", Some(matches)) => {
-            fastq::split::split(&matches.values_of("chunks").unwrap().collect_vec())
+            match fastq::split::split(&matches.values_of("chunks").unwrap().collect_vec()) {
+                Ok(()) => Ok(()),
+                Err(e) => {
+                    eprintln!("{}", e);
+                    Err(Box::new(e))
+                }
+            }
         }
         ("fastq-filter", Some(matches)) => {
             match fastq::filter::filter(&matches.value_of("ids").unwrap()) {

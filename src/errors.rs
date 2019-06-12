@@ -40,21 +40,17 @@ pub enum Error {
         source: std::io::Error,
     },
 
-    #[snafu(display("Could not write record {:?}: {:?}", record, source))]
+    #[snafu(display("Could not write record: {:?}", source))]
     BamWriteError {
-        record: Option<rust_htslib::bam::record::Record>,
         source: rust_htslib::bam::WriteError,
     },
 
-    #[snafu(display("Could not write record {:?}: {:?}", record, source))]
-    FastqWriteError {
-        record: Option<bio::io::fastq::Record>,
-        source: std::io::Error,
-    },
+    #[snafu(display("Could not write record: {:?}", source))]
+    FastqWriteError { source: std::io::Error },
 
-    #[snafu(display("Could not read record {:?}: {:?}", record, source))]
+    #[snafu(display("Could not read record with index{}: {:?}", record_idx, source))]
     BamReadError {
-        record: Option<rust_htslib::bam::record::Record>,
+        record_idx: usize,
         source: rust_htslib::bam::ReadError,
     },
 
@@ -64,9 +60,9 @@ pub enum Error {
     #[snafu(display("Could not write to csv record: {:?}", source))]
     CsvWriteError { source: csv::Error },
 
-    #[snafu(display("Could not read record {:?}: {:?}", record, source))]
+    #[snafu(display("Could not read record with index {}: {:?}", record_idx, source))]
     FastqReadError {
-        record: Option<bio::io::fastq::Record>,
+        record_idx: usize,
         source: std::io::Error,
     },
 
@@ -150,13 +146,9 @@ pub enum Error {
         source: serde_json::error::Error,
     },
 
-    #[snafu(display(
-        "Record {:?} contains unsupported Cigar operation.: {:?}",
-        record,
-        source
-    ))]
+    #[snafu(display("Cigar {} contains unsupported Cigar operation.: {:?}", cigar, source))]
     BamCigarError {
-        record: rust_htslib::bam::record::Record,
+        cigar: String,
         source: rust_htslib::bam::record::CigarError,
     },
 
@@ -198,9 +190,8 @@ pub enum Error {
         source: rust_htslib::bcf::record::TagWriteError,
     },
 
-    #[snafu(display("Failed write record {} to BCF file: {:?}", record, source))]
+    #[snafu(display("Failed write recordto BCF file: {:?}", source))]
     BCFWriteError {
-        record: String,
         source: rust_htslib::bcf::WriteError,
     },
 
@@ -252,9 +243,13 @@ pub enum Error {
     #[snafu(display("Failed to write to BCR writer {:?}", source))]
     BCFStdIOWriteError { source: std::io::Error },
 
-    #[snafu(display("Failed to read info from BCF record {:?}: {:?}", record, source))]
+    #[snafu(display(
+        "Failed to read info from BCF record with index {}: {:?}",
+        record_idx,
+        source
+    ))]
     BCFInfoReadError {
-        record: Option<String>,
+        record_idx: usize,
         source: rust_htslib::bcf::record::InfoReadError,
     },
 

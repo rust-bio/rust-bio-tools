@@ -132,13 +132,9 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> error
                     data: format!("{:?}", matching),
                     fd: String::from("MATCHING"),
                 })?;
-            outbcf.write(&rec).context(errors::BCFWriteError {
-                record: format!("{:?}", rec),
-            })?;
+            outbcf.write(&rec).context(errors::BCFWriteError)?;
         } else {
-            outbcf.write(&rec).context(errors::BCFWriteError {
-                record: format!("{:?}", rec),
-            })?;
+            outbcf.write(&rec).context(errors::BCFWriteError)?;
         }
 
         if (i) % 1000 == 0 {

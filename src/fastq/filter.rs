@@ -44,20 +44,19 @@ pub fn filter(ids_path: &str) -> errors::Result<()> {
         HashSet::<String>::from_iter(f.lines().filter_map(Result::ok).collect::<Vec<String>>());
 
     let mut record = fastq::Record::new();
-
+    let mut record_idx: usize = 0;
     loop {
-        reader.read(&mut record).context(errors::FastqReadError {
-            record: Some(record.clone()),
-        })?;
+        reader
+            .read(&mut record)
+            .context(errors::FastqReadError { record_idx })?;
         if record.is_empty() {
             return Ok(());
         }
         if !ids.contains(record.id()) {
             writer
                 .write_record(&record)
-                .context(errors::FastqWriteError {
-                    record: Some(record.clone()),
-                })?;
+                .context(errors::FastqWriteError)?;
         }
+        record_idx += 1;
     }
 }

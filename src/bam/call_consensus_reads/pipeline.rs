@@ -33,7 +33,7 @@ impl CallConsensusRead {
         let mut record_storage: HashMap<RecordID, RecordStorage> = HashMap::new();
 
         for (i, result) in self.bam_reader.records().into_iter().enumerate() {
-            let mut record = result.context(errors::BamReadError { record: None })?;
+            let mut record = result.context(errors::BamReadError { record_idx: i })?;
             if !record.is_unmapped() {
                 //Process completed duplicate groups
                 calc_consensus_complete_groups(
@@ -49,9 +49,7 @@ impl CallConsensusRead {
             } else {
                 self.bam_writer
                     .write(&record)
-                    .context(errors::BamWriteError {
-                        record: Some(record),
-                    })?;
+                    .context(errors::BamWriteError)?;
                 continue;
             }
             if record.is_supplementary() {
@@ -73,7 +71,7 @@ impl CallConsensusRead {
                                 .entry(
                                     record.cigar_cached().unwrap().end_pos().context(
                                         errors::BamCigarError {
-                                            record: record.clone(),
+                                            cigar: record.cigar_cached().unwrap().to_string(),
                                         },
                                     )? - 1,
                                 )
@@ -100,7 +98,7 @@ impl CallConsensusRead {
                                     .entry(
                                         record.cigar_cached().unwrap().end_pos().context(
                                             errors::BamCigarError {
-                                                record: record.clone(),
+                                                cigar: record.cigar_cached().unwrap().to_string(),
                                             },
                                         )? - 1,
                                     )
@@ -138,9 +136,7 @@ impl CallConsensusRead {
                     if record.is_mate_unmapped() {
                         self.bam_writer
                             .write(&record)
-                            .context(errors::BamWriteError {
-                                record: Some(record),
-                            })?;
+                            .context(errors::BamWriteError)?;
                     } else {
                         match record_storage.get_mut(record_id) {
                             //Case: Left record
@@ -182,18 +178,14 @@ impl CallConsensusRead {
                                             .calc_consensus()
                                             .0,
                                         )
-                                        .context(errors::BamWriteError { record: None })?;
+                                        .context(errors::BamWriteError)?;
                                 } else {
-                                    self.bam_writer.write(&l_rec).context(
-                                        errors::BamWriteError {
-                                            record: Some(l_rec),
-                                        },
-                                    )?;
-                                    self.bam_writer.write(&record).context(
-                                        errors::BamWriteError {
-                                            record: Some(record),
-                                        },
-                                    )?;
+                                    self.bam_writer
+                                        .write(&l_rec)
+                                        .context(errors::BamWriteError)?;
+                                    self.bam_writer
+                                        .write(&record)
+                                        .context(errors::BamWriteError)?;
                                 }
                             }
                         }
@@ -322,7 +314,7 @@ pub fn calc_consensus_complete_groups(
                             .calc_consensus()
                             .0,
                         )
-                        .context(errors::BamWriteError { record: None })?;
+                        .context(errors::BamWriteError)?;
                 } else {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     bam_writer
@@ -336,7 +328,7 @@ pub fn calc_consensus_complete_groups(
                             .calc_consensus()
                             .0,
                         )
-                        .context(errors::BamWriteError { record: None })?;
+                        .context(errors::BamWriteError)?;
                     let r_uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     bam_writer
                         .write(
@@ -349,7 +341,7 @@ pub fn calc_consensus_complete_groups(
                             .calc_consensus()
                             .0,
                         )
-                        .context(errors::BamWriteError { record: None })?;
+                        .context(errors::BamWriteError)?;
                 }
             } else {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
@@ -364,7 +356,7 @@ pub fn calc_consensus_complete_groups(
                         .calc_consensus()
                         .0,
                     )
-                    .context(errors::BamWriteError { record: None })?;
+                    .context(errors::BamWriteError)?;
             }
         }
     }
@@ -377,7 +369,7 @@ fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> errors::Result<i32>
         .unwrap()
         .end_pos()
         .context(errors::BamCigarError {
-            record: l_rec.clone(),
+            cigar: l_rec.cigar_cached().unwrap().to_string(),
         })?;
     let r_start_pos = r_rec.pos();
     let l_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;

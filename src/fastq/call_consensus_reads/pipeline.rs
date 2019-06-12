@@ -185,17 +185,16 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         pb.set_prefix(&format!(
             "[1/2] Clustering input reads by UMI using starcode."
         ));
-
         loop {
             // update spinner
             pb.set_message(&format!("  Processed {:>10} reads", i));
             pb.inc(1);
             self.fq1_reader()
                 .read(&mut f_rec)
-                .context(errors::FastqReadError { record: None })?;
+                .context(errors::FastqReadError { record_idx: i })?;
             self.fq2_reader()
                 .read(&mut r_rec)
-                .context(errors::FastqReadError { record: None })?;
+                .context(errors::FastqReadError { record_idx: i })?;
 
             match (f_rec.is_empty(), r_rec.is_empty()) {
                 (true, true) => break,
@@ -411,7 +410,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                     .calc_consensus()
                     .0,
                 )
-                .context(errors::FastqWriteError { record: None })?;
+                .context(errors::FastqWriteError)?;
             self.fq2_writer
                 .write_record(
                     &CalcNonOverlappingConsensus::new(
@@ -423,18 +422,14 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
                     .calc_consensus()
                     .0,
                 )
-                .context(errors::FastqWriteError { record: None })?;
+                .context(errors::FastqWriteError)?;
         } else {
             self.fq1_writer
                 .write_record(&f_recs[0])
-                .context(errors::FastqWriteError {
-                    record: Some(f_recs[0].clone()),
-                })?;
+                .context(errors::FastqWriteError)?;
             self.fq2_writer
                 .write_record(&r_recs[0])
-                .context(errors::FastqWriteError {
-                    record: Some(f_recs[0].clone()),
-                })?;
+                .context(errors::FastqWriteError)?;
         }
         Ok(())
     }
@@ -584,22 +579,17 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         let non_ol_consensus =
             self.maximum_likelihood_nonoverlapping_consensus(&f_recs, &r_recs, &outer_seqids, uuid);
         match ol_consensus.likelihood > non_ol_consensus.likelihood {
-            true => self.fq3_writer.write_record(&ol_consensus.record).context(
-                errors::FastqWriteError {
-                    record: Some(ol_consensus.record),
-                },
-            )?,
+            true => self
+                .fq3_writer
+                .write_record(&ol_consensus.record)
+                .context(errors::FastqWriteError)?,
             false => {
                 self.fq1_writer
                     .write_record(&non_ol_consensus.f_record)
-                    .context(errors::FastqWriteError {
-                        record: Some(ol_consensus.record),
-                    })?;
+                    .context(errors::FastqWriteError)?;
                 self.fq2_writer
                     .write_record(&non_ol_consensus.r_record)
-                    .context(errors::FastqWriteError {
-                        record: Some(non_ol_consensus.r_record),
-                    })?;
+                    .context(errors::FastqWriteError)?;
             }
         }
         Ok(())

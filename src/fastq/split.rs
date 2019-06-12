@@ -29,16 +29,14 @@ pub fn split(out_paths: &[&str]) -> errors::Result<()> {
     let mut j = 0;
     loop {
         reader.read(&mut record).context(errors::FastqReadError {
-            record: Some(record.clone()),
+            record_idx: j as usize,
         })?;
         if record.is_empty() {
             return Ok(());
         }
         writers[i]
             .write_record(&record)
-            .context(errors::FastqWriteError {
-                record: Some(record.clone()),
-            })?;
+            .context(errors::FastqWriteError)?;
         i = (i + 1) % writers.len();
         j += 1;
         if j % 1000 == 0 {

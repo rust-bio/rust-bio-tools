@@ -72,9 +72,7 @@ pub fn calculate_baf() -> errors::Result<()> {
                 data: format!("{:?}", bafs),
                 fd: String::from("BAF"),
             })?;
-        writer.write(&record).context(errors::BCFWriteError {
-            record: format!("{:?}", record),
-        })?;
+        writer.write(&record).context(errors::BCFWriteError)?;
     }
 
     Ok(())

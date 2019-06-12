@@ -113,6 +113,7 @@ pub fn to_txt(
     }
     r#try!(writer.newline());
     let mut rec = reader.empty_record();
+    let mut record_idx: usize = 0;
     loop {
         if let Err(e) = reader.read(&mut rec) {
             if e.is_eof() {
@@ -161,18 +162,18 @@ pub fn to_txt(
 
                     match tag_type {
                         bcf::header::TagType::Flag => {
-                            r#try!(writer.write_flag(rec.info(_name).flag().context(
-                                errors::BCFInfoReadError {
-                                    record: format!("{:?}", rec)
-                                }
-                            )?));
+                            r#try!(writer.write_flag(
+                                rec.info(_name)
+                                    .flag()
+                                    .context(errors::BCFInfoReadError { record_idx: i })?
+                            ));
                         }
                         bcf::header::TagType::Integer => {
                             let i = r#try!(get_idx());
                             if let Some(values) = rec
                                 .info(_name)
                                 .integer()
-                                .context(errors::BCFInfoReadError { record: None })?
+                                .context(errors::BCFInfoReadError { record_idx })?
                             {
                                 r#try!(writer.write_integer(values[i]));
                             } else {
@@ -184,7 +185,7 @@ pub fn to_txt(
                             if let Some(values) = rec
                                 .info(_name)
                                 .float()
-                                .context(errors::BCFInfoReadError { record: None })?
+                                .context(errors::BCFInfoReadError { record_idx })?
                             {
                                 r#try!(writer.write_float(values[i]));
                             } else {
@@ -196,7 +197,7 @@ pub fn to_txt(
                             if let Some(values) = rec
                                 .info(_name)
                                 .string()
-                                .context(errors::BCFInfoReadError { record: None })?
+                                .context(errors::BCFInfoReadError { record_idx })?
                             {
                                 r#try!(writer.write_field(values[i]));
                             } else {
@@ -277,7 +278,7 @@ pub fn to_txt(
             }
             r#try!(writer.newline());
         }
+        record_idx += 1;
     }
-
     Ok(())
 }

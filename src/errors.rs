@@ -185,13 +185,9 @@ pub enum Error {
         source: rust_htslib::bcf::BCFError,
     },
 
-    #[snafu(display(
-        "Failed to interpret data as integer with format {:?} in BCF record: {:?}",
-        fd,
-        source
-    ))]
+    //TODO Can this be more precise?!
+    #[snafu(display("Failed to format data in BCF record: {:?}", source))]
     BCFFormatReadError {
-        fd: String,
         source: rust_htslib::bcf::record::FormatReadError,
     },
 
@@ -247,5 +243,18 @@ pub enum Error {
     FileOpenError {
         path: String,
         source: std::io::Error,
+    },
+
+    //TODO This should be more clear
+    #[snafu(display("Failed to parse tag length: {}. Currently, only R, A and 1 are supported multiplicities of tags", tag_length))]
+    UnsupportedTagLengthError { tag_length: String },
+
+    #[snafu(display("Failed to write to BCR writer {:?}", source))]
+    BCFStdIOWriteError { source: std::io::Error },
+
+    #[snafu(display("Failed to read info from BCF record {:?}: {:?}", record, source))]
+    BCFInfoReadError {
+        record: Option<String>,
+        source: rust_htslib::bcf::record::InfoReadError,
     },
 }

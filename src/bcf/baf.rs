@@ -37,19 +37,14 @@ pub fn calculate_baf() -> errors::Result<()> {
             let ref_depths = record
                 .format(b"RO")
                 .integer()
-                .context(errors::BCFFormatReadError {
-                    fd: String::from("RO"),
-                })?
+                .context(errors::BCFFormatReadError)?
                 .into_iter()
                 .map(|d| d.to_owned())
                 .collect_vec();
-            let alt_depths =
-                record
-                    .format(b"AO")
-                    .integer()
-                    .context(errors::BCFFormatReadError {
-                        fd: String::from("AO"),
-                    })?;
+            let alt_depths = record
+                .format(b"AO")
+                .integer()
+                .context(errors::BCFFormatReadError)?;
 
             for (sample_ref_depth, sample_alt_depth) in ref_depths.iter().zip(alt_depths.iter()) {
                 if allele_lens[0] != 1 || sample_ref_depth[0].is_missing() {

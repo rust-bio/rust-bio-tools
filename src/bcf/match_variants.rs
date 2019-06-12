@@ -9,15 +9,14 @@
 //! rbt vcf-match -d 50 -l 20 tests/test3.vcf < tests/test2.vcf > tests/matching.bcf
 //! ```
 //!
+use crate::errors;
 use itertools::Itertools;
 use log::{info, warn};
 use rust_htslib::bcf;
 use rust_htslib::bcf::Read;
+use snafu::ResultExt;
 use std::collections::{btree_map, BTreeMap, HashMap};
 use std::str;
-
-use crate::errors;
-use snafu::ResultExt;
 
 pub struct VarIndex {
     inner: HashMap<Vec<u8>, BTreeMap<u32, Vec<Variant>>>,

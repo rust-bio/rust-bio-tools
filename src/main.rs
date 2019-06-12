@@ -64,7 +64,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
             }
         }
-        ("vcf-to-txt", Some(matches)) => bcf::to_txt::to_txt(
+        ("vcf-to-txt", Some(matches)) => match bcf::to_txt::to_txt(
             &matches
                 .values_of("info")
                 .map(|values| values.collect_vec())
@@ -74,7 +74,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .map(|values| values.collect_vec())
                 .unwrap_or(vec![]),
             matches.is_present("genotypes"),
-        ),
+        ) {
+            Ok(()) => Ok(()),
+            Err(e) => {
+                eprintln!("{}", e);
+                Err(Box::new(e))
+            }
+        },
         ("vcf-match", Some(matches)) => match bcf::match_variants::match_variants(
             matches.value_of("vcf").unwrap(),
             value_t!(matches, "max-dist", u32).unwrap_or(20),

@@ -112,24 +112,20 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> error
             let pos = rec.pos();
 
             let var = Variant::new(&mut rec, &mut i)?;
-
-            let mut matching = Vec::new();
-            for allele in var.alleles.iter() {
-                let mut allele_id = None;
-                if let Some(range) = index.range(chrom, pos) {
-                    for v in Itertools::flatten(range.map(|(_, idx_vars)| idx_vars)) {
-                        if let Some(id) = var.matches(v, allele, max_dist, max_len_diff)? {
-                            allele_id = Some(id as i32);
-                            break;
+            let matching = var
+                .alleles
+                .iter()
+                .map(|a| {
+                    if let Some(range) = index.range(chrom, pos) {
+                        for v in Itertools::flatten(range.map(|(_, idx_vars)| idx_vars)) {
+                            if let Some(id) = var.matches(v, a, max_dist, max_len_diff)? {
+                                return Ok(id as i32);
+                            }
                         }
                     }
-                }
-                if let Some(id) = allele_id {
-                    matching.push(id);
-                } else {
-                    matching.push(-1);
-                }
-            }
+                    Ok(-1)
+                })
+                .collect::<errors::Result<Vec<i32>>>()?;
 
             rec.push_info_integer(b"MATCHING", &matching)
                 .context(errors::BCFTagWriteError {

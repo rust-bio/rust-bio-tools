@@ -269,11 +269,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads(),
-                _ => panic!(
-                    "Invalid combination of files. Each pair of files \
-                     (input and output) need to be both gzipped or \
-                     both not zipped."
-                ),
+                _ => Err(errors::Error::InvalidFileCombinationError)?,
             }
         }
         Some(fq3_out) => {
@@ -427,11 +423,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads(),
-                _ => panic!(
-                    "Invalid combination of files. Each pair of files \
-                     (input and output) need to be both gzipped or \
-                     both not zipped."
-                ),
+                _ => Err(errors::Error::InvalidFileCombinationError)?,
             }
         }
     }

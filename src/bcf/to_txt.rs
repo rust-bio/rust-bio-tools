@@ -238,9 +238,7 @@ pub fn to_txt(
                         };
 
                         match tag_type {
-                            bcf::header::TagType::Flag => {
-                                panic!("there is no flag type for format");
-                            }
+                            bcf::header::TagType::Flag => Err(errors::Error::FlagTypeError)?,
                             bcf::header::TagType::Integer => {
                                 r#try!(writer.write_field(
                                     format!(

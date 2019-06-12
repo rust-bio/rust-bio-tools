@@ -257,4 +257,14 @@ pub enum Error {
         record: Option<String>,
         source: rust_htslib::bcf::record::InfoReadError,
     },
+
+    #[snafu(display(
+        "Invalid combination of files. Each pair of files \
+         (input and output) need to be both gzipped or \
+         both not zipped."
+    ))]
+    InvalidFileCombinationError,
+
+    #[snafu(display("There is no flag type for format"))]
+    FlagTypeError,
 }

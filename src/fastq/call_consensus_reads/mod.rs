@@ -273,8 +273,8 @@ pub fn call_consensus_reads_from_paths(
             }
         }
         Some(fq3_out) => {
-            eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
-            eprintln!(
+            info!("Reading input files:\n    {}\n    {}", fq1, fq2);
+            info!(
                 "Writing output to:\n    {}\n    {}\n    {}",
                 fq1_out, fq2_out, fq3_out
             );

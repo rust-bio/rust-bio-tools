@@ -36,7 +36,7 @@ impl VarIndex {
                 return Err(Box::new(e));
             }
             if let Some(rid) = rec.rid() {
-                let chrom = reader.header().rid2name(rid);
+                let chrom = reader.header().rid2name(rid)?;
                 let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
                 recs.entry(rec.pos())
                     .or_insert_with(|| Vec::new())
@@ -89,7 +89,7 @@ pub fn match_variants(
         outbcf.translate(&mut rec);
 
         if let Some(rid) = rec.rid() {
-            let chrom = inbcf.header().rid2name(rid);
+            let chrom = inbcf.header().rid2name(rid)?;
             let pos = rec.pos();
 
             let var = Variant::new(&mut rec, &mut i)?;

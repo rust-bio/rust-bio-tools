@@ -9,6 +9,7 @@ use std::error::Error;
 
 pub mod bam;
 pub mod bcf;
+pub mod common;
 pub mod fastq;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -57,30 +58,39 @@ fn main() -> Result<(), Box<dyn Error>> {
             value_t!(matches, "max-len-diff", u32).unwrap_or(10),
         ),
         ("vcf-baf", Some(_)) => bcf::baf::calculate_baf(),
-        ("call-consensus-reads", Some(matches)) => {
-            fastq::call_consensus_reads::call_consensus_reads_from_paths(
-                matches.value_of("fq1").unwrap(),
-                matches.value_of("fq2").unwrap(),
-                matches.value_of("consensus-fq1").unwrap(),
-                matches.value_of("consensus-fq2").unwrap(),
-                matches.value_of("consensus-fq3"),
-                value_t!(matches, "umi-len", usize).unwrap(),
+        ("call-consensus-reads", Some(matches)) => match matches.subcommand() {
+            ("fastq", Some(matches)) => {
+                fastq::call_consensus_reads::call_consensus_reads_from_paths(
+                    matches.value_of("fq1").unwrap(),
+                    matches.value_of("fq2").unwrap(),
+                    matches.value_of("consensus-fq1").unwrap(),
+                    matches.value_of("consensus-fq2").unwrap(),
+                    matches.value_of("consensus-fq3"),
+                    value_t!(matches, "umi-len", usize).unwrap(),
+                    value_t!(matches, "max-seq-dist", usize).unwrap(),
+                    value_t!(matches, "max-umi-dist", usize).unwrap(),
+                    matches.is_present("umi-on-reverse"),
+                    matches.is_present("verbose-read-names"),
+                    if matches.is_present("insert-size") {
+                        Some(value_t!(matches, "insert-size", usize).unwrap())
+                    } else {
+                        None
+                    },
+                    if matches.is_present("std-dev") {
+                        Some(value_t!(matches, "std-dev", usize).unwrap())
+                    } else {
+                        None
+                    },
+                )
+            }
+            ("bam", Some(matches)) => bam::call_consensus_reads::call_consensus_reads_from_paths(
+                matches.value_of("bam").unwrap(),
+                matches.value_of("consensus-bam").unwrap(),
                 value_t!(matches, "max-seq-dist", usize).unwrap(),
-                value_t!(matches, "max-umi-dist", usize).unwrap(),
-                matches.is_present("umi-on-reverse"),
                 matches.is_present("verbose-read-names"),
-                if matches.is_present("insert-size") {
-                    Some(value_t!(matches, "insert-size", usize).unwrap())
-                } else {
-                    None
-                },
-                if matches.is_present("std-dev") {
-                    Some(value_t!(matches, "std-dev", usize).unwrap())
-                } else {
-                    None
-                },
-            )
-        }
+            ),
+            _ => unreachable!(),
+        },
         // This cannot be reached, since the matches step of
         // clap assures that a valid subcommand is provided
         _ => unreachable!(),

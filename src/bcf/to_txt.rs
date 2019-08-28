@@ -5,30 +5,25 @@
 //! $ rbt vcf-to-txt --genotypes --fmt S --info T X SOMATIC < tests/test.vcf > tests/variant-table.txt
 //! ```
 //!
+use derive_new::new;
+use itertools::Itertools;
 use quick_error::quick_error;
+use rust_htslib::bcf;
+use rust_htslib::bcf::record::Numeric;
+use rust_htslib::bcf::Read;
 use std::error::Error;
 use std::io;
 use std::io::Write;
 use std::str;
 
-use itertools::Itertools;
-use rust_htslib::bcf;
-use rust_htslib::bcf::record::Numeric;
-use rust_htslib::bcf::Read;
-
+#[derive(new)]
 pub struct Writer {
     inner: io::BufWriter<io::Stdout>,
+    #[new(value = "0")]
     field_count: usize,
 }
 
 impl Writer {
-    fn new(inner: io::BufWriter<io::Stdout>) -> Self {
-        Writer {
-            inner,
-            field_count: 0,
-        }
-    }
-
     fn write_integer(&mut self, value: i32) -> Result<(), Box<dyn Error>> {
         let fmt = if value.is_missing() {
             "".to_owned()
@@ -127,7 +122,7 @@ pub fn to_txt(
             .map(|a| a.to_owned())
             .collect_vec();
         for (i, allele) in alleles[1..].iter().enumerate() {
-            r#try!(writer.write_field(reader.header().rid2name(rec.rid().unwrap())));
+            r#try!(writer.write_field(reader.header().rid2name(rec.rid().unwrap())?));
             r#try!(writer.write_integer(rec.pos() as i32 + 1));
             r#try!(writer.write_field(&alleles[0]));
             r#try!(writer.write_field(allele));
@@ -140,7 +135,7 @@ pub fn to_txt(
                 let _name = name.as_bytes();
                 if let Ok((tag_type, tag_length)) = rec.header().info_type(_name) {
                     let get_idx = || match tag_length {
-                        bcf::header::TagLength::Fixed => Ok(0),
+                        bcf::header::TagLength::Fixed(_) => Ok(0),
                         bcf::header::TagLength::AltAlleles => Ok(i),
                         bcf::header::TagLength::Alleles => Ok(i + 1),
                         bcf::header::TagLength::Variable => Ok(0),
@@ -202,7 +197,7 @@ pub fn to_txt(
                     let _name = name.as_bytes();
                     if let Ok((tag_type, tag_length)) = reader.header().format_type(_name) {
                         let i = match tag_length {
-                            bcf::header::TagLength::Fixed => 0,
+                            bcf::header::TagLength::Fixed(_) => 0,
                             bcf::header::TagLength::AltAlleles => i,
                             bcf::header::TagLength::Alleles => i + 1,
                             _ => return Err(Box::new(ParseError::UnsupportedTagLength)),

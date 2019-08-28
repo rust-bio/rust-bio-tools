@@ -1,70 +1,10 @@
+use crate::common::CalcConsensus;
 use bio::io::fastq;
-use bio::stats::probs::{LogProb, PHREDProb};
+use bio::stats::probs::LogProb;
+use derive_new::new;
 use itertools::Itertools;
-use ordered_float::NotNaN;
-use std::cmp;
-
-const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
 
 const ALLELES: &'static [u8] = b"ACGT";
-
-pub trait CalcConsensus<'a> {
-    fn validate_read_lengths(recs: &[fastq::Record]) -> bool {
-        let reference_length = recs[0].seq().len();
-        recs.iter()
-            .map(|rec| rec.seq().len())
-            .all(|len| len == reference_length)
-    }
-
-    #[allow(unused_doc_comments)]
-    /// Compute the likelihood for the given allele and read position.
-    /// The allele (A, C, G, or T) is an explicit parameter,
-    /// the position i is captured by the closure.
-    ///
-    /// Likelihoods are managed in log space.
-    /// A matching base is scored with (1 - PHRED score), a mismatch
-    /// with PHRED score + confusion constant.
-    fn allele_likelihood_in_rec(allele: &u8, seq: &[u8], qual: &[u8], i: usize) -> LogProb {
-        let q = LogProb::from(PHREDProb::from((qual[i] - 33) as f64));
-        if *allele == seq[i].to_ascii_uppercase() {
-            q.ln_one_minus_exp()
-        } else {
-            q + PROB_CONFUSION
-        }
-    }
-
-    fn build_consensus_sequence(
-        likelihoods: Vec<LogProb>,
-        consensus_lh: &mut LogProb,
-        consensus_seq: &mut Vec<u8>,
-        consensus_qual: &mut Vec<u8>,
-    ) {
-        let (max_posterior, allele_lh) = likelihoods
-            .iter()
-            .enumerate()
-            .max_by_key(|&(_, &lh)| NotNaN::new(*lh).unwrap())
-            .unwrap();
-        *consensus_lh += *allele_lh;
-        let marginal = LogProb::ln_sum_exp(&likelihoods);
-        // new base: MAP
-        consensus_seq.push(ALLELES[max_posterior]);
-        // new qual: (1 - MAP)
-        let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
-        // Assume the maximal quality, if the likelihood is infinite
-        let truncated_quality: f64;
-        if (*PHREDProb::from(qual)).is_infinite() {
-            truncated_quality = 41.0;
-        } else {
-            truncated_quality = *PHREDProb::from(qual);
-        }
-        // Truncate quality values to PHRED+33 range
-        consensus_qual.push(cmp::min(74, (truncated_quality + 33.0) as u64) as u8);
-    }
-
-    fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;
-    fn seqids(&self) -> &'a [usize];
-    fn uuid(&self) -> &'a str;
-}
 
 /// Compute a consensus sequence for a collection of FASTQ reads.
 ///
@@ -72,28 +12,15 @@ pub trait CalcConsensus<'a> {
 /// choose the most likely one. Write the most likely allele i.e. base
 /// as sequence into the consensus sequence. The quality value is the
 /// likelihood for this allele, encoded in PHRED+33.
+/// //TODO Generalize as this is identical to BAM except Offset and cigar/writing to record
+#[derive(new)]
 pub struct CalcNonOverlappingConsensus<'a> {
     recs: &'a [fastq::Record],
     seqids: &'a [usize],
     uuid: &'a str,
     verbose_read_names: bool,
 }
-
 impl<'a> CalcNonOverlappingConsensus<'a> {
-    pub fn new(
-        recs: &'a [fastq::Record],
-        seqids: &'a [usize],
-        uuid: &'a str,
-        verbose_read_names: bool,
-    ) -> Self {
-        CalcNonOverlappingConsensus {
-            recs,
-            seqids,
-            uuid,
-            verbose_read_names,
-        }
-    }
-
     pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
         let seq_len = self.recs()[0].seq().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
@@ -129,6 +56,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 &mut consensus_lh,
                 &mut consensus_seq,
                 &mut consensus_qual,
+                33.0,
             );
         }
 
@@ -156,11 +84,12 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
     }
 }
 
-impl<'a> CalcConsensus<'a> for CalcNonOverlappingConsensus<'a> {
+//TODO Generalized as it is identical to BAM except Offset
+impl<'a> CalcConsensus<'a, fastq::Record> for CalcNonOverlappingConsensus<'a> {
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb {
         let mut lh = LogProb::ln_one(); // posterior: log(P(theta)) = 1
         for rec in self.recs() {
-            lh += Self::allele_likelihood_in_rec(allele, rec.seq(), rec.qual(), i);
+            lh += Self::allele_likelihood_in_rec(allele, rec.seq(), rec.qual(), i, 33);
         }
         lh
     }
@@ -181,31 +110,18 @@ impl<'a> CalcConsensus<'a> for CalcNonOverlappingConsensus<'a> {
 /// choose the most likely one. Write the most likely allele i.e. base
 /// as sequence into the consensus sequence. The quality value is the
 /// likelihood for this allele, encoded in PHRED+33.
+#[derive(new)]
 pub struct CalcOverlappingConsensus<'a> {
     recs1: &'a [fastq::Record],
     recs2: &'a [fastq::Record],
     overlap: usize,
     seqids: &'a [usize],
     uuid: &'a str,
+    verbose_read_names: bool,
 }
 
+//TODO Generalize as this is identical to BAM except Offset and cigar/writing to record
 impl<'a> CalcOverlappingConsensus<'a> {
-    pub fn new(
-        recs1: &'a [fastq::Record],
-        recs2: &'a [fastq::Record],
-        overlap: usize,
-        seqids: &'a [usize],
-        uuid: &'a str,
-    ) -> Self {
-        CalcOverlappingConsensus {
-            recs1,
-            recs2,
-            overlap,
-            seqids,
-            uuid,
-        }
-    }
-
     pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
         let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
@@ -237,13 +153,21 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 &mut consensus_lh,
                 &mut consensus_seq,
                 &mut consensus_qual,
+                33.0,
             );
         }
-        let name = format!(
-            "{}_consensus-read-from:{}",
-            self.uuid(),
-            self.seqids().iter().map(|i| format!("{}", i)).join(",")
-        );
+        let name = match self.verbose_read_names {
+            true => format!(
+                "{}_consensus-read-from:{}",
+                self.uuid(),
+                self.seqids().iter().map(|i| format!("{}", i)).join(",")
+            ),
+            false => format!(
+                "{}_consensus-read-from:{}_reads",
+                self.uuid(),
+                self.seqids().len(),
+            ),
+        };
         (
             fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual),
             consensus_lh,
@@ -263,18 +187,18 @@ impl<'a> CalcOverlappingConsensus<'a> {
     }
 }
 
-impl<'a> CalcConsensus<'a> for CalcOverlappingConsensus<'a> {
+impl<'a> CalcConsensus<'a, fastq::Record> for CalcOverlappingConsensus<'a> {
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb {
         let mut lh = LogProb::ln_one();
         for (rec1, rec2) in self.recs1().into_iter().zip(self.recs2()) {
             if i < rec1.seq().len() {
-                lh += Self::allele_likelihood_in_rec(allele, rec1.seq(), rec1.qual(), i);
+                lh += Self::allele_likelihood_in_rec(allele, rec1.seq(), rec1.qual(), i, 33);
             };
             if i >= rec1.seq().len() - self.overlap() {
                 let rec2_i = i - (rec1.seq().len() - self.overlap());
                 let rec2_seq = bio::alphabets::dna::revcomp(rec2.seq());
                 let rec2_qual: Vec<u8> = rec2.qual().iter().rev().cloned().collect();
-                lh += Self::allele_likelihood_in_rec(allele, &rec2_seq, &rec2_qual, rec2_i);
+                lh += Self::allele_likelihood_in_rec(allele, &rec2_seq, &rec2_qual, rec2_i, 33);
             };
         }
         lh

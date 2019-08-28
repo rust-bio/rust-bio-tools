@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.6.0] - 2019-08-28
+### Added
+- Consensus reads can now be calculated from BAM files, based on marked PCR/optical duplicates from picard tools.
+
 ## [0.5.0] - 2019-05-08
 ### Changed
 - Fixed a bug in `call-consensus-reads` where read sequences were kept in memory.

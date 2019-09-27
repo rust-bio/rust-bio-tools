@@ -115,15 +115,17 @@ pub fn to_txt(
     let mut rec = reader.empty_record();
     let mut record_idx: usize = 0;
     loop {
-        if let Err(e) = reader.read(&mut rec) {
-            if e.is_eof() {
-                break;
-            } else {
+        match reader.read(&mut rec) {
+            Err(e) => {
                 return Err(e).context(errors::BCFReadError {
                     header: format!("{:?}", reader.header()),
                 });
             }
-        }
+            Ok(false) => {
+                // reached end of file
+                break;
+            }
+            Ok(true) => {
 
         let alleles = rec
             .alleles()
@@ -279,6 +281,8 @@ pub fn to_txt(
             r#try!(writer.newline());
         }
         record_idx += 1;
+            }
+        }
     }
     Ok(())
 }

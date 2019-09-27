@@ -29,34 +29,39 @@ impl VarIndex {
         let mut i = 0;
         let mut rec = reader.empty_record();
         loop {
-            if let Err(e) = reader.read(&mut rec) {
-                if e.is_eof() {
+            match reader.read(&mut rec) {
+                Err(e) => {
+                    return Err(e).context(errors::BCFReadError {
+                        header: format!("{:?}", reader.header()),
+                    });
+                }
+                Ok(false) => {
+                    // reached end of file
                     break;
                 }
-                return Err(e).context(errors::BCFReadError {
-                    header: format!("{:?}", reader.header()),
-                });
-            }
-            if let Some(rid) = rec.rid() {
-                let chrom = reader
-                    .header()
-                    .rid2name(rid)
-                    .context(errors::BCFReadIdError {
-                        rid,
-                        header: format!("{:?}", reader.header()),
-                    })?;
-                let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
-                recs.entry(rec.pos())
-                    .or_insert_with(|| Vec::new())
-                    .push(Variant::new(&mut rec, &mut i)?);
-            //recs.insert(rec.pos(), Variant::new(&mut rec, &mut i)?);
-            } else {
-                // skip records without rid
-                let alt_count = rec.alleles().len() as u32 - 1;
-                i += alt_count;
+                Ok(true) => {
+                    if let Some(rid) = rec.rid() {
+                        let chrom = reader
+                            .header()
+                            .rid2name(rid)
+                            .context(errors::BCFReadIdError {
+                                rid,
+                                header: format!("{:?}", reader.header()),
+                            })?;
+                        let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
+                        recs.entry(rec.pos())
+                            .or_insert_with(|| Vec::new())
+                            .push(Variant::new(&mut rec, &mut i)?);
+                        //recs.insert(rec.pos(), Variant::new(&mut rec, &mut i)?);
+                    } else {
+                        // skip records without rid
+                        let alt_count = rec.alleles().len() as u32 - 1;
+                        i += alt_count;
+                    }
+                }
             }
         }
-
+        
         Ok(VarIndex { inner, max_dist })
     }
 
@@ -79,7 +84,7 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> error
         lengths <= {}\">", max_dist, max_len_diff).as_bytes()
     );
     let mut outbcf =
-        bcf::Writer::from_stdout(&header, false, false).context(errors::BCFWriterStdoutError {
+        bcf::Writer::from_stdout(&header, false, bcf::Format::BCF).context(errors::BCFWriterStdoutError {
             header: format!("{:?}", header),
         })?;
     let index = VarIndex::new(
@@ -91,54 +96,60 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> error
     let mut rec = inbcf.empty_record();
     let mut i = 0;
     loop {
-        if let Err(e) = inbcf.read(&mut rec) {
-            if e.is_eof() {
+        match inbcf.read(&mut rec) {
+            Err(e) => {
+                return Err(e).context(errors::BCFReadError {
+                    header: format!("{:?}", header),
+                });
+            }
+            Ok(false) => {
+                // reached end of file
                 break;
             }
-            return Err(e).context(errors::BCFReadError {
-                header: format!("{:?}", header),
-            });
-        }
-        outbcf.translate(&mut rec);
+            Ok(true) => {
 
-        if let Some(rid) = rec.rid() {
-            let chrom = inbcf
-                .header()
-                .rid2name(rid)
-                .context(errors::BCFReadIdError {
-                    rid,
-                    header: format!("{:?}", inbcf.header()),
-                })?;
-            let pos = rec.pos();
+                outbcf.translate(&mut rec);
 
-            let var = Variant::new(&mut rec, &mut i)?;
-            let matching = var
-                .alleles
-                .iter()
-                .map(|a| {
-                    if let Some(range) = index.range(chrom, pos) {
-                        for v in Itertools::flatten(range.map(|(_, idx_vars)| idx_vars)) {
-                            if let Some(id) = var.matches(v, a, max_dist, max_len_diff)? {
-                                return Ok(id as i32);
+                if let Some(rid) = rec.rid() {
+                    let chrom = inbcf
+                        .header()
+                        .rid2name(rid)
+                        .context(errors::BCFReadIdError {
+                            rid,
+                            header: format!("{:?}", inbcf.header()),
+                        })?;
+                    let pos = rec.pos();
+                    
+                    let var = Variant::new(&mut rec, &mut i)?;
+                    let matching = var
+                        .alleles
+                        .iter()
+                        .map(|a| {
+                            if let Some(range) = index.range(chrom, pos) {
+                                for v in Itertools::flatten(range.map(|(_, idx_vars)| idx_vars)) {
+                                    if let Some(id) = var.matches(v, a, max_dist, max_len_diff)? {
+                                        return Ok(id as i32);
+                                    }
+                                }
                             }
-                        }
-                    }
-                    Ok(-1)
-                })
-                .collect::<errors::Result<Vec<i32>>>()?;
+                            Ok(-1)
+                        })
+                        .collect::<errors::Result<Vec<i32>>>()?;
 
-            rec.push_info_integer(b"MATCHING", &matching)
-                .context(errors::BCFTagWriteError {
-                    data: format!("{:?}", matching),
-                    fd: String::from("MATCHING"),
-                })?;
-            outbcf.write(&rec).context(errors::BCFWriteError)?;
-        } else {
-            outbcf.write(&rec).context(errors::BCFWriteError)?;
-        }
+                    rec.push_info_integer(b"MATCHING", &matching)
+                        .context(errors::BCFTagWriteError {
+                            data: format!("{:?}", matching),
+                            fd: String::from("MATCHING"),
+                        })?;
+                    outbcf.write(&rec).context(errors::BCFWriteError)?;
+                } else {
+                    outbcf.write(&rec).context(errors::BCFWriteError)?;
+                }
 
-        if (i) % 1000 == 0 {
-            info!("{} variants written.", i);
+                if (i) % 1000 == 0 {
+                    info!("{} variants written.", i);
+                }
+            }
         }
     }
     info!("{} variants written.", i);

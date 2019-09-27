@@ -69,11 +69,7 @@ impl CallConsensusRead {
                             //For right record save end position and duplicate group ID
                             group_end_idx
                                 .entry(
-                                    record.cigar_cached().unwrap().end_pos().context(
-                                        errors::BamCigarError {
-                                            cigar: record.cigar_cached().unwrap().to_string(),
-                                        },
-                                    )? - 1,
+                                    record.cigar_cached().unwrap().end_pos() - 1,
                                 )
                                 .or_insert_with(HashSet::new)
                                 .insert(duplicate_id.integer());
@@ -96,11 +92,7 @@ impl CallConsensusRead {
                                 //If right or single record save end position and duplicate group ID
                                 group_end_idx
                                     .entry(
-                                        record.cigar_cached().unwrap().end_pos().context(
-                                            errors::BamCigarError {
-                                                cigar: record.cigar_cached().unwrap().to_string(),
-                                            },
-                                        )? - 1,
+                                        record.cigar_cached().unwrap().end_pos() - 1,
                                     )
                                     .or_insert_with(HashSet::new)
                                     .insert(duplicate_id.integer());
@@ -367,10 +359,7 @@ fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> errors::Result<i32>
     let l_end_pos = l_rec
         .cigar_cached()
         .unwrap()
-        .end_pos()
-        .context(errors::BamCigarError {
-            cigar: l_rec.cigar_cached().unwrap().to_string(),
-        })?;
+        .end_pos();
     let r_start_pos = r_rec.pos();
     let l_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;
     let r_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter())?;

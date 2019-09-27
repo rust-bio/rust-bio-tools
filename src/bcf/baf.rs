@@ -9,7 +9,7 @@ use itertools::repeat_n;
 use itertools::Itertools;
 use rust_htslib::bcf;
 use rust_htslib::bcf::Read;
-use rust_htslib::prelude::*;
+use rust_htslib::bcf::record::Numeric;
 use std::f32;
 
 use crate::errors;
@@ -22,7 +22,7 @@ pub fn calculate_baf() -> errors::Result<()> {
     header.push_record(b"##FORMAT=<ID=BAF,Number=A,Type=Float,Description=\"b-allele frequency\">");
 
     let mut writer =
-        bcf::Writer::from_stdout(&header, false, false).context(errors::BCFWriterStdoutError {
+        bcf::Writer::from_stdout(&header, false, bcf::Format::BCF).context(errors::BCFWriterStdoutError {
             header: format!("{:?}", header),
         })?;
 

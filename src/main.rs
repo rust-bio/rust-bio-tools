@@ -99,8 +99,8 @@ fn main() -> errors::Result<()> {
     } {
         Err(e) => {
             eprintln!("{}", e);
-            return Err(e);
+            Err(e)
         }
-        Ok(x) => Ok(x),
+        Ok(_) => Ok(()),
     }
 }

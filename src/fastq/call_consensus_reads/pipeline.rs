@@ -47,7 +47,7 @@ fn median_hamming_distance(
         if (insert_size < f_rec.seq().len()) | (insert_size < r_rec.seq().len()) {
             return None;
         }
-        if insert_size >= (&f_rec.seq().len() + &r_rec.seq().len()) {
+        if insert_size >= (f_rec.seq().len() + r_rec.seq().len()) {
             return None;
         }
         let overlap = (f_rec.seq().len() + r_rec.seq().len()) - insert_size;
@@ -92,7 +92,7 @@ impl FASTQStorage {
         })
     }
 
-    fn as_key<'a>(i: u64) -> [u8; 8] {
+    fn as_key(i: u64) -> [u8; 8] {
         unsafe { mem::transmute::<u64, [u8; 8]>(i) }
     }
 
@@ -182,9 +182,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         // prepare spinner for user feedback
         let pb = indicatif::ProgressBar::new_spinner();
         pb.set_style(spinner_style.clone());
-        pb.set_prefix(&format!(
-            "[1/2] Clustering input reads by UMI using starcode."
-        ));
+        pb.set_prefix(&"[1/2] Clustering input reads by UMI using starcode.".to_string());
         loop {
             // update spinner
             pb.set_message(&format!("  Processed {:>10} reads", i));
@@ -260,9 +258,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         let mut j = 0;
         let pb = indicatif::ProgressBar::new_spinner();
         pb.set_style(spinner_style.clone());
-        pb.set_prefix(&format!(
-            "[2/2] Merge eligable reads within each cluster.    "
-        ));
+        pb.set_prefix(&"[2/2] Merge eligable reads within each cluster.    ".to_string());
         // read clusters identified by the first starcode run
         // the first run clustered by UMI, hence all reads in
         // the clusters handled here had similar UMIs
@@ -479,19 +475,19 @@ pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
 impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
     fn isize_highest_probability(&mut self, f_seq_len: usize, r_seq_len: usize) -> f64 {
         if f_seq_len + f_seq_len < self.insert_size {
-            return self.insert_size as f64;
+            self.insert_size as f64
         } else if f_seq_len + r_seq_len > self.insert_size + 2 * self.std_dev {
-            return (self.insert_size + 2 * self.std_dev) as f64;
+            (self.insert_size + 2 * self.std_dev) as f64
         } else {
-            return (f_seq_len + r_seq_len) as f64;
+            (f_seq_len + r_seq_len) as f64
         }
     }
 
     fn maximum_likelihood_overlapping_consensus(
         &mut self,
-        f_recs: &Vec<Record>,
-        r_recs: &Vec<Record>,
-        outer_seqids: &Vec<usize>,
+        f_recs: &[Record],
+        r_recs: &[Record],
+        outer_seqids: &[usize],
         uuid: &str,
     ) -> OverlappingConsensus {
         //Returns consensus record by filtering overlaps with lowest hamming distance.
@@ -533,9 +529,9 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
 
     fn maximum_likelihood_nonoverlapping_consensus(
         &mut self,
-        f_recs: &Vec<Record>,
-        r_recs: &Vec<Record>,
-        outer_seqids: &Vec<usize>,
+        f_recs: &[Record],
+        r_recs: &[Record],
+        outer_seqids: &[usize],
         uuid: &str,
     ) -> NonOverlappingConsensus {
         //Calculate non-overlapping consensus records and shared lh

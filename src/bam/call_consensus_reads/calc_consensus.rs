@@ -4,7 +4,7 @@ use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
 
-const ALLELES: &'static [u8] = b"ACGT";
+const ALLELES: &[u8] = b"ACGT";
 
 #[derive(new)]
 pub struct CalcOverlappingConsensus<'a> {
@@ -83,7 +83,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
 impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb {
         let mut lh = LogProb::ln_one();
-        for (rec1, rec2) in self.recs1().into_iter().zip(self.recs2()) {
+        for (rec1, rec2) in self.recs1().iter().zip(self.recs2()) {
             if i < rec1.seq().len() {
                 lh += Self::allele_likelihood_in_rec(
                     allele,

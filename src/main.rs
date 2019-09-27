@@ -45,11 +45,11 @@ fn main() -> errors::Result<()> {
             &matches
                 .values_of("info")
                 .map(|values| values.collect_vec())
-                .unwrap_or(vec![]),
+                .unwrap_or_else(|| vec![]),
             &matches
                 .values_of("format")
                 .map(|values| values.collect_vec())
-                .unwrap_or(vec![]),
+                .unwrap_or_else(|| vec![]),
             matches.is_present("genotypes"),
         ),
         ("vcf-match", Some(matches)) => bcf::match_variants::match_variants(

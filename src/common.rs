@@ -3,8 +3,8 @@ use bio_types::sequence::SequenceRead;
 use ordered_float::NotNaN;
 use std::cmp;
 
-const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
-const ALLELES: &'static [u8] = b"ACGT";
+const PROB_CONFUSION: LogProb = LogProb(-1.098_612_288_668_109_8); // (1 / 3).ln()
+const ALLELES: &[u8] = b"ACGT";
 
 pub trait CalcConsensus<'a, R: SequenceRead> {
     fn validate_read_lengths(recs: &[R]) -> bool {

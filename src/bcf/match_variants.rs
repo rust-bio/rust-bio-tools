@@ -49,9 +49,9 @@ impl VarIndex {
                                     rid,
                                     header: format!("{:?}", reader.header()),
                                 })?;
-                        let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
+                        let recs = inner.entry(chrom.to_owned()).or_insert_with(BTreeMap::new);
                         recs.entry(rec.pos())
-                            .or_insert_with(|| Vec::new())
+                            .or_insert_with(Vec::new)
                             .push(Variant::new(&mut rec, &mut i)?);
                     //recs.insert(rec.pos(), Variant::new(&mut rec, &mut i)?);
                     } else {
@@ -172,7 +172,7 @@ impl Variant {
         let pos = rec.pos();
 
         let svlens = if let Ok(Some(svlens)) = rec.info(b"SVLEN").integer() {
-            Some(svlens.into_iter().map(|l| l.abs() as u32).collect_vec())
+            Some(svlens.iter().map(|l| l.abs() as u32).collect_vec())
         } else {
             None
         };

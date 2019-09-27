@@ -68,7 +68,7 @@ impl Writer {
     }
 }
 
-const HEADER_COMMON: &'static [u8] = b"VARIANT";
+const HEADER_COMMON: &[u8] = b"VARIANT";
 
 pub fn to_txt(
     info_tags: &[&str],

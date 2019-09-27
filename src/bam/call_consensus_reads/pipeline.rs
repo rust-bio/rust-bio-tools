@@ -32,7 +32,7 @@ impl CallConsensusRead {
         let mut duplicate_groups: HashMap<GroupID, RecordIDS> = HashMap::new();
         let mut record_storage: HashMap<RecordID, RecordStorage> = HashMap::new();
 
-        for (i, result) in self.bam_reader.records().into_iter().enumerate() {
+        for (i, result) in self.bam_reader.records().enumerate() {
             let mut record = result.context(errors::BamReadError { record_idx: i })?;
             if !record.is_unmapped() {
                 //Process completed duplicate groups
@@ -216,9 +216,7 @@ pub fn calc_consensus_complete_groups(
     // prepare spinner for user feedback
     let pb = indicatif::ProgressBar::new_spinner();
     pb.set_style(spinner_style.clone());
-    pb.set_prefix(&format!(
-        "Clustering duplicated records by sequence using starcode."
-    ));
+    pb.set_prefix(&"Clustering duplicated records by sequence using starcode.".to_string());
     for (i, group_id) in group_ids.into_iter().enumerate() {
         pb.inc(1);
         let mut read_id_storage = Vec::new();

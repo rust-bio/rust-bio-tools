@@ -269,7 +269,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads(),
-                _ => Err(errors::Error::InvalidFileCombinationError)?,
+                _ => Err(errors::Error::InvalidFileCombinationError),
             }
         }
         Some(fq3_out) => {
@@ -423,7 +423,7 @@ pub fn call_consensus_reads_from_paths(
                     verbose_read_names,
                 )
                 .call_consensus_reads(),
-                _ => Err(errors::Error::InvalidFileCombinationError)?,
+                _ => Err(errors::Error::InvalidFileCombinationError),
             }
         }
     }

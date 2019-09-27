@@ -58,8 +58,8 @@ pub fn depth(
     exclude_flags: u16,
     min_mapq: u8,
 ) -> errors::Result<()> {
-    let mut bam_reader = bam::IndexedReader::from_path(&bam_path)
-        .context(errors::BamIndexedReaderError {})?;
+    let mut bam_reader =
+        bam::IndexedReader::from_path(&bam_path).context(errors::BamIndexedReaderError {})?;
     let bam_header = bam_reader.header().clone();
     let mut pos_reader = csv::ReaderBuilder::new()
         .has_headers(false)

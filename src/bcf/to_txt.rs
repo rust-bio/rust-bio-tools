@@ -126,161 +126,162 @@ pub fn to_txt(
                 break;
             }
             Ok(true) => {
-
-        let alleles = rec
-            .alleles()
-            .into_iter()
-            .map(|a| a.to_owned())
-            .collect_vec();
-        for (i, allele) in alleles[1..].iter().enumerate() {
-            r#try!(
-                writer.write_field(reader.header().rid2name(rec.rid().unwrap()).context(
-                    errors::BCFReadIdError {
-                        rid: rec.rid().unwrap(),
-                        header: format!("{:?}", reader.header()),
+                let alleles = rec
+                    .alleles()
+                    .into_iter()
+                    .map(|a| a.to_owned())
+                    .collect_vec();
+                for (i, allele) in alleles[1..].iter().enumerate() {
+                    r#try!(writer.write_field(
+                        reader.header().rid2name(rec.rid().unwrap()).context(
+                            errors::BCFReadIdError {
+                                rid: rec.rid().unwrap(),
+                                header: format!("{:?}", reader.header()),
+                            }
+                        )?
+                    ));
+                    r#try!(writer.write_integer(rec.pos() as i32 + 1));
+                    r#try!(writer.write_field(&alleles[0]));
+                    r#try!(writer.write_field(allele));
+                    match rec.qual() {
+                        q if q.is_missing() => r#try!(writer.write_field(b"")),
+                        q => r#try!(writer.write_float(q)),
                     }
-                )?)
-            );
-            r#try!(writer.write_integer(rec.pos() as i32 + 1));
-            r#try!(writer.write_field(&alleles[0]));
-            r#try!(writer.write_field(allele));
-            match rec.qual() {
-                q if q.is_missing() => r#try!(writer.write_field(b"")),
-                q => r#try!(writer.write_float(q)),
-            }
 
-            for name in info_tags {
-                let _name = name.as_bytes();
-                if let Ok((tag_type, tag_length)) = rec.header().info_type(_name) {
-                    let get_idx = || match tag_length {
-                        bcf::header::TagLength::Fixed(_) => Ok(0),
-                        bcf::header::TagLength::AltAlleles => Ok(i),
-                        bcf::header::TagLength::Alleles => Ok(i + 1),
-                        bcf::header::TagLength::Variable => Ok(0),
-                        _ => Err(errors::Error::UnsupportedTagLengthError {
-                            tag_length: format!("{:?}", tag_length),
-                        }),
+                    for name in info_tags {
+                        let _name = name.as_bytes();
+                        if let Ok((tag_type, tag_length)) = rec.header().info_type(_name) {
+                            let get_idx = || match tag_length {
+                                bcf::header::TagLength::Fixed(_) => Ok(0),
+                                bcf::header::TagLength::AltAlleles => Ok(i),
+                                bcf::header::TagLength::Alleles => Ok(i + 1),
+                                bcf::header::TagLength::Variable => Ok(0),
+                                _ => Err(errors::Error::UnsupportedTagLengthError {
+                                    tag_length: format!("{:?}", tag_length),
+                                }),
+                            };
+
+                            match tag_type {
+                                bcf::header::TagType::Flag => {
+                                    r#try!(writer.write_flag(
+                                        rec.info(_name)
+                                            .flag()
+                                            .context(errors::BCFInfoReadError { record_idx: i })?
+                                    ));
+                                }
+                                bcf::header::TagType::Integer => {
+                                    let i = r#try!(get_idx());
+                                    if let Some(values) = rec
+                                        .info(_name)
+                                        .integer()
+                                        .context(errors::BCFInfoReadError { record_idx })?
+                                    {
+                                        r#try!(writer.write_integer(values[i]));
+                                    } else {
+                                        r#try!(writer.write_field(b""));
+                                    }
+                                }
+                                bcf::header::TagType::Float => {
+                                    let i = r#try!(get_idx());
+                                    if let Some(values) = rec
+                                        .info(_name)
+                                        .float()
+                                        .context(errors::BCFInfoReadError { record_idx })?
+                                    {
+                                        r#try!(writer.write_float(values[i]));
+                                    } else {
+                                        r#try!(writer.write_field(b""));
+                                    }
+                                }
+                                bcf::header::TagType::String => {
+                                    let i = r#try!(get_idx());
+                                    if let Some(values) = rec
+                                        .info(_name)
+                                        .string()
+                                        .context(errors::BCFInfoReadError { record_idx })?
+                                    {
+                                        r#try!(writer.write_field(values[i]));
+                                    } else {
+                                        r#try!(writer.write_field(b""));
+                                    }
+                                }
+                            }
+                        } else {
+                            // tag undefined, write NA
+                            r#try!(writer.write_field(b""));
+                        }
+                    }
+
+                    let genotypes = if show_genotypes {
+                        let genotypes = rec.genotypes().context(errors::BCFFormatReadError)?;
+                        Some(
+                            (0..reader.header().sample_count() as usize)
+                                .map(|s| format!("{}", genotypes.get(s)))
+                                .collect_vec(),
+                        )
+                    } else {
+                        None
                     };
 
-                    match tag_type {
-                        bcf::header::TagType::Flag => {
-                            r#try!(writer.write_flag(
-                                rec.info(_name)
-                                    .flag()
-                                    .context(errors::BCFInfoReadError { record_idx: i })?
-                            ));
+                    for s in 0..reader.header().sample_count() as usize {
+                        if let Some(ref genotypes) = genotypes {
+                            r#try!(writer.write_field(genotypes[s].as_bytes()));
                         }
-                        bcf::header::TagType::Integer => {
-                            let i = r#try!(get_idx());
-                            if let Some(values) = rec
-                                .info(_name)
-                                .integer()
-                                .context(errors::BCFInfoReadError { record_idx })?
-                            {
-                                r#try!(writer.write_integer(values[i]));
+                        for name in format_tags {
+                            let _name = name.as_bytes();
+                            if let Ok((tag_type, tag_length)) = reader.header().format_type(_name) {
+                                let i = match tag_length {
+                                    bcf::header::TagLength::Fixed(_) => 0,
+                                    bcf::header::TagLength::AltAlleles => i,
+                                    bcf::header::TagLength::Alleles => i + 1,
+                                    _ => Err(errors::Error::UnsupportedTagLengthError {
+                                        tag_length: format!("{:?}", tag_length),
+                                    })?,
+                                };
+
+                                match tag_type {
+                                    bcf::header::TagType::Flag => {
+                                        Err(errors::Error::FlagTypeError)?
+                                    }
+                                    bcf::header::TagType::Integer => {
+                                        r#try!(writer.write_field(
+                                            format!(
+                                                "{}",
+                                                rec.format(_name)
+                                                    .integer()
+                                                    .context(errors::BCFFormatReadError)?[s][i]
+                                            )
+                                            .as_bytes()
+                                        ));
+                                    }
+                                    bcf::header::TagType::Float => {
+                                        r#try!(writer.write_field(
+                                            format!(
+                                                "{}",
+                                                rec.format(_name)
+                                                    .float()
+                                                    .context(errors::BCFFormatReadError)?[s][i]
+                                            )
+                                            .as_bytes()
+                                        ));
+                                    }
+                                    bcf::header::TagType::String => {
+                                        r#try!(writer.write_field(
+                                            rec.format(_name)
+                                                .string()
+                                                .context(errors::BCFFormatReadError)?[s]
+                                        ));
+                                    }
+                                }
                             } else {
-                                r#try!(writer.write_field(b""));
-                            }
-                        }
-                        bcf::header::TagType::Float => {
-                            let i = r#try!(get_idx());
-                            if let Some(values) = rec
-                                .info(_name)
-                                .float()
-                                .context(errors::BCFInfoReadError { record_idx })?
-                            {
-                                r#try!(writer.write_float(values[i]));
-                            } else {
-                                r#try!(writer.write_field(b""));
-                            }
-                        }
-                        bcf::header::TagType::String => {
-                            let i = r#try!(get_idx());
-                            if let Some(values) = rec
-                                .info(_name)
-                                .string()
-                                .context(errors::BCFInfoReadError { record_idx })?
-                            {
-                                r#try!(writer.write_field(values[i]));
-                            } else {
+                                // tag undefined, write NA
                                 r#try!(writer.write_field(b""));
                             }
                         }
                     }
-                } else {
-                    // tag undefined, write NA
-                    r#try!(writer.write_field(b""));
+                    r#try!(writer.newline());
                 }
-            }
-
-            let genotypes = if show_genotypes {
-                let genotypes = rec.genotypes().context(errors::BCFFormatReadError)?;
-                Some(
-                    (0..reader.header().sample_count() as usize)
-                        .map(|s| format!("{}", genotypes.get(s)))
-                        .collect_vec(),
-                )
-            } else {
-                None
-            };
-
-            for s in 0..reader.header().sample_count() as usize {
-                if let Some(ref genotypes) = genotypes {
-                    r#try!(writer.write_field(genotypes[s].as_bytes()));
-                }
-                for name in format_tags {
-                    let _name = name.as_bytes();
-                    if let Ok((tag_type, tag_length)) = reader.header().format_type(_name) {
-                        let i = match tag_length {
-                            bcf::header::TagLength::Fixed(_) => 0,
-                            bcf::header::TagLength::AltAlleles => i,
-                            bcf::header::TagLength::Alleles => i + 1,
-                            _ => Err(errors::Error::UnsupportedTagLengthError {
-                                tag_length: format!("{:?}", tag_length),
-                            })?,
-                        };
-
-                        match tag_type {
-                            bcf::header::TagType::Flag => Err(errors::Error::FlagTypeError)?,
-                            bcf::header::TagType::Integer => {
-                                r#try!(writer.write_field(
-                                    format!(
-                                        "{}",
-                                        rec.format(_name)
-                                            .integer()
-                                            .context(errors::BCFFormatReadError)?[s][i]
-                                    )
-                                    .as_bytes()
-                                ));
-                            }
-                            bcf::header::TagType::Float => {
-                                r#try!(writer.write_field(
-                                    format!(
-                                        "{}",
-                                        rec.format(_name)
-                                            .float()
-                                            .context(errors::BCFFormatReadError)?[s][i]
-                                    )
-                                    .as_bytes()
-                                ));
-                            }
-                            bcf::header::TagType::String => {
-                                r#try!(writer.write_field(
-                                    rec.format(_name)
-                                        .string()
-                                        .context(errors::BCFFormatReadError)?[s]
-                                ));
-                            }
-                        }
-                    } else {
-                        // tag undefined, write NA
-                        r#try!(writer.write_field(b""));
-                    }
-                }
-            }
-            r#try!(writer.newline());
-        }
-        record_idx += 1;
+                record_idx += 1;
             }
         }
     }

@@ -29,8 +29,7 @@ fn main() -> errors::Result<()> {
         .apply()
         .unwrap();
 
-    match 
-    match matches.subcommand() {
+    match match matches.subcommand() {
         ("fastq-split", Some(matches)) => {
             fastq::split::split(&matches.values_of("chunks").unwrap().collect_vec())
         }
@@ -100,7 +99,7 @@ fn main() -> errors::Result<()> {
     } {
         Err(e) => {
             eprintln!("{}", e);
-            return Err(e)
+            return Err(e);
         }
         Ok(x) => Ok(x),
     }

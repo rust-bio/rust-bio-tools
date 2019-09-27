@@ -41,18 +41,19 @@ impl VarIndex {
                 }
                 Ok(true) => {
                     if let Some(rid) = rec.rid() {
-                        let chrom = reader
-                            .header()
-                            .rid2name(rid)
-                            .context(errors::BCFReadIdError {
-                                rid,
-                                header: format!("{:?}", reader.header()),
-                            })?;
+                        let chrom =
+                            reader
+                                .header()
+                                .rid2name(rid)
+                                .context(errors::BCFReadIdError {
+                                    rid,
+                                    header: format!("{:?}", reader.header()),
+                                })?;
                         let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
                         recs.entry(rec.pos())
                             .or_insert_with(|| Vec::new())
                             .push(Variant::new(&mut rec, &mut i)?);
-                        //recs.insert(rec.pos(), Variant::new(&mut rec, &mut i)?);
+                    //recs.insert(rec.pos(), Variant::new(&mut rec, &mut i)?);
                     } else {
                         // skip records without rid
                         let alt_count = rec.alleles().len() as u32 - 1;
@@ -61,7 +62,7 @@ impl VarIndex {
                 }
             }
         }
-        
+
         Ok(VarIndex { inner, max_dist })
     }
 
@@ -83,10 +84,11 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> error
         alternative allele separately). For indels, matching is fuzzy: distance of centres <= {}, difference of \
         lengths <= {}\">", max_dist, max_len_diff).as_bytes()
     );
-    let mut outbcf =
-        bcf::Writer::from_stdout(&header, false, bcf::Format::BCF).context(errors::BCFWriterStdoutError {
+    let mut outbcf = bcf::Writer::from_stdout(&header, false, bcf::Format::BCF).context(
+        errors::BCFWriterStdoutError {
             header: format!("{:?}", header),
-        })?;
+        },
+    )?;
     let index = VarIndex::new(
         bcf::Reader::from_path(matchbcf)
             .context(errors::BCFReaderFromPathError { path: matchbcf })?,
@@ -107,7 +109,6 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> error
                 break;
             }
             Ok(true) => {
-
                 outbcf.translate(&mut rec);
 
                 if let Some(rid) = rec.rid() {
@@ -119,7 +120,7 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> error
                             header: format!("{:?}", inbcf.header()),
                         })?;
                     let pos = rec.pos();
-                    
+
                     let var = Variant::new(&mut rec, &mut i)?;
                     let matching = var
                         .alleles
@@ -136,11 +137,12 @@ pub fn match_variants(matchbcf: &str, max_dist: u32, max_len_diff: u32) -> error
                         })
                         .collect::<errors::Result<Vec<i32>>>()?;
 
-                    rec.push_info_integer(b"MATCHING", &matching)
-                        .context(errors::BCFTagWriteError {
+                    rec.push_info_integer(b"MATCHING", &matching).context(
+                        errors::BCFTagWriteError {
                             data: format!("{:?}", matching),
                             fd: String::from("MATCHING"),
-                        })?;
+                        },
+                    )?;
                     outbcf.write(&rec).context(errors::BCFWriteError)?;
                 } else {
                     outbcf.write(&rec).context(errors::BCFWriteError)?;

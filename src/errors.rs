@@ -6,14 +6,10 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[snafu(visibility(pub))]
 pub enum Error {
     #[snafu(display("Could not open input file; {}", source))]
-    BamIndexedReaderError {
-        source: rust_htslib::bam::Error,
-    },
+    BamIndexedReaderError { source: rust_htslib::bam::Error },
 
     #[snafu(display("Could not open input file; {}", source))]
-    BamReaderError {
-        source: rust_htslib::bam::Error,
-    },
+    BamReaderError { source: rust_htslib::bam::Error },
 
     #[snafu(display("Could not open input file {}; {}", filename, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
@@ -23,9 +19,7 @@ pub enum Error {
     },
 
     #[snafu(display("Could not open output file; {}", source))]
-    BamWriterError {
-        source: rust_htslib::bam::Error,
-    },
+    BamWriterError { source: rust_htslib::bam::Error },
 
     #[snafu(display("Could not open output file {}; {}", filename, source))]
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
@@ -35,9 +29,7 @@ pub enum Error {
     },
 
     #[snafu(display("Could not write record; {}", source))]
-    BamWriteError {
-        source: rust_htslib::bam::Error,
-    },
+    BamWriteError { source: rust_htslib::bam::Error },
 
     #[snafu(display("Could not write FASTQ record; {}", source))]
     FastqWriteError { source: std::io::Error },
@@ -172,9 +164,7 @@ pub enum Error {
     },
 
     #[snafu(display("Failed to format data in BCF record; {}", source))]
-    BCFFormatReadError {
-        source: rust_htslib::bcf::Error,
-    },
+    BCFFormatReadError { source: rust_htslib::bcf::Error },
 
     #[snafu(display("Failed to format {:?} as {:?}; {}", data, fd, source))]
     BCFTagWriteError {
@@ -184,9 +174,7 @@ pub enum Error {
     },
 
     #[snafu(display("Failed write record to BCF file; {}", source))]
-    BCFWriteError {
-        source: rust_htslib::bcf::Error,
-    },
+    BCFWriteError { source: rust_htslib::bcf::Error },
 
     #[snafu(display("Failed to read BCF file with header {}; {}", header, source))]
     BCFReadError {

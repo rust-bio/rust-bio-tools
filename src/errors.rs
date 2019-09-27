@@ -5,18 +5,14 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Snafu)]
 #[snafu(visibility(pub))]
 pub enum Error {
-    #[snafu(display("Could not open input file from path {}: {:?}", filepath, source))]
-    #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
+    #[snafu(display("Could not open input file from path: {:?}", source))]
     BamIndexedReaderError {
-        filepath: String,
-        source: rust_htslib::bam::IndexedReaderPathError,
+        source: rust_htslib::bam::Error,
     },
 
-    #[snafu(display("Could not open input file {}: {:?}", filename, source))]
-    #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
+    #[snafu(display("Could not open input file: {:?}", source))]
     BamReaderError {
-        filename: String,
-        source: rust_htslib::bam::ReaderPathError,
+        source: rust_htslib::bam::Error,
     },
 
     #[snafu(display("Could not open input file {}: {:?}", filename, source))]
@@ -26,11 +22,9 @@ pub enum Error {
         source: std::io::Error,
     },
 
-    #[snafu(display("Could not open output file {}: {:?}", filename, source))]
-    #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
+    #[snafu(display("Could not open output file: {:?}", source))]
     BamWriterError {
-        filename: String,
-        source: rust_htslib::bam::WriterPathError,
+        source: rust_htslib::bam::Error,
     },
 
     #[snafu(display("Could not open output file {}: {:?}", filename, source))]
@@ -42,16 +36,16 @@ pub enum Error {
 
     #[snafu(display("Could not write record: {:?}", source))]
     BamWriteError {
-        source: rust_htslib::bam::WriteError,
+        source: rust_htslib::bam::Error,
     },
 
-    #[snafu(display("Could not write record: {:?}", source))]
+    #[snafu(display("Could not write FASTQ record: {:?}", source))]
     FastqWriteError { source: std::io::Error },
 
     #[snafu(display("Could not read record with index{}: {:?}", record_idx, source))]
     BamReadError {
         record_idx: usize,
-        source: rust_htslib::bam::ReadError,
+        source: rust_htslib::bam::Error,
     },
 
     #[snafu(display("Could not read csv record: {:?}", source))]
@@ -105,7 +99,7 @@ pub enum Error {
     #[snafu(source(from((dyn std::error::Error + 'static), Box::new)))]
     PipelineError {
         params: String,
-        source: Box<std::error::Error>,
+        source: Box<dyn std::error::Error>,
     },
 
     #[snafu(display("Failed to create a temporary directory for RocksDB: {:?}", source))]
@@ -149,23 +143,23 @@ pub enum Error {
     #[snafu(display("Cigar {} contains unsupported Cigar operation.: {:?}", cigar, source))]
     BamCigarError {
         cigar: String,
-        source: rust_htslib::bam::record::CigarError,
+        source: rust_htslib::bam::Error,
     },
 
     #[snafu(display("Could not fetch record {}: {:?}", tid, source))]
     BamFetchError {
         tid: u32,
-        source: rust_htslib::bam::FetchError,
+        source: rust_htslib::bam::Error,
     },
 
     #[snafu(display("Could not read pileup from {}: {:?}", path, source))]
     BamPileupError {
         path: String,
-        source: rust_htslib::bam::pileup::PileupError,
+        source: rust_htslib::bam::Error,
     },
 
     #[snafu(display("Failed to read BCF file from stdin: {:?}", source))]
-    BCFReaderStdinError { source: rust_htslib::bcf::BCFError },
+    BCFReaderStdinError { source: rust_htslib::bcf::Error },
 
     #[snafu(display(
         "Failed to open BCF writer for stdout with header {:?}: {:?}",
@@ -174,31 +168,31 @@ pub enum Error {
     ))]
     BCFWriterStdoutError {
         header: String,
-        source: rust_htslib::bcf::BCFError,
+        source: rust_htslib::bcf::Error,
     },
 
     //TODO Can this be more precise?!
     #[snafu(display("Failed to format data in BCF record: {:?}", source))]
     BCFFormatReadError {
-        source: rust_htslib::bcf::record::FormatReadError,
+        source: rust_htslib::bcf::Error,
     },
 
     #[snafu(display("Failed to format {:?} as {:?}: {:?}", data, fd, source))]
     BCFTagWriteError {
         data: String,
         fd: String,
-        source: rust_htslib::bcf::record::TagWriteError,
+        source: rust_htslib::bcf::Error,
     },
 
     #[snafu(display("Failed write recordto BCF file: {:?}", source))]
     BCFWriteError {
-        source: rust_htslib::bcf::WriteError,
+        source: rust_htslib::bcf::Error,
     },
 
     #[snafu(display("Failed to read BCF file with header {}: {:?}", header, source))]
     BCFReadError {
         header: String,
-        source: rust_htslib::bcf::ReadError,
+        source: rust_htslib::bcf::Error,
     },
 
     #[snafu(display(
@@ -210,13 +204,13 @@ pub enum Error {
     BCFReadIdError {
         rid: u32,
         header: String,
-        source: rust_htslib::bcf::header::RidIndexError,
+        source: rust_htslib::bcf::Error,
     },
 
     #[snafu(display("Failed to create new BCF reader from {}: {:?}", path, source))]
     BCFReaderFromPathError {
         path: String,
-        source: rust_htslib::bcf::BCFPathError,
+        source: rust_htslib::bcf::Error,
     },
 
     //TODO This should be more clear
@@ -250,7 +244,7 @@ pub enum Error {
     ))]
     BCFInfoReadError {
         record_idx: usize,
-        source: rust_htslib::bcf::record::InfoReadError,
+        source: rust_htslib::bcf::Error,
     },
 
     #[snafu(display(

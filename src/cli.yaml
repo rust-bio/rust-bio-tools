@@ -158,6 +158,18 @@ subcommands:
         {n}
       author: Johannes Köster <johannes.koester@uni-due.de>, Jan Forster <j.forster@dkfz.de>
 
+  - vcf-annotate-dgidb:
+        about: |
+            Looks for interacting drugs in DGIdb and annotates them for every gene in every record.
+
+            Example:
+                rbt vcf-annotate-dgidb input.vcf > output.vcf
+        args:
+          - vcf:
+                required: true
+                help: VCF/BCF file to be extended by dgidb drug entries
+        author: Felix Mölder <felix.moelder@uni-due.de>
+
   - call-consensus-reads:
       about: |
         Tool to remove PCR duplicates from either FASTQ or BAM files.

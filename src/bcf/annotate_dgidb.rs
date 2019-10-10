@@ -1,28 +1,55 @@
-use rust_htslib::bcf;
-use std::error::Error;
-use std::collections::{HashSet, HashMap};
-use rust_htslib::bcf::Read;
-use std::str;
 use itertools::Itertools;
-use isahc::prelude::*;
+use reqwest;
+use rust_htslib::bcf;
+use rust_htslib::bcf::Read;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use isahc::ResponseExt;
+use std::collections::{HashMap, HashSet};
+use std::error::Error;
+use std::str;
 
-
-pub fn annotate_dgidb(vcf_path: &str) -> Result<(), Box<dyn Error>> {
-    request_interaction_drugs(vcf_path)?;
-    modify_vcf_entries(vcf_path)
+#[derive(Serialize, Deserialize, Debug)]
+struct Dgidb {
+    matchedTerms: Vec<MatchedTerm>,
 }
 
-fn request_interaction_drugs(vcf_path: &str) -> Result<(), Box<dyn Error>> {
+#[derive(Serialize, Deserialize, Debug)]
+struct MatchedTerm {
+    geneName: String,
+    interactions: Vec<Interaction>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Interaction {
+    drugName: String,
+}
+
+pub fn annotate_dgidb(vcf_path: &str) -> Result<(), Box<dyn Error>> {
+    let gene_drug_interactions = request_interaction_drugs(vcf_path)?;
+    modify_vcf_entries(vcf_path, gene_drug_interactions)
+}
+
+fn request_interaction_drugs(
+    vcf_path: &str,
+) -> Result<HashMap<String, Vec<String>>, Box<dyn Error>> {
     let mut genes = collect_genes(vcf_path)?;
     let mut url = "http://dgidb.org/api/v2/interactions.json?genes=".to_string();
-    url.push_str( genes.drain().join(",").as_str());
-    let mut response: Value = isahc::get(url.as_str())?.json()?;
-    let mut gene_drug_interactions: HashMap<String, String> = HashMap::new();
-    dbg!(response);
-    Ok(())
+    url.push_str(genes.drain().join(",").as_str());
+    let res: Dgidb = reqwest::get(&url)?.json()?;
 
+    let mut gene_drug_interactions: HashMap<String, Vec<String>> = HashMap::new();
+    for term in res.matchedTerms {
+        if !term.interactions.is_empty() {
+            gene_drug_interactions.insert(
+                term.geneName,
+                term.interactions
+                    .iter()
+                    .map(|interaction| interaction.drugName.clone())
+                    .collect(),
+            );
+        }
+    }
+    Ok(gene_drug_interactions)
 }
 
 fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
@@ -33,22 +60,28 @@ fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
         let mut rec = result?;
         let annotation = rec.info("ANN".as_bytes()).string()?;
         match annotation {
-            Some(transcripts) => {
-                transcripts.iter().for_each(|transcript| {
-                    let gene = str::from_utf8(transcript).unwrap().split("|").nth(3).unwrap().to_string();
-                    total_genes.insert(gene);
-                })
-            },
+            Some(transcripts) => transcripts.iter().for_each(|transcript| {
+                let gene = str::from_utf8(transcript)
+                    .unwrap()
+                    .split("|")
+                    .nth(3)
+                    .unwrap()
+                    .to_string();
+                total_genes.insert(gene);
+            }),
             None => {}
         };
     }
     Ok(total_genes)
 }
 
-fn modify_vcf_entries(vcf_path: &str) -> Result<(), Box<dyn Error>> {
+fn modify_vcf_entries(
+    vcf_path: &str,
+    gene_drug_interactions: HashMap<String, Vec<String>>,
+) -> Result<(), Box<dyn Error>> {
     let mut reader = bcf::Reader::from_path(vcf_path)?;
-    let mut writer = bcf::Writer::from_stdout(&bcf::Header::from_template(reader.header()), true, true)?;
-
+    let mut writer =
+        bcf::Writer::from_stdout(&bcf::Header::from_template(reader.header()), true, true)?;
 
     for result in reader.records() {
         let rec = result?;
@@ -56,4 +89,3 @@ fn modify_vcf_entries(vcf_path: &str) -> Result<(), Box<dyn Error>> {
     }
     Ok(())
 }
-

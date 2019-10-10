@@ -4,8 +4,10 @@ use std::collections::{HashSet, HashMap};
 use rust_htslib::bcf::Read;
 use std::str;
 use itertools::Itertools;
-use reqwest;
-use rustc_serialize::json::ToJson;
+use isahc::prelude::*;
+use serde_json::Value;
+use isahc::ResponseExt;
+
 
 pub fn annotate_dgidb(vcf_path: &str) -> Result<(), Box<dyn Error>> {
     request_interaction_drugs(vcf_path)?;
@@ -16,8 +18,9 @@ fn request_interaction_drugs(vcf_path: &str) -> Result<(), Box<dyn Error>> {
     let mut genes = collect_genes(vcf_path)?;
     let mut url = "http://dgidb.org/api/v2/interactions.json?genes=".to_string();
     url.push_str( genes.drain().join(",").as_str());
-    let response = reqwest::get(url.as_str())?.text()?.to_json();
-    dbg!(&response);
+    let mut response: Value = isahc::get(url.as_str())?.json()?;
+    let mut gene_drug_interactions: HashMap<String, String> = HashMap::new();
+    dbg!(response);
     Ok(())
 
 }

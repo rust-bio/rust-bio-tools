@@ -51,7 +51,8 @@ fn request_interaction_drugs(
     }
     Ok(gene_drug_interactions)
 }
-
+//TODO Remove split by ',' when updating to latest htslib release
+//TODO Only use first transcripts entry and split transcripts by ','
 fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
     let mut total_genes = HashSet::new();
     let mut reader = bcf::Reader::from_path(vcf_path)?;
@@ -75,6 +76,7 @@ fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
     Ok(total_genes)
 }
 
+//TODO Only use first transcripts entry and split transcripts by ','
 fn modify_vcf_entries(
     vcf_path: &str,
     gene_drug_interactions: HashMap<String, Vec<String>>,
@@ -84,8 +86,25 @@ fn modify_vcf_entries(
         bcf::Writer::from_stdout(&bcf::Header::from_template(reader.header()), true, true)?;
 
     for result in reader.records() {
-        let rec = result?;
-        writer.write(&rec)?;
+        let mut rec = result?;
+        let annotation = rec.info("ANN".as_bytes()).string()?;
+        match annotation {
+            Some(transcripts) => {
+                dbg!(transcripts.len());
+                let genes: Vec<String> = transcripts.iter().map(|transcript| {
+                    str::from_utf8(transcript)
+                        .unwrap()
+                        .split("|")
+                        .nth(3)
+                        .unwrap()
+                        .to_string()
+                }).collect();
+                dbg!(&genes);
+            }
+            None => {}
+        }
+        //TODO Reenable after implementation is completed
+        //writer.write(&rec)?;
     }
     Ok(())
 }

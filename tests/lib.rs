@@ -51,7 +51,6 @@ fn compare_bam(result: &str, expected: &str) {
     }
 }
 
-
 #[test]
 fn fastq_split() {
     assert!(Command::new("bash")

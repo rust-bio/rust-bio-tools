@@ -26,14 +26,18 @@ struct Interaction {
     drug_name: String,
 }
 
-pub fn annotate_dgidb(vcf_path: &str, api_path: String, field_name: &str) -> Result<(), Box<dyn Error>> {
+pub fn annotate_dgidb(
+    vcf_path: &str,
+    api_path: String,
+    field_name: &str,
+) -> Result<(), Box<dyn Error>> {
     let gene_drug_interactions = request_interaction_drugs(vcf_path, api_path)?;
     modify_vcf_entries(vcf_path, gene_drug_interactions, field_name)
 }
 
 fn request_interaction_drugs(
     vcf_path: &str,
-    mut api_path: String
+    mut api_path: String,
 ) -> Result<HashMap<String, Vec<String>>, Box<dyn Error>> {
     let mut genes = collect_genes(vcf_path)?;
     api_path.push_str(genes.drain().join(",").as_str());
@@ -91,7 +95,7 @@ fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
 fn modify_vcf_entries(
     vcf_path: &str,
     gene_drug_interactions: HashMap<String, Vec<String>>,
-    field_name: &str
+    field_name: &str,
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = bcf::Reader::from_path(vcf_path)?;
     let mut header = bcf::header::Header::from_template(reader.header());

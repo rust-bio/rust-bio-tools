@@ -51,6 +51,7 @@ fn compare_bam(result: &str, expected: &str) {
     }
 }
 
+
 #[test]
 fn fastq_split() {
     assert!(Command::new("bash")
@@ -213,7 +214,7 @@ fn test_vcf_annotate_dgidb() {
             .arg("-c")
             .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf > /tmp/annotate_dgidb_test.vcf")
             .spawn().unwrap().wait().unwrap().success());
-    compare_bam(
+    test_output(
         "/tmp/annotate_dgidb_test.vcf",
         "tests/expected/annotate_dgidb_test.vcf",
     );

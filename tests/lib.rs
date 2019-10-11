@@ -205,3 +205,16 @@ fn test_call_consensus_from_bam() {
         "tests/expected/overlapping_consensus_marked.bam",
     );
 }
+
+#[test]
+fn test_vcf_annotate_dgidb() {
+    assert!(
+        Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf > /tmp/annotate_dgidb_test.vcf")
+            .spawn().unwrap().wait().unwrap().success());
+    compare_bam(
+        "/tmp/annotate_dgidb_test.vcf",
+        "tests/expected/annotate_dgidb_test.vcf",
+    );
+}

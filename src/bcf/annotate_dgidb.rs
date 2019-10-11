@@ -26,18 +26,18 @@ struct Interaction {
     drug_name: String,
 }
 
-pub fn annotate_dgidb(vcf_path: &str) -> Result<(), Box<dyn Error>> {
-    let gene_drug_interactions = request_interaction_drugs(vcf_path)?;
-    modify_vcf_entries(vcf_path, gene_drug_interactions)
+pub fn annotate_dgidb(vcf_path: &str, api_path: String, field_name: &str) -> Result<(), Box<dyn Error>> {
+    let gene_drug_interactions = request_interaction_drugs(vcf_path, api_path)?;
+    modify_vcf_entries(vcf_path, gene_drug_interactions, field_name)
 }
 
 fn request_interaction_drugs(
     vcf_path: &str,
+    mut api_path: String
 ) -> Result<HashMap<String, Vec<String>>, Box<dyn Error>> {
     let mut genes = collect_genes(vcf_path)?;
-    let mut url = "http://dgidb.org/api/v2/interactions.json?genes=".to_string();
-    url.push_str(genes.drain().join(",").as_str());
-    let res: Dgidb = reqwest::get(&url)?.json()?;
+    api_path.push_str(genes.drain().join(",").as_str());
+    let res: Dgidb = reqwest::get(&api_path)?.json()?;
 
     let mut gene_drug_interactions: HashMap<String, Vec<String>> = HashMap::new();
     for term in res.matched_terms {
@@ -91,10 +91,11 @@ fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
 fn modify_vcf_entries(
     vcf_path: &str,
     gene_drug_interactions: HashMap<String, Vec<String>>,
+    field_name: &str
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = bcf::Reader::from_path(vcf_path)?;
     let mut header = bcf::header::Header::from_template(reader.header());
-    header.push_record("##INFO=<ID=dgiDB_drugs,Number=.,Type=String,Description=\"Interacting drugs for each gene extracted from dgiDB. Multiple drugs for one gene are pipe-seperated.\">".as_bytes());
+    header.push_record(format!("##INFO=<ID={},Number=.,Type=String,Description=\"Interacting drugs for each gene extracted from dgiDB. Multiple drugs for one gene are pipe-seperated.\">", field_name).as_bytes());
     let mut writer = bcf::Writer::from_stdout(&header, true, true)?;
 
     for result in reader.records() {
@@ -121,7 +122,7 @@ fn modify_vcf_entries(
                 let field_entries: Vec<&[u8]> =
                     field_entries.iter().map(|v| v.as_slice()).collect();
                 writer.translate(&mut rec); //That's bullshit
-                rec.push_info_string("dgiDB_drugs".as_bytes(), &field_entries[..])?;
+                rec.push_info_string(field_name.as_bytes(), &field_entries[..])?;
                 writer.write(&rec)?;
             }
             None => {}

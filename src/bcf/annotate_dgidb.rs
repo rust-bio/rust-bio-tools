@@ -24,6 +24,8 @@ struct MatchedTerm {
 struct Interaction {
     #[serde(rename = "drugName")]
     drug_name: String,
+    #[serde(rename = "interactionTypes")]
+    interaction_types: Vec<String>,
 }
 
 pub fn annotate_dgidb(
@@ -38,19 +40,25 @@ pub fn annotate_dgidb(
 fn request_interaction_drugs(
     vcf_path: &str,
     mut api_path: String,
-) -> Result<HashMap<String, Vec<String>>, Box<dyn Error>> {
+) -> Result<HashMap<String, Vec<(String, Vec<String>)>>, Box<dyn Error>> {
     let mut genes = collect_genes(vcf_path)?;
     api_path.push_str(genes.drain().join(",").as_str());
+    dbg!(&api_path);
     let res: Dgidb = reqwest::get(&api_path)?.json()?;
 
-    let mut gene_drug_interactions: HashMap<String, Vec<String>> = HashMap::new();
+    let mut gene_drug_interactions: HashMap<String, Vec<(String, Vec<String>)>> = HashMap::new();
     for term in res.matched_terms {
         if !term.interactions.is_empty() {
             gene_drug_interactions.insert(
                 term.gene_name,
                 term.interactions
                     .iter()
-                    .map(|interaction| interaction.drug_name.clone())
+                    .map(|interaction| {
+                        (
+                            interaction.drug_name.clone(),
+                            interaction.interaction_types.clone(),
+                        )
+                    })
                     .collect(),
             );
         }
@@ -97,7 +105,7 @@ fn extract_genes<'a>(
 
 fn modify_vcf_entries(
     vcf_path: &str,
-    gene_drug_interactions: HashMap<String, Vec<String>>,
+    gene_drug_interactions: HashMap<String, Vec<(String, Vec<String>)>>,
     field_name: &str,
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = bcf::Reader::from_path(vcf_path)?;
@@ -120,13 +128,29 @@ fn modify_vcf_entries(
 }
 
 fn build_dgidb_field(
-    gene_drug_interactions: &HashMap<String, Vec<String>>,
+    gene_drug_interactions: &HashMap<String, Vec<(String, Vec<String>)>>,
     genes: Vec<String>,
 ) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
     let mut field_entries: Vec<Vec<u8>> = Vec::new();
     for gene in genes.iter() {
         match gene_drug_interactions.get(gene) {
-            Some(drugs) => field_entries.push(drugs.join("|").as_bytes().to_vec()),
+            Some(drug_interactions) => {
+                let format_string = drug_interactions
+                    .iter()
+                    .map(|(drug, interaction_types)| {
+                        format!(
+                            "{d} ({t})",
+                            d = drug,
+                            t = interaction_types.join(", ")
+                        )
+                    })
+                    .collect_vec()
+                    .join("|")
+                    .as_bytes()
+                    .to_vec();
+                field_entries.push(format_string);
+                //field_entries.push(drugs.join("|").as_bytes().to_vec()),
+            }
             None => field_entries.push([b'.'].to_vec()),
         }
     }

@@ -79,9 +79,9 @@ fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
 }
 
 //TODO Remove split by ',' when updating to latest htslib release
-fn extract_genes(
-    rec: &mut bcf::Record,
-) -> Result<Option<impl Iterator<Item = String>>, Box<dyn Error>> {
+fn extract_genes<'a>(
+    rec: &'a mut bcf::Record,
+) -> Result<Option<impl Iterator<Item = String> + 'a>, Box<dyn Error>> {
     let annotation = rec.info("ANN".as_bytes()).string()?;
     match annotation {
         Some(transcripts) => Ok(Some(transcripts[0].split(|c| *c == b',').map(
@@ -107,18 +107,15 @@ fn modify_vcf_entries(
 
     for result in reader.records() {
         let mut rec = result?;
-        let genes_opt = extract_genes(&mut rec)?;
-        match genes_opt {
-            Some(genes) => {
-                let field_entries = build_dgidb_field(&gene_drug_interactions, genes.collect())?;
-                let field_entries: Vec<&[u8]> =
-                    field_entries.iter().map(|v| v.as_slice()).collect();
-                writer.translate(&mut rec);
-                rec.push_info_string(field_name.as_bytes(), &field_entries[..])?;
-                writer.write(&rec)?;
-            }
-            None => {}
+        writer.translate(&mut rec);
+        let genes = extract_genes(&mut rec)?.map(|genes| genes.collect_vec());
+        if let Some(genes) = genes {
+            let field_entries = build_dgidb_field(&gene_drug_interactions, genes)?;
+            let field_entries: Vec<&[u8]> =
+                field_entries.iter().map(|v| v.as_slice()).collect();
+            rec.push_info_string(field_name.as_bytes(), &field_entries[..])?;
         }
+        writer.write(&rec)?;
     }
     Ok(())
 }

@@ -60,7 +60,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         ("vcf-baf", Some(_)) => bcf::baf::calculate_baf(),
         ("vcf-annotate-dgidb", Some(matches)) => bcf::annotate_dgidb::annotate_dgidb(
             &matches.value_of("vcf").unwrap(),
-            matches.value_of("api_path").unwrap().to_string(),
+            matches.value_of("api-path").unwrap().to_string(),
             &matches.value_of("field").unwrap(),
         ),
         ("call-consensus-reads", Some(matches)) => match matches.subcommand() {

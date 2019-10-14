@@ -57,6 +57,7 @@ fn request_interaction_drugs(
     }
     Ok(gene_drug_interactions)
 }
+
 //TODO Remove split by ',' when updating to latest htslib release
 fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
     let mut total_genes = HashSet::new();
@@ -64,34 +65,36 @@ fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
     //let all_genes = HashSet::new();
     for result in reader.records() {
         let mut rec = result?;
-        let annotation = rec.info("ANN".as_bytes()).string()?;
-        match annotation {
-            Some(transcripts) => {
-                str::from_utf8(transcripts[0])
-                    .unwrap()
-                    .split(",")
-                    .for_each(|transcript| {
-                        let gene = transcript.split("|").nth(3).unwrap().to_string();
-                        //TODO This should be the code for the latest htslib implementation (Needs to be tested)
-                        /*
-                        transcripts.iter().for_each(|transcript| {
-                        let gene = str::from_utf8(transcript)
-                            .unwrap()
-                            .split("|")
-                            .nth(3)
-                            .unwrap()
-                            .to_string();
-                         */
-                        total_genes.insert(gene);
-                    })
+        let genes_opt = extract_genes(&mut rec)?;
+        match genes_opt {
+            Some(genes) => {
+                for gene in genes {
+                    total_genes.insert(gene);
+                }
             }
             None => {}
-        };
+        }
     }
     Ok(total_genes)
 }
 
 //TODO Remove split by ',' when updating to latest htslib release
+fn extract_genes(
+    rec: &mut bcf::Record,
+) -> Result<Option<impl Iterator<Item = String>>, Box<dyn Error>> {
+    let annotation = rec.info("ANN".as_bytes()).string()?;
+    match annotation {
+        Some(transcripts) => Ok(Some(transcripts[0].split(|c| *c == b',').map(
+            |transcript| {
+                str::from_utf8(transcript.split(|c| *c == b'|').nth(3).unwrap())
+                    .unwrap()
+                    .to_owned()
+            },
+        ))),
+        None => Ok(None),
+    }
+}
+
 fn modify_vcf_entries(
     vcf_path: &str,
     gene_drug_interactions: HashMap<String, Vec<String>>,
@@ -104,33 +107,18 @@ fn modify_vcf_entries(
 
     for result in reader.records() {
         let mut rec = result?;
-        let annotation = rec.info("ANN".as_bytes()).string()?;
-        match annotation {
-            Some(transcripts) => {
-                let genes = str::from_utf8(transcripts[0])
-                    .unwrap()
-                    .split(',')
-                    .map(|transcript| transcript.split("|").nth(3).unwrap().to_string())
-                    .collect();
-                //TODO This should be the code for the latest htslib implementation (Needs to be tested)
-                /*let genes = transcripts.iter().map(|transcript| {
-                    str::from_utf8(transcript)
-                        .unwrap()
-                        .split("|")
-                        .nth(3)
-                        .unwrap()
-                        .to_string()
-                }).collect();
-                */
-                let field_entries = build_dgidb_field(&gene_drug_interactions, genes)?;
+        let genes_opt = extract_genes(&mut rec)?;
+        match genes_opt {
+            Some(genes) => {
+                let field_entries = build_dgidb_field(&gene_drug_interactions, genes.collect())?;
                 let field_entries: Vec<&[u8]> =
                     field_entries.iter().map(|v| v.as_slice()).collect();
-                writer.translate(&mut rec); //That's bullshit
+                writer.translate(&mut rec);
                 rec.push_info_string(field_name.as_bytes(), &field_entries[..])?;
                 writer.write(&rec)?;
             }
             None => {}
-        };
+        }
     }
     Ok(())
 }

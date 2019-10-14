@@ -168,7 +168,7 @@ subcommands:
           - vcf:
                 required: true
                 help: VCF/BCF file to be extended by dgidb drug entries
-          - api_path:
+          - api-path:
                 default_value: "http://dgidb.org/api/v2/interactions.json?genes="
                 help: "url prefix for requesting interaction drugs by gene names."
           - field:

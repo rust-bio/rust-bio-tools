@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use regex::Regex;
 use reqwest;
 use rust_htslib::bcf;
 use rust_htslib::bcf::Read;
@@ -43,7 +44,6 @@ fn request_interaction_drugs(
 ) -> Result<HashMap<String, Vec<(String, Vec<String>)>>, Box<dyn Error>> {
     let mut genes = collect_genes(vcf_path)?;
     api_path.push_str(genes.drain().join(",").as_str());
-    dbg!(&api_path);
     let res: Dgidb = reqwest::get(&api_path)?.json()?;
 
     let mut gene_drug_interactions: HashMap<String, Vec<(String, Vec<String>)>> = HashMap::new();
@@ -110,7 +110,7 @@ fn modify_vcf_entries(
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = bcf::Reader::from_path(vcf_path)?;
     let mut header = bcf::header::Header::from_template(reader.header());
-    header.push_record(format!("##INFO=<ID={},Number=.,Type=String,Description=\"Interacting drugs for each gene extracted from dgiDB. Multiple drugs for one gene are pipe-seperated.\">", field_name).as_bytes());
+    header.push_record(format!("##INFO=<ID={},Number=.,Type=String,Description=\"Combination of gene, drug, interaction types extracted from dgiDB. Each combination is pipe-seperated annotated as GENE|DRUG|TYPE\">", field_name).as_bytes());
     let mut writer = bcf::Writer::from_stdout(&header, true, true)?;
 
     for result in reader.records() {
@@ -132,26 +132,28 @@ fn build_dgidb_field(
     genes: Vec<String>,
 ) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
     let mut field_entries: Vec<Vec<u8>> = Vec::new();
+    let re = Regex::new(r"\s\(\w+\)").unwrap();
     for gene in genes.iter() {
         match gene_drug_interactions.get(gene) {
             Some(drug_interactions) => {
-                let format_string = drug_interactions
+                drug_interactions
                     .iter()
-                    .map(|(drug, interaction_types)| {
-                        format!(
-                            "{d} ({t})",
-                            d = drug,
-                            t = interaction_types.join(", ")
-                        )
-                    })
-                    .collect_vec()
-                    .join("|")
-                    .as_bytes()
-                    .to_vec();
-                field_entries.push(format_string);
-                //field_entries.push(drugs.join("|").as_bytes().to_vec()),
+                    .for_each(|(drug, interaction_types)| {
+                        interaction_types.iter().for_each(|interaction_type| {
+                            field_entries.push(
+                                format!(
+                                    "{g}|{d}|{t}",
+                                    g = gene,
+                                    d = re.replace(drug, ""),
+                                    t = interaction_type
+                                )
+                                .as_bytes()
+                                .to_vec(),
+                            )
+                        })
+                    });
             }
-            None => field_entries.push([b'.'].to_vec()),
+            None => field_entries.push(format!("{g}|.|.", g = gene).as_bytes().to_vec()),
         }
     }
     Ok(field_entries)

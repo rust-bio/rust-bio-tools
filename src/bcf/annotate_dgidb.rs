@@ -111,8 +111,7 @@ fn modify_vcf_entries(
         let genes = extract_genes(&mut rec)?.map(|genes| genes.collect_vec());
         if let Some(genes) = genes {
             let field_entries = build_dgidb_field(&gene_drug_interactions, genes)?;
-            let field_entries: Vec<&[u8]> =
-                field_entries.iter().map(|v| v.as_slice()).collect();
+            let field_entries: Vec<&[u8]> = field_entries.iter().map(|v| v.as_slice()).collect();
             rec.push_info_string(field_name.as_bytes(), &field_entries[..])?;
         }
         writer.write(&rec)?;
@@ -126,8 +125,7 @@ fn build_dgidb_field(
 ) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
     let mut field_entries: Vec<Vec<u8>> = Vec::new();
     for gene in genes.iter() {
-        let drugs_opt = gene_drug_interactions.get(gene);
-        match drugs_opt {
+        match gene_drug_interactions.get(gene) {
             Some(drugs) => field_entries.push(drugs.join("|").as_bytes().to_vec()),
             None => field_entries.push([b'.'].to_vec()),
         }

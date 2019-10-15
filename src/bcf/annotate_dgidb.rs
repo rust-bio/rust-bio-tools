@@ -133,12 +133,14 @@ fn build_dgidb_field(
 ) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
     let mut field_entries: Vec<Vec<u8>> = Vec::new();
     let re = Regex::new(r"\s\(\w+\)").unwrap();
+    dbg!(&gene_drug_interactions);
     for gene in genes.iter() {
         match gene_drug_interactions.get(gene) {
             Some(drug_interactions) => {
                 drug_interactions
                     .iter()
                     .for_each(|(drug, interaction_types)| {
+                        if !interaction_types.is_empty(){
                         interaction_types.iter().for_each(|interaction_type| {
                             field_entries.push(
                                 format!(
@@ -150,7 +152,18 @@ fn build_dgidb_field(
                                 .as_bytes()
                                 .to_vec(),
                             )
-                        })
+                        })} else {
+                            field_entries.push(
+                                format!(
+                                    "{g}|{d}|.",
+                                    g = gene,
+                                    d = re.replace(drug, "")
+                                )
+                                .as_bytes()
+                                .to_vec(),
+                            )
+                        }
+
                     });
             }
             None => field_entries.push(format!("{g}|.|.", g = gene).as_bytes().to_vec()),

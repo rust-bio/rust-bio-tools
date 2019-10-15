@@ -116,8 +116,9 @@ fn modify_vcf_entries(
     for result in reader.records() {
         let mut rec = result?;
         writer.translate(&mut rec);
-        let genes = extract_genes(&mut rec)?.map(|genes| genes.collect());
-        if let Some(genes) = genes {
+        let genes = extract_genes(&mut rec)?.map(|genes| genes.collect_vec());;
+        if let Some(mut genes) = genes {
+            genes.dedup();
             let field_entries = build_dgidb_field(&gene_drug_interactions, genes)?;
             let field_entries: Vec<&[u8]> = field_entries.iter().map(|v| v.as_slice()).collect();
             rec.push_info_string(field_name.as_bytes(), &field_entries[..])?;
@@ -129,7 +130,7 @@ fn modify_vcf_entries(
 
 fn build_dgidb_field(
     gene_drug_interactions: &HashMap<String, Vec<(String, Vec<String>)>>,
-    genes: HashSet<String>,
+    genes: Vec<String>,
 ) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
     let mut field_entries: Vec<Vec<u8>> = Vec::new();
     let re = Regex::new(r"\s\(\w+\)").unwrap();

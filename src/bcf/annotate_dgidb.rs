@@ -66,11 +66,9 @@ fn request_interaction_drugs(
     Ok(gene_drug_interactions)
 }
 
-//TODO Remove split by ',' when updating to latest htslib release
 fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
     let mut total_genes = HashSet::new();
     let mut reader = bcf::Reader::from_path(vcf_path)?;
-    //let all_genes = HashSet::new();
     for result in reader.records() {
         let mut rec = result?;
         let genes_opt = extract_genes(&mut rec)?;

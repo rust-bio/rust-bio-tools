@@ -139,30 +139,26 @@ fn build_dgidb_field(
                 drug_interactions
                     .iter()
                     .for_each(|(drug, interaction_types)| {
-                        if !interaction_types.is_empty(){
-                        interaction_types.iter().for_each(|interaction_type| {
-                            field_entries.push(
-                                format!(
-                                    "{g}|{d}|{t}",
-                                    g = gene,
-                                    d = re.replace(drug, ""),
-                                    t = interaction_type
+                        if !interaction_types.is_empty() {
+                            interaction_types.iter().for_each(|interaction_type| {
+                                field_entries.push(
+                                    format!(
+                                        "{g}|{d}|{t}",
+                                        g = gene,
+                                        d = re.replace(drug, ""),
+                                        t = interaction_type
+                                    )
+                                    .as_bytes()
+                                    .to_vec(),
                                 )
-                                .as_bytes()
-                                .to_vec(),
-                            )
-                        })} else {
+                            })
+                        } else {
                             field_entries.push(
-                                format!(
-                                    "{g}|{d}|.",
-                                    g = gene,
-                                    d = re.replace(drug, "")
-                                )
-                                .as_bytes()
-                                .to_vec(),
+                                format!("{g}|{d}|.", g = gene, d = re.replace(drug, ""))
+                                    .as_bytes()
+                                    .to_vec(),
                             )
                         }
-
                     });
             }
             None => field_entries.push(format!("{g}|.|.", g = gene).as_bytes().to_vec()),

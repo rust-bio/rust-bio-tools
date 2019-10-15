@@ -43,7 +43,9 @@ for a summary of all options and tools.
 
 
 
-## Author
+## Authors
 
-[Johannes Köster](https://github.com/johanneskoester)
+* Johannes Köster (https://koesterlab.github.io)
+* Felix Mölder
+* Henning Timm
 

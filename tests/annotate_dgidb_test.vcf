@@ -1,0 +1,62 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##INFO=<ID=PROB_GERMLINE_HET,Number=A,Type=Float,Description="Posterior probability for event germline_het">
+##INFO=<ID=PROB_SOMATIC_TUMOR_MEDIUM,Number=A,Type=Float,Description="Posterior probability for event somatic_tumor_medium">
+##INFO=<ID=PROB_ABSENT,Number=A,Type=Float,Description="Posterior probability for event absent">
+##INFO=<ID=PROB_SOMATIC_NORMAL,Number=A,Type=Float,Description="Posterior probability for event somatic_normal">
+##INFO=<ID=PROB_SOMATIC_TUMOR_HIGH,Number=A,Type=Float,Description="Posterior probability for event somatic_tumor_high">
+##INFO=<ID=PROB_SOMATIC_TUMOR_LOW,Number=A,Type=Float,Description="Posterior probability for event somatic_tumor_low">
+##INFO=<ID=PROB_GERMLINE_HOM,Number=A,Type=Float,Description="Posterior probability for event germline_hom">
+##INFO=<ID=PROB_ARTIFACT,Number=A,Type=Float,Description="Posterior probability for strand bias artifact">
+##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Difference in length between REF and ALT alleles">
+##FORMAT=<ID=DP,Number=A,Type=Integer,Description="Expected sequencing depth, while considering mapping uncertainty">
+##FORMAT=<ID=AF,Number=A,Type=Float,Description="Maximum a posteriori probability estimate of allele frequency">
+##FORMAT=<ID=OBS,Number=A,Type=String,Description="Posterior odds for alt allele of each fragment as Kass Raftery scores: N=none, B=barely, P=positive, S=strong, V=very strong (lower case if probability for correct mapping of fragment is <95%)">
+##FORMAT=<ID=SB,Number=A,Type=String,Description="Strand bias estimate: + indicates that ALT allele is associated with forward strand, - indicates that ALT allele is associated with reverse strand, - indicates no strand bias.">
+##contig=<ID=8,length=145138636>
+##bcftools_concatVersion=1.9+htslib-1.9
+##bcftools_concatCommand=concat -a -o calls/H021-ZNSUYN.vcf calls/H021-ZNSUYN.freebayes.1.bcf calls/H021-ZNSUYN.freebayes.2.bcf calls/H021-ZNSUYN.freebayes.3.bcf calls/H021-ZNSUYN.freebayes.4.bcf calls/H021-ZNSUYN.freebayes.5.bcf calls/H021-ZNSUYN.freebayes.6.bcf calls/H021-ZNSUYN.freebayes.7.bcf calls/H021-ZNSUYN.freebayes.8.bcf calls/H021-ZNSUYN.freebayes.9.bcf calls/H021-ZNSUYN.freebayes.10.bcf calls/H021-ZNSUYN.freebayes.11.bcf calls/H021-ZNSUYN.freebayes.12.bcf calls/H021-ZNSUYN.freebayes.13.bcf calls/H021-ZNSUYN.freebayes.14.bcf calls/H021-ZNSUYN.freebayes.15.bcf calls/H021-ZNSUYN.freebayes.16.bcf calls/H021-ZNSUYN.freebayes.17.bcf calls/H021-ZNSUYN.freebayes.18.bcf calls/H021-ZNSUYN.freebayes.19.bcf calls/H021-ZNSUYN.freebayes.20.bcf calls/H021-ZNSUYN.freebayes.21.bcf calls/H021-ZNSUYN.freebayes.22.bcf calls/H021-ZNSUYN.freebayes.X.bcf calls/H021-ZNSUYN.freebayes.Y.bcf calls/H021-ZNSUYN.freebayes.M.bcf calls/H021-ZNSUYN.delly.1.bcf calls/H021-ZNSUYN.delly.2.bcf calls/H021-ZNSUYN.delly.3.bcf calls/H021-ZNSUYN.delly.4.bcf calls/H021-ZNSUYN.delly.5.bcf calls/H021-ZNSUYN.delly.6.bcf calls/H021-ZNSUYN.delly.7.bcf calls/H021-ZNSUYN.delly.8.bcf calls/H021-ZNSUYN.delly.9.bcf calls/H021-ZNSUYN.delly.10.bcf calls/H021-ZNSUYN.delly.11.bcf calls/H021-ZNSUYN.delly.12.bcf calls/H021-ZNSUYN.delly.13.bcf calls/H021-ZNSUYN.delly.14.bcf calls/H021-ZNSUYN.delly.15.bcf calls/H021-ZNSUYN.delly.16.bcf calls/H021-ZNSUYN.delly.17.bcf calls/H021-ZNSUYN.delly.18.bcf calls/H021-ZNSUYN.delly.19.bcf calls/H021-ZNSUYN.delly.20.bcf calls/H021-ZNSUYN.delly.21.bcf calls/H021-ZNSUYN.delly.22.bcf calls/H021-ZNSUYN.delly.X.bcf calls/H021-ZNSUYN.delly.Y.bcf calls/H021-ZNSUYN.delly.M.bcf; Date=Wed Sep 18 09:11:53 2019
+##SnpEffVersion="4.3t (build 2017-11-24 10:18), by Pablo Cingolani"
+##SnpEffCmd="SnpEff  -stats snpeff/H021-ZNSUYN.html -csvStats snpeff/H021-ZNSUYN.csv GRCh38.86 calls/H021-ZNSUYN.vcf "
+##INFO=<ID=ANN,Number=.,Type=String,Description="Functional annotations: 'Allele | Annotation | Annotation_Impact | Gene_Name | Gene_ID | Feature_Type | Feature_ID | Transcript_BioType | Rank | HGVS.c | HGVS.p | cDNA.pos / cDNA.length | CDS.pos / CDS.length | AA.pos / AA.length | Distance | ERRORS / WARNINGS / INFO'">
+##INFO=<ID=LOF,Number=.,Type=String,Description="Predicted loss of function effects for this variant. Format: 'Gene_Name | Gene_ID | Number_of_transcripts_in_gene | Percent_of_transcripts_affected'">
+##INFO=<ID=NMD,Number=.,Type=String,Description="Predicted nonsense mediated decay effects for this variant. Format: 'Gene_Name | Gene_ID | Number_of_transcripts_in_gene | Percent_of_transcripts_affected'">
+##SnpSiftVersion="SnpSift 4.3t (build 2017-11-24 10:18), by Pablo Cingolani"
+##SnpSiftCmd="SnpSift Filter 'ANN[*].IMPACT = 'MODERATE'' calls/H021-ZNSUYN.annotated.vcf"
+##FILTER=<ID=SnpSift,Description="SnpSift 4.3t (build 2017-11-24 10:18), by Pablo Cingolani, Expression used: ANN[*].IMPACT = 'MODERATE'">
+##bcftools_concatCommand=concat -a -o merged-calls/H021-ZNSUYN.somatic_medium_high.fdr-controlled.vcf calls/H021-ZNSUYN.SNV.somatic_medium_high.MODERATE.fdr-controlled.bcf calls/H021-ZNSUYN.SNV.somatic_medium_high.HIGH.fdr-controlled.bcf calls/H021-ZNSUYN.INS.somatic_medium_high.MODERATE.fdr-controlled.bcf calls/H021-ZNSUYN.INS.somatic_medium_high.HIGH.fdr-controlled.bcf calls/H021-ZNSUYN.DEL.somatic_medium_high.MODERATE.fdr-controlled.bcf calls/H021-ZNSUYN.DEL.somatic_medium_high.HIGH.fdr-controlled.bcf; Date=Wed Sep 18 09:18:23 2019
+##SnpSiftCmd="SnpSift Annotate -name cosmic_ /vol/tiny/ref/cosmic/CosmicCodingMuts_v90.vcf /dev/stdin"
+##INFO=<ID=cosmic_GENOMIC_ID,Number=1,Type=String,Description="Genomic Mutation ID">
+##INFO=<ID=cosmic_CDS,Number=1,Type=String,Description="CDS annotation">
+##INFO=<ID=cosmic_AA,Number=1,Type=String,Description="Peptide annotation">
+##INFO=<ID=cosmic_GENE,Number=1,Type=String,Description="Gene name">
+##INFO=<ID=cosmic_CNT,Number=1,Type=Integer,Description="How many samples have this mutation">
+##INFO=<ID=cosmic_SNP,Number=0,Type=Flag,Description="classified as SNP">
+##INFO=<ID=cosmic_STRAND,Number=1,Type=String,Description="Gene strand">
+##INFO=<ID=cosmic_LEGACY_ID,Number=1,Type=String,Description="Legacy Mutation ID">
+##SnpSiftCmd="SnpSift DbNsfp -f MetaSVM_score,MetaLR_score,M-CAP_score,REVEL_score,MutPred_score,PrimateAI_score,DEOGEN2_score,LRT_score,Uniprot_entry,MutationAssessor_score,Uniprot_acc,Polyphen2_HDIV_score,Polyphen2_HVAR_score,Ensembl_proteinid,FATHMM_score,PROVEAN_score,SIFT_score,Ensembl_transcriptid,VEST4_score,SIFT4G_score,MVP_score,MPC_score,MutationTaster_score merged-calls/H021-ZNSUYN.somatic_medium_high.fdr-controlled.db-annotated.vcf"
+##INFO=<ID=dbNSFP_PROVEAN_score,Number=.,Type=Float,Description="Field 'PROVEAN_score' from dbNSFP">
+##INFO=<ID=dbNSFP_VEST4_score,Number=.,Type=Float,Description="Field 'VEST4_score' from dbNSFP">
+##INFO=<ID=dbNSFP_DEOGEN2_score,Number=.,Type=Float,Description="Field 'DEOGEN2_score' from dbNSFP">
+##INFO=<ID=dbNSFP_Polyphen2_HVAR_score,Number=.,Type=Float,Description="Field 'Polyphen2_HVAR_score' from dbNSFP">
+##INFO=<ID=dbNSFP_SIFT_score,Number=.,Type=Float,Description="Field 'SIFT_score' from dbNSFP">
+##INFO=<ID=dbNSFP_Ensembl_transcriptid,Number=.,Type=String,Description="Field 'Ensembl_transcriptid' from dbNSFP">
+##INFO=<ID=dbNSFP_MPC_score,Number=.,Type=Float,Description="Field 'MPC_score' from dbNSFP">
+##INFO=<ID=dbNSFP_MetaLR_score,Number=.,Type=Float,Description="Field 'MetaLR_score' from dbNSFP">
+##INFO=<ID=dbNSFP_REVEL_score,Number=.,Type=Float,Description="Field 'REVEL_score' from dbNSFP">
+##INFO=<ID=dbNSFP_MutationAssessor_score,Number=.,Type=Float,Description="Field 'MutationAssessor_score' from dbNSFP">
+##INFO=<ID=dbNSFP_Uniprot_acc,Number=.,Type=String,Description="Field 'Uniprot_acc' from dbNSFP">
+##INFO=<ID=dbNSFP_Polyphen2_HDIV_score,Number=.,Type=Float,Description="Field 'Polyphen2_HDIV_score' from dbNSFP">
+##INFO=<ID=dbNSFP_MutPred_score,Number=.,Type=Float,Description="Field 'MutPred_score' from dbNSFP">
+##INFO=<ID=dbNSFP_MetaSVM_score,Number=.,Type=Float,Description="Field 'MetaSVM_score' from dbNSFP">
+##INFO=<ID=dbNSFP_PrimateAI_score,Number=.,Type=Float,Description="Field 'PrimateAI_score' from dbNSFP">
+##INFO=<ID=dbNSFP_Ensembl_proteinid,Number=.,Type=String,Description="Field 'Ensembl_proteinid' from dbNSFP">
+##INFO=<ID=dbNSFP_FATHMM_score,Number=.,Type=Float,Description="Field 'FATHMM_score' from dbNSFP">
+##INFO=<ID=dbNSFP_MVP_score,Number=.,Type=Float,Description="Field 'MVP_score' from dbNSFP">
+##INFO=<ID=dbNSFP_MutationTaster_score,Number=.,Type=Float,Description="Field 'MutationTaster_score' from dbNSFP">
+##INFO=<ID=dbNSFP_Uniprot_entry,Number=.,Type=String,Description="Field 'Uniprot_entry' from dbNSFP">
+##INFO=<ID=dbNSFP_SIFT4G_score,Number=.,Type=Float,Description="Field 'SIFT4G_score' from dbNSFP">
+##INFO=<ID=dbNSFP_LRT_score,Number=.,Type=Float,Description="Field 'LRT_score' from dbNSFP">
+##INFO=<ID=dbNSFP_M_CAP_score,Number=.,Type=Float,Description="Field 'M-CAP_score' from dbNSFP">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	normal	tumor
+8	27461737	.	C	G	.	.	SVLEN=.;PROB_SOMATIC_NORMAL=18.3288;PROB_ABSENT=987.672;PROB_GERMLINE_HET=349.144;PROB_ARTIFACT=272.885;PROB_SOMATIC_TUMOR_MEDIUM=0.168458;PROB_SOMATIC_TUMOR_HIGH=16.3168;PROB_SOMATIC_TUMOR_LOW=59.5167;PROB_GERMLINE_HOM=5489.1;ANN=G|missense_variant|MODERATE|CHRNA2|ENSG00000120903|transcript|ENST00000240132.7|protein_coding|7/7|c.1437G>C|p.Lys479Asn|1601/1735|1437/1545|479/514||,G|missense_variant|MODERATE|CHRNA2|ENSG00000120903|transcript|ENST00000407991.2|protein_coding|7/7|c.1482G>C|p.Lys494Asn|2091/4067|1482/1590|494/529||,G|missense_variant|MODERATE|CHRNA2|ENSG00000120903|transcript|ENST00000520933.7|protein_coding|7/7|c.1416G>C|p.Lys472Asn|1858/2497|1416/1524|472/507||,G|3_prime_UTR_variant|MODIFIER|CHRNA2|ENSG00000120903|transcript|ENST00000523695.5|nonsense_mediated_decay|7/7|c.*884G>C|||||2108|,G|downstream_gene_variant|MODIFIER|PTK2B|ENSG00000120899|transcript|ENST00000346049.9|protein_coding||c.*3228C>G|||||2351|,G|downstream_gene_variant|MODIFIER|PTK2B|ENSG00000120899|transcript|ENST00000397501.5|protein_coding||c.*3228C>G|||||2347|,G|downstream_gene_variant|MODIFIER|PTK2B|ENSG00000120899|transcript|ENST00000517339.5|protein_coding||c.*3228C>G|||||2351|,G|downstream_gene_variant|MODIFIER|PTK2B|ENSG00000120899|transcript|ENST00000522245.1|retained_intron||n.*3263C>G|||||3263|,G|downstream_gene_variant|MODIFIER|CHRNA2|ENSG00000120903|transcript|ENST00000522008.1|retained_intron||n.*1891G>C|||||1891|,G|downstream_gene_variant|MODIFIER|PTK2B|ENSG00000120899|transcript|ENST00000420218.3|protein_coding||c.*3228C>G|||||2346|,G|downstream_gene_variant|MODIFIER|CHRNA2|ENSG00000120903|transcript|ENST00000637241.1|nonsense_mediated_decay||c.*7916G>C|||||1654|,G|non_coding_transcript_exon_variant|MODIFIER|CHRNA2|ENSG00000120903|transcript|ENST00000520600.1|retained_intron|2/2|n.307G>C||||||;dbNSFP_DEOGEN2_score=0.805964,.,.;dbNSFP_Ensembl_proteinid=ENSP00000385026,ENSP00000429616,ENSP00000240132;dbNSFP_Ensembl_transcriptid=ENST00000407991,ENST00000520933,ENST00000240132;dbNSFP_FATHMM_score=-0.7,.,-0.7;dbNSFP_LRT_score=0.000000;dbNSFP_M_CAP_score=0.225545;dbNSFP_MPC_score=0.770489779372,.,.;dbNSFP_MVP_score=0.925048298025,0.925048298025,0.925048298025;dbNSFP_MetaLR_score=0.5717;dbNSFP_MetaSVM_score=0.1915;dbNSFP_MutPred_score=0.803;dbNSFP_MutationAssessor_score=3.385,.,.;dbNSFP_MutationTaster_score=0.999992,0.999992,0.999992;dbNSFP_PROVEAN_score=-4.7,.,-4.7;dbNSFP_Polyphen2_HDIV_score=0.972,.,.;dbNSFP_Polyphen2_HVAR_score=0.968,.,.;dbNSFP_PrimateAI_score=0.582399249077;dbNSFP_REVEL_score=0.629;dbNSFP_SIFT4G_score=0.011,0.01,0.01;dbNSFP_SIFT_score=0.001,.,0.0;dbNSFP_Uniprot_acc=Q15822,A0A0X1KG79,Q15822-2;dbNSFP_Uniprot_entry=ACHA2_HUMAN,A0A0X1KG79_HUMAN,ACHA2_HUMAN;dbNSFP_VEST4_score=0.431,0.426,0.641	DP:AF:OBS:SB	116:0:83N-33N+:.	145:0.227034:91N-23V-21N+10V+:.

@@ -58,6 +58,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             value_t!(matches, "max-len-diff", u32).unwrap_or(10),
         ),
         ("vcf-baf", Some(_)) => bcf::baf::calculate_baf(),
+        ("vcf-annotate-dgidb", Some(matches)) => bcf::annotate_dgidb::annotate_dgidb(
+            &matches.value_of("vcf").unwrap(),
+            matches.value_of("api-path").unwrap().to_string(),
+            &matches.value_of("field").unwrap(),
+        ),
         ("call-consensus-reads", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {
                 fastq::call_consensus_reads::call_consensus_reads_from_paths(

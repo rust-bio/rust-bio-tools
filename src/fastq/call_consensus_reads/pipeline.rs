@@ -72,7 +72,7 @@ struct FASTQStorage {
 impl FASTQStorage {
     /// Create a new FASTQStorage using a Rocksdb database
     /// that maps read indices to read seqeunces.
-    pub fn new() -> Result<Self, Box<Error>> {
+    pub fn new() -> Result<Self, Box<dyn Error>> {
         // Save storage_dir to prevent it from leaving scope and
         // in turn deleting the tempdir
         let storage_dir = tempdir()?.path().join("db");
@@ -298,7 +298,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         f_recs: Vec<Record>,
         r_recs: Vec<Record>,
         outer_seqids: Vec<usize>,
-    ) -> Result<(), Box<Error>>;
+    ) -> Result<(), Box<dyn Error>>;
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R>;
     fn fq2_reader(&mut self) -> &mut fastq::Reader<R>;
     fn umi_len(&self) -> usize;
@@ -497,7 +497,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         f_recs: Vec<Record>,
         r_recs: Vec<Record>,
         outer_seqids: Vec<usize>,
-    ) -> Result<(), Box<Error>> {
+    ) -> Result<(), Box<dyn Error>> {
         //TODO Add deterministic uuid considering read ids
         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
         let ol_consensus =

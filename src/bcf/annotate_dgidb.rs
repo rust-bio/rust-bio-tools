@@ -133,7 +133,6 @@ fn build_dgidb_field(
 ) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
     let mut field_entries: Vec<Vec<u8>> = Vec::new();
     let re = Regex::new(r"\s\(\w+\)").unwrap();
-    dbg!(&gene_drug_interactions);
     for gene in genes.iter() {
         match gene_drug_interactions.get(gene) {
             Some(drug_interactions) => {

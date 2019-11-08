@@ -44,7 +44,7 @@ fn request_interaction_drugs(
 ) -> Result<Option<HashMap<String, Vec<(String, Vec<String>)>>>, Box<dyn Error>> {
     let mut genes = collect_genes(vcf_path)?;
     if genes.is_empty() {
-        return Ok(None)
+        return Ok(None);
     }
     api_path.push_str(genes.drain().join(",").as_str());
     let res: Dgidb = reqwest::get(&api_path)?.json()?;
@@ -118,7 +118,7 @@ fn modify_vcf_entries(
                 let rec = result?;
                 writer.write(&rec)?;
             }
-        },
+        }
         Some(gene_drug_interactions) => {
             header.push_record(format!("##INFO=<ID={},Number=.,Type=String,Description=\"Combination of gene, drug, interaction types extracted from dgiDB. Each combination is pipe-seperated annotated as GENE|DRUG|TYPE\">", field_name).as_bytes());
             let mut writer = bcf::Writer::from_stdout(&header, true, true)?;
@@ -130,7 +130,8 @@ fn modify_vcf_entries(
                 if let Some(mut genes) = genes {
                     genes.dedup();
                     let field_entries = build_dgidb_field(&gene_drug_interactions, genes)?;
-                    let field_entries: Vec<&[u8]> = field_entries.iter().map(|v| v.as_slice()).collect();
+                    let field_entries: Vec<&[u8]> =
+                        field_entries.iter().map(|v| v.as_slice()).collect();
                     rec.push_info_string(field_name.as_bytes(), &field_entries[..])?;
                 }
                 writer.write(&rec)?;

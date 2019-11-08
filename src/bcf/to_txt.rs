@@ -209,14 +209,12 @@ pub fn to_txt(
                             }
                             bcf::header::TagType::Integer => {
                                 writer.write_field(
-                                    format!("{}", rec.format(_name).integer()?[s][i])
-                                        .as_bytes()
+                                    format!("{}", rec.format(_name).integer()?[s][i]).as_bytes(),
                                 )?;
                             }
                             bcf::header::TagType::Float => {
                                 writer.write_field(
-                                    format!("{}", rec.format(_name).float()?[s][i])
-                                        .as_bytes()
+                                    format!("{}", rec.format(_name).float()?[s][i]).as_bytes(),
                                 )?;
                             }
                             bcf::header::TagType::String => {

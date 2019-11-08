@@ -48,15 +48,15 @@ impl Writer {
 
     fn write_field(&mut self, value: &[u8]) -> Result<(), Box<dyn Error>> {
         if self.field_count > 0 {
-            r#try!(self.inner.write(b"\t"));
+            self.inner.write(b"\t")?;
         }
-        r#try!(self.inner.write(value));
+        self.inner.write(value)?;
         self.field_count += 1;
         Ok(())
     }
 
     fn newline(&mut self) -> Result<(), Box<dyn Error>> {
-        r#try!(self.inner.write(b"\n"));
+        self.inner.write(b"\n")?;
         self.field_count = 0;
         Ok(())
     }
@@ -73,39 +73,39 @@ pub fn to_txt(
     let mut writer = Writer::new(io::BufWriter::new(io::stdout()));
 
     let common_n = 5 + info_tags.len();
-    r#try!(writer.write_field(HEADER_COMMON));
+    writer.write_field(HEADER_COMMON)?;
     for _ in 1..common_n {
-        r#try!(writer.write_field(HEADER_COMMON));
+        writer.write_field(HEADER_COMMON)?;
     }
     let show_samples = show_genotypes || !format_tags.is_empty();
     if show_samples {
         for sample in reader.header().samples() {
-            r#try!(writer.write_field(sample));
+            writer.write_field(sample)?;
             for _ in 1..format_tags.len() + show_genotypes as usize {
-                r#try!(writer.write_field(sample));
+                writer.write_field(sample)?;
             }
         }
     }
-    r#try!(writer.newline());
-    r#try!(writer.write_field(b"CHROM"));
-    r#try!(writer.write_field(b"POS"));
-    r#try!(writer.write_field(b"REF"));
-    r#try!(writer.write_field(b"ALT"));
-    r#try!(writer.write_field(b"QUAL"));
+    writer.newline()?;
+    writer.write_field(b"CHROM")?;
+    writer.write_field(b"POS")?;
+    writer.write_field(b"REF")?;
+    writer.write_field(b"ALT")?;
+    writer.write_field(b"QUAL")?;
     for name in info_tags {
-        r#try!(writer.write_field(name.as_bytes()));
+        writer.write_field(name.as_bytes())?;
     }
     if show_samples {
         for _ in 0..reader.header().sample_count() {
             if show_genotypes {
-                r#try!(writer.write_field(b"GT"));
+                writer.write_field(b"GT")?;
             }
             for name in format_tags {
-                r#try!(writer.write_field(name.as_bytes()));
+                writer.write_field(name.as_bytes())?;
             }
         }
     }
-    r#try!(writer.newline());
+    writer.newline()?;
     let mut rec = reader.empty_record();
     loop {
         if let Err(e) = reader.read(&mut rec) {
@@ -122,13 +122,13 @@ pub fn to_txt(
             .map(|a| a.to_owned())
             .collect_vec();
         for (i, allele) in alleles[1..].iter().enumerate() {
-            r#try!(writer.write_field(reader.header().rid2name(rec.rid().unwrap())?));
-            r#try!(writer.write_integer(rec.pos() as i32 + 1));
-            r#try!(writer.write_field(&alleles[0]));
-            r#try!(writer.write_field(allele));
+            writer.write_field(reader.header().rid2name(rec.rid().unwrap())?)?;
+            writer.write_integer(rec.pos() as i32 + 1)?;
+            writer.write_field(&alleles[0])?;
+            writer.write_field(allele)?;
             match rec.qual() {
-                q if q.is_missing() => r#try!(writer.write_field(b"")),
-                q => r#try!(writer.write_float(q)),
+                q if q.is_missing() => writer.write_field(b"")?,
+                q => writer.write_float(q)?,
             }
 
             for name in info_tags {
@@ -144,41 +144,41 @@ pub fn to_txt(
 
                     match tag_type {
                         bcf::header::TagType::Flag => {
-                            r#try!(writer.write_flag(r#try!(rec.info(_name).flag())));
+                            writer.write_flag(rec.info(_name).flag()?)?;
                         }
                         bcf::header::TagType::Integer => {
-                            let i = r#try!(get_idx());
-                            if let Some(values) = r#try!(rec.info(_name).integer()) {
-                                r#try!(writer.write_integer(values[i]));
+                            let i = get_idx()?;
+                            if let Some(values) = rec.info(_name).integer()? {
+                                writer.write_integer(values[i])?;
                             } else {
-                                r#try!(writer.write_field(b""));
+                                writer.write_field(b"")?;
                             }
                         }
                         bcf::header::TagType::Float => {
-                            let i = r#try!(get_idx());
-                            if let Some(values) = r#try!(rec.info(_name).float()) {
-                                r#try!(writer.write_float(values[i]));
+                            let i = get_idx()?;
+                            if let Some(values) = rec.info(_name).float()? {
+                                writer.write_float(values[i])?;
                             } else {
-                                r#try!(writer.write_field(b""));
+                                writer.write_field(b"")?;
                             }
                         }
                         bcf::header::TagType::String => {
-                            let i = r#try!(get_idx());
-                            if let Some(values) = r#try!(rec.info(_name).string()) {
-                                r#try!(writer.write_field(values[i]));
+                            let i = get_idx()?;
+                            if let Some(values) = rec.info(_name).string()? {
+                                writer.write_field(values[i])?;
                             } else {
-                                r#try!(writer.write_field(b""));
+                                writer.write_field(b"")?;
                             }
                         }
                     }
                 } else {
                     // tag undefined, write NA
-                    r#try!(writer.write_field(b""));
+                    writer.write_field(b"")?;
                 }
             }
 
             let genotypes = if show_genotypes {
-                let genotypes = r#try!(rec.genotypes());
+                let genotypes = rec.genotypes()?;
 
                 Some(
                     (0..reader.header().sample_count() as usize)
@@ -191,7 +191,7 @@ pub fn to_txt(
 
             for s in 0..reader.header().sample_count() as usize {
                 if let Some(ref genotypes) = genotypes {
-                    r#try!(writer.write_field(genotypes[s].as_bytes()));
+                    writer.write_field(genotypes[s].as_bytes())?;
                 }
                 for name in format_tags {
                     let _name = name.as_bytes();
@@ -208,28 +208,28 @@ pub fn to_txt(
                                 panic!("there is no flag type for format");
                             }
                             bcf::header::TagType::Integer => {
-                                r#try!(writer.write_field(
-                                    format!("{}", r#try!(rec.format(_name).integer())[s][i])
+                                writer.write_field(
+                                    format!("{}", rec.format(_name).integer()?[s][i])
                                         .as_bytes()
-                                ));
+                                )?;
                             }
                             bcf::header::TagType::Float => {
-                                r#try!(writer.write_field(
-                                    format!("{}", r#try!(rec.format(_name).float())[s][i])
+                                writer.write_field(
+                                    format!("{}", rec.format(_name).float()?[s][i])
                                         .as_bytes()
-                                ));
+                                )?;
                             }
                             bcf::header::TagType::String => {
-                                r#try!(writer.write_field(r#try!(rec.format(_name).string())[s]));
+                                writer.write_field(rec.format(_name).string()?[s])?;
                             }
                         }
                     } else {
                         // tag undefined, write NA
-                        r#try!(writer.write_field(b""));
+                        writer.write_field(b"")?;
                     }
                 }
             }
-            r#try!(writer.newline());
+            writer.newline()?;
         }
     }
 

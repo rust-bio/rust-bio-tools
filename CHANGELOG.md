@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.7.0] - 2019-10-15
+### Added
+- Annotation of VCF/BCF files with drug interactions from DGIdb.
+
 ## [0.6.0] - 2019-08-28
 ### Added
 - Consensus reads can now be calculated from BAM files, based on marked PCR/optical duplicates from picard tools.

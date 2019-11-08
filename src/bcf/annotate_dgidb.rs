@@ -137,7 +137,6 @@ fn modify_vcf_entries(
             }
         }
     }
-
     Ok(())
 }
 

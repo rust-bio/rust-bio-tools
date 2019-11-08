@@ -111,18 +111,17 @@ fn modify_vcf_entries(
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = bcf::Reader::from_path(vcf_path)?;
     let mut header = bcf::header::Header::from_template(reader.header());
+    header.push_record(format!("##INFO=<ID={},Number=.,Type=String,Description=\"Combination of gene, drug, interaction types extracted from dgiDB. Each combination is pipe-seperated annotated as GENE|DRUG|TYPE\">", field_name).as_bytes());
+    let mut writer = bcf::Writer::from_stdout(&header, true, true)?;
     match gene_drug_interactions_opt {
         None => {
-            let mut writer = bcf::Writer::from_stdout(&header, true, true)?;
             for result in reader.records() {
-                let rec = result?;
+                let mut rec = result?;
+                writer.translate(&mut rec);
                 writer.write(&rec)?;
             }
         }
         Some(gene_drug_interactions) => {
-            header.push_record(format!("##INFO=<ID={},Number=.,Type=String,Description=\"Combination of gene, drug, interaction types extracted from dgiDB. Each combination is pipe-seperated annotated as GENE|DRUG|TYPE\">", field_name).as_bytes());
-            let mut writer = bcf::Writer::from_stdout(&header, true, true)?;
-
             for result in reader.records() {
                 let mut rec = result?;
                 writer.translate(&mut rec);

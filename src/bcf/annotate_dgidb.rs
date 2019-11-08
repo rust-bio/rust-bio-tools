@@ -41,8 +41,11 @@ pub fn annotate_dgidb(
 fn request_interaction_drugs(
     vcf_path: &str,
     mut api_path: String,
-) -> Result<HashMap<String, Vec<(String, Vec<String>)>>, Box<dyn Error>> {
+) -> Result<Option<HashMap<String, Vec<(String, Vec<String>)>>>, Box<dyn Error>> {
     let mut genes = collect_genes(vcf_path)?;
+    if genes.is_empty() {
+        return Ok(None);
+    }
     api_path.push_str(genes.drain().join(",").as_str());
     let res: Dgidb = reqwest::get(&api_path)?.json()?;
 
@@ -63,7 +66,7 @@ fn request_interaction_drugs(
             );
         }
     }
-    Ok(gene_drug_interactions)
+    Ok(Some(gene_drug_interactions))
 }
 
 fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
@@ -103,25 +106,36 @@ fn extract_genes<'a>(
 
 fn modify_vcf_entries(
     vcf_path: &str,
-    gene_drug_interactions: HashMap<String, Vec<(String, Vec<String>)>>,
+    gene_drug_interactions_opt: Option<HashMap<String, Vec<(String, Vec<String>)>>>,
     field_name: &str,
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = bcf::Reader::from_path(vcf_path)?;
     let mut header = bcf::header::Header::from_template(reader.header());
     header.push_record(format!("##INFO=<ID={},Number=.,Type=String,Description=\"Combination of gene, drug, interaction types extracted from dgiDB. Each combination is pipe-seperated annotated as GENE|DRUG|TYPE\">", field_name).as_bytes());
     let mut writer = bcf::Writer::from_stdout(&header, true, true)?;
-
-    for result in reader.records() {
-        let mut rec = result?;
-        writer.translate(&mut rec);
-        let genes = extract_genes(&mut rec)?.map(|genes| genes.collect_vec());;
-        if let Some(mut genes) = genes {
-            genes.dedup();
-            let field_entries = build_dgidb_field(&gene_drug_interactions, genes)?;
-            let field_entries: Vec<&[u8]> = field_entries.iter().map(|v| v.as_slice()).collect();
-            rec.push_info_string(field_name.as_bytes(), &field_entries[..])?;
+    match gene_drug_interactions_opt {
+        None => {
+            for result in reader.records() {
+                let mut rec = result?;
+                writer.translate(&mut rec);
+                writer.write(&rec)?;
+            }
         }
-        writer.write(&rec)?;
+        Some(gene_drug_interactions) => {
+            for result in reader.records() {
+                let mut rec = result?;
+                writer.translate(&mut rec);
+                let genes = extract_genes(&mut rec)?.map(|genes| genes.collect_vec());
+                if let Some(mut genes) = genes {
+                    genes.dedup();
+                    let field_entries = build_dgidb_field(&gene_drug_interactions, genes)?;
+                    let field_entries: Vec<&[u8]> =
+                        field_entries.iter().map(|v| v.as_slice()).collect();
+                    rec.push_info_string(field_name.as_bytes(), &field_entries[..])?;
+                }
+                writer.write(&rec)?;
+            }
+        }
     }
     Ok(())
 }

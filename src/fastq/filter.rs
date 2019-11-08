@@ -45,12 +45,12 @@ pub fn filter(ids_path: &str) -> Result<(), Box<dyn Error>> {
     let mut record = fastq::Record::new();
 
     loop {
-        r#try!(reader.read(&mut record));
+        reader.read(&mut record)?;
         if record.is_empty() {
             return Ok(());
         }
         if !ids.contains(record.id()) {
-            r#try!(writer.write_record(&record));
+            writer.write_record(&record)?;
         }
     }
 }

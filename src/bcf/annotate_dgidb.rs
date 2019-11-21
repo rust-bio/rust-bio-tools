@@ -33,37 +33,47 @@ pub fn annotate_dgidb(
     vcf_path: &str,
     api_path: String,
     field_name: &str,
+    genes_per_request: usize,
 ) -> Result<(), Box<dyn Error>> {
-    let gene_drug_interactions = request_interaction_drugs(vcf_path, api_path)?;
+    let gene_drug_interactions = request_interaction_drugs(vcf_path, api_path, genes_per_request)?;
     modify_vcf_entries(vcf_path, gene_drug_interactions, field_name)
 }
 
 fn request_interaction_drugs(
     vcf_path: &str,
-    mut api_path: String,
+    api_path: String,
+    genes_per_request: usize,
 ) -> Result<Option<HashMap<String, Vec<(String, Vec<String>)>>>, Box<dyn Error>> {
     let mut genes = collect_genes(vcf_path)?;
     if genes.is_empty() {
         return Ok(None);
     }
-    api_path.push_str(genes.drain().join(",").as_str());
-    let res: Dgidb = reqwest::get(&api_path)?.json()?;
-
     let mut gene_drug_interactions: HashMap<String, Vec<(String, Vec<String>)>> = HashMap::new();
-    for term in res.matched_terms {
-        if !term.interactions.is_empty() {
-            gene_drug_interactions.insert(
-                term.gene_name,
-                term.interactions
-                    .iter()
-                    .map(|interaction| {
-                        (
-                            interaction.drug_name.clone(),
-                            interaction.interaction_types.clone(),
-                        )
-                    })
-                    .collect(),
-            );
+    for gene_slice in genes
+        .drain()
+        .map(|gene| gene)
+        .collect_vec()
+        .chunks(genes_per_request)
+    {
+        let mut slice_api_path = api_path.clone();
+        slice_api_path.push_str(gene_slice.join(",").as_str());
+        let res: Dgidb = reqwest::get(&slice_api_path)?.json()?;
+
+        for term in res.matched_terms {
+            if !term.interactions.is_empty() {
+                gene_drug_interactions.insert(
+                    term.gene_name,
+                    term.interactions
+                        .iter()
+                        .map(|interaction| {
+                            (
+                                interaction.drug_name.clone(),
+                                interaction.interaction_types.clone(),
+                            )
+                        })
+                        .collect(),
+                );
+            }
         }
     }
     Ok(Some(gene_drug_interactions))

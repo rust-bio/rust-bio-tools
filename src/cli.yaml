@@ -166,14 +166,24 @@ subcommands:
                 rbt vcf-annotate-dgidb input.vcf > output.vcf
         args:
           - vcf:
-                required: true
-                help: VCF/BCF file to be extended by dgidb drug entries
+              required: true
+              help: VCF/BCF file to be extended by dgidb drug entries
           - api-path:
-                default_value: "http://dgidb.org/api/v2/interactions.json?genes="
-                help: "url prefix for requesting interaction drugs by gene names."
+              long: api-path
+              short: p
+              default_value: http://dgidb.org/api/v2/interactions.json?genes=
+              help: url prefix for requesting interaction drugs by gene names.
           - field:
-              default_value: "dgiDB_drugs"
-              help: "Info field name to be used for annotation"
+              long: field
+              short: f
+              default_value: dgiDB_drugs
+              help: Info field name to be used for annotation.
+          - genes-per-request:
+              long: genes-per-request
+              short: g
+              default_value: "1000"
+              help: Number of genes to submit per api request. A lower value increases the number of api requests in return. 
+                    Too many requests could be rejected by the DGIdb server.
         author: Felix Mölder <felix.moelder@uni-due.de>
 
   - call-consensus-reads:

@@ -181,7 +181,7 @@ subcommands:
           - genes-per-request:
               long: genes-per-request
               short: g
-              default_value: 1000
+              default_value: "1000"
               help: Number of genes to submit per api request.
         author: Felix Mölder <felix.moelder@uni-due.de>
 

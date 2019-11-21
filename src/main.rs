@@ -62,6 +62,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             &matches.value_of("vcf").unwrap(),
             matches.value_of("api-path").unwrap().to_string(),
             &matches.value_of("field").unwrap(),
+            value_t!(matches, "genes-per-request", usize).unwrap()
         ),
         ("call-consensus-reads", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {

@@ -207,7 +207,7 @@ subcommands:
                 - UMI is the prefix of the reads
 
               Example:
-              rbt call-consensus-reads \
+              rbt call-consensus-reads fastq \
                 reads_1.fq reads_2.fq \    # input files
                 merged_1.fq merged_2.fq \  # output files
                 -l 13 \                    # length of UMI

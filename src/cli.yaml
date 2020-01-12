@@ -92,7 +92,7 @@ subcommands:
 
   - vcf-fix-iupac-alleles:
       about: |
-        Convert all alleles with IUPAC codes into Ns.
+        Convert any IUPAC codes in alleles into Ns (in order to comply with VCF 4 specs).
         Reads from STDIN and writes to STDOUT.
 
         Example:

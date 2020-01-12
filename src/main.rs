@@ -58,6 +58,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             value_t!(matches, "max-len-diff", u32).unwrap_or(10),
         ),
         ("vcf-baf", Some(_)) => bcf::baf::calculate_baf(),
+        ("vcf-fix-iupac-alleles", Some(_)) => bcf::fix_iupac_alleles::fix_iupac_alleles(),
         ("vcf-annotate-dgidb", Some(matches)) => bcf::annotate_dgidb::annotate_dgidb(
             &matches.value_of("vcf").unwrap(),
             matches.value_of("api-path").unwrap().to_string(),

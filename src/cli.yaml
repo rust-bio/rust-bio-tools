@@ -90,6 +90,15 @@ subcommands:
             default_value: "0"
             help: "Minimum mapping quality."
 
+  - vcf-fix-iupac-alleles:
+      about: |
+        Convert all alleles with IUPAC codes into Ns.
+        Reads from STDIN and writes to STDOUT.
+
+        Example:
+        rbt vcf-fix-iupac-alleles < test.vcf > fixed.bcf
+      author: Johannes Köster <johannes.koester@uni-due.de>
+
   - vcf-to-txt:
       about: |
         Convert VCF/BCF file from STDIN to tab-separated TXT file at STDOUT.

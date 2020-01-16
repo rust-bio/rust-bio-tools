@@ -3,6 +3,7 @@ use bio::io::fastq;
 use bio::stats::probs::LogProb;
 use derive_new::new;
 use itertools::Itertools;
+use regex;
 
 const ALLELES: &'static [u8] = b"ACGT";
 
@@ -61,11 +62,34 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         }
 
         let name = match self.verbose_read_names {
-            true => format!(
-                "{}_consensus-read-from:{}",
-                self.uuid(),
-                self.seqids().iter().map(|i| format!("{}", i)).join(",")
-            ),
+            true => {
+
+                // read_from:'Individual 73' at_locus:'0'
+                let pattern = regex::Regex::new(r"at_locus:'(\d+)'").unwrap();
+                let mut collected_stuff = Vec::new();
+                for name in self.recs.iter().map(|x| x.desc().unwrap()) {
+                    // dbg!(name);
+                    // eprintln!("Found a read name: {}", name);
+                    match pattern.captures(name) {
+                        Some(m) => {
+                            collected_stuff.push(
+                                format!(
+                                    "Locus_{}",
+                                    m.get(1).map_or("", |m| m.as_str()),
+                                    )
+                            );
+                        },
+                        None => panic!("invalid read name"),
+                    }
+                }
+                
+                format!(
+                    "{}_consensus-read-from:{}",
+                    self.uuid(),
+                    // self.seqids().iter().map(|i| format!("{}", i)).join(",")
+                    collected_stuff.iter().map(|i| format!("{}", i)).join(",")
+                )
+            },
             false => format!(
                 "{}_consensus-read-from:{}_reads",
                 self.uuid(),

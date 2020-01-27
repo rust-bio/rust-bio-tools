@@ -13,7 +13,7 @@
 //! ## Usage:
 //!
 //! ```bash
-//! $ rbt call-consensus-reads \
+//! $ rbt call-consensus-reads fastq \
 //!   <Path to FASTQ file with forward reads> \
 //!   <Path to FASTQ file with reverse reads> \
 //!   <Path for output forward FASTQ file> \

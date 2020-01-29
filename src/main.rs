@@ -1,4 +1,6 @@
 //! Documentation for Rust Bio Tools
+#[macro_use]
+extern crate clap;
 use clap::{load_yaml, value_t};
 use log::LevelFilter;
 
@@ -15,7 +17,10 @@ pub mod fastq;
 fn main() -> Result<(), Box<dyn Error>> {
     let yaml = load_yaml!("cli.yaml");
     let matches = App::from_yaml(yaml)
-        .version(env!("CARGO_PKG_VERSION"))
+        .name(crate_name!())
+        .author(crate_authors!())
+        .version(crate_version!())
+        .about(crate_description!())
         .get_matches();
 
     fern::Dispatch::new()

@@ -25,13 +25,17 @@ With Bioconda set up, installation is as easy as
 
     conda install rust-bio-tools
 
-### Manual
+### Cargo
 
-Download the source code and issue
+If the [Rust](https://www.rust-lang.org/tools/install) compiler and associated [Cargo](https://github.com/rust-lang/cargo/) are installed, Rust-Bio-Tools may be installed via
+
+    cargo install rust-bio-tools
+
+### Source
+
+Download the source code and within the root directory of source run
 
     cargo install
-
-from the root directory of the source.
 
 ## Usage and Documentation
 
@@ -40,7 +44,6 @@ Rust-Bio-Tools installs a command line utility `rbt`. Issue
     rbt --help
 
 for a summary of all options and tools.
-
 
 
 ## Authors

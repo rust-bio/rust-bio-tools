@@ -190,7 +190,7 @@ subcommands:
           - genes-per-request:
               long: genes-per-request
               short: g
-              default_value: "1000"
+              default_value: "500"
               help: Number of genes to submit per api request. A lower value increases the number of api requests in return. 
                     Too many requests could be rejected by the DGIdb server.
         author: Felix Mölder <felix.moelder@uni-due.de>

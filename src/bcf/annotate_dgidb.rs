@@ -97,13 +97,12 @@ fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
     Ok(total_genes)
 }
 
-//TODO Remove split by ',' when updating to latest htslib release
 fn extract_genes<'a>(
     rec: &'a mut bcf::Record,
 ) -> Result<Option<impl Iterator<Item = String> + 'a>, Box<dyn Error>> {
     let annotation = rec.info("ANN".as_bytes()).string()?;
     match annotation {
-        Some(transcripts) => Ok(Some(transcripts[0].split(|c| *c == b',').map(
+        Some(transcripts) => Ok(Some(transcripts.into_iter().map(
             |transcript| {
                 str::from_utf8(transcript.split(|c| *c == b'|').nth(3).unwrap())
                     .unwrap()
@@ -137,6 +136,7 @@ fn modify_vcf_entries(
                 writer.translate(&mut rec);
                 let genes = extract_genes(&mut rec)?.map(|genes| genes.collect_vec());
                 if let Some(mut genes) = genes {
+                    genes.sort();
                     genes.dedup();
                     let field_entries = build_dgidb_field(&gene_drug_interactions, genes)?;
                     let field_entries: Vec<&[u8]> =

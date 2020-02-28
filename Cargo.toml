@@ -10,7 +10,7 @@ readme = "README.md"
 
 
 [dependencies]
-bio = "0.27"
+bio = "0.29"
 clap = { version = "2.31", features = ["yaml", "color", "suggestions"]}
 indicatif = "0.11"
 itertools = "0.6"

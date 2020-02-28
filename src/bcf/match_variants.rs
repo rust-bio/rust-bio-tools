@@ -13,7 +13,7 @@ use itertools::Itertools;
 use log::{info, warn};
 use quick_error::quick_error;
 use rust_htslib::bcf;
-use rust_htslib::bcf::{Read, Format};
+use rust_htslib::bcf::{Format, Read};
 use std::collections::{btree_map, BTreeMap, HashMap};
 use std::error::Error;
 use std::str;
@@ -32,7 +32,7 @@ impl VarIndex {
             match reader.read(&mut rec) {
                 Ok(true) => (),
                 Ok(false) => break,
-                Err(e) => return Err(Box::new(e)) 
+                Err(e) => return Err(Box::new(e)),
             };
             if let Some(rid) = rec.rid() {
                 let chrom = reader.header().rid2name(rid)?;
@@ -82,7 +82,7 @@ pub fn match_variants(
         match inbcf.read(&mut rec) {
             Ok(true) => (),
             Ok(false) => break,
-            Err(e) => return Err(Box::new(e)) 
+            Err(e) => return Err(Box::new(e)),
         };
         outbcf.translate(&mut rec);
 

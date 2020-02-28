@@ -128,9 +128,15 @@ fn vcf_match_same() {
 #[test]
 fn vcf_fix_iupac_alleles() {
     assert!(Command::new("bash")
-            .arg("-c")
-            .arg("target/debug/rbt vcf-fix-iupac-alleles < tests/test-iupac.vcf > tests/iupac-fixed.bcf")
-            .spawn().unwrap().wait().unwrap().success());
+        .arg("-c")
+        .arg(
+            "target/debug/rbt vcf-fix-iupac-alleles < tests/test-iupac.vcf > tests/iupac-fixed.bcf"
+        )
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
     test_output("tests/iupac-fixed.bcf", "tests/expected/iupac-fixed.bcf");
 }
 

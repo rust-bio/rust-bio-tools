@@ -9,7 +9,7 @@ use itertools::repeat_n;
 use itertools::Itertools;
 use rust_htslib::bcf;
 use rust_htslib::bcf::record::Numeric;
-use rust_htslib::bcf::{Read, Format};
+use rust_htslib::bcf::{Format, Read};
 use std::error::Error;
 use std::f32;
 

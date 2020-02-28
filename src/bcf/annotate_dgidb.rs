@@ -2,7 +2,7 @@ use itertools::Itertools;
 use regex::Regex;
 use reqwest;
 use rust_htslib::bcf;
-use rust_htslib::bcf::{Read, Format};
+use rust_htslib::bcf::{Format, Read};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
@@ -102,13 +102,11 @@ fn extract_genes<'a>(
 ) -> Result<Option<impl Iterator<Item = String> + 'a>, Box<dyn Error>> {
     let annotation = rec.info("ANN".as_bytes()).string()?;
     match annotation {
-        Some(transcripts) => Ok(Some(transcripts.into_iter().map(
-            |transcript| {
-                str::from_utf8(transcript.split(|c| *c == b'|').nth(3).unwrap())
-                    .unwrap()
-                    .to_owned()
-            },
-        ))),
+        Some(transcripts) => Ok(Some(transcripts.into_iter().map(|transcript| {
+            str::from_utf8(transcript.split(|c| *c == b'|').nth(3).unwrap())
+                .unwrap()
+                .to_owned()
+        }))),
         None => Ok(None),
     }
 }

@@ -4,7 +4,7 @@ mod pipeline;
 use log::info;
 use pipeline::CallConsensusRead;
 use rust_htslib::bam;
-use rust_htslib::bam::{Header, Read};
+use rust_htslib::bam::{Header, Read, Format};
 use std::error::Error;
 
 pub fn call_consensus_reads_from_paths(
@@ -16,7 +16,7 @@ pub fn call_consensus_reads_from_paths(
     info!("Reading input files:\n    {}", bam_in);
     info!("Writing output to:\n    {}", bam_out);
     let bam_reader = bam::Reader::from_path(bam_in)?;
-    let bam_writer = bam::Writer::from_path(bam_out, &Header::from_template(bam_reader.header()))?;
+    let bam_writer = bam::Writer::from_path(bam_out, &Header::from_template(bam_reader.header()), Format::BAM)?;
     CallConsensusRead::new(bam_reader, bam_writer, seq_dist, verbose_read_names)
         .call_consensus_reads()
 }

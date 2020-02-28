@@ -2,11 +2,11 @@ use std::error::Error;
 
 use itertools::Itertools;
 use bio::alphabets::dna::n_alphabet;
-use rust_htslib::bcf::{self, Read};
+use rust_htslib::bcf::{self, Read, Format};
 
 pub fn fix_iupac_alleles() -> Result<(), Box<dyn Error>> {
     let mut inbcf = bcf::Reader::from_stdin()?;
-    let mut outbcf = bcf::Writer::from_stdout(&bcf::Header::from_template(inbcf.header()), false, false)?;
+    let mut outbcf = bcf::Writer::from_stdout(&bcf::Header::from_template(inbcf.header()), false, Format::BCF)?;
     let valid_alphabet = n_alphabet();
 
     for res in inbcf.records() {

@@ -108,14 +108,11 @@ pub fn to_txt(
     writer.newline()?;
     let mut rec = reader.empty_record();
     loop {
-        if let Err(e) = reader.read(&mut rec) {
-            if e.is_eof() {
-                break;
-            } else {
-                return Err(Box::new(e));
-            }
-        }
-
+        match reader.read(&mut rec) {
+            Ok(true) => (),
+            Ok(false) => break,
+            Err(e) => return Err(Box::new(e)) 
+        };
         let alleles = rec
             .alleles()
             .into_iter()

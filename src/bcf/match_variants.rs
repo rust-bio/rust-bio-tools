@@ -13,7 +13,7 @@ use itertools::Itertools;
 use log::{info, warn};
 use quick_error::quick_error;
 use rust_htslib::bcf;
-use rust_htslib::bcf::Read;
+use rust_htslib::bcf::{Read, Format};
 use std::collections::{btree_map, BTreeMap, HashMap};
 use std::error::Error;
 use std::str;
@@ -29,12 +29,11 @@ impl VarIndex {
         let mut i = 0;
         let mut rec = reader.empty_record();
         loop {
-            if let Err(e) = reader.read(&mut rec) {
-                if e.is_eof() {
-                    break;
-                }
-                return Err(Box::new(e));
-            }
+            match reader.read(&mut rec) {
+                Ok(true) => (),
+                Ok(false) => break,
+                Err(e) => return Err(Box::new(e)) 
+            };
             if let Some(rid) = rec.rid() {
                 let chrom = reader.header().rid2name(rid)?;
                 let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
@@ -74,18 +73,17 @@ pub fn match_variants(
         alternative allele separately). For indels, matching is fuzzy: distance of centres <= {}, difference of \
         lengths <= {}\">", max_dist, max_len_diff).as_bytes()
     );
-    let mut outbcf = bcf::Writer::from_path(&"-", &header, false, false)?;
+    let mut outbcf = bcf::Writer::from_path(&"-", &header, false, Format::BCF)?;
     let index = VarIndex::new(bcf::Reader::from_path(matchbcf)?, max_dist)?;
 
     let mut rec = inbcf.empty_record();
     let mut i = 0;
     loop {
-        if let Err(e) = inbcf.read(&mut rec) {
-            if e.is_eof() {
-                break;
-            }
-            return Err(Box::new(e));
-        }
+        match inbcf.read(&mut rec) {
+            Ok(true) => (),
+            Ok(false) => break,
+            Err(e) => return Err(Box::new(e)) 
+        };
         outbcf.translate(&mut rec);
 
         if let Some(rid) = rec.rid() {

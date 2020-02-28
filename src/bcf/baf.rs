@@ -8,8 +8,8 @@
 use itertools::repeat_n;
 use itertools::Itertools;
 use rust_htslib::bcf;
-use rust_htslib::bcf::Read;
-use rust_htslib::prelude::*;
+use rust_htslib::bcf::record::Numeric;
+use rust_htslib::bcf::{Format, Read};
 use std::error::Error;
 use std::f32;
 
@@ -19,7 +19,7 @@ pub fn calculate_baf() -> Result<(), Box<dyn Error>> {
     let mut header = bcf::Header::from_template(reader.header());
     header.push_record(b"##FORMAT=<ID=BAF,Number=A,Type=Float,Description=\"b-allele frequency\">");
 
-    let mut writer = bcf::Writer::from_stdout(&header, false, false)?;
+    let mut writer = bcf::Writer::from_stdout(&header, false, Format::BCF)?;
 
     for record in reader.records() {
         let mut record = record?;

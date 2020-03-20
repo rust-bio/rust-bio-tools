@@ -62,13 +62,14 @@ jobs:
           python-version: "3.8"
 
       - name: Install dependencies
+        shell: bash -l {0}
         run: |
             sudo apt-get install --yes libgsl0-dev zlib1g-dev
-            conda create -c bioconda -c conda-forge -n starcode starcode
-            conda activate starcode
+            conda install -c bioconda -c conda-forge starcode
 
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
+        shell: bash -l {0}
         with:
           args: '--features gslv2 -- --test-threads 1'
 

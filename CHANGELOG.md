@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.2] - 2020-03-20
+### Changed
+- BCF output for vcf-annotate-dgidb
+
 ## [0.9.0] - 2020-01-12
 ### Added
 - Subcommand vcf-fix-iupac-alleles for converting IUPAC codes in VCF/BCF files into Ns.

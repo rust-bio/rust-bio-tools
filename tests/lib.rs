@@ -226,10 +226,10 @@ fn test_vcf_annotate_dgidb() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf > /tmp/annotate_dgidb_test.vcf")
+            .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf > /tmp/annotate_dgidb_test.bcf")
             .spawn().unwrap().wait().unwrap().success());
     test_output(
-        "/tmp/annotate_dgidb_test.vcf",
-        "tests/expected/annotate_dgidb_test.vcf",
+        "/tmp/annotate_dgidb_test.bcf",
+        "tests/expected/annotate_dgidb_test.bcf",
     );
 }

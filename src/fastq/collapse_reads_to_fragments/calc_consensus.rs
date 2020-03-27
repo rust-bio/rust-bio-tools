@@ -6,7 +6,7 @@ use itertools::Itertools;
 
 const ALLELES: &'static [u8] = b"ACGT";
 
-/// Compute a consensus sequence for a collection of FASTQ reads.
+/// Compute a maximum likelihood fragment sequence for a collection of FASTQ reads.
 ///
 /// For each position, compute the likelihood of each allele and
 /// choose the most likely one. Write the most likely allele i.e. base

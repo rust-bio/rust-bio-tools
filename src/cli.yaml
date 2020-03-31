@@ -206,7 +206,7 @@ subcommands:
       subcommands:
         - fastq:
             about: |
-              Tool to merge sets of reads from paired FASTQ files that share the UMI and have similar read sequence. The result is a maximum likelihood fragment sequence per set.
+              Tool to merge sets of reads from paired FASTQ files that share the UMI and have similar read sequence. The result is a maximum likelihood fragment sequence per set with base quality scores improved accordingly.
 
               Takes two FASTQ files (forward and reverse) and returns two FASTQ files in which all PCR duplicates have been merged into a consensus read.
               Duplicates are identified by a Unique Molecular Identifier (UMI).
@@ -278,7 +278,7 @@ subcommands:
                     help: Standard deviation of expected insert size. Defines search space of the most likely overlap. (Required for calculating overlapping consensus only)
         - bam:
             about: |
-              Tool to merge sets of PCR duplicate reads from a BAM file into one maximum likelihood fragment sequence each.
+              Tool to merge sets of PCR duplicate reads from a BAM file into one maximum likelihood fragment sequence each with accordingly improved base quality scores.
 
               Takes a BAM file and returns a BAM file in which all PCR duplicates have been merged into a consensus read.
               Duplicates must be marked by Picard Tools using the TAG_DUPLICATE_SET_MEMBERS option.

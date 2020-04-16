@@ -306,3 +306,17 @@ subcommands:
                   help: Add list of reads that were merged for each consensus read. Note that this can yield very long FASTQ name lines which cannot be handled by some tools.
 
 
+  - sequences-stats:
+      about: |
+        Tool to compute stats on sequence file (from STDIN).
+
+        Example:
+          rbt sequence-stat < test.fasta
+          rbt sequence-stat -q < test.fastq
+        {n}
+      author: Pierre Marijon <pmarijon@mpi-inf.mpg.de>
+      args:
+        - fastq:
+            long: fastq
+            short: q
+            help: Flag to indicate the sequence in stdin is in fastq format

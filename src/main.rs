@@ -74,7 +74,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
 
             bcf::oncoprint::oncoprint(&sample_calls)
-        },
+        }
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {
                 fastq::collapse_reads_to_fragments::call_consensus_reads_from_paths(

@@ -154,6 +154,21 @@ fn vcf_baf() {
 }
 
 #[test]
+fn test_oncoprint() {
+    assert!(
+        Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt oncoprint a=tests/test-oncoprint.vcf b=tests/test-oncoprint.vcf > tests/oncoprint.html")
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success()
+    );
+    test_output("tests/oncoprint.html", "tests/expected/oncoprint.html");
+}
+
+#[test]
 fn test_call_consensus_reads_two_cluster() {
     assert!(
         Command::new("bash")

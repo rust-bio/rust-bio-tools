@@ -191,9 +191,23 @@ subcommands:
               long: genes-per-request
               short: g
               default_value: "500"
-              help: Number of genes to submit per api request. A lower value increases the number of api requests in return. 
-                    Too many requests could be rejected by the DGIdb server.
+              help: |
+                Number of genes to submit per api request. A lower value increases the number of api requests in return. 
+                Too many requests could be rejected by the DGIdb server.
         author: Felix Mölder <felix.moelder@uni-due.de>
+  
+  - oncoprint:
+      about: |
+        Creates oncoprint from given VCF/BCF files.
+
+        Example:
+          rbt oncoprint a=a.bcf b=b.bcf c=c.bcf > oncoprint.html
+      
+      args:
+        - vcfs:
+            multiple: true
+            value_name: NAME=FILE
+            help: VCF/BCF files to include (single-sample). Name is the sample name that will be used in the oncoprint.
 
   - call-consensus-reads:
       about: |

@@ -1,14 +1,14 @@
-use std::error::Error;
 use std::collections::HashMap;
-use std::str;
+use std::error::Error;
 use std::io::stdout;
 use std::io::Write;
+use std::str;
 
-use serde_json;
-use tera::{self, Tera, Context};
+use derive_new::new;
 use itertools::Itertools;
 use serde_derive::Serialize;
-use derive_new::new;
+use serde_json;
+use tera::{self, Context, Tera};
 
 use rust_htslib::bcf::{self, Read};
 
@@ -20,15 +20,17 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
 
         for res in bcf_reader.records() {
             let mut record = res?;
-            let alleles = record.alleles().into_iter().map(|allele| allele.to_owned()).collect_vec();
+            let alleles = record
+                .alleles()
+                .into_iter()
+                .map(|allele| allele.to_owned())
+                .collect_vec();
             let alt_alleles = &alleles[1..];
             let ref_allele = alleles[0].to_owned();
             let ann = record.info(b"ANN").string()?;
 
             if let Some(ann) = ann {
-                
                 for alt_allele in alt_alleles {
-
                     let variant = if alt_allele == b"<DEL>" {
                         "DEL"
                     } else if alt_allele == b"<BND>" {
@@ -44,7 +46,7 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
                     } else {
                         "Complex"
                     };
-                    
+
                     for entry in &ann {
                         let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
                         let alt = &fields[0];
@@ -56,7 +58,9 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
                         let dna_alteration = str::from_utf8(fields[9])?;
                         let protein_alteration = str::from_utf8(fields[10])?;
 
-                        let rec = genes.entry(gene.to_owned()).or_insert_with(|| Record::new(sample.to_owned(), gene.to_owned()));
+                        let rec = genes
+                            .entry(gene.to_owned())
+                            .or_insert_with(|| Record::new(sample.to_owned(), gene.to_owned()));
                         rec.dna_alterations.push(dna_alteration.to_owned());
                         if protein_alteration.len() > 0 {
                             rec.protein_alterations.push(protein_alteration.to_owned());
@@ -86,12 +90,14 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
     Ok(())
 }
 
-fn embed_source(value: &tera::Value, _: &HashMap<String, tera::Value>) -> tera::Result<tera::Value> {
+fn embed_source(
+    value: &tera::Value,
+    _: &HashMap<String, tera::Value>,
+) -> tera::Result<tera::Value> {
     let url = tera::try_get_value!("upper", "value", String, value);
     let source = reqwest::get(&url).unwrap().text().unwrap();
     Ok(tera::to_value(source).unwrap())
 }
-
 
 #[derive(new)]
 struct Record {
@@ -119,9 +125,21 @@ impl From<&Record> for FinalRecord {
         FinalRecord {
             sample: record.sample.to_owned(),
             gene: record.gene.to_owned(),
-            dna_alterations: record.dna_alterations.iter().sorted().iter().unique().join(", "),
-            protein_alterations: record.protein_alterations.iter().sorted().iter().unique().join(", "),
-            variants: record.variants.iter().sorted().iter().unique().join("/")
+            dna_alterations: record
+                .dna_alterations
+                .iter()
+                .sorted()
+                .iter()
+                .unique()
+                .join(", "),
+            protein_alterations: record
+                .protein_alterations
+                .iter()
+                .sorted()
+                .iter()
+                .unique()
+                .join(", "),
+            variants: record.variants.iter().sorted().iter().unique().join("/"),
         }
     }
 }

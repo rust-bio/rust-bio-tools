@@ -5,8 +5,8 @@ use log::LevelFilter;
 use clap::App;
 use fern;
 use itertools::Itertools;
-use std::error::Error;
 use std::collections::HashMap;
+use std::error::Error;
 
 pub mod bam;
 pub mod bcf;
@@ -71,7 +71,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             for entry in matches.values_of("vcfs").unwrap() {
                 let e: Vec<_> = entry.split('=').collect();
                 sample_calls.insert(e[0].to_owned(), e[1].to_owned());
-            };
+            }
 
             bcf::oncoprint::oncoprint(&sample_calls)
         }

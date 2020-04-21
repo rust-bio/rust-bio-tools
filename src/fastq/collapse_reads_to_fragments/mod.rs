@@ -1,4 +1,5 @@
-//! Tool to remove PCR duplicates from UMI-tagged reads.
+//! Tool to merge sets of reads in paired FASTQ files that share the UMI and have similar read sequence.
+//! The result is a maximum likelihood fragment sequence per set.
 //!
 //! This tool takes two FASTQ files (forward and reverse)
 //! and returns two FASTQ files in which all PCR duplicates
@@ -13,7 +14,7 @@
 //! ## Usage:
 //!
 //! ```bash
-//! $ rbt call-consensus-reads fastq \
+//! $ rbt collapse-reads-to-fragments fastq \
 //!   <Path to FASTQ file with forward reads> \
 //!   <Path to FASTQ file with reverse reads> \
 //!   <Path for output forward FASTQ file> \

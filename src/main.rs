@@ -66,9 +66,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             &matches.value_of("field").unwrap(),
             value_t!(matches, "genes-per-request", usize).unwrap(),
         ),
-        ("call-consensus-reads", Some(matches)) => match matches.subcommand() {
+        ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {
-                fastq::call_consensus_reads::call_consensus_reads_from_paths(
+                fastq::collapse_reads_to_fragments::call_consensus_reads_from_paths(
                     matches.value_of("fq1").unwrap(),
                     matches.value_of("fq2").unwrap(),
                     matches.value_of("consensus-fq1").unwrap(),
@@ -91,12 +91,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     },
                 )
             }
-            ("bam", Some(matches)) => bam::call_consensus_reads::call_consensus_reads_from_paths(
-                matches.value_of("bam").unwrap(),
-                matches.value_of("consensus-bam").unwrap(),
-                value_t!(matches, "max-seq-dist", usize).unwrap(),
-                matches.is_present("verbose-read-names"),
-            ),
+            ("bam", Some(matches)) => {
+                bam::collapse_reads_to_fragments::call_consensus_reads_from_paths(
+                    matches.value_of("bam").unwrap(),
+                    matches.value_of("consensus-bam").unwrap(),
+                    value_t!(matches, "max-seq-dist", usize).unwrap(),
+                    matches.is_present("verbose-read-names"),
+                )
+            }
             _ => unreachable!(),
         },
         ("sequences-stats", Some(matches)) => sequences_stats::stats(matches.is_present("fastq")),

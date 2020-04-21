@@ -195,9 +195,9 @@ subcommands:
                     Too many requests could be rejected by the DGIdb server.
         author: Felix Mölder <felix.moelder@uni-due.de>
 
-  - call-consensus-reads:
+  - collapse-reads-to-fragments:
       about: |
-        Tool to remove PCR duplicates from either FASTQ or BAM files.
+        Tool to predict maximum likelihood fragment sequence from FASTQ or BAM files.
 
         Requirements:
           - starcode
@@ -206,7 +206,7 @@ subcommands:
       subcommands:
         - fastq:
             about: |
-              Tool to remove PCR duplicates from UMI-tagged reads.
+              Tool to merge sets of reads from paired FASTQ files that share the UMI and have similar read sequence. The result is a maximum likelihood fragment sequence per set with base quality scores improved accordingly.
 
               Takes two FASTQ files (forward and reverse) and returns two FASTQ files in which all PCR duplicates have been merged into a consensus read.
               Duplicates are identified by a Unique Molecular Identifier (UMI).
@@ -216,7 +216,7 @@ subcommands:
                 - UMI is the prefix of the reads
 
               Example:
-              rbt call-consensus-reads fastq \
+              rbt collapse-reads-to-fragments fastq \
                 reads_1.fq reads_2.fq \    # input files
                 merged_1.fq merged_2.fq \  # output files
                 -l 13 \                    # length of UMI
@@ -278,7 +278,7 @@ subcommands:
                     help: Standard deviation of expected insert size. Defines search space of the most likely overlap. (Required for calculating overlapping consensus only)
         - bam:
             about: |
-              Tool to remove PCR duplicates from BAM file.
+              Tool to merge sets of PCR duplicate reads from a BAM file into one maximum likelihood fragment sequence each with accordingly improved base quality scores.
 
               Takes a BAM file and returns a BAM file in which all PCR duplicates have been merged into a consensus read.
               Duplicates must be marked by Picard Tools using the TAG_DUPLICATE_SET_MEMBERS option.

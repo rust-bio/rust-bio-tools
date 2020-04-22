@@ -67,6 +67,6 @@ jobs:
       - name: Run cargo test
         run: |
           export PATH="/usr/share/miniconda/bin:$PATH"
-          conda activate starcode
+          source activate starcode
           cargo test -- --test-threads=1
 

@@ -7,8 +7,6 @@ license-file = "LICENSE.md"
 homepage = "https://github.com/rust-bio/rust-bio-tools"
 edition = "2018"
 readme = "README.md"
-include = ["templates/*"]
-
 
 [dependencies]
 bio = "0.30"

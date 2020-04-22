@@ -308,11 +308,18 @@ subcommands:
 
   - sequences-stats:
       about: |
-        Tool to compute stats on sequence file (from STDIN).
+        Tool to compute stats on sequence file (from STDIN), output is in YAML with field:
+          - min: length of shortest sequence
+          - max: length of longest sequence
+          - average: average length of sequence
+          - median: median length of sequence
+          - nb_reads: number of reads
+          - nb_bases: number of bases
+          - n50: N50 of sequences
 
         Example:
-          rbt sequence-stat < test.fasta
-          rbt sequence-stat -q < test.fastq
+          rbt sequences-stats < test.fasta
+          rbt sequences-stats -q < test.fastq
         {n}
       author: Pierre Marijon <pmarijon@mpi-inf.mpg.de>
       args:

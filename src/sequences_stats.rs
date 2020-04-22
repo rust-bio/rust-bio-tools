@@ -7,6 +7,8 @@
 //!   - nb_bases: number of bases
 //!   - n50: N50 of sequences
 //!
+//! Output is in yaml format
+//!
 //! ## Usage:
 //!
 //! ```

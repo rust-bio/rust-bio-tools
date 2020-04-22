@@ -49,6 +49,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Install system dependencies
+        run: |
+            sudo apt-get install --yes libgsl0-dev
+
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:

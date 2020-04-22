@@ -51,7 +51,17 @@ jobs:
 
       - name: Install system dependencies
         run: |
-            sudo apt-get install --yes libgsl0-dev
+          sudo apt-get install --yes libgsl0-dev
+
+      - name: Setup conda
+        uses: s-weigand/setup-conda@v1
+        with:
+          activate-conda: false
+
+      - name: Install starcode
+        run: |
+          conda create -c bioconda -c conda-forge -n starcode starcode
+          conda activate starcode
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
@@ -60,8 +70,7 @@ jobs:
           override: true
 
       - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: -- --test-threads=1
+        run: |
+          conda activate starcode
+          cargo test -- --test-threads=1
 

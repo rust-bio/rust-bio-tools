@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
+## [0.10.0] - 2020-04-22
+### Added
+- `rbt oncoprint`, which allows to create an interactive HTML oncoprint from BCF/VCF files.
+
+### Changed
+- `rbt call-consensus-reads` has been renamed to `rbt collapse-reads-to-fragments`, which better highlights what is actually done.
 
 ## [0.9.2] - 2020-03-20
 ### Changed

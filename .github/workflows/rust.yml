@@ -53,13 +53,10 @@ jobs:
         run: |
           sudo apt-get install --yes libgsl0-dev
 
-      - name: Setup conda
-        uses: s-weigand/setup-conda@v1
-
       - name: Install starcode
         run: |
+          export PATH="/usr/share/miniconda/bin:$PATH"
           conda create -c bioconda -c conda-forge -n starcode starcode
-          conda activate starcode
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
@@ -69,6 +66,7 @@ jobs:
 
       - name: Run cargo test
         run: |
+          export PATH="/usr/share/miniconda/bin:$PATH"
           conda activate starcode
           cargo test -- --test-threads=1
 

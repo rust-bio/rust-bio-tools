@@ -5,6 +5,7 @@ use log::LevelFilter;
 use clap::App;
 use fern;
 use itertools::Itertools;
+use std::collections::HashMap;
 use std::error::Error;
 
 pub mod bam;
@@ -65,6 +66,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             &matches.value_of("field").unwrap(),
             value_t!(matches, "genes-per-request", usize).unwrap(),
         ),
+        ("oncoprint", Some(matches)) => {
+            let mut sample_calls = HashMap::new();
+            for entry in matches.values_of("vcfs").unwrap() {
+                let e: Vec<_> = entry.split('=').collect();
+                sample_calls.insert(e[0].to_owned(), e[1].to_owned());
+            }
+
+            bcf::oncoprint::oncoprint(&sample_calls)
+        }
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {
                 fastq::collapse_reads_to_fragments::call_consensus_reads_from_paths(

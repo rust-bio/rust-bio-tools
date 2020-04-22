@@ -79,12 +79,12 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
 
     let mut templates = Tera::default();
     templates.register_filter("embed_source", embed_source);
-    templates.add_raw_template("oncoprint.html", include_str!("oncoprint.html.tera"))?;
+    templates.add_raw_template("oncoprint.html.tera", include_str!("oncoprint.html.tera"))?;
     let mut context = Context::new();
     let data = serde_json::to_string(&data)?;
     context.insert("data", &data);
 
-    let html = templates.render("oncoprint.html", &context)?;
+    let html = templates.render("oncoprint.html.tera", &context)?;
 
     stdout().write(html.as_bytes())?;
 

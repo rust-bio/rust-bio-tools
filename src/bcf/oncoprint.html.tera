@@ -16,20 +16,20 @@
         <div id="oncoprint"></div>
 
         <script>
-            {{ "https://cdn.jsdelivr.net/npm/vega@5.10.1"|embed_source }}
+            {{ "https://cdn.jsdelivr.net/npm/vega@5.10.1"|embed_source|safe }}
         </script>
         <script>
-            {{ "https://cdn.jsdelivr.net/npm/vega-lite@4.10.4"|embed_source }}
+            {{ "https://cdn.jsdelivr.net/npm/vega-lite@4.10.4"|embed_source|safe }}
         </script>
         <script>
-            {{ "https://cdn.jsdelivr.net/npm/vega-embed@6.5.2"|embed_source }}
+            {{ "https://cdn.jsdelivr.net/npm/vega-embed@6.5.2"|embed_source|safe }}
         </script>
 
         <script>
             var spec = {
                 "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
                 "data": {
-                    "values": {{ data }}
+                    "values": {{ data|safe }}
                 },
                 "autosize": {
                     "type": "fit",

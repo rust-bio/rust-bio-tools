@@ -165,7 +165,7 @@ fn test_oncoprint() {
             .unwrap()
             .success()
     );
-    //test_output("tests/oncoprint.html", "tests/expected/oncoprint.html");
+    test_output("tests/oncoprint.html", "tests/expected/oncoprint.html");
 }
 
 #[test]

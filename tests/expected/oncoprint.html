@@ -84,13 +84,17 @@ function n(e,t,r,n){return new(r||(r=Promise))((function(o,i){function a(e){try{
                         "field": "sample",
                         "type": "ordinal",
                         "scale": {},
-                        "axis": null
+                        "axis": null,
+                        "sort": {
+                            "op": "valid",
+                            "field": "variants",
+                            "order": "descending"
+                        }
                     },
                     "y": {
                         "field": "variants",
                         "aggregate": "count",
-                        "type": "quantitative",
-                        "scale": {"domain": [0,400]}
+                        "type": "quantitative"
                     },
                     "color": {
                         "field": "variants",
@@ -116,7 +120,12 @@ function n(e,t,r,n){return new(r||(r=Promise))((function(o,i){function a(e){try{
                         "x": {
                             "field": "sample",
                             "type": "ordinal",
-                            "scale": {}
+                            "scale": {},
+                            "sort": {
+                                "op": "valid",
+                                "field": "variants",
+                                "order": "descending"
+                            }
                         },
                         "y": {
                             "field": "gene",

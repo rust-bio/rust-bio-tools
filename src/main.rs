@@ -42,6 +42,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             value_t!(matches, "exclude-flags", u16).unwrap_or(4 | 256 | 512 | 1024),
             value_t!(matches, "min-mapq", u8).unwrap_or(0),
         ),
+        ("pseudobam-fix-cigars", Some(matches)) => bam::pseudobam_fix_cigars::pseudobam_fix_cigars(
+            &matches.value_of("fasta-path").unwrap(),
+            &matches.value_of("bam-in").unwrap(),
+            &matches.value_of("bam-out").unwrap(),
+        ),
         ("vcf-to-txt", Some(matches)) => bcf::to_txt::to_txt(
             &matches
                 .values_of("info")

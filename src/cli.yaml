@@ -90,6 +90,24 @@ subcommands:
             default_value: "0"
             help: "Minimum mapping quality."
 
+  - pseudobam-fix-cigars:
+      about: |
+        Taking a pseudobam / pseudoaligned BAM file and the correct reference, properly align each read and give it a correct CIGAR string.
+
+        Usage:
+        $ rbt pseudobam-fix-cigar input.bam test.fasta >output.bam
+      author: David Lähnemann <david.laehnemann@uni-due.de>
+      args:
+        - bam-in:
+            required: true
+            help: Path to indexed BAM file.
+        - fasta-path:
+            required: true
+            help: Path to indexed FASTA reference file.
+        - bam-out:
+            required: true
+            help: Path for output BAM file.
+
   - vcf-fix-iupac-alleles:
       about: |
         Convert any IUPAC codes in alleles into Ns (in order to comply with VCF 4 specs).

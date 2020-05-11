@@ -10,7 +10,7 @@
                 text-align: center;
             }
         </style>
-        <title>Oncoprint</title>
+        <title>Oncoprint (only recurrent genes)</title>
     </head>
     <body>
         <div id="oncoprint"></div>

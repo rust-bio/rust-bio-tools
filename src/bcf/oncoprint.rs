@@ -13,7 +13,7 @@ use tera::{self, Context, Tera};
 use rust_htslib::bcf::{self, Read};
 
 pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn Error>> {
-    let mut data = Vec::new();
+    let mut data = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
         let mut bcf_reader = bcf::Reader::from_path(path)?;
@@ -73,9 +73,13 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
 
         for gene in genes.keys().sorted() {
             let record = genes.get(gene).unwrap();
-            data.push(FinalRecord::from(record));
+            let entry = data.entry(gene.to_owned()).or_insert_with(&Vec::new);
+            entry.push(FinalRecord::from(record));
         }
     }
+
+    // only keep recurrent entries
+    let data: Vec<_> = data.values().filter(|entry| entry.len() > 1).collect();
 
     let mut templates = Tera::default();
     templates.register_filter("embed_source", embed_source);

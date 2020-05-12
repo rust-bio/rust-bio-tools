@@ -7,7 +7,7 @@ use rust_htslib::bam::Read;
 use rust_htslib::bam::record::CigarString;
 
 use bio::io::fasta;
-use bio::alignment::pairwise;
+use bio::alignment::{Alignment, pairwise};
 use itertools::Itertools;
 
 pub fn pseudobam_fix_cigars(
@@ -38,8 +38,8 @@ pub fn pseudobam_fix_cigars(
         match_scores: Some((1, -4)),
         xclip_prefix: -5,
         xclip_suffix: -5,
-        yclip_prefix: pairwise::MIN_SCORE,
-        yclip_suffix: pairwise::MIN_SCORE
+        yclip_prefix: 0,
+        yclip_suffix: 0
     };
     let mut aligner = pairwise::Aligner::with_scoring(scoring);
     let check_upstream= 100;
@@ -62,7 +62,7 @@ pub fn pseudobam_fix_cigars(
                     let alignment = aligner.semiglobal( &record.seq().as_bytes().as_slice(), &reference_seq[start_align..]);
 //                    println!("alignment: {:?}", alignment);
                     // new function cigar_string_from_alignment_operations()
-                    let cigar_string = CigarString(vec![]);
+                    let cigar_string = CigarString::from(alignment);
                     new_record.set(record.qname(), Some(&cigar_string), record.seq().encoded, record.qual());
                     //write out new record here
                 }
@@ -71,4 +71,10 @@ pub fn pseudobam_fix_cigars(
     }
 
     Ok(())
+}
+
+impl From<Alignment> for CigarString {
+    fn from(alignment: Alignment) -> Self {
+       
+    }
 }

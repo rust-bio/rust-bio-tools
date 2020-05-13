@@ -96,7 +96,7 @@ pub fn match_variants(
                 .iter()
                 .map(|a| {
                     if let Some(range) = index.range(chrom, pos) {
-                        for v in Itertools::flatten(range.map(|(_, idx_vars)| idx_vars)) {
+                        for v in range.map(|(_, idx_vars)| idx_vars).flatten() {
                             if let Some(id) = var.matches(v, a, max_dist, max_len_diff) {
                                 return id as i32;
                             }

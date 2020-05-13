@@ -83,6 +83,7 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
         .values()
         .filter(|entry| entry.len() > 1)
         .flatten()
+        .sorted()
         .collect();
 
     let mut templates = Tera::default();
@@ -120,7 +121,7 @@ struct Record {
     variants: Vec<String>,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct FinalRecord {
     sample: String,
     gene: String,

@@ -1,0 +1,490 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "autosize": {
+    "type": "fit",
+    "contains": "content",
+    "resize": true
+  },
+  "background": "white",
+  "padding": 5,
+  "width": 200,
+  "height": 250,
+  "title": {
+    "text": "Chromosom",
+    "frame": "group"
+  },
+  "style": "cell",
+  "data": [
+    {
+      "name": "grid_store"
+    },
+    {
+      "name": "fasta"
+    },
+    {
+      "name": "vars",
+      "source": "fasta",
+      "transform": [{
+        "type": "filter",
+        "expr": "datum.row < 0"
+      }
+      ]
+    },
+    {
+      "name": "alignments",
+      "source": "fasta",
+      "transform": [{
+        "type": "filter",
+        "expr": "datum.row >= 0"
+      }
+      ]
+    }
+  ],
+  "signals": [
+    {
+      "name": "unit",
+      "value": {},
+      "on": [
+        {
+          "events": "mousemove",
+          "update": "isTuple(group()) ? group() : unit"
+        }
+      ]
+    },
+    {
+      "name": "grid",
+      "update": "vlSelectionResolve(\"grid_store\", \"union\")"
+    },
+    {
+      "name": "grid_start_position",
+      "on": [
+        {
+          "events": {
+            "signal": "grid_translate_delta"
+          },
+          "update": "panLinear(grid_translate_anchor.extent_x, -grid_translate_delta.x / width)"
+        },
+        {
+          "events": {
+            "signal": "grid_zoom_delta"
+          },
+          "update": "zoomLinear(domain(\"x\"), grid_zoom_anchor.x, grid_zoom_delta)"
+        },
+        {
+          "events": [
+            {
+              "source": "scope",
+              "type": "dblclick"
+            }
+          ],
+          "update": "null"
+        }
+      ]
+    },
+    {
+      "name": "grid_row",
+      "on": [
+        {
+          "events": {
+            "signal": "grid_translate_delta"
+          },
+          "update": "panLinear(grid_translate_anchor.extent_y, grid_translate_delta.y / height)"
+        },
+        {
+          "events": {
+            "signal": "grid_zoom_delta"
+          },
+          "update": "zoomLinear(domain(\"y\"), grid_zoom_anchor.y, grid_zoom_delta)"
+        },
+        {
+          "events": [
+            {
+              "source": "scope",
+              "type": "dblclick"
+            }
+          ],
+          "update": "null"
+        }
+      ]
+    },
+    {
+      "name": "grid_tuple",
+      "on": [
+        {
+          "events": [
+            {
+              "signal": "grid_start_position || grid_row"
+            }
+          ],
+          "update": "grid_start_position && grid_row ? {unit: \"\", fields: grid_tuple_fields, values: [grid_start_position,grid_row]} : null"
+        }
+      ]
+    },
+    {
+      "name": "grid_tuple_fields",
+      "value": [
+        {
+          "field": "start_position",
+          "channel": "x",
+          "type": "R"
+        },
+        {
+          "field": "row",
+          "channel": "y",
+          "type": "E"
+        }
+      ]
+    },
+    {
+      "name": "grid_translate_anchor",
+      "value": {},
+      "on": [
+        {
+          "events": [
+            {
+              "source": "scope",
+              "type": "mousedown"
+            }
+          ],
+          "update": "{x: x(unit), y: y(unit), extent_x: domain(\"x\"), extent_y: domain(\"y\")}"
+        }
+      ]
+    },
+    {
+      "name": "grid_translate_delta",
+      "value": {},
+      "on": [
+        {
+          "events": [
+            {
+              "source": "window",
+              "type": "mousemove",
+              "consume": true,
+              "between": [
+                {
+                  "source": "scope",
+                  "type": "mousedown"
+                },
+                {
+                  "source": "window",
+                  "type": "mouseup"
+                }
+              ]
+            }
+          ],
+          "update": "{x: grid_translate_anchor.x - x(unit), y: grid_translate_anchor.y - y(unit)}"
+        }
+      ]
+    },
+    {
+      "name": "grid_zoom_anchor",
+      "on": [
+        {
+          "events": [
+            {
+              "source": "scope",
+              "type": "wheel",
+              "consume": true
+            }
+          ],
+          "update": "{x: invert(\"x\", x(unit)), y: invert(\"y\", y(unit))}"
+        }
+      ]
+    },
+    {
+      "name": "grid_zoom_delta",
+      "on": [
+        {
+          "events": [
+            {
+              "source": "scope",
+              "type": "wheel",
+              "consume": true
+            }
+          ],
+          "force": true,
+          "update": "pow(1.001, event.deltaY * pow(16, event.deltaMode))"
+        }
+      ]
+    },
+    {
+      "name": "grid_modify",
+      "on": [
+        {
+          "events": {
+            "signal": "grid_tuple"
+          },
+          "update": "modify(\"grid_store\", grid_tuple, true)"
+        }
+      ]
+    }
+  ],
+  "marks": [
+    {
+      "name": "marks",
+      "type": "group",
+      "clip": true,
+      "style": [
+        "rule"
+      ],
+      "interactive": true,
+      "from": {
+        "data": "alignments"
+      },
+      "encode": {
+        "update": {
+          "stroke": {
+            "scale": "color",
+            "field": "marker_type"
+          },
+          "opacity": {
+            "value": 0.8
+          },
+          "tooltip": {
+            "signal": "{\"type\": datum[\"typ\"], \"base\": datum[\"base\"], \"variant type\": datum[\"var_type\"],\"test\": datum[\"test\"], \"inserted base(s)\": datum[\"inserts\"], \"reference\": datum[\"reference\"], \"alternatives\": datum[\"alternatives\"], \"name\": datum[\"name\"], \"flag 1\": (datum[\"flags\"] || {})[\"1\"], \"flag 2\": (datum[\"flags\"] || {})[\"2\"], \"flag 4\": (datum[\"flags\"] || {})[\"4\"], \"flag 8\": (datum[\"flags\"] || {})[\"8\"], \"flag 16\": (datum[\"flags\"] || {})[\"16\"], \"flag 32\": (datum[\"flags\"] || {})[\"32\"], \"flag 64\": (datum[\"flags\"] || {})[\"64\"], \"flag 128\": (datum[\"flags\"] || {})[\"128\"], \"flag 256\": (datum[\"flags\"] || {})[\"256\"], \"flag 512\": (datum[\"flags\"] || {})[\"512\"], \"flag 1024\": (datum[\"flags\"] || {})[\"1024\"], \"flag 2048\": (datum[\"flags\"] || {})[\"2048\"]}"
+          },
+          "x": {
+            "scale": "x",
+            "field": "start_position"
+          },
+          "x2": {
+            "scale": "x",
+            "field": "end_position"
+          },
+          "y": {
+            "scale": "y",
+            "field": "row",
+            "band": 0.5
+          },
+          "zindex": {
+            "scale": "z",
+            "field": "marker_type"
+          },
+          "strokeWidth": {
+            "scale": "stroke",
+            "field": "marker_type"
+          }
+        }
+      }
+    },
+    {
+      "name": "marks2",
+      "type": "group",
+      "clip": true,
+      "style": [
+        "rule"
+      ],
+      "interactive": true,
+      "from": {
+        "data": "vars"
+      },
+      "encode": {
+        "update": {
+          "stroke": {
+            "scale": "color",
+            "field": "var_type"
+          },
+          "opacity": {
+            "value": 0.8
+          },
+          "tooltip": {
+            "signal": "{\"type\": datum[\"typ\"], \"base\": datum[\"base\"], \"variant type\": datum[\"var_type\"],\"test\": datum[\"test\"], \"inserted base(s)\": datum[\"inserts\"], \"reference\": datum[\"reference\"], \"alternatives\": datum[\"alternatives\"], \"name\": datum[\"name\"], \"flag 1\": (datum[\"flags\"] || {})[\"1\"], \"flag 2\": (datum[\"flags\"] || {})[\"2\"], \"flag 4\": (datum[\"flags\"] || {})[\"4\"], \"flag 8\": (datum[\"flags\"] || {})[\"8\"], \"flag 16\": (datum[\"flags\"] || {})[\"16\"], \"flag 32\": (datum[\"flags\"] || {})[\"32\"], \"flag 64\": (datum[\"flags\"] || {})[\"64\"], \"flag 128\": (datum[\"flags\"] || {})[\"128\"], \"flag 256\": (datum[\"flags\"] || {})[\"256\"], \"flag 512\": (datum[\"flags\"] || {})[\"512\"], \"flag 1024\": (datum[\"flags\"] || {})[\"1024\"], \"flag 2048\": (datum[\"flags\"] || {})[\"2048\"]}"
+          },
+          "x": {
+            "scale": "x",
+            "field": "start_position"
+          },
+          "x2": {
+            "scale": "x",
+            "field": "end_position"
+          },
+          "y": {
+            "scale": "y",
+            "field": "row",
+            "band": 0.5
+          },
+          "zindex": {
+            "scale": "z",
+            "field": "marker_type"
+          },
+          "strokeWidth": {
+            "scale": "stroke",
+            "field": "marker_type"
+          }
+        }
+      }
+    }
+  ],
+  "scales": [
+    {
+      "name": "x",
+      "type": "linear",
+      "range": [
+        0,
+        {
+          "signal": "width"
+        }
+      ],
+      "domain": [],
+      "domainRaw": {
+        "signal": "grid[\"start_position\"]"
+      },
+      "nice": true,
+      "zero": false
+    },
+    {
+      "name": "y",
+      "type": "band",
+      "domain": {
+        "data": "fasta",
+        "field": "row",
+        "sort": true
+      },
+      "range": [
+        0,
+        {
+          "signal": "height"
+        }
+      ],
+      "paddingInner": 0,
+      "paddingOuter": 0
+    },
+    {
+      "name": "z",
+      "type": "ordinal",
+      "range": [
+        2,
+        2,
+        2,
+        2,
+        2,
+        1,
+        4,
+        2,
+        1,
+        1
+      ],
+      "domain": [
+        "A",
+        "C",
+        "G",
+        "T",
+        "N",
+        "Variant",
+        "Insertion",
+        "Deletion",
+        "Match",
+        "Pairing"
+      ]
+    },
+    {
+      "name": "stroke",
+      "type": "ordinal",
+      "domain": [
+        "A",
+        "C",
+        "G",
+        "T",
+        "N",
+        "Variant",
+        "Insertion",
+        "Deletion",
+        "Match",
+        "Pairing"
+      ],
+      "range": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        7.5,
+        5,
+        5,
+        1
+      ]
+    },
+    {
+      "name": "color",
+      "type": "ordinal",
+      "domain": [
+        "A",
+        "C",
+        "G",
+        "T",
+        "N",
+        "Variant",
+        "Insertion",
+        "Deletion",
+        "Match",
+        "Pairing",
+        "Inversion",
+        "Duplicate"
+      ],
+      "range": [
+        "#CADB69",
+        "#F2B671",
+        "#F28CC2",
+        "#7284A8",
+        "#A23E11",
+        "#000000",
+        "#047C0A",
+        "#CC1414",
+        "#BBBBBB",
+        "#BBBBBB",
+        "#984aff",
+        "#ffa600"
+      ]
+    },
+    {
+      "name": "flags"
+    }
+  ],
+  "axes": [
+    {
+      "scale": "x",
+      "orient": "bottom",
+      "gridScale": "y",
+      "grid": true,
+      "tickCount": {
+        "signal": "ceil(width/40)"
+      },
+      "domain": true,
+      "labels": false,
+      "maxExtent": 0,
+      "minExtent": 0,
+      "ticks": false,
+      "zindex": 0
+    },
+    {
+      "scale": "x",
+      "orient": "bottom",
+      "grid": false,
+      "title": "Position",
+      "labelFlush": true,
+      "labelOverlap": true,
+      "tickCount": {
+        "signal": "ceil(width/40)"
+      },
+      "zindex": 0
+    }
+  ],
+  "legends": [
+    {
+      "symbolType": "stroke",
+      "title": "Base",
+      "stroke": "color",
+      "encode": {
+        "symbols": {
+          "update": {
+            "opacity": {
+              "value": 0.8
+            }
+          }
+        }
+      }
+    }
+  ],
+  "config": {}
+}

@@ -195,19 +195,41 @@ subcommands:
                 Number of genes to submit per api request. A lower value increases the number of api requests in return. 
                 Too many requests could be rejected by the DGIdb server.
         author: Felix Mölder <felix.moelder@uni-due.de>
-  
+
   - oncoprint:
       about: |
         Creates oncoprint from given VCF/BCF files.
 
         Example:
           rbt oncoprint a=a.bcf b=b.bcf c=c.bcf > oncoprint.html
-      
+
       args:
         - vcfs:
             multiple: true
             value_name: NAME=FILE
             help: VCF/BCF files to include (single-sample). Name is the sample name that will be used in the oncoprint.
+
+  - report:
+      about: |
+        Creates report from a given VCF file including a visual plot
+        for every variant with the given BAM and FASTA file.
+
+        Example:
+          rbt report a.vcf.gz b.bam c.fa 11 > report.html
+      author: Felix Wiegand <felix.wiegand@tu-dortmund.de>
+      args:
+        - vcf:
+            required: true
+            help: VCF file for the report
+        - bam:
+            required: true
+            help: bam file containing the alignments for the visual plot
+        - fasta:
+            required: true
+            help: fasta file containing the reference genome for the visual plot
+        - chromosome:
+            required: true
+            help: the chromosome of the given variants
 
   - collapse-reads-to-fragments:
       about: |

@@ -75,6 +75,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             bcf::oncoprint::oncoprint(&sample_calls)
         }
+        ("report", Some(matches)) => bcf::report::report(
+            matches.value_of("vcf").unwrap(),
+            matches.value_of("fasta").unwrap(),
+            matches.value_of("bam").unwrap(),
+            matches.value_of("chromosome").unwrap(),
+        ),
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {
                 fastq::collapse_reads_to_fragments::call_consensus_reads_from_paths(

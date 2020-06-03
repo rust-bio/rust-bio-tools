@@ -5,6 +5,7 @@ use rust_htslib::bam;
 use rust_htslib::bam::record::Cigar;
 use rust_htslib::bam::Read;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::convert::TryInto;
 use std::error::Error;
 use std::io::Write;
 use std::ops::Deref;
@@ -38,13 +39,14 @@ impl CallConsensusRead {
                 calc_consensus_complete_groups(
                     &mut group_end_idx,
                     &mut duplicate_groups,
-                    Some(&record.pos()),
+                    Some(&record.pos().try_into().unwrap()),
                     &mut record_storage,
                     &mut self.bam_writer,
                     self.seq_dist,
                     self.verbose_read_names,
                 )?;
-                group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
+                group_end_idx = group_end_idx.split_off(&record.pos().try_into().unwrap());
+            //Remove processed indexes
             } else {
                 self.bam_writer.write(&record)?;
                 continue;
@@ -65,7 +67,11 @@ impl CallConsensusRead {
                         Some(record_pair) => {
                             //For right record save end position and duplicate group ID
                             group_end_idx
-                                .entry(record.cigar_cached().unwrap().end_pos() - 1)
+                                .entry(
+                                    (record.cigar_cached().unwrap().end_pos() - 1)
+                                        .try_into()
+                                        .unwrap(),
+                                )
                                 .or_insert_with(HashSet::new)
                                 .insert(duplicate_id.integer());
                             match record_pair {
@@ -86,7 +92,11 @@ impl CallConsensusRead {
                             if !record.is_paired() || record.is_mate_unmapped() {
                                 //If right or single record save end position and duplicate group ID
                                 group_end_idx
-                                    .entry(record.cigar_cached().unwrap().end_pos() - 1)
+                                    .entry(
+                                        (record.cigar_cached().unwrap().end_pos() - 1)
+                                            .try_into()
+                                            .unwrap(),
+                                    )
                                     .or_insert_with(HashSet::new)
                                     .insert(duplicate_id.integer());
                                 record_storage.insert(
@@ -318,7 +328,11 @@ fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i32, Box<dyn
     let r_start_pos = r_rec.pos();
     let l_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;
     let r_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter())?;
-    Ok((l_end_pos + l_softclips) - (r_start_pos - r_softclips))
+    Ok(
+        ((l_end_pos + l_softclips as i64) - (r_start_pos - r_softclips as i64))
+            .try_into()
+            .unwrap(),
+    )
 }
 
 //Gets an Iterator over Cigar-items and returns number of soft-clips at the beginning

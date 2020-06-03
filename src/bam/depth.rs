@@ -73,7 +73,7 @@ pub fn depth(
         // jump to correct position
         let tid = bam_header.tid(record.chrom.as_bytes()).unwrap();
         let start = cmp::max(record.pos as i32 - max_read_length as i32 - 1, 0) as u32;
-        bam_reader.fetch(tid, start, start + max_read_length * 2)?;
+        bam_reader.fetch(tid, start.into(), (start + max_read_length * 2).into())?;
 
         // iterate over pileups
         let mut covered = false;

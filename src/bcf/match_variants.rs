@@ -15,6 +15,7 @@ use quick_error::quick_error;
 use rust_htslib::bcf;
 use rust_htslib::bcf::{Format, Read};
 use std::collections::{btree_map, BTreeMap, HashMap};
+use std::convert::TryInto;
 use std::error::Error;
 use std::str;
 
@@ -37,7 +38,7 @@ impl VarIndex {
             if let Some(rid) = rec.rid() {
                 let chrom = reader.header().rid2name(rid)?;
                 let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
-                recs.entry(rec.pos())
+                recs.entry(rec.pos().try_into().unwrap())
                     .or_insert_with(|| Vec::new())
                     .push(Variant::new(&mut rec, &mut i)?);
             //recs.insert(rec.pos(), Variant::new(&mut rec, &mut i)?);
@@ -95,7 +96,7 @@ pub fn match_variants(
                 .alleles
                 .iter()
                 .map(|a| {
-                    if let Some(range) = index.range(chrom, pos) {
+                    if let Some(range) = index.range(chrom, pos.try_into().unwrap()) {
                         for v in range.map(|(_, idx_vars)| idx_vars).flatten() {
                             if let Some(id) = var.matches(v, a, max_dist, max_len_diff) {
                                 return id as i32;
@@ -133,7 +134,7 @@ impl Variant {
     pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self, Box<dyn Error>> {
         let pos = rec.pos();
 
-        let svlens = if let Ok(Some(svlens)) = rec.info(b"SVLEN").integer() {
+        let svlens: Option<Vec<u32>> = if let Ok(Some(svlens)) = rec.info(b"SVLEN").integer() {
             Some(svlens.into_iter().map(|l| l.abs() as u32).collect_vec())
         } else {
             None
@@ -169,7 +170,7 @@ impl Variant {
             } else if svtype == b"DEL" {
                 let svlen = match (svlens, end) {
                     (Some(svlens), _) => svlens[0],
-                    (None, Some(end)) => end - 1 - pos,
+                    (None, Some(end)) => ((end - 1) as i64 - pos).try_into().unwrap(),
                     _ => {
                         return Err(Box::new(MatchError::MissingTag("SVLEN or END".to_owned())));
                     }
@@ -208,7 +209,7 @@ impl Variant {
         let var = Variant {
             id: *id,
             rid: rec.rid().unwrap(),
-            pos,
+            pos: pos.try_into().unwrap(),
             alleles: _alleles,
         };
         *id += alleles.len() as u32 - 1;

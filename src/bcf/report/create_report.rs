@@ -165,16 +165,33 @@ pub(crate) fn make_report(
                     var_type: var_type,
                 };
 
-                let content = create_report_data(
-                    fasta_path,
-                    var.clone(),
-                    bam_path,
-                    chrom.clone(),
-                    variant.pos() as u64 - 75,
-                    end_position as u64 + 75,
-                );
-                let visualization =
-                    manipulate_json(content, variant.pos() as u64 - 75, end_position as u64 + 75);
+                let visualization: Value;
+
+                if variant.pos() < 75 {
+                    let content = create_report_data(
+                        fasta_path,
+                        var.clone(),
+                        bam_path,
+                        chrom.clone(),
+                        0,
+                        end_position as u64 + 75,
+                    );
+                    visualization = manipulate_json(content, 0, end_position as u64 + 75);
+                } else {
+                    let content = create_report_data(
+                        fasta_path,
+                        var.clone(),
+                        bam_path,
+                        chrom.clone(),
+                        variant.pos() as u64 - 75,
+                        end_position as u64 + 75,
+                    );
+                    visualization = manipulate_json(
+                        content,
+                        variant.pos() as u64 - 75,
+                        end_position as u64 + 75,
+                    );
+                }
 
                 let r = Report {
                     id: id.clone(),

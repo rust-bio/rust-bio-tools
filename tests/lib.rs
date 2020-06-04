@@ -169,6 +169,21 @@ fn test_oncoprint() {
 }
 
 #[test]
+fn test_report() {
+    assert!(
+        Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt report tests/report-test.vcf.gz tests/test-report.bam tests/ref.fa chr1 > tests/report.html")
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success()
+    );
+    test_output("tests/report.html", "tests/expected/report.html");
+}
+
+#[test]
 fn test_collapse_reads_to_fragments_two_cluster() {
     assert!(
         Command::new("bash")

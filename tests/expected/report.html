@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Report</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
+    <link href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid ">
+        <div class="row">
+            <div class="col-8">
+
+                <table id="table" class="table table-hover table-light table-bordered" data-toggle="table" data-height="510" data-search="true" data-pagination="true">
+                    <thead>
+                    <tr>
+                        <th scope="col">name</th>
+                        <th scope="col" data-sortable="true">id</th>
+                        <th scope="col" data-sortable="true">position</th>
+                        <th scope="col">reference</th>
+                        <th scope="col">alternative</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    
+                    <tr
+                            class="variant-row"
+                            id="rs377549148"
+                            data-name="chr1"
+                            data-id="rs377549148"
+                            data-position="4"
+                            data-type="Variant"
+                            data-reference="C"
+                            data-alternatives="T"
+                            data-vis="{&quot;$schema&quot;:&quot;https:&#x2F;&#x2F;vega.github.io&#x2F;schema&#x2F;vega&#x2F;v5.json&quot;,&quot;autosize&quot;:{&quot;contains&quot;:&quot;content&quot;,&quot;resize&quot;:true,&quot;type&quot;:&quot;fit&quot;},&quot;axes&quot;:[{&quot;domain&quot;:true,&quot;grid&quot;:true,&quot;gridScale&quot;:&quot;y&quot;,&quot;labels&quot;:false,&quot;maxExtent&quot;:0,&quot;minExtent&quot;:0,&quot;orient&quot;:&quot;bottom&quot;,&quot;scale&quot;:&quot;x&quot;,&quot;tickCount&quot;:{&quot;signal&quot;:&quot;ceil(width&#x2F;40)&quot;},&quot;ticks&quot;:false,&quot;zindex&quot;:0},{&quot;grid&quot;:false,&quot;labelFlush&quot;:true,&quot;labelOverlap&quot;:true,&quot;orient&quot;:&quot;bottom&quot;,&quot;scale&quot;:&quot;x&quot;,&quot;tickCount&quot;:{&quot;signal&quot;:&quot;ceil(width&#x2F;40)&quot;},&quot;title&quot;:&quot;Position&quot;,&quot;zindex&quot;:0}],&quot;background&quot;:&quot;white&quot;,&quot;config&quot;:{},&quot;data&quot;:[{&quot;name&quot;:&quot;grid_store&quot;},{&quot;name&quot;:&quot;fasta&quot;,&quot;values&quot;:[{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:0.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:-0.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:1.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:0.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:2.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:1.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:3.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:2.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:4.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:3.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:5.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:4.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:6.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:5.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:7.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:6.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:8.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:7.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:9.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:8.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:10.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:9.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:11.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:10.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:12.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:11.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:13.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:12.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:14.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:13.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:15.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:14.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:16.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:15.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:17.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:16.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:18.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:17.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:19.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:18.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:20.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:19.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:21.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:20.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:22.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:21.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:23.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:22.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:24.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:23.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:25.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:24.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:26.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:25.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:27.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:26.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:28.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:27.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:29.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:28.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:30.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:29.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:31.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:30.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:32.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:31.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:33.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:32.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:34.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:33.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:35.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:34.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:36.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:35.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:37.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:36.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:38.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:37.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:39.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:38.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:40.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:39.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:41.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:40.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:42.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:41.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:43.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:42.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:44.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:43.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:45.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:44.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:46.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:45.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:47.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:46.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:48.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:47.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:49.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:48.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:50.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:49.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:51.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:50.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:52.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:51.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:53.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:52.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:54.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:53.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:55.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:54.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:56.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:55.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:57.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:56.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:58.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:57.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:59.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:58.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:60.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:59.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:61.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:60.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:62.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:61.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:63.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:62.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:64.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:63.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:65.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:64.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:66.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:65.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:67.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:66.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:68.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:67.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:69.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:68.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:70.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:69.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:71.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:70.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:72.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:71.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:73.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:72.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:74.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:73.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:75.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:74.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:76.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:75.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:77.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:76.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:78.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:77.5},{&quot;bases&quot;:&quot;AA&quot;,&quot;end_position&quot;:20.0,&quot;flags&quot;:{&quot;1&quot;:&quot;template having multiple segments in sequencing&quot;,&quot;2&quot;:&quot;each segment properly aligned according to the aligner&quot;,&quot;32&quot;:&quot;SEQ of the next segment in the template being reverse complemented&quot;,&quot;64&quot;:&quot;the first segment in the template &quot;},&quot;inserts&quot;:&quot;AA&quot;,&quot;marker_type&quot;:&quot;Insertion&quot;,&quot;name&quot;:&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;row&quot;:1,&quot;start_position&quot;:19.0,&quot;typ&quot;:&quot;Insertion&quot;},{&quot;end_position&quot;:789263.5,&quot;flags&quot;:{&quot;1&quot;:&quot;template having multiple segments in sequencing&quot;,&quot;2&quot;:&quot;each segment properly aligned according to the aligner&quot;,&quot;32&quot;:&quot;SEQ of the next segment in the template being reverse complemented&quot;,&quot;64&quot;:&quot;the first segment in the template &quot;},&quot;marker_type&quot;:&quot;Pairing&quot;,&quot;name&quot;:&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;row&quot;:1,&quot;start_position&quot;:103.5,&quot;typ&quot;:&quot;Pairing&quot;},{&quot;end_position&quot;:19.5,&quot;flags&quot;:{&quot;1&quot;:&quot;template having multiple segments in sequencing&quot;,&quot;2&quot;:&quot;each segment properly aligned according to the aligner&quot;,&quot;32&quot;:&quot;SEQ of the next segment in the template being reverse complemented&quot;,&quot;64&quot;:&quot;the first segment in the template &quot;},&quot;marker_type&quot;:&quot;Match&quot;,&quot;name&quot;:&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;row&quot;:1,&quot;start_position&quot;:3.5,&quot;typ&quot;:&quot;Match&quot;},{&quot;end_position&quot;:78.5,&quot;flags&quot;:{&quot;1&quot;:&quot;template having multiple segments in sequencing&quot;,&quot;2&quot;:&quot;each segment properly aligned according to the aligner&quot;,&quot;32&quot;:&quot;SEQ of the next segment in the template being reverse complemented&quot;,&quot;64&quot;:&quot;the first segment in the template &quot;},&quot;marker_type&quot;:&quot;Match&quot;,&quot;name&quot;:&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;row&quot;:1,&quot;start_position&quot;:19.5,&quot;typ&quot;:&quot;Match&quot;},{&quot;alternatives&quot;:&quot;T&quot;,&quot;end_position&quot;:4.5,&quot;marker_type&quot;:&quot;Variant&quot;,&quot;reference&quot;:&quot;C&quot;,&quot;row&quot;:-1,&quot;start_position&quot;:3.5,&quot;var_type&quot;:&quot;Variant&quot;}]},{&quot;name&quot;:&quot;vars&quot;,&quot;source&quot;:&quot;fasta&quot;,&quot;transform&quot;:[{&quot;expr&quot;:&quot;datum.row &lt; 0&quot;,&quot;type&quot;:&quot;filter&quot;}]},{&quot;name&quot;:&quot;alignments&quot;,&quot;source&quot;:&quot;fasta&quot;,&quot;transform&quot;:[{&quot;expr&quot;:&quot;datum.row &gt;= 0&quot;,&quot;type&quot;:&quot;filter&quot;}]}],&quot;height&quot;:250,&quot;legends&quot;:[{&quot;encode&quot;:{&quot;symbols&quot;:{&quot;update&quot;:{&quot;opacity&quot;:{&quot;value&quot;:0.8}}}},&quot;stroke&quot;:&quot;color&quot;,&quot;symbolType&quot;:&quot;stroke&quot;,&quot;title&quot;:&quot;Base&quot;}],&quot;marks&quot;:[{&quot;clip&quot;:true,&quot;encode&quot;:{&quot;update&quot;:{&quot;opacity&quot;:{&quot;value&quot;:0.8},&quot;stroke&quot;:{&quot;field&quot;:&quot;marker_type&quot;,&quot;scale&quot;:&quot;color&quot;},&quot;strokeWidth&quot;:{&quot;field&quot;:&quot;marker_type&quot;,&quot;scale&quot;:&quot;stroke&quot;},&quot;tooltip&quot;:{&quot;signal&quot;:&quot;{\&quot;type\&quot;: datum[\&quot;typ\&quot;], \&quot;base\&quot;: datum[\&quot;base\&quot;], \&quot;variant type\&quot;: datum[\&quot;var_type\&quot;],\&quot;test\&quot;: datum[\&quot;test\&quot;], \&quot;inserted base(s)\&quot;: datum[\&quot;inserts\&quot;], \&quot;reference\&quot;: datum[\&quot;reference\&quot;], \&quot;alternatives\&quot;: datum[\&quot;alternatives\&quot;], \&quot;name\&quot;: datum[\&quot;name\&quot;], \&quot;flag 1\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1\&quot;], \&quot;flag 2\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2\&quot;], \&quot;flag 4\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;4\&quot;], \&quot;flag 8\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;8\&quot;], \&quot;flag 16\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;16\&quot;], \&quot;flag 32\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;32\&quot;], \&quot;flag 64\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;64\&quot;], \&quot;flag 128\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;128\&quot;], \&quot;flag 256\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;256\&quot;], \&quot;flag 512\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;512\&quot;], \&quot;flag 1024\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1024\&quot;], \&quot;flag 2048\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2048\&quot;]}&quot;},&quot;x&quot;:{&quot;field&quot;:&quot;start_position&quot;,&quot;scale&quot;:&quot;x&quot;},&quot;x2&quot;:{&quot;field&quot;:&quot;end_position&quot;,&quot;scale&quot;:&quot;x&quot;},&quot;y&quot;:{&quot;band&quot;:0.5,&quot;field&quot;:&quot;row&quot;,&quot;scale&quot;:&quot;y&quot;},&quot;zindex&quot;:{&quot;field&quot;:&quot;marker_type&quot;,&quot;scale&quot;:&quot;z&quot;}}},&quot;from&quot;:{&quot;data&quot;:&quot;alignments&quot;},&quot;interactive&quot;:true,&quot;name&quot;:&quot;marks&quot;,&quot;style&quot;:[&quot;rule&quot;],&quot;type&quot;:&quot;group&quot;},{&quot;clip&quot;:true,&quot;encode&quot;:{&quot;update&quot;:{&quot;opacity&quot;:{&quot;value&quot;:0.8},&quot;stroke&quot;:{&quot;field&quot;:&quot;var_type&quot;,&quot;scale&quot;:&quot;color&quot;},&quot;strokeWidth&quot;:{&quot;field&quot;:&quot;marker_type&quot;,&quot;scale&quot;:&quot;stroke&quot;},&quot;tooltip&quot;:{&quot;signal&quot;:&quot;{\&quot;type\&quot;: datum[\&quot;typ\&quot;], \&quot;base\&quot;: datum[\&quot;base\&quot;], \&quot;variant type\&quot;: datum[\&quot;var_type\&quot;],\&quot;test\&quot;: datum[\&quot;test\&quot;], \&quot;inserted base(s)\&quot;: datum[\&quot;inserts\&quot;], \&quot;reference\&quot;: datum[\&quot;reference\&quot;], \&quot;alternatives\&quot;: datum[\&quot;alternatives\&quot;], \&quot;name\&quot;: datum[\&quot;name\&quot;], \&quot;flag 1\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1\&quot;], \&quot;flag 2\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2\&quot;], \&quot;flag 4\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;4\&quot;], \&quot;flag 8\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;8\&quot;], \&quot;flag 16\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;16\&quot;], \&quot;flag 32\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;32\&quot;], \&quot;flag 64\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;64\&quot;], \&quot;flag 128\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;128\&quot;], \&quot;flag 256\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;256\&quot;], \&quot;flag 512\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;512\&quot;], \&quot;flag 1024\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1024\&quot;], \&quot;flag 2048\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2048\&quot;]}&quot;},&quot;x&quot;:{&quot;field&quot;:&quot;start_position&quot;,&quot;scale&quot;:&quot;x&quot;},&quot;x2&quot;:{&quot;field&quot;:&quot;end_position&quot;,&quot;scale&quot;:&quot;x&quot;},&quot;y&quot;:{&quot;band&quot;:0.5,&quot;field&quot;:&quot;row&quot;,&quot;scale&quot;:&quot;y&quot;},&quot;zindex&quot;:{&quot;field&quot;:&quot;marker_type&quot;,&quot;scale&quot;:&quot;z&quot;}}},&quot;from&quot;:{&quot;data&quot;:&quot;vars&quot;},&quot;interactive&quot;:true,&quot;name&quot;:&quot;marks2&quot;,&quot;style&quot;:[&quot;rule&quot;],&quot;type&quot;:&quot;group&quot;}],&quot;padding&quot;:5,&quot;scales&quot;:[{&quot;domain&quot;:[0,79],&quot;domainRaw&quot;:{&quot;signal&quot;:&quot;grid[\&quot;start_position\&quot;]&quot;},&quot;name&quot;:&quot;x&quot;,&quot;nice&quot;:true,&quot;range&quot;:[0,{&quot;signal&quot;:&quot;width&quot;}],&quot;type&quot;:&quot;linear&quot;,&quot;zero&quot;:false},{&quot;domain&quot;:{&quot;data&quot;:&quot;fasta&quot;,&quot;field&quot;:&quot;row&quot;,&quot;sort&quot;:true},&quot;name&quot;:&quot;y&quot;,&quot;paddingInner&quot;:0,&quot;paddingOuter&quot;:0,&quot;range&quot;:[0,{&quot;signal&quot;:&quot;height&quot;}],&quot;type&quot;:&quot;band&quot;},{&quot;domain&quot;:[&quot;A&quot;,&quot;C&quot;,&quot;G&quot;,&quot;T&quot;,&quot;N&quot;,&quot;Variant&quot;,&quot;Insertion&quot;,&quot;Deletion&quot;,&quot;Match&quot;,&quot;Pairing&quot;],&quot;name&quot;:&quot;z&quot;,&quot;range&quot;:[2,2,2,2,2,1,4,2,1,1],&quot;type&quot;:&quot;ordinal&quot;},{&quot;domain&quot;:[&quot;A&quot;,&quot;C&quot;,&quot;G&quot;,&quot;T&quot;,&quot;N&quot;,&quot;Variant&quot;,&quot;Insertion&quot;,&quot;Deletion&quot;,&quot;Match&quot;,&quot;Pairing&quot;],&quot;name&quot;:&quot;stroke&quot;,&quot;range&quot;:[5,5,5,5,5,5,7.5,5,5,1],&quot;type&quot;:&quot;ordinal&quot;},{&quot;domain&quot;:[&quot;A&quot;,&quot;C&quot;,&quot;G&quot;,&quot;T&quot;,&quot;N&quot;,&quot;Variant&quot;,&quot;Insertion&quot;,&quot;Deletion&quot;,&quot;Match&quot;,&quot;Pairing&quot;,&quot;Inversion&quot;,&quot;Duplicate&quot;],&quot;name&quot;:&quot;color&quot;,&quot;range&quot;:[&quot;#CADB69&quot;,&quot;#F2B671&quot;,&quot;#F28CC2&quot;,&quot;#7284A8&quot;,&quot;#A23E11&quot;,&quot;#000000&quot;,&quot;#047C0A&quot;,&quot;#CC1414&quot;,&quot;#BBBBBB&quot;,&quot;#BBBBBB&quot;,&quot;#984aff&quot;,&quot;#ffa600&quot;],&quot;type&quot;:&quot;ordinal&quot;},{&quot;name&quot;:&quot;flags&quot;}],&quot;signals&quot;:[{&quot;name&quot;:&quot;unit&quot;,&quot;on&quot;:[{&quot;events&quot;:&quot;mousemove&quot;,&quot;update&quot;:&quot;isTuple(group()) ? group() : unit&quot;}],&quot;value&quot;:{}},{&quot;name&quot;:&quot;grid&quot;,&quot;update&quot;:&quot;vlSelectionResolve(\&quot;grid_store\&quot;, \&quot;union\&quot;)&quot;},{&quot;name&quot;:&quot;grid_start_position&quot;,&quot;on&quot;:[{&quot;events&quot;:{&quot;signal&quot;:&quot;grid_translate_delta&quot;},&quot;update&quot;:&quot;panLinear(grid_translate_anchor.extent_x, -grid_translate_delta.x &#x2F; width)&quot;},{&quot;events&quot;:{&quot;signal&quot;:&quot;grid_zoom_delta&quot;},&quot;update&quot;:&quot;zoomLinear(domain(\&quot;x\&quot;), grid_zoom_anchor.x, grid_zoom_delta)&quot;},{&quot;events&quot;:[{&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;dblclick&quot;}],&quot;update&quot;:&quot;null&quot;}]},{&quot;name&quot;:&quot;grid_row&quot;,&quot;on&quot;:[{&quot;events&quot;:{&quot;signal&quot;:&quot;grid_translate_delta&quot;},&quot;update&quot;:&quot;panLinear(grid_translate_anchor.extent_y, grid_translate_delta.y &#x2F; height)&quot;},{&quot;events&quot;:{&quot;signal&quot;:&quot;grid_zoom_delta&quot;},&quot;update&quot;:&quot;zoomLinear(domain(\&quot;y\&quot;), grid_zoom_anchor.y, grid_zoom_delta)&quot;},{&quot;events&quot;:[{&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;dblclick&quot;}],&quot;update&quot;:&quot;null&quot;}]},{&quot;name&quot;:&quot;grid_tuple&quot;,&quot;on&quot;:[{&quot;events&quot;:[{&quot;signal&quot;:&quot;grid_start_position || grid_row&quot;}],&quot;update&quot;:&quot;grid_start_position &amp;&amp; grid_row ? {unit: \&quot;\&quot;, fields: grid_tuple_fields, values: [grid_start_position,grid_row]} : null&quot;}]},{&quot;name&quot;:&quot;grid_tuple_fields&quot;,&quot;value&quot;:[{&quot;channel&quot;:&quot;x&quot;,&quot;field&quot;:&quot;start_position&quot;,&quot;type&quot;:&quot;R&quot;},{&quot;channel&quot;:&quot;y&quot;,&quot;field&quot;:&quot;row&quot;,&quot;type&quot;:&quot;E&quot;}]},{&quot;name&quot;:&quot;grid_translate_anchor&quot;,&quot;on&quot;:[{&quot;events&quot;:[{&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;mousedown&quot;}],&quot;update&quot;:&quot;{x: x(unit), y: y(unit), extent_x: domain(\&quot;x\&quot;), extent_y: domain(\&quot;y\&quot;)}&quot;}],&quot;value&quot;:{}},{&quot;name&quot;:&quot;grid_translate_delta&quot;,&quot;on&quot;:[{&quot;events&quot;:[{&quot;between&quot;:[{&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;mousedown&quot;},{&quot;source&quot;:&quot;window&quot;,&quot;type&quot;:&quot;mouseup&quot;}],&quot;consume&quot;:true,&quot;source&quot;:&quot;window&quot;,&quot;type&quot;:&quot;mousemove&quot;}],&quot;update&quot;:&quot;{x: grid_translate_anchor.x - x(unit), y: grid_translate_anchor.y - y(unit)}&quot;}],&quot;value&quot;:{}},{&quot;name&quot;:&quot;grid_zoom_anchor&quot;,&quot;on&quot;:[{&quot;events&quot;:[{&quot;consume&quot;:true,&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;wheel&quot;}],&quot;update&quot;:&quot;{x: invert(\&quot;x\&quot;, x(unit)), y: invert(\&quot;y\&quot;, y(unit))}&quot;}]},{&quot;name&quot;:&quot;grid_zoom_delta&quot;,&quot;on&quot;:[{&quot;events&quot;:[{&quot;consume&quot;:true,&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;wheel&quot;}],&quot;force&quot;:true,&quot;update&quot;:&quot;pow(1.001, event.deltaY * pow(16, event.deltaMode))&quot;}]},{&quot;name&quot;:&quot;grid_modify&quot;,&quot;on&quot;:[{&quot;events&quot;:{&quot;signal&quot;:&quot;grid_tuple&quot;},&quot;update&quot;:&quot;modify(\&quot;grid_store\&quot;, grid_tuple, true)&quot;}]}],&quot;style&quot;:&quot;cell&quot;,&quot;title&quot;:{&quot;frame&quot;:&quot;group&quot;,&quot;text&quot;:&quot;Chromosom&quot;},&quot;width&quot;:700}"
+                            
+                                
+                                
+                                    data-ann[1][1]="T"
+                                
+                                    data-ann[1][2]="stop_gained"
+                                
+                                    data-ann[1][3]="HIGH"
+                                
+                                    data-ann[1][4]="C1QC"
+                                
+                                    data-ann[1][5]="ENSG00000159189"
+                                
+                                    data-ann[1][6]="transcript"
+                                
+                                    data-ann[1][7]="ENST00000374640.8"
+                                
+                                    data-ann[1][8]="protein_coding"
+                                
+                                    data-ann[1][9]="3/3"
+                                
+                                    data-ann[1][10]="c.205C>T"
+                                
+                                    data-ann[1][11]="p.Arg69*"
+                                
+                                    data-ann[1][12]="303/1163"
+                                
+                                    data-ann[1][13]="205/738"
+                                
+                                    data-ann[1][14]="69/245"
+                                
+                                    data-ann[1][15]=""
+                                
+                                    data-ann[1][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[2][1]="T"
+                                
+                                    data-ann[2][2]="stop_gained"
+                                
+                                    data-ann[2][3]="HIGH"
+                                
+                                    data-ann[2][4]="C1QC"
+                                
+                                    data-ann[2][5]="ENSG00000159189"
+                                
+                                    data-ann[2][6]="transcript"
+                                
+                                    data-ann[2][7]="ENST00000374639.7"
+                                
+                                    data-ann[2][8]="protein_coding"
+                                
+                                    data-ann[2][9]="3/3"
+                                
+                                    data-ann[2][10]="c.205C>T"
+                                
+                                    data-ann[2][11]="p.Arg69*"
+                                
+                                    data-ann[2][12]="323/1183"
+                                
+                                    data-ann[2][13]="205/738"
+                                
+                                    data-ann[2][14]="69/245"
+                                
+                                    data-ann[2][15]=""
+                                
+                                    data-ann[2][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[3][1]="T"
+                                
+                                    data-ann[3][2]="stop_gained"
+                                
+                                    data-ann[3][3]="HIGH"
+                                
+                                    data-ann[3][4]="C1QC"
+                                
+                                    data-ann[3][5]="ENSG00000159189"
+                                
+                                    data-ann[3][6]="transcript"
+                                
+                                    data-ann[3][7]="ENST00000374637.1"
+                                
+                                    data-ann[3][8]="protein_coding"
+                                
+                                    data-ann[3][9]="3/3"
+                                
+                                    data-ann[3][10]="c.205C>T"
+                                
+                                    data-ann[3][11]="p.Arg69*"
+                                
+                                    data-ann[3][12]="452/1089"
+                                
+                                    data-ann[3][13]="205/738"
+                                
+                                    data-ann[3][14]="69/245"
+                                
+                                    data-ann[3][15]=""
+                                
+                                    data-ann[3][16]=""
+                                
+                            
+                    >
+                        <th scope="row">chr1</th>
+                        <td>rs377549148</td>
+                        <td>4</td>
+                        <td>C</td>
+                        <td>T</td>
+                    </tr>
+                    
+                    <tr
+                            class="variant-row"
+                            id="rs1057519087"
+                            data-name="chr1"
+                            data-id="rs1057519087"
+                            data-position="28"
+                            data-type="Variant"
+                            data-reference="C"
+                            data-alternatives="T"
+                            data-vis="{&quot;$schema&quot;:&quot;https:&#x2F;&#x2F;vega.github.io&#x2F;schema&#x2F;vega&#x2F;v5.json&quot;,&quot;autosize&quot;:{&quot;contains&quot;:&quot;content&quot;,&quot;resize&quot;:true,&quot;type&quot;:&quot;fit&quot;},&quot;axes&quot;:[{&quot;domain&quot;:true,&quot;grid&quot;:true,&quot;gridScale&quot;:&quot;y&quot;,&quot;labels&quot;:false,&quot;maxExtent&quot;:0,&quot;minExtent&quot;:0,&quot;orient&quot;:&quot;bottom&quot;,&quot;scale&quot;:&quot;x&quot;,&quot;tickCount&quot;:{&quot;signal&quot;:&quot;ceil(width&#x2F;40)&quot;},&quot;ticks&quot;:false,&quot;zindex&quot;:0},{&quot;grid&quot;:false,&quot;labelFlush&quot;:true,&quot;labelOverlap&quot;:true,&quot;orient&quot;:&quot;bottom&quot;,&quot;scale&quot;:&quot;x&quot;,&quot;tickCount&quot;:{&quot;signal&quot;:&quot;ceil(width&#x2F;40)&quot;},&quot;title&quot;:&quot;Position&quot;,&quot;zindex&quot;:0}],&quot;background&quot;:&quot;white&quot;,&quot;config&quot;:{},&quot;data&quot;:[{&quot;name&quot;:&quot;grid_store&quot;},{&quot;name&quot;:&quot;fasta&quot;,&quot;values&quot;:[{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:0.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:-0.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:1.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:0.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:2.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:1.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:3.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:2.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:4.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:3.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:5.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:4.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:6.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:5.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:7.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:6.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:8.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:7.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:9.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:8.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:10.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:9.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:11.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:10.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:12.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:11.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:13.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:12.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:14.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:13.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:15.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:14.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:16.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:15.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:17.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:16.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:18.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:17.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:19.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:18.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:20.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:19.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:21.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:20.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:22.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:21.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:23.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:22.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:24.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:23.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:25.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:24.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:26.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:25.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:27.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:26.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:28.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:27.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:29.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:28.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:30.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:29.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:31.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:30.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:32.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:31.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:33.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:32.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:34.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:33.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:35.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:34.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:36.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:35.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:37.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:36.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:38.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:37.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:39.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:38.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:40.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:39.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:41.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:40.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:42.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:41.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:43.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:42.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:44.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:43.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:45.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:44.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:46.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:45.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:47.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:46.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:48.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:47.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:49.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:48.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:50.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:49.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:51.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:50.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:52.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:51.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:53.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:52.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:54.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:53.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:55.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:54.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:56.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:55.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:57.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:56.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:58.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:57.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:59.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:58.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:60.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:59.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:61.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:60.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:62.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:61.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:63.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:62.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:64.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:63.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:65.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:64.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:66.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:65.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:67.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:66.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:68.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:67.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:69.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:68.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:70.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:69.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:71.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:70.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:72.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:71.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:73.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:72.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:74.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:73.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:75.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:74.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:76.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:75.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:77.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:76.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:78.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:77.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:79.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:78.5},{&quot;base&quot;:&quot;T&quot;,&quot;end_position&quot;:80.5,&quot;marker_type&quot;:&quot;T&quot;,&quot;row&quot;:0,&quot;start_position&quot;:79.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:81.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:80.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:82.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:81.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:83.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:82.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:84.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:83.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:85.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:84.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:86.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:85.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:87.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:86.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:88.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:87.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:89.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:88.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:90.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:89.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:91.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:90.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:92.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:91.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:93.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:92.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:94.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:93.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:95.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:94.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:96.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:95.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:97.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:96.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:98.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:97.5},{&quot;base&quot;:&quot;A&quot;,&quot;end_position&quot;:99.5,&quot;marker_type&quot;:&quot;A&quot;,&quot;row&quot;:0,&quot;start_position&quot;:98.5},{&quot;base&quot;:&quot;G&quot;,&quot;end_position&quot;:100.5,&quot;marker_type&quot;:&quot;G&quot;,&quot;row&quot;:0,&quot;start_position&quot;:99.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:101.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:100.5},{&quot;base&quot;:&quot;C&quot;,&quot;end_position&quot;:102.5,&quot;marker_type&quot;:&quot;C&quot;,&quot;row&quot;:0,&quot;start_position&quot;:101.5},{&quot;bases&quot;:&quot;AA&quot;,&quot;end_position&quot;:20.0,&quot;flags&quot;:{&quot;1&quot;:&quot;template having multiple segments in sequencing&quot;,&quot;2&quot;:&quot;each segment properly aligned according to the aligner&quot;,&quot;32&quot;:&quot;SEQ of the next segment in the template being reverse complemented&quot;,&quot;64&quot;:&quot;the first segment in the template &quot;},&quot;inserts&quot;:&quot;AA&quot;,&quot;marker_type&quot;:&quot;Insertion&quot;,&quot;name&quot;:&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;row&quot;:1,&quot;start_position&quot;:19.0,&quot;typ&quot;:&quot;Insertion&quot;},{&quot;base&quot;:&quot;T&quot;,&quot;bases&quot;:&quot;T&quot;,&quot;end_position&quot;:100.5,&quot;flags&quot;:{&quot;1&quot;:&quot;template having multiple segments in sequencing&quot;,&quot;2&quot;:&quot;each segment properly aligned according to the aligner&quot;,&quot;32&quot;:&quot;SEQ of the next segment in the template being reverse complemented&quot;,&quot;64&quot;:&quot;the first segment in the template &quot;},&quot;marker_type&quot;:&quot;T&quot;,&quot;name&quot;:&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;row&quot;:1,&quot;start_position&quot;:99.5},{&quot;end_position&quot;:789263.5,&quot;flags&quot;:{&quot;1&quot;:&quot;template having multiple segments in sequencing&quot;,&quot;2&quot;:&quot;each segment properly aligned according to the aligner&quot;,&quot;32&quot;:&quot;SEQ of the next segment in the template being reverse complemented&quot;,&quot;64&quot;:&quot;the first segment in the template &quot;},&quot;marker_type&quot;:&quot;Pairing&quot;,&quot;name&quot;:&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;row&quot;:1,&quot;start_position&quot;:103.5,&quot;typ&quot;:&quot;Pairing&quot;},{&quot;end_position&quot;:19.5,&quot;flags&quot;:{&quot;1&quot;:&quot;template having multiple segments in sequencing&quot;,&quot;2&quot;:&quot;each segment properly aligned according to the aligner&quot;,&quot;32&quot;:&quot;SEQ of the next segment in the template being reverse complemented&quot;,&quot;64&quot;:&quot;the first segment in the template &quot;},&quot;marker_type&quot;:&quot;Match&quot;,&quot;name&quot;:&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;row&quot;:1,&quot;start_position&quot;:3.5,&quot;typ&quot;:&quot;Match&quot;},{&quot;end_position&quot;:99.5,&quot;flags&quot;:{&quot;1&quot;:&quot;template having multiple segments in sequencing&quot;,&quot;2&quot;:&quot;each segment properly aligned according to the aligner&quot;,&quot;32&quot;:&quot;SEQ of the next segment in the template being reverse complemented&quot;,&quot;64&quot;:&quot;the first segment in the template &quot;},&quot;marker_type&quot;:&quot;Match&quot;,&quot;name&quot;:&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;row&quot;:1,&quot;start_position&quot;:19.5,&quot;typ&quot;:&quot;Match&quot;},{&quot;end_position&quot;:101.5,&quot;flags&quot;:{&quot;1&quot;:&quot;template having multiple segments in sequencing&quot;,&quot;2&quot;:&quot;each segment properly aligned according to the aligner&quot;,&quot;32&quot;:&quot;SEQ of the next segment in the template being reverse complemented&quot;,&quot;64&quot;:&quot;the first segment in the template &quot;},&quot;marker_type&quot;:&quot;Match&quot;,&quot;name&quot;:&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;row&quot;:1,&quot;start_position&quot;:100.5,&quot;typ&quot;:&quot;Match&quot;},{&quot;alternatives&quot;:&quot;T&quot;,&quot;end_position&quot;:28.5,&quot;marker_type&quot;:&quot;Variant&quot;,&quot;reference&quot;:&quot;C&quot;,&quot;row&quot;:-1,&quot;start_position&quot;:27.5,&quot;var_type&quot;:&quot;Variant&quot;}]},{&quot;name&quot;:&quot;vars&quot;,&quot;source&quot;:&quot;fasta&quot;,&quot;transform&quot;:[{&quot;expr&quot;:&quot;datum.row &lt; 0&quot;,&quot;type&quot;:&quot;filter&quot;}]},{&quot;name&quot;:&quot;alignments&quot;,&quot;source&quot;:&quot;fasta&quot;,&quot;transform&quot;:[{&quot;expr&quot;:&quot;datum.row &gt;= 0&quot;,&quot;type&quot;:&quot;filter&quot;}]}],&quot;height&quot;:250,&quot;legends&quot;:[{&quot;encode&quot;:{&quot;symbols&quot;:{&quot;update&quot;:{&quot;opacity&quot;:{&quot;value&quot;:0.8}}}},&quot;stroke&quot;:&quot;color&quot;,&quot;symbolType&quot;:&quot;stroke&quot;,&quot;title&quot;:&quot;Base&quot;}],&quot;marks&quot;:[{&quot;clip&quot;:true,&quot;encode&quot;:{&quot;update&quot;:{&quot;opacity&quot;:{&quot;value&quot;:0.8},&quot;stroke&quot;:{&quot;field&quot;:&quot;marker_type&quot;,&quot;scale&quot;:&quot;color&quot;},&quot;strokeWidth&quot;:{&quot;field&quot;:&quot;marker_type&quot;,&quot;scale&quot;:&quot;stroke&quot;},&quot;tooltip&quot;:{&quot;signal&quot;:&quot;{\&quot;type\&quot;: datum[\&quot;typ\&quot;], \&quot;base\&quot;: datum[\&quot;base\&quot;], \&quot;variant type\&quot;: datum[\&quot;var_type\&quot;],\&quot;test\&quot;: datum[\&quot;test\&quot;], \&quot;inserted base(s)\&quot;: datum[\&quot;inserts\&quot;], \&quot;reference\&quot;: datum[\&quot;reference\&quot;], \&quot;alternatives\&quot;: datum[\&quot;alternatives\&quot;], \&quot;name\&quot;: datum[\&quot;name\&quot;], \&quot;flag 1\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1\&quot;], \&quot;flag 2\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2\&quot;], \&quot;flag 4\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;4\&quot;], \&quot;flag 8\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;8\&quot;], \&quot;flag 16\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;16\&quot;], \&quot;flag 32\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;32\&quot;], \&quot;flag 64\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;64\&quot;], \&quot;flag 128\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;128\&quot;], \&quot;flag 256\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;256\&quot;], \&quot;flag 512\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;512\&quot;], \&quot;flag 1024\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1024\&quot;], \&quot;flag 2048\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2048\&quot;]}&quot;},&quot;x&quot;:{&quot;field&quot;:&quot;start_position&quot;,&quot;scale&quot;:&quot;x&quot;},&quot;x2&quot;:{&quot;field&quot;:&quot;end_position&quot;,&quot;scale&quot;:&quot;x&quot;},&quot;y&quot;:{&quot;band&quot;:0.5,&quot;field&quot;:&quot;row&quot;,&quot;scale&quot;:&quot;y&quot;},&quot;zindex&quot;:{&quot;field&quot;:&quot;marker_type&quot;,&quot;scale&quot;:&quot;z&quot;}}},&quot;from&quot;:{&quot;data&quot;:&quot;alignments&quot;},&quot;interactive&quot;:true,&quot;name&quot;:&quot;marks&quot;,&quot;style&quot;:[&quot;rule&quot;],&quot;type&quot;:&quot;group&quot;},{&quot;clip&quot;:true,&quot;encode&quot;:{&quot;update&quot;:{&quot;opacity&quot;:{&quot;value&quot;:0.8},&quot;stroke&quot;:{&quot;field&quot;:&quot;var_type&quot;,&quot;scale&quot;:&quot;color&quot;},&quot;strokeWidth&quot;:{&quot;field&quot;:&quot;marker_type&quot;,&quot;scale&quot;:&quot;stroke&quot;},&quot;tooltip&quot;:{&quot;signal&quot;:&quot;{\&quot;type\&quot;: datum[\&quot;typ\&quot;], \&quot;base\&quot;: datum[\&quot;base\&quot;], \&quot;variant type\&quot;: datum[\&quot;var_type\&quot;],\&quot;test\&quot;: datum[\&quot;test\&quot;], \&quot;inserted base(s)\&quot;: datum[\&quot;inserts\&quot;], \&quot;reference\&quot;: datum[\&quot;reference\&quot;], \&quot;alternatives\&quot;: datum[\&quot;alternatives\&quot;], \&quot;name\&quot;: datum[\&quot;name\&quot;], \&quot;flag 1\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1\&quot;], \&quot;flag 2\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2\&quot;], \&quot;flag 4\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;4\&quot;], \&quot;flag 8\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;8\&quot;], \&quot;flag 16\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;16\&quot;], \&quot;flag 32\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;32\&quot;], \&quot;flag 64\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;64\&quot;], \&quot;flag 128\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;128\&quot;], \&quot;flag 256\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;256\&quot;], \&quot;flag 512\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;512\&quot;], \&quot;flag 1024\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1024\&quot;], \&quot;flag 2048\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2048\&quot;]}&quot;},&quot;x&quot;:{&quot;field&quot;:&quot;start_position&quot;,&quot;scale&quot;:&quot;x&quot;},&quot;x2&quot;:{&quot;field&quot;:&quot;end_position&quot;,&quot;scale&quot;:&quot;x&quot;},&quot;y&quot;:{&quot;band&quot;:0.5,&quot;field&quot;:&quot;row&quot;,&quot;scale&quot;:&quot;y&quot;},&quot;zindex&quot;:{&quot;field&quot;:&quot;marker_type&quot;,&quot;scale&quot;:&quot;z&quot;}}},&quot;from&quot;:{&quot;data&quot;:&quot;vars&quot;},&quot;interactive&quot;:true,&quot;name&quot;:&quot;marks2&quot;,&quot;style&quot;:[&quot;rule&quot;],&quot;type&quot;:&quot;group&quot;}],&quot;padding&quot;:5,&quot;scales&quot;:[{&quot;domain&quot;:[0,103],&quot;domainRaw&quot;:{&quot;signal&quot;:&quot;grid[\&quot;start_position\&quot;]&quot;},&quot;name&quot;:&quot;x&quot;,&quot;nice&quot;:true,&quot;range&quot;:[0,{&quot;signal&quot;:&quot;width&quot;}],&quot;type&quot;:&quot;linear&quot;,&quot;zero&quot;:false},{&quot;domain&quot;:{&quot;data&quot;:&quot;fasta&quot;,&quot;field&quot;:&quot;row&quot;,&quot;sort&quot;:true},&quot;name&quot;:&quot;y&quot;,&quot;paddingInner&quot;:0,&quot;paddingOuter&quot;:0,&quot;range&quot;:[0,{&quot;signal&quot;:&quot;height&quot;}],&quot;type&quot;:&quot;band&quot;},{&quot;domain&quot;:[&quot;A&quot;,&quot;C&quot;,&quot;G&quot;,&quot;T&quot;,&quot;N&quot;,&quot;Variant&quot;,&quot;Insertion&quot;,&quot;Deletion&quot;,&quot;Match&quot;,&quot;Pairing&quot;],&quot;name&quot;:&quot;z&quot;,&quot;range&quot;:[2,2,2,2,2,1,4,2,1,1],&quot;type&quot;:&quot;ordinal&quot;},{&quot;domain&quot;:[&quot;A&quot;,&quot;C&quot;,&quot;G&quot;,&quot;T&quot;,&quot;N&quot;,&quot;Variant&quot;,&quot;Insertion&quot;,&quot;Deletion&quot;,&quot;Match&quot;,&quot;Pairing&quot;],&quot;name&quot;:&quot;stroke&quot;,&quot;range&quot;:[5,5,5,5,5,5,7.5,5,5,1],&quot;type&quot;:&quot;ordinal&quot;},{&quot;domain&quot;:[&quot;A&quot;,&quot;C&quot;,&quot;G&quot;,&quot;T&quot;,&quot;N&quot;,&quot;Variant&quot;,&quot;Insertion&quot;,&quot;Deletion&quot;,&quot;Match&quot;,&quot;Pairing&quot;,&quot;Inversion&quot;,&quot;Duplicate&quot;],&quot;name&quot;:&quot;color&quot;,&quot;range&quot;:[&quot;#CADB69&quot;,&quot;#F2B671&quot;,&quot;#F28CC2&quot;,&quot;#7284A8&quot;,&quot;#A23E11&quot;,&quot;#000000&quot;,&quot;#047C0A&quot;,&quot;#CC1414&quot;,&quot;#BBBBBB&quot;,&quot;#BBBBBB&quot;,&quot;#984aff&quot;,&quot;#ffa600&quot;],&quot;type&quot;:&quot;ordinal&quot;},{&quot;name&quot;:&quot;flags&quot;}],&quot;signals&quot;:[{&quot;name&quot;:&quot;unit&quot;,&quot;on&quot;:[{&quot;events&quot;:&quot;mousemove&quot;,&quot;update&quot;:&quot;isTuple(group()) ? group() : unit&quot;}],&quot;value&quot;:{}},{&quot;name&quot;:&quot;grid&quot;,&quot;update&quot;:&quot;vlSelectionResolve(\&quot;grid_store\&quot;, \&quot;union\&quot;)&quot;},{&quot;name&quot;:&quot;grid_start_position&quot;,&quot;on&quot;:[{&quot;events&quot;:{&quot;signal&quot;:&quot;grid_translate_delta&quot;},&quot;update&quot;:&quot;panLinear(grid_translate_anchor.extent_x, -grid_translate_delta.x &#x2F; width)&quot;},{&quot;events&quot;:{&quot;signal&quot;:&quot;grid_zoom_delta&quot;},&quot;update&quot;:&quot;zoomLinear(domain(\&quot;x\&quot;), grid_zoom_anchor.x, grid_zoom_delta)&quot;},{&quot;events&quot;:[{&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;dblclick&quot;}],&quot;update&quot;:&quot;null&quot;}]},{&quot;name&quot;:&quot;grid_row&quot;,&quot;on&quot;:[{&quot;events&quot;:{&quot;signal&quot;:&quot;grid_translate_delta&quot;},&quot;update&quot;:&quot;panLinear(grid_translate_anchor.extent_y, grid_translate_delta.y &#x2F; height)&quot;},{&quot;events&quot;:{&quot;signal&quot;:&quot;grid_zoom_delta&quot;},&quot;update&quot;:&quot;zoomLinear(domain(\&quot;y\&quot;), grid_zoom_anchor.y, grid_zoom_delta)&quot;},{&quot;events&quot;:[{&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;dblclick&quot;}],&quot;update&quot;:&quot;null&quot;}]},{&quot;name&quot;:&quot;grid_tuple&quot;,&quot;on&quot;:[{&quot;events&quot;:[{&quot;signal&quot;:&quot;grid_start_position || grid_row&quot;}],&quot;update&quot;:&quot;grid_start_position &amp;&amp; grid_row ? {unit: \&quot;\&quot;, fields: grid_tuple_fields, values: [grid_start_position,grid_row]} : null&quot;}]},{&quot;name&quot;:&quot;grid_tuple_fields&quot;,&quot;value&quot;:[{&quot;channel&quot;:&quot;x&quot;,&quot;field&quot;:&quot;start_position&quot;,&quot;type&quot;:&quot;R&quot;},{&quot;channel&quot;:&quot;y&quot;,&quot;field&quot;:&quot;row&quot;,&quot;type&quot;:&quot;E&quot;}]},{&quot;name&quot;:&quot;grid_translate_anchor&quot;,&quot;on&quot;:[{&quot;events&quot;:[{&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;mousedown&quot;}],&quot;update&quot;:&quot;{x: x(unit), y: y(unit), extent_x: domain(\&quot;x\&quot;), extent_y: domain(\&quot;y\&quot;)}&quot;}],&quot;value&quot;:{}},{&quot;name&quot;:&quot;grid_translate_delta&quot;,&quot;on&quot;:[{&quot;events&quot;:[{&quot;between&quot;:[{&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;mousedown&quot;},{&quot;source&quot;:&quot;window&quot;,&quot;type&quot;:&quot;mouseup&quot;}],&quot;consume&quot;:true,&quot;source&quot;:&quot;window&quot;,&quot;type&quot;:&quot;mousemove&quot;}],&quot;update&quot;:&quot;{x: grid_translate_anchor.x - x(unit), y: grid_translate_anchor.y - y(unit)}&quot;}],&quot;value&quot;:{}},{&quot;name&quot;:&quot;grid_zoom_anchor&quot;,&quot;on&quot;:[{&quot;events&quot;:[{&quot;consume&quot;:true,&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;wheel&quot;}],&quot;update&quot;:&quot;{x: invert(\&quot;x\&quot;, x(unit)), y: invert(\&quot;y\&quot;, y(unit))}&quot;}]},{&quot;name&quot;:&quot;grid_zoom_delta&quot;,&quot;on&quot;:[{&quot;events&quot;:[{&quot;consume&quot;:true,&quot;source&quot;:&quot;scope&quot;,&quot;type&quot;:&quot;wheel&quot;}],&quot;force&quot;:true,&quot;update&quot;:&quot;pow(1.001, event.deltaY * pow(16, event.deltaMode))&quot;}]},{&quot;name&quot;:&quot;grid_modify&quot;,&quot;on&quot;:[{&quot;events&quot;:{&quot;signal&quot;:&quot;grid_tuple&quot;},&quot;update&quot;:&quot;modify(\&quot;grid_store\&quot;, grid_tuple, true)&quot;}]}],&quot;style&quot;:&quot;cell&quot;,&quot;title&quot;:{&quot;frame&quot;:&quot;group&quot;,&quot;text&quot;:&quot;Chromosom&quot;},&quot;width&quot;:700}"
+                            
+                                
+                                
+                                    data-ann[1][1]="T"
+                                
+                                    data-ann[1][2]="missense_variant"
+                                
+                                    data-ann[1][3]="MODERATE"
+                                
+                                    data-ann[1][4]="MFSD2A"
+                                
+                                    data-ann[1][5]="ENSG00000168389"
+                                
+                                    data-ann[1][6]="transcript"
+                                
+                                    data-ann[1][7]="ENST00000372811.9"
+                                
+                                    data-ann[1][8]="protein_coding"
+                                
+                                    data-ann[1][9]="10/14"
+                                
+                                    data-ann[1][10]="c.1016C>T"
+                                
+                                    data-ann[1][11]="p.Ser339Leu"
+                                
+                                    data-ann[1][12]="1179/2154"
+                                
+                                    data-ann[1][13]="1016/1593"
+                                
+                                    data-ann[1][14]="339/530"
+                                
+                                    data-ann[1][15]=""
+                                
+                                    data-ann[1][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[2][1]="T"
+                                
+                                    data-ann[2][2]="missense_variant"
+                                
+                                    data-ann[2][3]="MODERATE"
+                                
+                                    data-ann[2][4]="MFSD2A"
+                                
+                                    data-ann[2][5]="ENSG00000168389"
+                                
+                                    data-ann[2][6]="transcript"
+                                
+                                    data-ann[2][7]="ENST00000372809.5"
+                                
+                                    data-ann[2][8]="protein_coding"
+                                
+                                    data-ann[2][9]="10/14"
+                                
+                                    data-ann[2][10]="c.1055C>T"
+                                
+                                    data-ann[2][11]="p.Ser352Leu"
+                                
+                                    data-ann[2][12]="1198/2173"
+                                
+                                    data-ann[2][13]="1055/1632"
+                                
+                                    data-ann[2][14]="352/543"
+                                
+                                    data-ann[2][15]=""
+                                
+                                    data-ann[2][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[3][1]="T"
+                                
+                                    data-ann[3][2]="missense_variant"
+                                
+                                    data-ann[3][3]="MODERATE"
+                                
+                                    data-ann[3][4]="MFSD2A"
+                                
+                                    data-ann[3][5]="ENSG00000168389"
+                                
+                                    data-ann[3][6]="transcript"
+                                
+                                    data-ann[3][7]="ENST00000420632.6"
+                                
+                                    data-ann[3][8]="protein_coding"
+                                
+                                    data-ann[3][9]="8/12"
+                                
+                                    data-ann[3][10]="c.548C>T"
+                                
+                                    data-ann[3][11]="p.Ser183Leu"
+                                
+                                    data-ann[3][12]="937/1914"
+                                
+                                    data-ann[3][13]="548/1125"
+                                
+                                    data-ann[3][14]="183/374"
+                                
+                                    data-ann[3][15]=""
+                                
+                                    data-ann[3][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[4][1]="T"
+                                
+                                    data-ann[4][2]="downstream_gene_variant"
+                                
+                                    data-ann[4][3]="MODIFIER"
+                                
+                                    data-ann[4][4]="MFSD2A"
+                                
+                                    data-ann[4][5]="ENSG00000168389"
+                                
+                                    data-ann[4][6]="transcript"
+                                
+                                    data-ann[4][7]="ENST00000434861.5"
+                                
+                                    data-ann[4][8]="protein_coding"
+                                
+                                    data-ann[4][9]=""
+                                
+                                    data-ann[4][10]="c.*941C>T"
+                                
+                                    data-ann[4][11]=""
+                                
+                                    data-ann[4][12]=""
+                                
+                                    data-ann[4][13]=""
+                                
+                                    data-ann[4][14]=""
+                                
+                                    data-ann[4][15]="941"
+                                
+                                    data-ann[4][16]="WARNING_TRANSCRIPT_INCOMPLETE"
+                                
+                            
+                                
+                                
+                                    data-ann[5][1]="T"
+                                
+                                    data-ann[5][2]="downstream_gene_variant"
+                                
+                                    data-ann[5][3]="MODIFIER"
+                                
+                                    data-ann[5][4]="MFSD2A"
+                                
+                                    data-ann[5][5]="ENSG00000168389"
+                                
+                                    data-ann[5][6]="transcript"
+                                
+                                    data-ann[5][7]="ENST00000469745.5"
+                                
+                                    data-ann[5][8]="processed_transcript"
+                                
+                                    data-ann[5][9]=""
+                                
+                                    data-ann[5][10]="n.*463C>T"
+                                
+                                    data-ann[5][11]=""
+                                
+                                    data-ann[5][12]=""
+                                
+                                    data-ann[5][13]=""
+                                
+                                    data-ann[5][14]=""
+                                
+                                    data-ann[5][15]="463"
+                                
+                                    data-ann[5][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[6][1]="T"
+                                
+                                    data-ann[6][2]="downstream_gene_variant"
+                                
+                                    data-ann[6][3]="MODIFIER"
+                                
+                                    data-ann[6][4]="RP3-342P20.2"
+                                
+                                    data-ann[6][5]="ENSG00000228477"
+                                
+                                    data-ann[6][6]="transcript"
+                                
+                                    data-ann[6][7]="ENST00000438210.1"
+                                
+                                    data-ann[6][8]="processed_pseudogene"
+                                
+                                    data-ann[6][9]=""
+                                
+                                    data-ann[6][10]="n.*4228C>T"
+                                
+                                    data-ann[6][11]=""
+                                
+                                    data-ann[6][12]=""
+                                
+                                    data-ann[6][13]=""
+                                
+                                    data-ann[6][14]=""
+                                
+                                    data-ann[6][15]="4228"
+                                
+                                    data-ann[6][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[7][1]="T"
+                                
+                                    data-ann[7][2]="intron_variant"
+                                
+                                    data-ann[7][3]="MODIFIER"
+                                
+                                    data-ann[7][4]="MFSD2A"
+                                
+                                    data-ann[7][5]="ENSG00000168389"
+                                
+                                    data-ann[7][6]="transcript"
+                                
+                                    data-ann[7][7]="ENST00000483824.5"
+                                
+                                    data-ann[7][8]="processed_transcript"
+                                
+                                    data-ann[7][9]="9/11"
+                                
+                                    data-ann[7][10]="n.1146+463C>T"
+                                
+                                    data-ann[7][11]=""
+                                
+                                    data-ann[7][12]=""
+                                
+                                    data-ann[7][13]=""
+                                
+                                    data-ann[7][14]=""
+                                
+                                    data-ann[7][15]=""
+                                
+                                    data-ann[7][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[8][1]="T"
+                                
+                                    data-ann[8][2]="non_coding_transcript_exon_variant"
+                                
+                                    data-ann[8][3]="MODIFIER"
+                                
+                                    data-ann[8][4]="MFSD2A"
+                                
+                                    data-ann[8][5]="ENSG00000168389"
+                                
+                                    data-ann[8][6]="transcript"
+                                
+                                    data-ann[8][7]="ENST00000480630.5"
+                                
+                                    data-ann[8][8]="processed_transcript"
+                                
+                                    data-ann[8][9]="5/9"
+                                
+                                    data-ann[8][10]="n.1457C>T"
+                                
+                                    data-ann[8][11]=""
+                                
+                                    data-ann[8][12]=""
+                                
+                                    data-ann[8][13]=""
+                                
+                                    data-ann[8][14]=""
+                                
+                                    data-ann[8][15]=""
+                                
+                                    data-ann[8][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[9][1]="T"
+                                
+                                    data-ann[9][2]="non_coding_transcript_exon_variant"
+                                
+                                    data-ann[9][3]="MODIFIER"
+                                
+                                    data-ann[9][4]="MFSD2A"
+                                
+                                    data-ann[9][5]="ENSG00000168389"
+                                
+                                    data-ann[9][6]="transcript"
+                                
+                                    data-ann[9][7]="ENST00000459917.1"
+                                
+                                    data-ann[9][8]="processed_transcript"
+                                
+                                    data-ann[9][9]="1/3"
+                                
+                                    data-ann[9][10]="n.150C>T"
+                                
+                                    data-ann[9][11]=""
+                                
+                                    data-ann[9][12]=""
+                                
+                                    data-ann[9][13]=""
+                                
+                                    data-ann[9][14]=""
+                                
+                                    data-ann[9][15]=""
+                                
+                                    data-ann[9][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[10][1]="T"
+                                
+                                    data-ann[10][2]="non_coding_transcript_exon_variant"
+                                
+                                    data-ann[10][3]="MODIFIER"
+                                
+                                    data-ann[10][4]="MFSD2A"
+                                
+                                    data-ann[10][5]="ENSG00000168389"
+                                
+                                    data-ann[10][6]="transcript"
+                                
+                                    data-ann[10][7]="ENST00000481612.1"
+                                
+                                    data-ann[10][8]="processed_transcript"
+                                
+                                    data-ann[10][9]="1/2"
+                                
+                                    data-ann[10][10]="n.14C>T"
+                                
+                                    data-ann[10][11]=""
+                                
+                                    data-ann[10][12]=""
+                                
+                                    data-ann[10][13]=""
+                                
+                                    data-ann[10][14]=""
+                                
+                                    data-ann[10][15]=""
+                                
+                                    data-ann[10][16]=""
+                                
+                            
+                                
+                                
+                                    data-ann[11][1]="T"
+                                
+                                    data-ann[11][2]="non_coding_transcript_exon_variant"
+                                
+                                    data-ann[11][3]="MODIFIER"
+                                
+                                    data-ann[11][4]="MFSD2A"
+                                
+                                    data-ann[11][5]="ENSG00000168389"
+                                
+                                    data-ann[11][6]="transcript"
+                                
+                                    data-ann[11][7]="ENST00000491515.5"
+                                
+                                    data-ann[11][8]="processed_transcript"
+                                
+                                    data-ann[11][9]="4/6"
+                                
+                                    data-ann[11][10]="n.241C>T"
+                                
+                                    data-ann[11][11]=""
+                                
+                                    data-ann[11][12]=""
+                                
+                                    data-ann[11][13]=""
+                                
+                                    data-ann[11][14]=""
+                                
+                                    data-ann[11][15]=""
+                                
+                                    data-ann[11][16]=""
+                                
+                            
+                    >
+                        <th scope="row">chr1</th>
+                        <td>rs1057519087</td>
+                        <td>28</td>
+                        <td>C</td>
+                        <td>T</td>
+                    </tr>
+                    
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-4">
+                <table id="sidebar" class="table table-hover table-light table-bordered" style="margin-top: 58px;">
+                </table>
+            </div>
+
+            <script>
+                // customize column_values to display the attributes of your choice to the sidebar
+                let column_values = ['id', 'position', 'reference', 'alternatives', 'type', 'ann[1][3]', 'ann[1][5]', 'ann[1][6]','ann[1][7]'];
+
+                $(document).ready(function () {
+                    $("html").on('click', '.variant-row', function () {
+                        let specs = $(this).data('vis');
+                        specs.width = $('#vis').width() - 40;
+                        let v = vegaEmbed('#vis', specs);
+                        $("#sidebar").empty();
+                        $.each($(this).data(), function(i, v) {
+                            if (i !== 'index' && column_values.includes(i)) {
+                                $('#sidebar').append('<tr><th class="thead-dark">' + i + '</th><td>' + v + '</td></tr>');
+                            }
+                        });
+                    })
+                })
+            </script>
+        </div>
+        <div class="row">
+            <div class="col-8">
+                <div id="vis" class="justify-content-center" style="width: 100%"></div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

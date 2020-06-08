@@ -1,4 +1,4 @@
-use crate::bcf::report::fasta_reader::read_fasta;
+use crate::bcf::report::fasta_reader::{read_fasta, get_fasta_length};
 use crate::bcf::report::static_reader::{get_static_reads, StaticVariant};
 use rust_htslib::bcf::Read;
 use rustc_serialize::json::Json;
@@ -166,6 +166,7 @@ pub(crate) fn make_report(
                 };
 
                 let visualization: Value;
+                let fasta_length = get_fasta_length(fasta_path);
 
                 if variant.pos() < 75 {
                     let content = create_report_data(
@@ -177,6 +178,16 @@ pub(crate) fn make_report(
                         end_position as u64 + 75,
                     );
                     visualization = manipulate_json(content, 0, end_position as u64 + 75);
+                } else if variant.pos() + 75 >= fasta_length as i64 {
+                    let content = create_report_data(
+                        fasta_path,
+                        var.clone(),
+                        bam_path,
+                        chrom.clone(),
+                        variant.pos() as u64 - 75,
+                        fasta_length - 1,
+                    );
+                    visualization = manipulate_json(content, variant.pos() as u64 - 75, fasta_length - 1);
                 } else {
                     let content = create_report_data(
                         fasta_path,

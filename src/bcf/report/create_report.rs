@@ -1,5 +1,5 @@
 use crate::bcf::report::fasta_reader::{get_fasta_length, read_fasta};
-use crate::bcf::report::static_reader::{get_static_reads, StaticVariant};
+use crate::bcf::report::static_reader::{get_static_reads, Variant};
 use rust_htslib::bcf::Read;
 use rustc_serialize::json::Json;
 use serde::Serialize;
@@ -42,18 +42,12 @@ pub(crate) fn make_report(
     for v in vcf.records() {
         let mut variant = v.unwrap();
 
-        let n = header.rid2name(variant.rid().unwrap()).unwrap();
+        let n = header.rid2name(variant.rid().unwrap()).unwrap().to_owned();
         let i = variant.id();
 
-        let mut name = String::from("");
-        for c in n {
-            name.push(*c as char);
-        }
+        let name = String::from_utf8(n).unwrap();
 
-        let mut id = String::from("");
-        for c in i {
-            id.push(c as char);
-        }
+        let id = String::from_utf8(i).unwrap();
 
         let pos = variant.pos();
         let end_pos = match variant.info(b"END").integer() {
@@ -73,8 +67,7 @@ pub(crate) fn make_report(
                 let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
                 let mut s = Vec::new();
                 for f in fields {
-                    let mut attr = String::from("");
-                    attr.push_str(std::str::from_utf8(f).unwrap());
+                    let attr = String::from_utf8(f.to_owned()).unwrap();
                     s.push(attr);
                 }
                 ann_strings.push(s);
@@ -84,15 +77,10 @@ pub(crate) fn make_report(
         let alleles = variant.alleles();
 
         if alleles.len() > 0 {
-            let ref_vec = alleles[0].clone();
-            let mut rfrce = String::from("");
+            let ref_vec = alleles[0].to_owned();
+            let ref_allele = String::from_utf8(ref_vec).unwrap();
 
-            let mut len: u8 = 0;
-
-            for c in ref_vec {
-                rfrce.push(*c as char);
-                len += 1;
-            }
+            let len: u8 = ref_allele.len() as u8;
 
             for i in 1..alleles.len() {
                 let alt = alleles[i];
@@ -111,53 +99,53 @@ pub(crate) fn make_report(
                     }
                     b"<INV>" => {
                         var_type = VariantType::Inversion;
-                        let rev: String = rfrce.chars().rev().collect();
+                        let rev: String = ref_allele.chars().rev().collect();
                         alternatives = Some(rev.clone());
                         end_position = end_pos.unwrap();
                         plot_start_position = pos as f64 - 0.5;
                     }
                     b"<DUP>" => {
                         var_type = VariantType::Duplicate;
-                        let dup: String = [rfrce.clone(), rfrce.clone()].concat();
+                        let dup: String = [ref_allele.clone(), ref_allele.clone()].concat();
                         alternatives = Some(dup.clone());
                         end_position = end_pos.unwrap();
                         plot_start_position = pos as f64 - 0.5;
                     }
                     _ => {
-                        let mut allel = String::from("");
+                        let mut alt_allele = String::from("");
 
                         for c in alt {
                             if *c as char != '<' && *c as char != '>' {
-                                allel.push(*c as char);
+                                alt_allele.push(*c as char);
                             }
                         }
 
-                        match allel.len() {
-                            a if a < rfrce.len() => {
+                        match alt_allele.len() {
+                            a if a < ref_allele.len() => {
                                 plot_start_position = pos as f64 + 0.5; // start position + 1 due to alignment with deletions from bam (example: ref: ACTT alt: A  -> deletion is just CTT)
                                 end_position = pos as f64 - 0.5 + len as f64;
                                 var_type = VariantType::Deletion;
-                                alternatives = Some(allel.clone());
+                                alternatives = Some(alt_allele.clone());
                             }
-                            a if a > rfrce.len() => {
+                            a if a > ref_allele.len() => {
                                 plot_start_position = pos as f64;
                                 end_position = pos as f64 + len as f64;
                                 var_type = VariantType::Insertion;
-                                alternatives = Some(allel.clone());
+                                alternatives = Some(alt_allele.clone());
                             }
                             _ => {
                                 plot_start_position = pos as f64 - 0.5;
                                 end_position = pos as f64 - 0.5 + len as f64;
                                 var_type = VariantType::Variant;
-                                alternatives = Some(allel.clone());
+                                alternatives = Some(alt_allele.clone());
                             }
                         }
                     }
                 }
 
-                let var = StaticVariant {
+                let var = Variant {
                     marker_type: var_string,
-                    reference: rfrce.clone(),
+                    reference: ref_allele.clone(),
                     alternatives: alternatives,
                     start_position: plot_start_position,
                     end_position: end_position,
@@ -209,7 +197,7 @@ pub(crate) fn make_report(
                     id: id.clone(),
                     name: name.clone(),
                     position: variant.pos(),
-                    reference: rfrce.clone(),
+                    reference: ref_allele.clone(),
                     var_type: var.var_type,
                     alternatives: var.alternatives,
                     ann: Some(ann_strings.clone()),
@@ -226,7 +214,7 @@ pub(crate) fn make_report(
 
 fn create_report_data(
     fasta_path: &Path,
-    variant: StaticVariant,
+    variant: Variant,
     bam_path: &Path,
     chrom: String,
     from: u64,
@@ -258,6 +246,8 @@ fn create_report_data(
     values
 }
 
+/// Inserts the json containing the genome data into the vega specs.
+/// It also changes keys and values of the json data for the vega plot to look better.
 fn manipulate_json(data: Json, from: u64, to: u64) -> Value {
     let json_string = include_str!("vegaSpecs.json");
 

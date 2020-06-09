@@ -28,7 +28,7 @@ pub struct StaticAlignmentNucleobase {
 }
 
 #[derive(Serialize, Clone)]
-pub struct StaticVariant {
+pub struct Variant {
     pub(crate) marker_type: String,
     pub(crate) reference: String,
     pub(crate) alternatives: Option<String>,

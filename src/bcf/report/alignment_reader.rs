@@ -93,7 +93,7 @@ pub fn read_indexed_bam(path: &Path, chrom: String, from: u64, to: u64) -> Vec<A
     for r in bam.records() {
         let rec = r.unwrap();
 
-        let a = make_alignment(rec);
+        let a = make_alignment(&rec);
 
         alignments.push(a);
     }
@@ -101,7 +101,7 @@ pub fn read_indexed_bam(path: &Path, chrom: String, from: u64, to: u64) -> Vec<A
     alignments
 }
 
-fn make_alignment(record: bam::Record) -> Alignment {
+fn make_alignment(record: &bam::Record) -> Alignment {
     let has_pair = record.is_paired();
 
     let mate_pos = record.mpos();
@@ -120,21 +120,15 @@ fn make_alignment(record: bam::Record) -> Alignment {
 
     //Sequenz
     let seq = record.seq().as_bytes();
-    let mut sequenz = String::from("");
-    for b in seq {
-        sequenz.push(b as char);
-    }
+    let sequenz = String::from_utf8(seq).unwrap();
 
     //Flags
     let flgs = record.flags();
     let flag_string = decode_flags(flgs);
 
     //Name
-    let n = record.qname();
-    let mut name = String::from("");
-    for a in n {
-        name.push(*a as char);
-    }
+    let n = record.qname().to_owned();
+    let name = String::from_utf8(n).unwrap();
 
     let read = Alignment {
         sequence: sequenz,

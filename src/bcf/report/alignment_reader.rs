@@ -199,7 +199,6 @@ pub fn make_nucleobases(
                             let ref_index = snip.pos + read_offset - from as i64;
                             let ref_base = &ref_bases[ref_index as usize];
 
-                            let m: Marker;
                             if ref_base.get_marker_type() == b {
                                 // Create long rule while bases match
                                 if match_count == 0 {
@@ -210,67 +209,23 @@ pub fn make_nucleobases(
 
                             //m = Marker::Match; // Match with reference fasta
                             } else {
-                                match b {
-                                    // Mismatch
-                                    'A' => m = Marker::A,
-                                    'T' => m = Marker::T,
-                                    'C' => m = Marker::C,
-                                    'N' => m = Marker::N,
-                                    'G' => m = Marker::G,
-                                    _ => m = Marker::Deletion,
+                                let (mtch, base) = make_markers(
+                                    snip.clone(),
+                                    b,
+                                    read_offset,
+                                    match_start,
+                                    match_count,
+                                );
+                                match mtch {
+                                    Some(m) => matches.push(m),
+                                    _ => {}
                                 }
-
-                                let p = snip.pos as i64 + read_offset;
-                                let f = snip.flags;
-                                let n = snip.name;
-
-                                let rs: i64;
-                                let re: i64;
-
-                                if snip.paired && snip.tid == snip.mate_tid {
-                                    if snip.pos < snip.mate_pos {
-                                        re = snip.mate_pos + 100;
-                                        rs = snip.pos;
-                                    } else {
-                                        rs = snip.mate_pos;
-                                        re = snip.pos + snip.length as i64;
-                                    }
-                                } else {
-                                    rs = snip.pos;
-                                    re = snip.pos + snip.length as i64;
-                                }
-
-                                if match_count > 0 {
-                                    // First mismatch detection must lead to new creation of all previous matches
-                                    let mtch = AlignmentMatch {
-                                        marker_type: Marker::Match,
-                                        start_position: match_start as f64 - 0.5,
-                                        end_position: (match_start + match_count - 1) as f64 + 0.5,
-                                        flags: f.clone(),
-                                        name: n.clone(),
-                                        read_start: rs.clone() as u32,
-                                        read_end: re.clone() as u32,
-                                    };
-
-                                    match_count = 0;
-                                    match_start = 0;
-
-                                    match_ending = false;
-                                    matches.push(mtch);
-                                }
-
-                                let base = AlignmentNucleobase {
-                                    marker_type: m,
-                                    bases: b.to_string(),
-                                    start_position: p.clone() as f64 - 0.5,
-                                    end_position: p as f64 + 0.5,
-                                    flags: f,
-                                    name: n,
-                                    read_start: rs as u32,
-                                    read_end: re as u32,
-                                };
-
                                 bases.push(base);
+
+                                match_count = 0;
+                                match_start = 0;
+
+                                match_ending = false;
                             }
                         }
                         cigar_offset += 1;
@@ -278,38 +233,7 @@ pub fn make_nucleobases(
                     }
 
                     if match_ending {
-                        // Mismatch detection at end
-
-                        let snip = s.clone();
-                        let f = snip.flags;
-                        let n = snip.name;
-
-                        let rs: i64;
-                        let re: i64;
-
-                        if snip.paired && snip.tid == snip.mate_tid {
-                            if snip.pos < snip.mate_pos {
-                                re = snip.mate_pos + 100;
-                                rs = snip.pos;
-                            } else {
-                                rs = snip.mate_pos;
-                                re = snip.pos + snip.length as i64;
-                            }
-                        } else {
-                            rs = snip.pos;
-                            re = snip.pos + snip.length as i64;
-                        }
-
-                        let mtch = AlignmentMatch {
-                            marker_type: Marker::Match,
-                            start_position: match_start as f64 - 0.5,
-                            end_position: (match_start + match_count - 1) as f64 + 0.5,
-                            flags: f.clone(),
-                            name: n.clone(),
-                            read_start: rs.clone() as u32,
-                            read_end: re.clone() as u32,
-                        };
-
+                        let mtch = end_mismatch_detection(s.clone(), match_start, match_count);
                         matches.push(mtch);
                     }
 
@@ -408,260 +332,54 @@ pub fn make_nucleobases(
 
                     soft_clip_begin = false;
                 }
-                rust_htslib::bam::record::Cigar::RefSkip(c) => {
-                    for _i in 0..rust_htslib::bam::record::Cigar::RefSkip(*c).len() {
-                        //offset += 1;
-                    }
-
-                    soft_clip_begin = false;
-                }
                 rust_htslib::bam::record::Cigar::SoftClip(c) => {
-                    if soft_clip_begin {
-                        for _i in 0..rust_htslib::bam::record::Cigar::SoftClip(*c).len() {
-                            let snip = s.clone();
-                            let b = char_vec[cigar_offset as usize];
+                    for _i in 0..rust_htslib::bam::record::Cigar::SoftClip(*c).len() {
+                        let snip = s.clone();
+                        let b = char_vec[cigar_offset as usize];
 
-                            if snip.pos + read_offset >= from as i64
-                                && snip.pos + read_offset < to as i64
-                            {
-                                let ref_index = snip.pos + read_offset - from as i64;
-                                let ref_base = &ref_bases[ref_index as usize];
+                        if snip.pos + read_offset >= from as i64
+                            && snip.pos + read_offset < to as i64
+                        {
+                            let ref_index = snip.pos + read_offset - from as i64;
+                            let ref_base = &ref_bases[ref_index as usize];
 
-                                let m: Marker;
-                                if ref_base.get_marker_type() == b {
-                                    // Create long rule while bases match
-                                    if match_count == 0 {
-                                        match_start = snip.pos as i64 + read_offset;
-                                    }
-                                    match_count += 1;
-                                    match_ending = true;
-                                } else {
-                                    match b {
-                                        // Mismatch
-                                        'A' => m = Marker::A,
-                                        'T' => m = Marker::T,
-                                        'C' => m = Marker::C,
-                                        'N' => m = Marker::N,
-                                        'G' => m = Marker::G,
-                                        _ => m = Marker::Deletion,
-                                    }
-
-                                    let p = snip.pos as i64 + read_offset;
-                                    let f = snip.flags;
-                                    let n = snip.name;
-
-                                    let rs: i64;
-                                    let re: i64;
-
-                                    if snip.paired && snip.tid == snip.mate_tid {
-                                        if snip.pos < snip.mate_pos {
-                                            re = snip.mate_pos + 100;
-                                            rs = snip.pos;
-                                        } else {
-                                            rs = snip.mate_pos;
-                                            re = snip.pos + snip.length as i64;
-                                        }
-                                    } else {
-                                        rs = snip.pos;
-                                        re = snip.pos + snip.length as i64;
-                                    }
-
-                                    if match_count > 0 {
-                                        // First mismatch detection must lead to new creation of all previous matches
-                                        let mtch = AlignmentMatch {
-                                            marker_type: Marker::Match,
-                                            start_position: match_start as f64 - 0.5,
-                                            end_position: (match_start + match_count - 1) as f64
-                                                + 0.5,
-                                            flags: f.clone(),
-                                            name: n.clone(),
-                                            read_start: rs.clone() as u32,
-                                            read_end: re.clone() as u32,
-                                        };
-
-                                        match_count = 0;
-                                        match_start = 0;
-
-                                        match_ending = false;
-                                        matches.push(mtch);
-                                    }
-
-                                    let base = AlignmentNucleobase {
-                                        marker_type: m,
-                                        bases: b.to_string(),
-                                        start_position: p.clone() as f64 - 0.5,
-                                        end_position: p as f64 + 0.5,
-                                        flags: f,
-                                        name: n,
-                                        read_start: rs as u32,
-                                        read_end: re as u32,
-                                    };
-
-                                    bases.push(base);
+                            if ref_base.get_marker_type() == b {
+                                // Create long rule while bases match
+                                if match_count == 0 {
+                                    match_start = snip.pos as i64 + read_offset;
                                 }
-                            }
-
-                            cigar_offset += 1;
-                        }
-
-                        if match_ending {
-                            // Mismatch detection at end
-
-                            let snip = s.clone();
-                            let f = snip.flags;
-                            let n = snip.name;
-
-                            let rs: i64;
-                            let re: i64;
-
-                            if snip.paired && snip.tid == snip.mate_tid {
-                                if snip.pos < snip.mate_pos {
-                                    re = snip.mate_pos + 100;
-                                    rs = snip.pos;
-                                } else {
-                                    rs = snip.mate_pos;
-                                    re = snip.pos + snip.length as i64;
-                                }
+                                match_count += 1;
+                                match_ending = true;
                             } else {
-                                rs = snip.pos;
-                                re = snip.pos + snip.length as i64;
-                            }
-
-                            let mtch = AlignmentMatch {
-                                marker_type: Marker::Match,
-                                start_position: match_start as f64 - 0.5,
-                                end_position: (match_start + match_count - 1) as f64 + 0.5,
-                                flags: f.clone(),
-                                name: n.clone(),
-                                read_start: rs.clone() as u32,
-                                read_end: re.clone() as u32,
-                            };
-
-                            matches.push(mtch);
-                        }
-                    } else {
-                        for _i in 0..rust_htslib::bam::record::Cigar::SoftClip(*c).len() {
-                            let snip = s.clone();
-                            let b = char_vec[cigar_offset as usize];
-
-                            if snip.pos + read_offset >= from as i64
-                                && snip.pos + read_offset < to as i64
-                            {
-                                let ref_index = snip.pos + read_offset - from as i64;
-                                let ref_base = &ref_bases[ref_index as usize];
-
-                                let m: Marker;
-                                if ref_base.get_marker_type() == b {
-                                    // Create long rule while bases match
-                                    if match_count == 0 {
-                                        match_start = snip.pos as i64 + read_offset;
-                                    }
-                                    match_count += 1;
-                                    match_ending = true;
-                                } else {
-                                    match b {
-                                        // Mismatch
-                                        'A' => m = Marker::A,
-                                        'T' => m = Marker::T,
-                                        'C' => m = Marker::C,
-                                        'N' => m = Marker::N,
-                                        'G' => m = Marker::G,
-                                        _ => m = Marker::Deletion,
-                                    }
-
-                                    let p = snip.pos as i64 + read_offset;
-                                    let f = snip.flags;
-                                    let n = snip.name;
-
-                                    let rs: i64;
-                                    let re: i64;
-
-                                    if snip.paired && snip.tid == snip.mate_tid {
-                                        if snip.pos < snip.mate_pos {
-                                            re = snip.mate_pos + 100;
-                                            rs = snip.pos;
-                                        } else {
-                                            rs = snip.mate_pos;
-                                            re = snip.pos + snip.length as i64;
-                                        }
-                                    } else {
-                                        rs = snip.pos;
-                                        re = snip.pos + snip.length as i64;
-                                    }
-
-                                    if match_count > 0 {
-                                        // First mismatch detection must lead to new creation of all previous matches
-                                        let mtch = AlignmentMatch {
-                                            marker_type: Marker::Match,
-                                            start_position: match_start as f64 - 0.5,
-                                            end_position: (match_start + match_count - 1) as f64
-                                                + 0.5,
-                                            flags: f.clone(),
-                                            name: n.clone(),
-                                            read_start: rs.clone() as u32,
-                                            read_end: re.clone() as u32,
-                                        };
-
-                                        match_count = 0;
-                                        match_start = 0;
-
-                                        match_ending = false;
-                                        matches.push(mtch);
-                                    }
-
-                                    let base = AlignmentNucleobase {
-                                        marker_type: m,
-                                        bases: b.to_string(),
-                                        start_position: p.clone() as f64 - 0.5,
-                                        end_position: p as f64 + 0.5,
-                                        flags: f,
-                                        name: n,
-                                        read_start: rs as u32,
-                                        read_end: re as u32,
-                                    };
-
-                                    bases.push(base);
+                                let (mtch, base) = make_markers(
+                                    snip.clone(),
+                                    b,
+                                    read_offset,
+                                    match_start,
+                                    match_count,
+                                );
+                                match mtch {
+                                    Some(m) => matches.push(m),
+                                    _ => {}
                                 }
+                                bases.push(base);
+
+                                match_count = 0;
+                                match_start = 0;
+
+                                match_ending = false;
                             }
-                            cigar_offset += 1;
+                        }
+
+                        cigar_offset += 1;
+                        if !soft_clip_begin {
                             read_offset += 1;
                         }
+                    }
 
-                        if match_ending {
-                            // Mismatch detection at end
-
-                            let snip = s.clone();
-                            let f = snip.flags;
-                            let n = snip.name;
-
-                            let rs: i64;
-                            let re: i64;
-
-                            if snip.paired && snip.tid == snip.mate_tid {
-                                if snip.pos < snip.mate_pos {
-                                    re = snip.mate_pos + 100;
-                                    rs = snip.pos;
-                                } else {
-                                    rs = snip.mate_pos;
-                                    re = snip.pos + snip.length as i64;
-                                }
-                            } else {
-                                rs = snip.pos;
-                                re = snip.pos + snip.length as i64;
-                            }
-
-                            let mtch = AlignmentMatch {
-                                marker_type: Marker::Match,
-                                start_position: match_start as f64 - 0.5,
-                                end_position: (match_start + match_count - 1) as f64 + 0.5,
-                                flags: f.clone(),
-                                name: n.clone(),
-                                read_start: rs.clone() as u32,
-                                read_end: re.clone() as u32,
-                            };
-
-                            matches.push(mtch);
-                        }
+                    if match_ending {
+                        let mtch = end_mismatch_detection(s.clone(), match_start, match_count);
+                        matches.push(mtch);
                     }
 
                     soft_clip_begin = false;
@@ -673,29 +391,111 @@ pub fn make_nucleobases(
 
                     soft_clip_begin = false;
                 }
-                rust_htslib::bam::record::Cigar::Pad(c) => {
-                    for _i in 0..rust_htslib::bam::record::Cigar::Pad(*c).len() {
-                        //offset += 1;
-                    }
-
-                    soft_clip_begin = false;
-                }
-                rust_htslib::bam::record::Cigar::Equal(c) => {
-                    for _i in 0..rust_htslib::bam::record::Cigar::Equal(*c).len() {
-                        //offset += 1;
-                    }
-
-                    soft_clip_begin = false;
-                }
-                rust_htslib::bam::record::Cigar::Diff(c) => {
-                    for _i in 0..rust_htslib::bam::record::Cigar::Diff(*c).len() {
-                        //offset += 1;
-                    }
-
+                _ => {
                     soft_clip_begin = false;
                 }
             }
         }
     }
     (bases, matches)
+}
+
+fn make_markers(
+    snip: Alignment,
+    b: char,
+    read_offset: i64,
+    match_start: i64,
+    match_count: i64,
+) -> (Option<AlignmentMatch>, AlignmentNucleobase) {
+    let m: Marker;
+
+    match b {
+        // Mismatch
+        'A' => m = Marker::A,
+        'T' => m = Marker::T,
+        'C' => m = Marker::C,
+        'N' => m = Marker::N,
+        'G' => m = Marker::G,
+        _ => m = Marker::Deletion,
+    }
+
+    let p = snip.pos as i64 + read_offset;
+    let f = snip.flags;
+    let n = snip.name;
+
+    let rs: i64;
+    let re: i64;
+
+    if snip.paired && snip.tid == snip.mate_tid {
+        if snip.pos < snip.mate_pos {
+            re = snip.mate_pos + 100;
+            rs = snip.pos;
+        } else {
+            rs = snip.mate_pos;
+            re = snip.pos + snip.length as i64;
+        }
+    } else {
+        rs = snip.pos;
+        re = snip.pos + snip.length as i64;
+    }
+
+    let mut mtch = None;
+
+    if match_count > 0 {
+        // First mismatch detection must lead to new creation of all previous matches
+        mtch = Some(AlignmentMatch {
+            marker_type: Marker::Match,
+            start_position: match_start as f64 - 0.5,
+            end_position: (match_start + match_count - 1) as f64 + 0.5,
+            flags: f.clone(),
+            name: n.clone(),
+            read_start: rs.clone() as u32,
+            read_end: re.clone() as u32,
+        });
+    }
+
+    let base = AlignmentNucleobase {
+        marker_type: m,
+        bases: b.to_string(),
+        start_position: p.clone() as f64 - 0.5,
+        end_position: p as f64 + 0.5,
+        flags: f,
+        name: n,
+        read_start: rs as u32,
+        read_end: re as u32,
+    };
+    (mtch, base)
+}
+
+fn end_mismatch_detection(snip: Alignment, match_start: i64, match_count: i64) -> AlignmentMatch {
+    let f = snip.flags;
+    let n = snip.name;
+
+    let rs: i64;
+    let re: i64;
+
+    if snip.paired && snip.tid == snip.mate_tid {
+        if snip.pos < snip.mate_pos {
+            re = snip.mate_pos + 100;
+            rs = snip.pos;
+        } else {
+            rs = snip.mate_pos;
+            re = snip.pos + snip.length as i64;
+        }
+    } else {
+        rs = snip.pos;
+        re = snip.pos + snip.length as i64;
+    }
+
+    let mtch = AlignmentMatch {
+        marker_type: Marker::Match,
+        start_position: match_start as f64 - 0.5,
+        end_position: (match_start + match_count - 1) as f64 + 0.5,
+        flags: f.clone(),
+        name: n.clone(),
+        read_start: rs.clone() as u32,
+        read_end: re.clone() as u32,
+    };
+
+    mtch
 }

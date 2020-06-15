@@ -332,8 +332,8 @@ subcommands:
           - n50: N50 of sequences
 
         Example:
-          rbt sequences-stats < test.fasta
-          rbt sequences-stats -q < test.fastq
+          rbt sequence-stats < test.fasta
+          rbt sequence-stats -q < test.fastq
         {n}
       author: Pierre Marijon <pmarijon@mpi-inf.mpg.de>
       args:

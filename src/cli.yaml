@@ -322,7 +322,7 @@ subcommands:
 
   - sequence-stats:
       about: |
-        Tool to compute stats on sequence file (from STDIN), output is in YAML with field:
+        Tool to compute stats on sequence file (from STDIN), output is in YAML with fields:
           - min: length of shortest sequence
           - max: length of longest sequence
           - average: average length of sequence

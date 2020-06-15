@@ -13,7 +13,7 @@ use tera::{self, Context, Tera};
 use rust_htslib::bcf::{self, Read};
 
 pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn Error>> {
-    let mut data = Vec::new();
+    let mut data = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
         let mut bcf_reader = bcf::Reader::from_path(path)?;
@@ -73,9 +73,18 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
 
         for gene in genes.keys().sorted() {
             let record = genes.get(gene).unwrap();
-            data.push(FinalRecord::from(record));
+            let entry = data.entry(gene.to_owned()).or_insert_with(&Vec::new);
+            entry.push(FinalRecord::from(record));
         }
     }
+
+    // only keep recurrent entries
+    let data: Vec<_> = data
+        .values()
+        .filter(|entry| entry.len() > 1)
+        .flatten()
+        .sorted()
+        .collect();
 
     let mut templates = Tera::default();
     templates.register_filter("embed_source", embed_source);
@@ -100,7 +109,7 @@ fn embed_source(
     Ok(tera::to_value(source).unwrap())
 }
 
-#[derive(new)]
+#[derive(new, Debug)]
 struct Record {
     sample: String,
     gene: String,
@@ -112,7 +121,7 @@ struct Record {
     variants: Vec<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct FinalRecord {
     sample: String,
     gene: String,
@@ -126,21 +135,14 @@ impl From<&Record> for FinalRecord {
         FinalRecord {
             sample: record.sample.to_owned(),
             gene: record.gene.to_owned(),
-            dna_alterations: record
-                .dna_alterations
-                .iter()
-                .sorted()
-                .iter()
-                .unique()
-                .join(", "),
+            dna_alterations: record.dna_alterations.iter().sorted().unique().join(", "),
             protein_alterations: record
                 .protein_alterations
                 .iter()
                 .sorted()
-                .iter()
                 .unique()
                 .join(", "),
-            variants: record.variants.iter().sorted().iter().unique().join("/"),
+            variants: record.variants.iter().sorted().unique().join("/"),
         }
     }
 }

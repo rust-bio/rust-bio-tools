@@ -1,6 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
+## [0.10.1] - 2020-05-13
+### Changed
+- Only print recurrent genes in oncoprint, in order to save time and space.
+
 ## [0.10.0] - 2020-04-22
 ### Added
 - `rbt oncoprint`, which allows to create an interactive HTML oncoprint from BCF/VCF files.

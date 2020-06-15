@@ -320,7 +320,7 @@ subcommands:
                   help: Add list of reads that were merged for each consensus read. Note that this can yield very long FASTQ name lines which cannot be handled by some tools.
 
 
-  - sequences-stats:
+  - sequence-stats:
       about: |
         Tool to compute stats on sequence file (from STDIN), output is in YAML with field:
           - min: length of shortest sequence

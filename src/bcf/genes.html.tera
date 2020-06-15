@@ -10,7 +10,7 @@
                 text-align: center;
             }
         </style>
-        <title>Oncoprint (only recurrent genes)</title>
+        <title>{{ gene|safe }}</title>
     </head>
     <body>
         <div id="oncoprint"></div>
@@ -88,7 +88,7 @@
                             }
                         },
                         "y": {
-                            "field": "gene",
+                            "field": "variants",
                             "type": "ordinal",
                             "sort": {
                                 "op": "valid",
@@ -113,7 +113,7 @@
                     "width": 100,
                     "encoding": {
                         "y": {
-                            "field": "gene",
+                            "field": "variants",
                             "type": "ordinal",
                             "sort": {
                                 "op": "valid",
@@ -141,11 +141,7 @@
                     }]
                 }]
             };
-            vegaEmbed('#oncoprint', spec).then(function(result) {
-                result.view.addEventListener('click', function(event, item) {
-                    window.location.href = 'genes/' + item.datum.gene + '.html';
-                });
-            });
+            vegaEmbed('#oncoprint', spec);
 
         </script>
     </body>

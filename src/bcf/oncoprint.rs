@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::io::stdout;
 use std::io::Write;
-use std::str;
+use std::{str, fs};
 
 use derive_new::new;
 use itertools::Itertools;
@@ -11,6 +11,7 @@ use serde_json;
 use tera::{self, Context, Tera};
 
 use rust_htslib::bcf::{self, Read};
+use std::fs::File;
 
 pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
@@ -78,6 +79,22 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
         }
     }
 
+    fs::create_dir("genes")?;
+    let mut gene_templates = Tera::default();
+    gene_templates.register_filter("embed_source", embed_source);
+    gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
+
+    for (gene, gene_data) in data.clone() {
+        let gene_data = serde_json::to_string(&gene_data)?;
+        let mut context = Context::new();
+        context.insert("data", &gene_data);
+        context.insert("gene", &gene);
+        let html = gene_templates.render("genes.html.tera", &context)?;
+        let filepath = String::from("genes/") + &gene + ".html";
+        let mut file = File::create(filepath)?;
+        file.write_all(html.as_bytes())?;
+    }
+
     // only keep recurrent entries
     let data: Vec<_> = data
         .values()
@@ -121,7 +138,7 @@ struct Record {
     variants: Vec<String>,
 }
 
-#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 struct FinalRecord {
     sample: String,
     gene: String,

@@ -12,6 +12,7 @@ pub mod bam;
 pub mod bcf;
 pub mod common;
 pub mod fastq;
+pub mod sequences_stats;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let yaml = load_yaml!("cli.yaml");
@@ -116,6 +117,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             _ => unreachable!(),
         },
+        ("sequences-stats", Some(matches)) => sequences_stats::stats(matches.is_present("fastq")),
         // This cannot be reached, since the matches step of
         // clap assures that a valid subcommand is provided
         _ => unreachable!(),

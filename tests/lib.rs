@@ -263,3 +263,37 @@ fn test_vcf_annotate_dgidb() {
         "tests/expected/annotate_dgidb_test.bcf",
     );
 }
+
+#[test]
+fn test_stats_fasta_file() {
+    assert!(Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt sequences-stats < tests/stats.fasta > /tmp/result.fasta.stats")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
+
+    test_output(
+        "/tmp/result.fasta.stats",
+        "tests/expected/result.fasta.stats",
+    );
+}
+
+#[test]
+fn test_stats_fastq_file() {
+    assert!(Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt sequences-stats -q < tests/stats.fastq > /tmp/result.fastq.stats")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
+
+    test_output(
+        "/tmp/result.fastq.stats",
+        "tests/expected/result.fastq.stats",
+    );
+}

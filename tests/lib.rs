@@ -270,7 +270,7 @@ fn test_stats_fasta_file() {
 fn test_stats_fastq_file() {
     assert!(Command::new("bash")
         .arg("-c")
-        .arg("target/debug/rbt sequences-stats -q < tests/stats.fastq > /tmp/result.fastq.stats")
+        .arg("target/debug/rbt sequence-stats -q < tests/stats.fastq > /tmp/result.fastq.stats")
         .spawn()
         .unwrap()
         .wait()

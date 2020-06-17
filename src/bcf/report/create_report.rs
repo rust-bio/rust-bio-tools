@@ -1,12 +1,12 @@
 use crate::bcf::report::fasta_reader::{get_fasta_length, read_fasta};
 use crate::bcf::report::static_reader::{get_static_reads, Variant};
+use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::Read;
 use rustc_serialize::json::Json;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::error::Error;
 use std::path::Path;
-use jsonm::packer::{Packer, PackOptions};
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub enum VariantType {

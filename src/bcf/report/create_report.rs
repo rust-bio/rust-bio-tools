@@ -6,6 +6,7 @@ use serde::Serialize;
 use serde_json::{json, Value};
 use std::error::Error;
 use std::path::Path;
+use jsonm::packer::{Packer, PackOptions};
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub enum VariantType {
@@ -246,7 +247,7 @@ fn create_report_data(
 }
 
 /// Inserts the json containing the genome data into the vega specs.
-/// It also changes keys and values of the json data for the vega plot to look better.
+/// It also changes keys and values of the json data for the vega plot to look better and compresses the json with jsonm.
 fn manipulate_json(data: Json, from: u64, to: u64) -> Value {
     let json_string = include_str!("vegaSpecs.json");
 
@@ -280,5 +281,9 @@ fn manipulate_json(data: Json, from: u64, to: u64) -> Value {
     vega_specs["scales"][0]["domain"] = domain;
     vega_specs["data"][1] = values;
 
-    vega_specs
+    let mut packer = Packer::new();
+    let options = PackOptions::new();
+    let packed_specs = packer.pack(&vega_specs, &options).unwrap();
+
+    packed_specs
 }

@@ -9,6 +9,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsonm@1.0.10/build/jsonm.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
     <link href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css" rel="stylesheet">
 </head>
@@ -67,7 +68,9 @@
 
                 $(document).ready(function () {
                     $("html").on('click', '.variant-row', function () {
-                        let specs = $(this).data('vis');
+                        let compressed_specs = $(this).data('vis');
+                        const unpacker = new jsonm.Unpacker();
+                        let specs = unpacker.unpack(compressed_specs);
                         specs.data[1].values.forEach(function(a) {
                             if (a.row > 0 && Array.isArray(a.flags)) {
                                 let flags = {};

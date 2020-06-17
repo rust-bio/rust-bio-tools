@@ -253,7 +253,7 @@ fn test_vcf_annotate_dgidb() {
 fn test_stats_fasta_file() {
     assert!(Command::new("bash")
         .arg("-c")
-        .arg("target/debug/rbt sequences-stats < tests/stats.fasta > /tmp/result.fasta.stats")
+        .arg("target/debug/rbt sequence-stats < tests/stats.fasta > /tmp/result.fasta.stats")
         .spawn()
         .unwrap()
         .wait()

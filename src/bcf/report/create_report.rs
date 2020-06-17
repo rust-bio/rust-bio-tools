@@ -32,7 +32,6 @@ pub(crate) fn make_report(
     vcf_path: &Path,
     fasta_path: &Path,
     bam_path: &Path,
-    chrom: String,
 ) -> Result<Vec<Report>, Box<dyn Error>> {
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     let header = vcf.header().clone();
@@ -45,7 +44,7 @@ pub(crate) fn make_report(
         let n = header.rid2name(variant.rid().unwrap()).unwrap().to_owned();
         let i = variant.id();
 
-        let name = String::from_utf8(n).unwrap();
+        let chrom = String::from_utf8(n).unwrap();
 
         let id = String::from_utf8(i).unwrap();
 
@@ -195,7 +194,7 @@ pub(crate) fn make_report(
 
                 let r = Report {
                     id: id.clone(),
-                    name: name.clone(),
+                    name: chrom.clone(),
                     position: variant.pos(),
                     reference: ref_allele.clone(),
                     var_type: var.var_type,

@@ -80,7 +80,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             matches.value_of("vcf").unwrap(),
             matches.value_of("fasta").unwrap(),
             matches.value_of("bam").unwrap(),
-            matches.value_of("chromosome").unwrap(),
         ),
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {

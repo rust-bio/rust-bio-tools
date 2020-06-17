@@ -173,7 +173,7 @@ fn test_report() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt report tests/report-test.vcf.gz tests/test-report.bam tests/ref.fa chr1 > tests/report.html")
+            .arg("target/debug/rbt report tests/report-test.vcf.gz tests/test-report.bam tests/ref.fa > tests/report.html")
             .spawn()
             .unwrap()
             .wait()

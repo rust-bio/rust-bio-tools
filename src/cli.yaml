@@ -215,7 +215,7 @@ subcommands:
         for every variant with the given BAM and FASTA file.
 
         Example:
-          rbt report a.vcf.gz b.bam c.fa 11 > report.html
+          rbt report a.vcf.gz b.bam c.fa > report.html
       author: Felix Wiegand <felix.wiegand@tu-dortmund.de>
       args:
         - vcf:
@@ -227,9 +227,6 @@ subcommands:
         - fasta:
             required: true
             help: fasta file containing the reference genome for the visual plot
-        - chromosome:
-            required: true
-            help: the chromosome of the given variants
 
   - collapse-reads-to-fragments:
       about: |

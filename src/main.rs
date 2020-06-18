@@ -12,6 +12,7 @@ pub mod bam;
 pub mod bcf;
 pub mod common;
 pub mod fastq;
+pub mod sequences_stats;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let yaml = load_yaml!("cli.yaml");
@@ -75,6 +76,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             bcf::oncoprint::oncoprint(&sample_calls)
         }
+        ("report", Some(matches)) => bcf::report::report(
+            matches.value_of("vcf").unwrap(),
+            matches.value_of("fasta").unwrap(),
+            matches.value_of("bam").unwrap(),
+        ),
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {
                 fastq::collapse_reads_to_fragments::call_consensus_reads_from_paths(
@@ -110,6 +116,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             _ => unreachable!(),
         },
+        ("sequence-stats", Some(matches)) => sequences_stats::stats(matches.is_present("fastq")),
         // This cannot be reached, since the matches step of
         // clap assures that a valid subcommand is provided
         _ => unreachable!(),

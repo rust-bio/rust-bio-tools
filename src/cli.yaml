@@ -195,19 +195,38 @@ subcommands:
                 Number of genes to submit per api request. A lower value increases the number of api requests in return. 
                 Too many requests could be rejected by the DGIdb server.
         author: Felix Mölder <felix.moelder@uni-due.de>
-  
+
   - oncoprint:
       about: |
         Creates oncoprint from given VCF/BCF files.
 
         Example:
           rbt oncoprint a=a.bcf b=b.bcf c=c.bcf > oncoprint.html
-      
+
       args:
         - vcfs:
             multiple: true
             value_name: NAME=FILE
             help: VCF/BCF files to include (single-sample). Name is the sample name that will be used in the oncoprint.
+
+  - report:
+      about: |
+        Creates report from a given VCF file including a visual plot
+        for every variant with the given BAM and FASTA file.
+
+        Example:
+          rbt report a.vcf.gz b.bam c.fa > report.html
+      author: Felix Wiegand <felix.wiegand@tu-dortmund.de>
+      args:
+        - vcf:
+            required: true
+            help: VCF file for the report
+        - bam:
+            required: true
+            help: bam file containing the alignments for the visual plot
+        - fasta:
+            required: true
+            help: fasta file containing the reference genome for the visual plot
 
   - collapse-reads-to-fragments:
       about: |
@@ -320,3 +339,24 @@ subcommands:
                   help: Add list of reads that were merged for each consensus read. Note that this can yield very long FASTQ name lines which cannot be handled by some tools.
 
 
+  - sequence-stats:
+      about: |
+        Tool to compute stats on sequence file (from STDIN), output is in YAML with fields:
+          - min: length of shortest sequence
+          - max: length of longest sequence
+          - average: average length of sequence
+          - median: median length of sequence
+          - nb_reads: number of reads
+          - nb_bases: number of bases
+          - n50: N50 of sequences
+
+        Example:
+          rbt sequence-stats < test.fasta
+          rbt sequence-stats -q < test.fastq
+        {n}
+      author: Pierre Marijon <pmarijon@mpi-inf.mpg.de>
+      args:
+        - fastq:
+            long: fastq
+            short: q
+            help: Flag to indicate the sequence in stdin is in fastq format

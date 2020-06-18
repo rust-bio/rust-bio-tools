@@ -169,6 +169,21 @@ fn test_oncoprint() {
 }
 
 #[test]
+fn test_report() {
+    assert!(
+        Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt report tests/report-test.vcf.gz tests/test-report.bam tests/ref.fa > tests/report.html")
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success()
+    );
+    test_output("tests/report.html", "tests/expected/report.html");
+}
+
+#[test]
 fn test_collapse_reads_to_fragments_two_cluster() {
     assert!(
         Command::new("bash")
@@ -246,5 +261,39 @@ fn test_vcf_annotate_dgidb() {
     test_output(
         "/tmp/annotate_dgidb_test.bcf",
         "tests/expected/annotate_dgidb_test.bcf",
+    );
+}
+
+#[test]
+fn test_stats_fasta_file() {
+    assert!(Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt sequence-stats < tests/stats.fasta > /tmp/result.fasta.stats")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
+
+    test_output(
+        "/tmp/result.fasta.stats",
+        "tests/expected/result.fasta.stats",
+    );
+}
+
+#[test]
+fn test_stats_fastq_file() {
+    assert!(Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt sequence-stats -q < tests/stats.fastq > /tmp/result.fastq.stats")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
+
+    test_output(
+        "/tmp/result.fastq.stats",
+        "tests/expected/result.fastq.stats",
     );
 }

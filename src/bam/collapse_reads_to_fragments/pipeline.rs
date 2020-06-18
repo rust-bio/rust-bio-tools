@@ -19,7 +19,7 @@ pub struct CallConsensusRead {
     verbose_read_names: bool,
 }
 
-type Position = i32;
+type Position = i64;
 type GroupID = i64;
 type GroupIDs = HashSet<GroupID>;
 type RecordIDS = Vec<RecordID>;
@@ -187,7 +187,7 @@ impl CallConsensusRead {
 pub fn calc_consensus_complete_groups(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
     duplicate_groups: &mut HashMap<GroupID, RecordIDS>,
-    end_pos: Option<&i32>,
+    end_pos: Option<&i64>,
     record_storage: &mut HashMap<Vec<u8>, RecordStorage>,
     bam_writer: &mut bam::Writer,
     seq_dist: usize,
@@ -198,7 +198,7 @@ pub fn calc_consensus_complete_groups(
         .template("{prefix:.bold.dim} {spinner} {wide_msg}");
 
     let group_ids: HashSet<i64> = group_end_idx
-        .range(..end_pos.unwrap_or(&(group_end_idx.len() as i32)))
+        .range(..end_pos.unwrap_or(&(group_end_idx.len() as i64)))
         .flat_map(|(_, group_ids)| group_ids.clone())
         .collect();
 
@@ -313,12 +313,12 @@ pub fn calc_consensus_complete_groups(
     Ok(())
 }
 
-fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i32, Box<dyn Error>> {
+fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i64, Box<dyn Error>> {
     let l_end_pos = l_rec.cigar_cached().unwrap().end_pos();
     let r_start_pos = r_rec.pos();
     let l_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;
     let r_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter())?;
-    Ok((l_end_pos + l_softclips) - (r_start_pos - r_softclips))
+    Ok((l_end_pos + l_softclips as i64) - (r_start_pos - r_softclips as i64))
 }
 
 //Gets an Iterator over Cigar-items and returns number of soft-clips at the beginning

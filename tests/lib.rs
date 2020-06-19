@@ -173,14 +173,14 @@ fn test_report() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt report tests/report-test.vcf.gz tests/test-report.bam tests/ref.fa > tests/report.html")
+            .arg("target/debug/rbt table_report tests/table_report-test.vcf.gz tests/test-table_report.bam tests/ref.fa > tests/table_report.html")
             .spawn()
             .unwrap()
             .wait()
             .unwrap()
             .success()
     );
-    test_output("tests/report.html", "tests/expected/report.html");
+    test_output("tests/table_report.html", "tests/expected/table_report.html");
 }
 
 #[test]

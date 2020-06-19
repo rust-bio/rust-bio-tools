@@ -1,5 +1,5 @@
-use crate::bcf::report::fasta_reader::{get_fasta_length, read_fasta};
-use crate::bcf::report::static_reader::{get_static_reads, Variant};
+use crate::bcf::report::table_report::fasta_reader::{get_fasta_length, read_fasta};
+use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
 use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::Read;
 use rustc_serialize::json::Json;
@@ -29,7 +29,7 @@ pub struct Report {
     vis: String,
 }
 
-pub(crate) fn make_report(
+pub(crate) fn make_table_report(
     vcf_path: &Path,
     fasta_path: &Path,
     bam_path: &Path,

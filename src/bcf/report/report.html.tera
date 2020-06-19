@@ -76,6 +76,9 @@
                         "type": "rect",
                         "tooltip": {"content": "data"}
                     },
+                    "selection": {
+                        "highlight": {"type": "single", "empty": "none", "on": "mouseover", "fields": ["gene"]}
+                    },
                     "encoding": {
                         "x": {
                             "field": "sample",
@@ -95,6 +98,10 @@
                                 "field": "variants",
                                 "order": "descending"
                             }
+                        },
+                        "fillOpacity": {
+                            "condition": {"selection": "highlight", "value": 0.8},
+                            "value": 1
                         },
                         "color": {
                             "field": "variants",

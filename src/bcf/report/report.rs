@@ -15,6 +15,7 @@ use std::fs::File;
 
 pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
+    let mut gene_data = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
         let mut bcf_reader = bcf::Reader::from_path(path)?;
@@ -74,8 +75,16 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
 
         for gene in genes.keys().sorted() {
             let record = genes.get(gene).unwrap();
+            // data for first stage
             let entry = data.entry(gene.to_owned()).or_insert_with(&Vec::new);
             entry.push(FinalRecord::from(record));
+
+            // data for second stage
+            let gene_entry = gene_data.entry(gene.to_owned()).or_insert_with(&Vec::new);
+            let gene_records:Vec<GeneRecord> = Vec::<GeneRecord>::from(record);
+            for rec in gene_records {
+                gene_entry.push(rec);
+            }
         }
     }
 
@@ -84,7 +93,7 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
     gene_templates.register_filter("embed_source", embed_source);
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
 
-    for (gene, gene_data) in data.clone() {
+    for (gene, gene_data) in gene_data {
         let gene_data = serde_json::to_string(&gene_data)?;
         let mut context = Context::new();
         context.insert("data", &gene_data);
@@ -138,6 +147,7 @@ struct Record {
     variants: Vec<String>,
 }
 
+// Record for the first stage of the report
 #[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 struct FinalRecord {
     sample: String,
@@ -145,6 +155,44 @@ struct FinalRecord {
     dna_alterations: String,
     protein_alterations: String,
     variants: String,
+}
+
+// Record for the second stage of the report
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+struct GeneRecord {
+    sample: String,
+    gene: String,
+    alteration: String,
+    variants: String,
+}
+
+
+
+impl From<&Record> for Vec<GeneRecord> {
+    fn from(record: &Record) -> Self {
+        let mut gene_vec = Vec::new();
+        for dna_alt in record.dna_alterations.iter().sorted().unique() {
+            let alt = GeneRecord {
+                sample: record.sample.to_owned(),
+                gene: record.gene.to_owned(),
+                alteration: dna_alt.to_owned(),
+                variants: record.variants.iter().sorted().unique().join("/"),
+            };
+            gene_vec.push(alt);
+        }
+
+        for protein_alt in record.protein_alterations.iter().sorted().unique() {
+            let alt = GeneRecord {
+                sample: record.sample.to_owned(),
+                gene: record.gene.to_owned(),
+                alteration: protein_alt.to_owned(),
+                variants: record.variants.iter().sorted().unique().join("/"),
+            };
+            gene_vec.push(alt);
+        }
+
+        gene_vec
+    }
 }
 
 impl From<&Record> for FinalRecord {

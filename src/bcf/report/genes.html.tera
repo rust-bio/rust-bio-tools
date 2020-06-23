@@ -91,7 +91,7 @@
                             }
                         },
                         "y": {
-                            "field": "variants",
+                            "field": "alteration",
                             "type": "ordinal",
                             "sort": {
                                 "op": "valid",
@@ -120,7 +120,7 @@
                     "width": 100,
                     "encoding": {
                         "y": {
-                            "field": "variants",
+                            "field": "alteration",
                             "type": "ordinal",
                             "sort": {
                                 "op": "valid",

@@ -69,9 +69,12 @@ fn main() -> Result<(), Box<dyn Error>> {
         ),
         ("report", Some(matches)) => {
             let mut sample_calls = HashMap::new();
-            for entry in matches.values_of("vcfs").unwrap() {
-                let e: Vec<_> = entry.split('=').collect();
-                sample_calls.insert(e[0].to_owned(), e[1].to_owned());
+            let mut bam_paths = HashMap::new();
+            for (vcf, bam ) in matches.values_of("vcf-bam-pairs").unwrap().tuples::<(&str, &str)>() {
+                let v: Vec<_> = vcf.split('=').collect();
+                let b: Vec<_> = bam.split('=').collect();
+                sample_calls.insert(v[0].to_owned(), v[1].to_owned());
+                bam_paths.insert(b[0].to_owned(), b[1].to_owned());
             }
 
             bcf::report::report::oncoprint(&sample_calls)

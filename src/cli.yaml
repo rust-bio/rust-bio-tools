@@ -204,10 +204,15 @@ subcommands:
           rbt report a.vcf.gz > report.html
       author: Johannes Köster <johannes.koester@uni-due.de>, Felix Wiegand <felix.wiegand@tu-dortmund.de>
       args:
-        - vcfs:
+        - vcf-bam-pairs:
             multiple: true
-            value_name: NAME=FILE
-            help: VCF/BCF files to include (single-sample). Name is the sample name that will be used in the oncoprint.
+            required: true
+            number_of_values: 2
+            value_name: NAME=VCF_FILE NAME=BAM_FILE
+            help: VCF/BCF files to include (single-sample). Name is the sample name that will be used in the oncoprint. There needs to be one corresponding BAM file for each VCF/BCF file.
+        - fasta:
+            required: true
+            help: fasta file containing the reference genome for the visual plot
 
   - collapse-reads-to-fragments:
       about: |

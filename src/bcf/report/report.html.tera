@@ -64,7 +64,7 @@
                             "domain": ["SNV", "MNV", "DEL", "INS", "DUP", "INV", "BND", "Complex"],
                             "range": ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00"],
                             "type": "ordinal"
-                        }
+                            }
                         }
                     }
                 },
@@ -72,48 +72,424 @@
                     "spacing": 15,
                     "bounds": "flush",
                     "hconcat": [{
-                    "mark": {
-                        "type": "rect",
-                        "tooltip": {"content": "data"}
-                    },
-                    "selection": {
-                        "highlight": {"type": "single", "empty": "none", "on": "mouseover", "fields": ["gene"]}
-                    },
-                    "encoding": {
-                        "x": {
-                            "field": "sample",
-                            "type": "ordinal",
-                            "scale": {},
-                            "sort": {
-                                "op": "valid",
-                                "field": "variants",
-                                "order": "descending"
+                        "layer": [
+                            {
+                                "mark": {
+                                    "type": "square",
+                                    "size": 350,
+                                    "opacity": 1
+                                },
+                                "selection": {
+                                    "highlight1": {"type": "single", "empty": "none", "on": "mouseover", "fields": ["gene"]}
+                                },
+                                "encoding": {
+                                    "x": {
+                                        "field": "sample",
+                                        "type": "ordinal",
+                                        "scale": {},
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "y": {
+                                        "field": "gene",
+                                        "type": "ordinal",
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "fillOpacity": {
+                                        "condition": {"selection": "highlight1", "value": 0.8},
+                                        "value": 1
+                                    },
+                                    "color": {
+                                        "field": "variants1",
+                                        "type": "nominal",
+                                        "title": "Variants",
+                                        "scale": {
+                                            "domain": ["SNV", "MNV", "DEL", "INS", "DUP", "INV", "BND", "Complex"],
+                                            "range": ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00"],
+                                            "type": "ordinal"
+                                        }
+                                    },
+                                    "tooltip": [
+                                        {"field":"gene", "type": "nominal"},
+                                        {"field":"sample", "type": "nominal"},
+                                        {"field":"dna_alterations", "type": "nominal"},
+                                        {"field":"protein_alterations", "type": "nominal"},
+                                        {"field":"variants", "type": "ordinal"}
+                                    ],
+                                }
+                            },
+                            {
+                                "mark": {
+                                    "type": "square",
+                                    "size": 260,
+                                    "opacity": 1
+                                },
+                                "selection": {
+                                    "highlight2": {"type": "single", "empty": "none", "on": "mouseover", "fields": ["gene"]}
+                                },
+                                "encoding": {
+                                    "x": {
+                                        "field": "sample",
+                                        "type": "ordinal",
+                                        "scale": {},
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "y": {
+                                        "field": "gene",
+                                        "type": "ordinal",
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "fillOpacity": {
+                                        "condition": {"selection": "highlight2", "value": 0.8},
+                                        "value": 1
+                                    },
+                                    "color": {
+                                        "field": "variants2",
+                                        "type": "nominal",
+                                        "title": "Variants",
+                                        "scale": {
+                                            "domain": ["SNV", "MNV", "DEL", "INS", "DUP", "INV", "BND", "Complex"],
+                                            "range": ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00"],
+                                            "type": "ordinal"
+                                        }
+                                    },
+                                    "tooltip": [
+                                        {"field":"gene", "type": "nominal"},
+                                        {"field":"sample", "type": "nominal"},
+                                        {"field":"dna_alterations", "type": "nominal"},
+                                        {"field":"protein_alterations", "type": "nominal"},
+                                        {"field":"variants", "type": "ordinal"}
+                                    ],
+                                }
+                            },
+                            {
+                                "mark": {
+                                    "type": "square",
+                                    "size": 220,
+                                    "opacity": 1
+                                },
+                                "selection": {
+                                    "highlight3": {"type": "single", "empty": "none", "on": "mouseover", "fields": ["gene"]}
+                                },
+                                "encoding": {
+                                    "x": {
+                                        "field": "sample",
+                                        "type": "ordinal",
+                                        "scale": {},
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "y": {
+                                        "field": "gene",
+                                        "type": "ordinal",
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "fillOpacity": {
+                                        "condition": {"selection": "highlight3", "value": 0.8},
+                                        "value": 1
+                                    },
+                                    "color": {
+                                        "field": "variants3",
+                                        "type": "nominal",
+                                        "title": "Variants",
+                                        "scale": {
+                                            "domain": ["SNV", "MNV", "DEL", "INS", "DUP", "INV", "BND", "Complex"],
+                                            "range": ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00"],
+                                            "type": "ordinal"
+                                        }
+                                    },
+                                    "tooltip": [
+                                        {"field":"gene", "type": "nominal"},
+                                        {"field":"sample", "type": "nominal"},
+                                        {"field":"dna_alterations", "type": "nominal"},
+                                        {"field":"protein_alterations", "type": "nominal"},
+                                        {"field":"variants", "type": "ordinal"}
+                                    ],
+                                }
+                            },
+                            {
+                                "mark": {
+                                    "type": "square",
+                                    "size": 180,
+                                    "opacity": 1
+                                },
+                                "selection": {
+                                    "highlight4": {"type": "single", "empty": "none", "on": "mouseover", "fields": ["gene"]}
+                                },
+                                "encoding": {
+                                    "x": {
+                                        "field": "sample",
+                                        "type": "ordinal",
+                                        "scale": {},
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "y": {
+                                        "field": "gene",
+                                        "type": "ordinal",
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "fillOpacity": {
+                                        "condition": {"selection": "highlight4", "value": 0.8},
+                                        "value": 1
+                                    },
+                                    "color": {
+                                        "field": "variants4",
+                                        "type": "nominal",
+                                        "title": "Variants",
+                                        "scale": {
+                                            "domain": ["SNV", "MNV", "DEL", "INS", "DUP", "INV", "BND", "Complex"],
+                                            "range": ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00"],
+                                            "type": "ordinal"
+                                        }
+                                    },
+                                    "tooltip": [
+                                        {"field":"gene", "type": "nominal"},
+                                        {"field":"sample", "type": "nominal"},
+                                        {"field":"dna_alterations", "type": "nominal"},
+                                        {"field":"protein_alterations", "type": "nominal"},
+                                        {"field":"variants", "type": "ordinal"}
+                                    ],
+                                }
+                            },
+                            {
+                                "mark": {
+                                    "type": "square",
+                                    "size": 140,
+                                    "opacity": 1
+                                },
+                                "selection": {
+                                    "highlight5": {"type": "single", "empty": "none", "on": "mouseover", "fields": ["gene"]}
+                                },
+                                "encoding": {
+                                    "x": {
+                                        "field": "sample",
+                                        "type": "ordinal",
+                                        "scale": {},
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "y": {
+                                        "field": "gene",
+                                        "type": "ordinal",
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "fillOpacity": {
+                                        "condition": {"selection": "highlight5", "value": 0.8},
+                                        "value": 1
+                                    },
+                                    "color": {
+                                        "field": "variants5",
+                                        "type": "nominal",
+                                        "title": "Variants",
+                                        "scale": {
+                                            "domain": ["SNV", "MNV", "DEL", "INS", "DUP", "INV", "BND", "Complex"],
+                                            "range": ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00"],
+                                            "type": "ordinal"
+                                        }
+                                    },
+                                    "tooltip": [
+                                        {"field":"gene", "type": "nominal"},
+                                        {"field":"sample", "type": "nominal"},
+                                        {"field":"dna_alterations", "type": "nominal"},
+                                        {"field":"protein_alterations", "type": "nominal"},
+                                        {"field":"variants", "type": "ordinal"}
+                                    ],
+                                }
+                            },
+                            {
+                                "mark": {
+                                    "type": "square",
+                                    "size": 100,
+                                    "opacity": 1
+                                },
+                                "selection": {
+                                    "highlight6": {"type": "single", "empty": "none", "on": "mouseover", "fields": ["gene"]}
+                                },
+                                "encoding": {
+                                    "x": {
+                                        "field": "sample",
+                                        "type": "ordinal",
+                                        "scale": {},
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "y": {
+                                        "field": "gene",
+                                        "type": "ordinal",
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "fillOpacity": {
+                                        "condition": {"selection": "highlight6", "value": 0.8},
+                                        "value": 1
+                                    },
+                                    "color": {
+                                        "field": "variants6",
+                                        "type": "nominal",
+                                        "title": "Variants",
+                                        "scale": {
+                                            "domain": ["SNV", "MNV", "DEL", "INS", "DUP", "INV", "BND", "Complex"],
+                                            "range": ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00"],
+                                            "type": "ordinal"
+                                        }
+                                    },
+                                    "tooltip": [
+                                        {"field":"gene", "type": "nominal"},
+                                        {"field":"sample", "type": "nominal"},
+                                        {"field":"dna_alterations", "type": "nominal"},
+                                        {"field":"protein_alterations", "type": "nominal"},
+                                        {"field":"variants", "type": "ordinal"}
+                                    ],
+                                }
+                            },
+                            {
+                                "mark": {
+                                    "type": "square",
+                                    "size": 60,
+                                    "opacity": 1
+                                },
+                                "selection": {
+                                    "highlight7": {"type": "single", "empty": "none", "on": "mouseover", "fields": ["gene"]}
+                                },
+                                "encoding": {
+                                    "x": {
+                                        "field": "sample",
+                                        "type": "ordinal",
+                                        "scale": {},
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "y": {
+                                        "field": "gene",
+                                        "type": "ordinal",
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "fillOpacity": {
+                                        "condition": {"selection": "highlight7", "value": 0.8},
+                                        "value": 1
+                                    },
+                                    "color": {
+                                        "field": "variants7",
+                                        "type": "nominal",
+                                        "title": "Variants",
+                                        "scale": {
+                                            "domain": ["SNV", "MNV", "DEL", "INS", "DUP", "INV", "BND", "Complex"],
+                                            "range": ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00"],
+                                            "type": "ordinal"
+                                        }
+                                    },
+                                    "tooltip": [
+                                        {"field":"gene", "type": "nominal"},
+                                        {"field":"sample", "type": "nominal"},
+                                        {"field":"dna_alterations", "type": "nominal"},
+                                        {"field":"protein_alterations", "type": "nominal"},
+                                        {"field":"variants", "type": "ordinal"}
+                                    ],
+                                }
+                            },
+                            {
+                                "mark": {
+                                    "type": "square",
+                                    "size": 20,
+                                    "opacity": 1
+                                },
+                                "selection": {
+                                    "highlight8": {"type": "single", "empty": "none", "on": "mouseover", "fields": ["gene"]}
+                                },
+                                "encoding": {
+                                    "x": {
+                                        "field": "sample",
+                                        "type": "ordinal",
+                                        "scale": {},
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "y": {
+                                        "field": "gene",
+                                        "type": "ordinal",
+                                        "sort": {
+                                            "op": "valid",
+                                            "field": "variants",
+                                            "order": "descending"
+                                        }
+                                    },
+                                    "fillOpacity": {
+                                        "condition": {"selection": "highlight8", "value": 0.8},
+                                        "value": 1
+                                    },
+                                    "color": {
+                                        "field": "variants8",
+                                        "type": "nominal",
+                                        "title": "Variants",
+                                        "scale": {
+                                            "domain": ["SNV", "MNV", "DEL", "INS", "DUP", "INV", "BND", "Complex"],
+                                            "range": ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00"],
+                                            "type": "ordinal"
+                                        }
+                                    },
+                                    "tooltip": [
+                                        {"field":"gene", "type": "nominal"},
+                                        {"field":"sample", "type": "nominal"},
+                                        {"field":"dna_alterations", "type": "nominal"},
+                                        {"field":"protein_alterations", "type": "nominal"},
+                                        {"field":"variants", "type": "ordinal"}
+                                    ],
+                                }
                             }
-                        },
-                        "y": {
-                            "field": "gene",
-                            "type": "ordinal",
-                            "sort": {
-                                "op": "valid",
-                                "field": "variants",
-                                "order": "descending"
-                            }
-                        },
-                        "fillOpacity": {
-                            "condition": {"selection": "highlight", "value": 0.8},
-                            "value": 1
-                        },
-                        "color": {
-                            "field": "variants",
-                            "type": "nominal",
-                            "title": "Variants",
-                            "scale": {
-                                "domain": ["SNV", "MNV", "DEL", "INS", "DUP", "INV", "BND", "Complex"],
-                                "range": ["#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00"],
-                                "type": "ordinal"
-                            }
-                        }
-                    }
+                        ]
                     },
                     {
                     "mark": "bar",
@@ -148,6 +524,29 @@
                     }]
                 }]
             };
+            let changed_records = []
+            let delete_records = []
+            spec.data.values.forEach(function(record, j) {
+                let variants = record.variants.split("/");
+                if (variants.length > 1) {
+                    for (var i = 0; i < variants.length; i++) {
+                        let field = "variants" + (i+1);
+                        let layer_record = JSON.parse(JSON.stringify(record));
+                        layer_record[field] = variants[i];
+                        changed_records.push(layer_record);
+                    }
+                    delete_records.push(j);
+                } else {
+                    record.variants1 = record.variants;
+                }
+            });
+            for (let i = 0; i < delete_records.length; i++) {
+                console.log(spec.data.values[delete_records[i]-i]);
+                spec.data.values.splice(delete_records[i]-i, 1);
+            }
+            changed_records.forEach(function(record) {
+                spec.data.values.push(record);
+            });
             vegaEmbed('#oncoprint', spec).then(function(result) {
                 result.view.addEventListener('click', function(event, item) {
                     window.location.href = 'genes/' + item.datum.gene + '.html';

@@ -12,6 +12,8 @@ use tera::{self, Context, Tera};
 
 use rust_htslib::bcf::{self, Read};
 use std::fs::File;
+use serde_json::{Value, json};
+use jsonm::packer::{Packer, PackOptions};
 
 pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
@@ -93,10 +95,18 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
     gene_templates.register_filter("embed_source", embed_source);
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
 
+
+    let gene_specs: Value = serde_json::from_str(include_str!("gene_specs.json")).unwrap();
+
     for (gene, gene_data) in gene_data {
-        let gene_data = serde_json::to_string(&gene_data)?;
+        let mut specs = gene_specs.clone();
+        let values = json!({"values": gene_data});
+        specs["data"] = values;
+        let mut packer = Packer::new();
+        let options = PackOptions::new();
+        let packed_gene_specs = packer.pack(&specs, &options).unwrap();
         let mut context = Context::new();
-        context.insert("data", &gene_data);
+        context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
         context.insert("gene", &gene);
         let html = gene_templates.render("genes.html.tera", &context)?;
         let filepath = String::from("genes/") + &gene + ".html";
@@ -112,12 +122,19 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
         .sorted()
         .collect();
 
+    let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
+    let values = json!({"values": data});
+    vl_specs["data"] = values;
+
+    let mut packer = Packer::new();
+    let options = PackOptions::new();
+    let packed_specs = packer.pack(&vl_specs, &options).unwrap();
     let mut templates = Tera::default();
     templates.register_filter("embed_source", embed_source);
     templates.add_raw_template("report.html.tera", include_str!("report.html.tera"))?;
     let mut context = Context::new();
-    let data = serde_json::to_string(&data)?;
-    context.insert("data", &data);
+    let data = serde_json::to_string(&packed_specs)?;
+    context.insert("oncoprint", &data);
 
     let html = templates.render("report.html.tera", &context)?;
 

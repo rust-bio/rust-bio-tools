@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::error::Error;
-use std::io::stdout;
 use std::io::Write;
 use std::{str, fs};
 
@@ -14,8 +13,9 @@ use rust_htslib::bcf::{self, Read};
 use std::fs::File;
 use serde_json::{Value, json};
 use jsonm::packer::{Packer, PackOptions};
+use std::path::Path;
 
-pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn Error>> {
+pub fn oncoprint(sample_calls: &HashMap<String, String>, output_path: &str) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
@@ -90,7 +90,8 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
         }
     }
 
-    fs::create_dir("genes")?;
+    let gene_path = output_path.to_owned() + "/genes/";
+    fs::create_dir(Path::new(&gene_path))?;
     let mut gene_templates = Tera::default();
     gene_templates.register_filter("embed_source", embed_source);
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
@@ -109,7 +110,7 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
         context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
         context.insert("gene", &gene);
         let html = gene_templates.render("genes.html.tera", &context)?;
-        let filepath = String::from("genes/") + &gene + ".html";
+        let filepath = String::from(gene_path.clone()) + &gene + ".html";
         let mut file = File::create(filepath)?;
         file.write_all(html.as_bytes())?;
     }
@@ -138,7 +139,9 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>) -> Result<(), Box<dyn E
 
     let html = templates.render("report.html.tera", &context)?;
 
-    stdout().write(html.as_bytes())?;
+    let index = output_path.to_owned() + "/index.html";
+    let mut file = File::create(index)?;
+    file.write_all(html.as_bytes())?;
 
     Ok(())
 }

@@ -200,19 +200,27 @@ subcommands:
         Creates report from a given VCF file including a visual plot
         for every variant with the given BAM and FASTA file.
 
-        Example:
-          rbt report a.vcf.gz > report.html
+        Examples:
+          With current directory as default ouput path:
+            rbt report fasta.fa a=a.vcf a=a.bam b=b.vcf b=b.bam
+          With custom directory as default ouput path:
+            rbt report fasta.fa a=a.vcf a=a.bam b=b.vcf b=b.bam -- my/output/path/
       author: Johannes Köster <johannes.koester@uni-due.de>, Felix Wiegand <felix.wiegand@tu-dortmund.de>
       args:
+        - fasta:
+            required: true
+            help: FASTA file containing the reference genome for the visual plot
         - vcf-bam-pairs:
             multiple: true
             required: true
             number_of_values: 2
             value_name: NAME=VCF_FILE NAME=BAM_FILE
             help: VCF/BCF files to include (single-sample). Name is the sample name that will be used in the oncoprint. There needs to be one corresponding BAM file for each VCF/BCF file.
-        - fasta:
-            required: true
-            help: fasta file containing the reference genome for the visual plot
+        - output-path:
+            last: true
+            required: false
+            default_value: "."
+            help: Relative output path for the report files. Default value is the current directory.
 
   - collapse-reads-to-fragments:
       about: |

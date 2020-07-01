@@ -12,7 +12,10 @@ use tera::{self, Context, Tera};
 
 use rust_htslib::bcf::{self, Read};
 
-pub fn oncoprint(sample_calls: &HashMap<String, String>, vep_annotation: bool) -> Result<(), Box<dyn Error>> {
+pub fn oncoprint(
+    sample_calls: &HashMap<String, String>,
+    vep_annotation: bool,
+) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
@@ -55,8 +58,16 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>, vep_annotation: bool) -
                         }
 
                         let gene = str::from_utf8(fields[3])?;
-                        let dna_alteration = if vep_annotation {str::from_utf8(fields[10])?} else {str::from_utf8(fields[9])? };
-                        let protein_alteration = if vep_annotation {str::from_utf8(fields[11])?} else {str::from_utf8(fields[10])? };
+                        let dna_alteration = if vep_annotation {
+                            str::from_utf8(fields[10])?
+                        } else {
+                            str::from_utf8(fields[9])?
+                        };
+                        let protein_alteration = if vep_annotation {
+                            str::from_utf8(fields[11])?
+                        } else {
+                            str::from_utf8(fields[10])?
+                        };
 
                         let rec = genes
                             .entry(gene.to_owned())

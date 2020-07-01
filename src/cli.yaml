@@ -208,6 +208,9 @@ subcommands:
             multiple: true
             value_name: NAME=FILE
             help: VCF/BCF files to include (single-sample). Name is the sample name that will be used in the oncoprint.
+        - vep-annotation:
+            long: vep-annotation
+            help: Annotation field gets parsed as definded by VEP.
 
   - collapse-reads-to-fragments:
       about: |

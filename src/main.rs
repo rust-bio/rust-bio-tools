@@ -74,7 +74,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 sample_calls.insert(e[0].to_owned(), e[1].to_owned());
             }
 
-            bcf::oncoprint::oncoprint(&sample_calls)
+            bcf::oncoprint::oncoprint(&sample_calls, matches.is_present("vep-annotation"))
         }
         ("report", Some(matches)) => bcf::report::report(
             matches.value_of("vcf").unwrap(),

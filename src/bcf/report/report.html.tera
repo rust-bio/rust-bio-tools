@@ -2,6 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
         <style>
             body {
                 text-align: center;
@@ -14,6 +15,17 @@
     </head>
     <body>
         <div id="oncoprint"></div>
+
+        <div>
+            <nav aria-label="gene navigation">
+                <ul class="pagination justify-content-center">
+                {% for i in range(start=1,end=pages+1) %}
+                    <li class="page-item"><a class="page-link" href="index{{ i }}.html">{{ i }}</a></li>
+                {% endfor %}
+                </ul>
+            </nav>
+        </div>
+
 
         <script>
             {{ "https://cdn.jsdelivr.net/npm/vega@5.10.1"|embed_source|safe }}

@@ -18,6 +18,7 @@ use std::path::Path;
 pub fn oncoprint(sample_calls: &HashMap<String, String>, output_path: &str) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
+    let mut unique_genes = Vec::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
         let mut bcf_reader = bcf::Reader::from_path(path)?;
@@ -61,6 +62,8 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>, output_path: &str) -> R
                         let gene = str::from_utf8(fields[3])?;
                         let dna_alteration = str::from_utf8(fields[9])?;
                         let protein_alteration = str::from_utf8(fields[10])?;
+
+                        unique_genes.push(gene.to_owned());
 
                         let rec = genes
                             .entry(gene.to_owned())
@@ -123,25 +126,50 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>, output_path: &str) -> R
         .sorted()
         .collect();
 
-    let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
-    let values = json!({"values": data});
-    vl_specs["data"] = values;
+    let page_size = 100;
 
-    let mut packer = Packer::new();
-    let options = PackOptions::new();
-    let packed_specs = packer.pack(&vl_specs, &options).unwrap();
-    let mut templates = Tera::default();
-    templates.register_filter("embed_source", embed_source);
-    templates.add_raw_template("report.html.tera", include_str!("report.html.tera"))?;
-    let mut context = Context::new();
-    let data = serde_json::to_string(&packed_specs)?;
-    context.insert("oncoprint", &data);
+    // remove dup and check genes for pagination
+    unique_genes.sort();
+    unique_genes.dedup();
 
-    let html = templates.render("report.html.tera", &context)?;
+    let pages = unique_genes.len()/page_size;
 
-    let index = output_path.to_owned() + "/index.html";
-    let mut file = File::create(index)?;
-    file.write_all(html.as_bytes())?;
+    for i in 0..pages + 1 {
+        let current_genes;
+        if i != pages {
+            current_genes = &unique_genes[(i*page_size)..((i+1)*page_size)]; // get genes for current page
+        } else {
+            current_genes = &unique_genes[(i*page_size)..]; // get genes for last page
+        }
+
+        let page = i + 1;
+
+        let page_data: Vec<_> = data
+            .iter()
+            .filter(|entry| current_genes.contains(&entry.gene))
+            .collect();
+
+        let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
+        let values = json!({"values": page_data});
+        vl_specs["data"] = values;
+
+        let mut packer = Packer::new();
+        let options = PackOptions::new();
+        let packed_specs = packer.pack(&vl_specs, &options).unwrap();
+        let mut templates = Tera::default();
+        templates.register_filter("embed_source", embed_source);
+        templates.add_raw_template("report.html.tera", include_str!("report.html.tera"))?;
+        let mut context = Context::new();
+        let data = serde_json::to_string(&packed_specs)?;
+        context.insert("oncoprint", &data);
+        context.insert("pages", &(pages + 1));
+
+        let html = templates.render("report.html.tera", &context)?;
+
+        let index = output_path.to_owned() + "/index" + &page.to_string() + ".html";
+        let mut file = File::create(index)?;
+        file.write_all(html.as_bytes())?;
+    }
 
     Ok(())
 }

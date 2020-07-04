@@ -1,2 +1,2 @@
-pub mod table_report;
 pub mod report;
+pub mod table_report;

@@ -12,7 +12,10 @@ use tera::{Context, Tera};
 pub fn table_report(vcf: &str, fasta: &str, bam: &str) -> Result<(), Box<dyn Error>> {
     let mut templates = Tera::default();
     templates
-        .add_raw_template("table_report.html.tera", include_str!("report_table.html.tera"))
+        .add_raw_template(
+            "table_report.html.tera",
+            include_str!("report_table.html.tera"),
+        )
         .unwrap();
     let mut context = Context::new();
     context.insert(
@@ -20,7 +23,9 @@ pub fn table_report(vcf: &str, fasta: &str, bam: &str) -> Result<(), Box<dyn Err
         &make_table_report(Path::new(vcf), Path::new(fasta), Path::new(bam))?,
     );
 
-    let html = templates.render("table_report.html.tera", &context).unwrap();
+    let html = templates
+        .render("table_report.html.tera", &context)
+        .unwrap();
     stdout().write(html.as_bytes())?;
 
     Ok(())

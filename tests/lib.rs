@@ -180,7 +180,10 @@ fn test_report() {
             .unwrap()
             .success()
     );
-    test_output("tests/table_report.html", "tests/expected/table_report.html");
+    test_output(
+        "tests/table_report.html",
+        "tests/expected/table_report.html",
+    );
 }
 
 #[test]

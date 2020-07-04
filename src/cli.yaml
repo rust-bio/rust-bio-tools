@@ -216,6 +216,9 @@ subcommands:
             number_of_values: 2
             value_name: NAME=VCF_FILE NAME=BAM_FILE
             help: VCF/BCF files to include (single-sample). Name is the sample name that will be used in the oncoprint. There needs to be one corresponding BAM file for each VCF/BCF file.
+        - vep-annotation:
+            long: vep-annotation
+            help: Annotation field gets parsed as definded by VEP.
         - output-path:
             last: true
             required: false

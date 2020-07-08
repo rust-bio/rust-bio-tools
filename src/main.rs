@@ -89,7 +89,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 bam_paths.insert(b[0].to_owned(), b[1].to_owned());
             }
 
-            bcf::report::report::oncoprint(&sample_calls, output_path)
+            bcf::report::report::oncoprint(
+                &sample_calls,
+                output_path,
+                matches.is_present("vep-annotation"),
+            )
         }
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {

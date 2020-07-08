@@ -18,6 +18,7 @@ use std::path::Path;
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
     output_path: &str,
+    vep_annotation: bool,
 ) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
@@ -63,8 +64,16 @@ pub fn oncoprint(
                         }
 
                         let gene = str::from_utf8(fields[3])?;
-                        let dna_alteration = str::from_utf8(fields[9])?;
-                        let protein_alteration = str::from_utf8(fields[10])?;
+                        let dna_alteration = if vep_annotation {
+                            str::from_utf8(fields[10])?
+                        } else {
+                            str::from_utf8(fields[9])?
+                        };
+                        let protein_alteration = if vep_annotation {
+                            str::from_utf8(fields[11])?
+                        } else {
+                            str::from_utf8(fields[10])?
+                        };
 
                         unique_genes.push(gene.to_owned());
 
@@ -137,13 +146,11 @@ pub fn oncoprint(
     let pages = unique_genes.len() / page_size;
 
     for i in 0..pages + 1 {
-        let current_genes;
-        if i != pages {
-            current_genes = &unique_genes[(i * page_size)..((i + 1) * page_size)];
-        // get genes for current page
+        let current_genes = if i != pages {
+            &unique_genes[(i * page_size)..((i + 1) * page_size)] // get genes for current page
         } else {
-            current_genes = &unique_genes[(i * page_size)..]; // get genes for last page
-        }
+            &unique_genes[(i * page_size)..] // get genes for last page
+        };
 
         let page = i + 1;
 

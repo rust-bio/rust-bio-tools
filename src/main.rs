@@ -7,6 +7,8 @@ use fern;
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::error::Error;
+use std::fs;
+use std::path::Path;
 
 pub mod bam;
 pub mod bcf;
@@ -70,13 +72,22 @@ fn main() -> Result<(), Box<dyn Error>> {
         ("report", Some(matches)) => {
             let mut sample_calls = HashMap::new();
             let mut bam_paths = HashMap::new();
-            for (vcf, bam) in matches.values_of("vcf-bam-pairs").unwrap().tuples::<(&str, &str)>() {
+            let output_path = matches.value_of("output-path").unwrap();
+            let fasta_path = matches.value_of("fasta").unwrap();
+            let detail_path = output_path.to_owned() + "/details/";
+            fs::create_dir(Path::new(&detail_path))?;
+            for (vcf, bam) in matches
+                .values_of("vcf-bam-pairs")
+                .unwrap()
+                .tuples::<(&str, &str)>()
+            {
                 let v: Vec<_> = vcf.split('=').collect();
                 let b: Vec<_> = bam.split('=').collect();
+                bcf::report::table_report::table_report(v[1], fasta_path, b[1], output_path, v[0])?;
+
                 sample_calls.insert(v[0].to_owned(), v[1].to_owned());
                 bam_paths.insert(b[0].to_owned(), b[1].to_owned());
             }
-            let output_path = matches.value_of("output-path").unwrap();
 
             bcf::report::report::oncoprint(&sample_calls, output_path)
         }

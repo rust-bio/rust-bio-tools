@@ -55,7 +55,11 @@
             changed_records.forEach(function(record) {
                 spec.data.values.push(record);
             });
-            vegaEmbed('#oncoprint', spec);
+            vegaEmbed('#oncoprint', spec).then(function(result) {
+                result.view.addEventListener('click', function(event, item) {
+                    window.location.href = '../details/' + item.datum.sample + '/' + item.datum.gene + '.html';
+                });
+            });
 
         </script>
     </body>

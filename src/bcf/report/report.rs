@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::error::Error;
 use std::io::Write;
-use std::{str, fs};
+use std::{fs, str};
 
 use derive_new::new;
 use itertools::Itertools;
@@ -9,13 +9,16 @@ use serde_derive::Serialize;
 use serde_json;
 use tera::{self, Context, Tera};
 
+use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::{self, Read};
+use serde_json::{json, Value};
 use std::fs::File;
-use serde_json::{Value, json};
-use jsonm::packer::{Packer, PackOptions};
 use std::path::Path;
 
-pub fn oncoprint(sample_calls: &HashMap<String, String>, output_path: &str) -> Result<(), Box<dyn Error>> {
+pub fn oncoprint(
+    sample_calls: &HashMap<String, String>,
+    output_path: &str,
+) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
     let mut unique_genes = Vec::new();
@@ -86,7 +89,7 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>, output_path: &str) -> R
 
             // data for second stage
             let gene_entry = gene_data.entry(gene.to_owned()).or_insert_with(&Vec::new);
-            let gene_records:Vec<GeneRecord> = Vec::<GeneRecord>::from(record);
+            let gene_records: Vec<GeneRecord> = Vec::<GeneRecord>::from(record);
             for rec in gene_records {
                 gene_entry.push(rec);
             }
@@ -99,12 +102,11 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>, output_path: &str) -> R
     gene_templates.register_filter("embed_source", embed_source);
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
 
-
     let gene_specs: Value = serde_json::from_str(include_str!("gene_specs.json")).unwrap();
 
     for (gene, gene_data) in gene_data {
         let mut specs = gene_specs.clone();
-        let values = json!({"values": gene_data});
+        let values = json!({ "values": gene_data });
         specs["data"] = values;
         let mut packer = Packer::new();
         let options = PackOptions::new();
@@ -132,14 +134,15 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>, output_path: &str) -> R
     unique_genes.sort();
     unique_genes.dedup();
 
-    let pages = unique_genes.len()/page_size;
+    let pages = unique_genes.len() / page_size;
 
     for i in 0..pages + 1 {
         let current_genes;
         if i != pages {
-            current_genes = &unique_genes[(i*page_size)..((i+1)*page_size)]; // get genes for current page
+            current_genes = &unique_genes[(i * page_size)..((i + 1) * page_size)];
+        // get genes for current page
         } else {
-            current_genes = &unique_genes[(i*page_size)..]; // get genes for last page
+            current_genes = &unique_genes[(i * page_size)..]; // get genes for last page
         }
 
         let page = i + 1;
@@ -150,7 +153,7 @@ pub fn oncoprint(sample_calls: &HashMap<String, String>, output_path: &str) -> R
             .collect();
 
         let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
-        let values = json!({"values": page_data});
+        let values = json!({ "values": page_data });
         vl_specs["data"] = values;
 
         let mut packer = Packer::new();
@@ -213,8 +216,6 @@ struct GeneRecord {
     alteration: String,
     variants: String,
 }
-
-
 
 impl From<&Record> for Vec<GeneRecord> {
     fn from(record: &Record) -> Self {

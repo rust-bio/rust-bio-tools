@@ -41,8 +41,13 @@
                             data-alternatives="{{ variant.alternatives | safe }}"
                             data-vis="{{ variant.vis | escape }}"
                             data-packed=true
-                            {% for a in variant.ann %}
-                                    data-{{ "ann" ~ "[" ~ loop.index ~ "]" }}="{{ a }}"
+                            data-annlen="{{ variant.ann | length }}"
+                            data-description="{{ description }}"
+                            {% for attr in variant.ann %}
+                                {% set rowloop = loop.index %}
+                                {% for a in attr %}
+                                    data-{{ "ann" ~ "[" ~ rowloop ~ "][" ~ loop.index ~ "]" }}="{{ a }}"
+                                {% endfor %}
                             {% endfor %}
                     >
                         <th scope="row">{{ variant.name }}</th>
@@ -58,11 +63,15 @@
             <div class="col-4">
                 <table id="sidebar" class="table table-hover table-light table-bordered" style="margin-top: 58px;">
                 </table>
+                <table id="ann-sidebar" class="table table-hover table-light table-bordered" data-widht="100" data-toggle="table">
+                </table>
             </div>
 
             <script>
                 // customize column_values to display the attributes of your choice to the sidebar
-                let column_values = ['id', 'position', 'reference', 'alternatives', 'type', 'ann[1]', 'ann[2]', 'ann[3]','ann[4]', 'ann[5]', 'ann[6]', 'ann[7]', 'ann[8]', 'ann[9]'];
+                let column_values = ['id', 'position', 'reference', 'alternatives', 'type'];
+                // customize which parts of the annotation field to display at the sidebar
+                let ann_values = [0,1,2,3,4,5,6,7,8,9,10]
 
                 $(document).ready(function () {
                     $("html").on('click', '.variant-row', function () {
@@ -73,6 +82,11 @@
                             $(this).data('packed', false);
                         }
                         let specs = $(this).data('vis');
+                        let d = $(this).data('description')
+                        d = d.replace(/, /g,"\",\"");
+                        d = d.replace("[","[\"");
+                        d = d.replace("]","\"]")
+                        let description = JSON.parse(d);
 
                         specs.data[1].values.forEach(function(a) {
                             if (a.row > 0 && Array.isArray(a.flags)) {
@@ -111,9 +125,28 @@
                         let v = vegaEmbed('#vis', specs);
                         $("#sidebar").empty();
                         $.each($(this).data(), function(i, v) {
-                            if (i !== 'index' && column_values.includes(i)) {
+                            if (i !== 'index' && !i.includes("ann") && column_values.includes(i)) {
                                 $('#sidebar').append('<tr><th class="thead-dark">' + i + '</th><td>' + v + '</td></tr>');
                             }
+                        });
+                        $("#ann-sidebar").empty();
+                        let ann_length = $(this).data('annlen');
+                        let that = this;
+                        $('#ann-sidebar').append('<th class="thead-dark">annotation field</th>');
+                        for (let k = 1; k <= ann_length; k++) {
+                            $('#ann-sidebar').append('<th class="thead-dark">' + k + '</th>');
+                        }
+                        ann_values.forEach(function (x) {
+                            let name = description[x];
+                            $('#ann-sidebar').append('<tr>');
+                            $('#ann-sidebar').append('<th class="thead-dark">' + name + '</th>');
+                            for (let j = 1; j <= ann_length; j++) {
+                                let ix = x + 1;
+                                let field = 'ann[' + j + '][' + ix + ']';
+                                let val = $(that).data(field);
+                                $('#ann-sidebar').append('<td>' + val + '</td>');
+                            }
+                            $('#ann-sidebar').append('</tr>');
                         });
                     })
                 })

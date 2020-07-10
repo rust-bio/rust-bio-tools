@@ -18,7 +18,8 @@ pub fn table_report(
     output_path: &str,
     sample: &str,
 ) -> Result<(), Box<dyn Error>> {
-    let reports = make_table_report(Path::new(vcf), Path::new(fasta), Path::new(bam))?;
+    let (reports, ann_field_description) =
+        make_table_report(Path::new(vcf), Path::new(fasta), Path::new(bam))?;
 
     let detail_path = output_path.to_owned() + "/details/" + sample;
     fs::create_dir(Path::new(&detail_path))?;
@@ -34,6 +35,7 @@ pub fn table_report(
         let mut context = Context::new();
         context.insert("variants", &report_data);
         context.insert("gene", &gene);
+        context.insert("description", &ann_field_description);
 
         let html = templates
             .render("table_report.html.tera", &context)

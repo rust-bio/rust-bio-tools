@@ -10,6 +10,7 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use tera::{Context, Tera};
+use chrono::{DateTime, Local};
 
 pub fn table_report(
     vcf: &str,
@@ -24,6 +25,8 @@ pub fn table_report(
     let detail_path = output_path.to_owned() + "/details/" + sample;
     fs::create_dir(Path::new(&detail_path))?;
 
+    let local: DateTime<Local> = Local::now();
+
     for (gene, report_data) in reports {
         let mut templates = Tera::default();
         templates
@@ -36,6 +39,8 @@ pub fn table_report(
         context.insert("variants", &report_data);
         context.insert("gene", &gene);
         context.insert("description", &ann_field_description);
+        context.insert("sample", &sample);
+        context.insert("time", &local.format("%a %b %e %T %Y").to_string());
 
         let html = templates
             .render("table_report.html.tera", &context)

@@ -14,6 +14,7 @@ use rust_htslib::bcf::{self, Read};
 use serde_json::{json, Value};
 use std::fs::File;
 use std::path::Path;
+use chrono::{DateTime, Local};
 
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
@@ -123,6 +124,8 @@ pub fn oncoprint(
         let mut context = Context::new();
         context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
         context.insert("gene", &gene);
+        let local: DateTime<Local> = Local::now();
+        context.insert("time", &local.format("%a %b %e %T %Y").to_string());
         let html = gene_templates.render("genes.html.tera", &context)?;
         let filepath = String::from(gene_path.clone()) + &gene + ".html";
         let mut file = File::create(filepath)?;
@@ -173,6 +176,8 @@ pub fn oncoprint(
         let data = serde_json::to_string(&packed_specs)?;
         context.insert("oncoprint", &data);
         context.insert("pages", &(pages + 1));
+        let local: DateTime<Local> = Local::now();
+        context.insert("time", &local.format("%a %b %e %T %Y").to_string());
 
         let html = templates.render("report.html.tera", &context)?;
 

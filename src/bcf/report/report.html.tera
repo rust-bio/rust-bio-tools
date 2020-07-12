@@ -8,12 +8,29 @@
                 text-align: center;
             }
             #oncoprint {
+                margin-top: 15px;
                 text-align: center;
             }
         </style>
         <title>Oncoprint (only recurrent genes)</title>
     </head>
     <body>
+        <nav class="navbar navbar-dark bg-dark">
+            <a class="navbar-brand" href="#">rbt report</a>
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+                </li>
+            </ul>
+            <span class="navbar-text">
+          created {{ time }}
+        </span>
+        </nav>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active" aria-current="page">Oncoprint</li>
+            </ol>
+        </nav>
         <div id="oncoprint"></div>
 
         <div>

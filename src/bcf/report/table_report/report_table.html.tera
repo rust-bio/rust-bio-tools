@@ -14,7 +14,25 @@
     <link href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container-fluid ">
+<nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">rbt report</a>
+    <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+            <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+        </li>
+    </ul>
+    <span class="navbar-text">
+      created {{ time }}
+    </span>
+</nav>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="../../index1.html">Oncoprint</a></li>
+        <li class="breadcrumb-item"><a href="../../genes/{{ gene|safe }}.html">{{ gene|safe }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ sample }}</li>
+    </ol>
+</nav>
+<div class="container-fluid ">
         <div class="row">
             <div class="col-8">
                 <div class="row">
@@ -132,10 +150,6 @@
                             $("#ann-sidebar").empty();
                             let ann_length = $(this).data('annlen');
                             let that = this;
-                            $('#ann-sidebar').append('<th class="thead-dark" style="position: sticky; left:-1px;">annotation field</th>');
-                            for (let k = 1; k <= ann_length; k++) {
-                                $('#ann-sidebar').append('<th class="thead-dark">' + k + '</th>');
-                            }
                             ann_values.forEach(function (x) {
                                 let name = description[x];
                                 $('#ann-sidebar').append('<tr>');

@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>MFSD2A</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsonm@1.0.10/build/jsonm.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
+    <link href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">rbt report</a>
+    <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+            <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+        </li>
+    </ul>
+    <span class="navbar-text">
+      created Mon Jul 13 11:11:01 2020
+    </span>
+</nav>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="../../index1.html">Oncoprint</a></li>
+        <li class="breadcrumb-item"><a href="../../genes/MFSD2A.html">MFSD2A</a></li>
+        <li class="breadcrumb-item active" aria-current="page">b</li>
+    </ol>
+</nav>
+<div class="container-fluid ">
+        <div class="row">
+            <div class="col-8">
+                <div class="row">
+                    <div class="col-12">
+                        <table id="table" class="table table-hover table-light table-bordered" data-toggle="table" data-height="510" data-search="true" data-pagination="true">
+                            <thead>
+                            <tr>
+                                <th scope="col">name</th>
+                                <th scope="col" data-sortable="true">id</th>
+                                <th scope="col" data-sortable="true">position</th>
+                                <th scope="col">reference</th>
+                                <th scope="col">alternative</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            
+                            <tr
+                                    class="variant-row"
+                                    id="rs1057519087"
+                                    data-name="chr1"
+                                    data-id="rs1057519087"
+                                    data-position="28"
+                                    data-type="Variant"
+                                    data-reference="C"
+                                    data-alternatives="T"
+                                    data-vis="[&quot;$schema&quot;,&quot;autosize&quot;,&quot;background&quot;,&quot;padding&quot;,&quot;width&quot;,&quot;height&quot;,&quot;title&quot;,&quot;style&quot;,&quot;data&quot;,&quot;signals&quot;,&quot;marks&quot;,&quot;scales&quot;,&quot;axes&quot;,&quot;legends&quot;,&quot;config&quot;,&quot;https:&#x2F;&#x2F;vega.github.io&#x2F;schema&#x2F;vega&#x2F;v5.json&quot;,[&quot;type&quot;,&quot;contains&quot;,&quot;resize&quot;,&quot;fit&quot;,&quot;content&quot;,true],&quot;white&quot;,&quot;5&quot;,&quot;700&quot;,&quot;250&quot;,[&quot;text&quot;,&quot;frame&quot;,&quot;Chromosom&quot;,&quot;group&quot;],&quot;cell&quot;,[0,[&quot;name&quot;,&quot;grid_store&quot;],[&quot;values&quot;,34,[0,[&quot;end_position&quot;,&quot;marker_type&quot;,&quot;row&quot;,&quot;start_position&quot;,&quot;base&quot;,&quot;0.5&quot;,&quot;T&quot;,&quot;0&quot;,&quot;-0.5&quot;,43],[37,38,39,40,41,&quot;1.5&quot;,43,44,42,43],[37,38,39,40,41,&quot;2.5&quot;,&quot;G&quot;,44,46,48],[37,38,39,40,41,&quot;3.5&quot;,&quot;C&quot;,44,47,50],[37,38,39,40,41,&quot;4.5&quot;,50,44,49,50],[37,38,39,40,41,&quot;5.5&quot;,48,44,51,48],[37,38,39,40,41,&quot;6.5&quot;,48,44,52,48],[37,38,39,40,41,&quot;7.5&quot;,48,44,53,48],[37,38,39,40,41,&quot;8.5&quot;,48,44,54,48],[37,38,39,40,41,&quot;9.5&quot;,43,44,55,43],[37,38,39,40,41,&quot;10.5&quot;,48,44,56,48],[37,38,39,40,41,&quot;11.5&quot;,48,44,57,48],[37,38,39,40,41,&quot;12.5&quot;,48,44,58,48],[37,38,39,40,41,&quot;13.5&quot;,48,44,59,48],[37,38,39,40,41,&quot;14.5&quot;,&quot;A&quot;,44,60,62],[37,38,39,40,41,&quot;15.5&quot;,48,44,61,48],[37,38,39,40,41,&quot;16.5&quot;,62,44,63,62],[37,38,39,40,41,&quot;17.5&quot;,48,44,64,48],[37,38,39,40,41,&quot;18.5&quot;,62,44,65,62],[37,38,39,40,41,&quot;19.5&quot;,48,44,66,48],[37,38,39,40,41,&quot;20.5&quot;,48,44,67,48],[37,38,39,40,41,&quot;21.5&quot;,62,44,68,62],[37,38,39,40,41,&quot;22.5&quot;,48,44,69,48],[37,38,39,40,41,&quot;23.5&quot;,62,44,70,62],[37,38,39,40,41,&quot;24.5&quot;,48,44,71,48],[37,38,39,40,41,&quot;25.5&quot;,50,44,72,50],[37,38,39,40,41,&quot;26.5&quot;,48,44,73,48],[37,38,39,40,41,&quot;27.5&quot;,43,44,74,43],[37,38,39,40,41,&quot;28.5&quot;,50,44,75,50],[37,38,39,40,41,&quot;29.5&quot;,48,44,76,48],[37,38,39,40,41,&quot;30.5&quot;,62,44,77,62],[37,38,39,40,41,&quot;31.5&quot;,62,44,78,62],[37,38,39,40,41,&quot;32.5&quot;,62,44,79,62],[37,38,39,40,41,&quot;33.5&quot;,50,44,80,50],[37,38,39,40,41,&quot;34.5&quot;,43,44,81,43],[37,38,39,40,41,&quot;35.5&quot;,48,44,82,48],[37,38,39,40,41,&quot;36.5&quot;,48,44,83,48],[37,38,39,40,41,&quot;37.5&quot;,48,44,84,48],[37,38,39,40,41,&quot;38.5&quot;,48,44,85,48],[37,38,39,40,41,&quot;39.5&quot;,62,44,86,62],[37,38,39,40,41,&quot;40.5&quot;,62,44,87,62],[37,38,39,40,41,&quot;41.5&quot;,48,44,88,48],[37,38,39,40,41,&quot;42.5&quot;,43,44,89,43],[37,38,39,40,41,&quot;43.5&quot;,48,44,90,48],[37,38,39,40,41,&quot;44.5&quot;,48,44,91,48],[37,38,39,40,41,&quot;45.5&quot;,48,44,92,48],[37,38,39,40,41,&quot;46.5&quot;,48,44,93,48],[37,38,39,40,41,&quot;47.5&quot;,62,44,94,62],[37,38,39,40,41,&quot;48.5&quot;,62,44,95,62],[37,38,39,40,41,&quot;49.5&quot;,50,44,96,50],[37,38,39,40,41,&quot;50.5&quot;,50,44,97,50],[37,38,39,40,41,&quot;51.5&quot;,62,44,98,62],[37,38,39,40,41,&quot;52.5&quot;,48,44,99,48],[37,38,39,40,41,&quot;53.5&quot;,62,44,100,62],[37,38,39,40,41,&quot;54.5&quot;,48,44,101,48],[37,38,39,40,41,&quot;55.5&quot;,62,44,102,62],[37,38,39,40,41,&quot;56.5&quot;,43,44,103,43],[37,38,39,40,41,&quot;57.5&quot;,48,44,104,48],[37,38,39,40,41,&quot;58.5&quot;,48,44,105,48],[37,38,39,40,41,&quot;59.5&quot;,50,44,106,50],[37,38,39,40,41,&quot;60.5&quot;,62,44,107,62],[37,38,39,40,41,&quot;61.5&quot;,62,44,108,62],[37,38,39,40,41,&quot;62.5&quot;,62,44,109,62],[37,38,39,40,41,&quot;63.5&quot;,48,44,110,48],[37,38,39,40,41,&quot;64.5&quot;,50,44,111,50],[37,38,39,40,41,&quot;65.5&quot;,50,44,112,50],[37,38,39,40,41,&quot;66.5&quot;,43,44,113,43],[37,38,39,40,41,&quot;67.5&quot;,48,44,114,48],[37,38,39,40,41,&quot;68.5&quot;,48,44,115,48],[37,38,39,40,41,&quot;69.5&quot;,48,44,116,48],[37,38,39,40,41,&quot;70.5&quot;,62,44,117,62],[37,38,39,40,41,&quot;71.5&quot;,50,44,118,50],[37,38,39,40,41,&quot;72.5&quot;,43,44,119,43],[37,38,39,40,41,&quot;73.5&quot;,43,44,120,43],[37,38,39,40,41,&quot;74.5&quot;,50,44,121,50],[37,38,39,40,41,&quot;75.5&quot;,50,44,122,50],[37,38,39,40,41,&quot;76.5&quot;,62,44,123,62],[37,38,39,40,41,&quot;77.5&quot;,48,44,124,48],[37,38,39,40,41,&quot;78.5&quot;,50,44,125,50],[37,38,39,40,41,&quot;79.5&quot;,43,44,126,43],[37,38,39,40,41,&quot;80.5&quot;,43,44,127,43],[37,38,39,40,41,&quot;81.5&quot;,50,44,128,50],[37,38,39,40,41,&quot;82.5&quot;,62,44,129,62],[37,38,39,40,41,&quot;83.5&quot;,50,44,130,50],[37,38,39,40,41,&quot;84.5&quot;,50,44,131,50],[37,38,39,40,41,&quot;85.5&quot;,50,44,132,50],[37,38,39,40,41,&quot;86.5&quot;,62,44,133,62],[37,38,39,40,41,&quot;87.5&quot;,50,44,134,50],[37,38,39,40,41,&quot;88.5&quot;,62,44,135,62],[37,38,39,40,41,&quot;89.5&quot;,48,44,136,48],[37,38,39,40,41,&quot;90.5&quot;,48,44,137,48],[37,38,39,40,41,&quot;91.5&quot;,62,44,138,62],[37,38,39,40,41,&quot;92.5&quot;,50,44,139,50],[37,38,39,40,41,&quot;93.5&quot;,48,44,140,48],[37,38,39,40,41,&quot;94.5&quot;,50,44,141,50],[37,38,39,40,41,&quot;95.5&quot;,48,44,142,48],[37,38,39,40,41,&quot;96.5&quot;,62,44,143,62],[37,38,39,40,41,&quot;97.5&quot;,48,44,144,48],[37,38,39,40,41,&quot;98.5&quot;,48,44,145,48],[37,38,39,40,41,&quot;99.5&quot;,62,44,146,62],[37,38,39,40,41,&quot;100.5&quot;,48,44,147,48],[37,38,39,40,41,&quot;101.5&quot;,50,44,148,50],[37,38,39,40,41,&quot;102.5&quot;,50,44,149,50],[&quot;bases&quot;,37,&quot;flags&quot;,38,34,&quot;read_end&quot;,&quot;read_start&quot;,39,40,&quot;typ&quot;,&quot;inserts&quot;,&quot;AA&quot;,&quot;20.0&quot;,[0,&quot;1&quot;,&quot;2&quot;,&quot;32&quot;,&quot;64&quot;],&quot;Insertion&quot;,&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;789364&quot;,&quot;4&quot;,159,&quot;19.0&quot;,163,157],[151,37,152,38,34,153,154,39,40,41,43,148,[0,159,160,161,162],43,164,165,166,159,147,43],[37,152,38,34,153,154,39,40,155,&quot;789263.5&quot;,[0,159,160,161,162],&quot;Pairing&quot;,164,165,166,159,&quot;103.5&quot;,169],[37,152,38,34,153,154,39,40,155,67,[0,159,160,161,162],&quot;Match&quot;,164,165,166,159,49,171],[37,152,38,34,153,154,39,40,155,147,[0,159,160,161,162],171,164,165,166,159,67,171],[37,152,38,34,153,154,39,40,155,149,[0,159,160,161,162],171,164,165,166,159,148,171],[&quot;alternatives&quot;,37,38,&quot;reference&quot;,39,40,&quot;var_type&quot;,43,76,&quot;Variant&quot;,50,&quot;-1&quot;,75,175]],&quot;fasta&quot;],[34,&quot;source&quot;,&quot;transform&quot;,&quot;vars&quot;,177,[0,[19,&quot;expr&quot;,&quot;filter&quot;,&quot;datum.row &lt; 0&quot;]]],[34,178,179,&quot;alignments&quot;,177,[0,[19,181,182,&quot;datum.row &gt;= 0&quot;]]]],[0,[34,&quot;value&quot;,&quot;on&quot;,&quot;unit&quot;,[],[0,[&quot;events&quot;,&quot;update&quot;,&quot;mousemove&quot;,&quot;isTuple(group()) ? group() : unit&quot;]]],[34,190,&quot;grid&quot;,&quot;vlSelectionResolve(\&quot;grid_store\&quot;, \&quot;union\&quot;)&quot;],[34,187,&quot;grid_start_position&quot;,[0,[189,190,[&quot;signal&quot;,&quot;grid_translate_delta&quot;],&quot;panLinear(grid_translate_anchor.extent_x, -grid_translate_delta.x &#x2F; width)&quot;],[189,190,[196,&quot;grid_zoom_delta&quot;],&quot;zoomLinear(domain(\&quot;x\&quot;), grid_zoom_anchor.x, grid_zoom_delta)&quot;],[189,190,[0,[178,19,&quot;scope&quot;,&quot;dblclick&quot;]],&quot;null&quot;]]],[34,187,&quot;grid_row&quot;,[0,[189,190,[196,197],&quot;panLinear(grid_translate_anchor.extent_y, grid_translate_delta.y &#x2F; height)&quot;],[189,190,[196,199],&quot;zoomLinear(domain(\&quot;y\&quot;), grid_zoom_anchor.y, grid_zoom_delta)&quot;],[189,190,[0,[178,19,201,202]],203]]],[34,187,&quot;grid_tuple&quot;,[0,[189,190,[0,[196,&quot;grid_start_position || grid_row&quot;]],&quot;grid_start_position &amp;&amp; grid_row ? {unit: \&quot;\&quot;, fields: grid_tuple_fields, values: [grid_start_position,grid_row]} : null&quot;]]],[34,186,&quot;grid_tuple_fields&quot;,[0,[&quot;field&quot;,&quot;channel&quot;,19,40,&quot;x&quot;,&quot;R&quot;],[211,212,19,39,&quot;y&quot;,&quot;E&quot;]]],[34,186,187,&quot;grid_translate_anchor&quot;,[],[0,[189,190,[0,[178,19,201,&quot;mousedown&quot;]],&quot;{x: x(unit), y: y(unit), extent_x: domain(\&quot;x\&quot;), extent_y: domain(\&quot;y\&quot;)}&quot;]]],[34,186,187,197,[],[0,[189,190,[0,[178,19,&quot;consume&quot;,&quot;between&quot;,&quot;window&quot;,191,24,[0,[178,19,201,218],[178,19,222,&quot;mouseup&quot;]]]],&quot;{x: grid_translate_anchor.x - x(unit), y: grid_translate_anchor.y - y(unit)}&quot;]]],[34,187,&quot;grid_zoom_anchor&quot;,[0,[189,190,[0,[178,19,220,201,&quot;wheel&quot;,24]],&quot;{x: invert(\&quot;x\&quot;, x(unit)), y: invert(\&quot;y\&quot;, y(unit))}&quot;]]],[34,187,199,[0,[189,&quot;force&quot;,190,[0,[178,19,220,201,226,24]],24,&quot;pow(1.001, event.deltaY * pow(16, event.deltaMode))&quot;]]],[34,187,&quot;grid_modify&quot;,[0,[189,190,[196,207],&quot;modify(\&quot;grid_store\&quot;, grid_tuple, true)&quot;]]]],[0,[34,19,&quot;clip&quot;,10,&quot;interactive&quot;,&quot;from&quot;,&quot;encode&quot;,13,32,24,[0,&quot;rule&quot;],24,[11,184],[190,[&quot;stroke&quot;,&quot;opacity&quot;,&quot;tooltip&quot;,213,&quot;x2&quot;,215,&quot;zindex&quot;,&quot;strokeWidth&quot;,[&quot;scale&quot;,211,&quot;color&quot;,38],[186,&quot;0.8&quot;],[196,&quot;{\&quot;type\&quot;: datum[\&quot;typ\&quot;], \&quot;base\&quot;: datum[\&quot;base\&quot;], \&quot;variant type\&quot;: datum[\&quot;var_type\&quot;],\&quot;test\&quot;: datum[\&quot;test\&quot;], \&quot;inserted base(s)\&quot;: datum[\&quot;inserts\&quot;], \&quot;reference\&quot;: datum[\&quot;reference\&quot;], \&quot;alternatives\&quot;: datum[\&quot;alternatives\&quot;], \&quot;name\&quot;: datum[\&quot;name\&quot;], \&quot;flag 1\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1\&quot;], \&quot;flag 2\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2\&quot;], \&quot;flag 4\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;4\&quot;], \&quot;flag 8\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;8\&quot;], \&quot;flag 16\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;16\&quot;], \&quot;flag 32\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;32\&quot;], \&quot;flag 64\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;64\&quot;], \&quot;flag 128\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;128\&quot;], \&quot;flag 256\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;256\&quot;], \&quot;flag 512\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;512\&quot;], \&quot;flag 1024\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1024\&quot;], \&quot;flag 2048\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2048\&quot;]}&quot;],[243,211,213,40],[243,211,213,37],[243,211,&quot;band&quot;,215,39,42],[243,211,&quot;z&quot;,38],[243,211,237,38]]]],[34,19,232,10,233,234,235,&quot;marks2&quot;,32,24,[0,236],24,[11,180],[190,[237,238,239,213,240,215,241,242,[243,211,244,174],[186,245],[196,246],[243,211,213,40],[243,211,213,37],[243,211,247,215,39,42],[243,211,248,38],[243,211,237,38]]]]],[0,[34,19,&quot;range&quot;,&quot;domain&quot;,&quot;domainRaw&quot;,&quot;nice&quot;,&quot;zero&quot;,213,&quot;linear&quot;,[0,44,[196,7]],[0,44,&quot;103&quot;],[196,&quot;grid[\&quot;start_position\&quot;]&quot;],24,false],[34,19,251,250,&quot;paddingInner&quot;,&quot;paddingOuter&quot;,215,247,[11,211,&quot;sort&quot;,177,39,24],[0,44,[196,8]],44,44],[34,19,250,251,248,&quot;ordinal&quot;,[0,160,160,160,160,160,159,166,160,159,159],[0,62,50,48,43,&quot;N&quot;,175,163,&quot;Deletion&quot;,171,169]],[34,19,251,250,237,262,[0,62,50,48,43,263,175,163,264,171,169],[0,26,26,26,26,26,26,54,26,26,159]],[34,19,251,250,244,262,[0,62,50,48,43,263,175,163,264,171,169,&quot;Inversion&quot;,&quot;Duplicate&quot;],[0,&quot;#CADB69&quot;,&quot;#F2B671&quot;,&quot;#F28CC2&quot;,&quot;#7284A8&quot;,&quot;#A23E11&quot;,&quot;#000000&quot;,&quot;#047C0A&quot;,&quot;#CC1414&quot;,&quot;#BBBBBB&quot;,275,&quot;#984aff&quot;,&quot;#ffa600&quot;]],[34,152]],[0,[243,&quot;orient&quot;,&quot;gridScale&quot;,193,&quot;tickCount&quot;,251,&quot;labels&quot;,&quot;maxExtent&quot;,&quot;minExtent&quot;,&quot;ticks&quot;,241,213,&quot;bottom&quot;,215,24,[196,&quot;ceil(width&#x2F;40)&quot;],24,258,44,44,258,44],[243,278,193,9,&quot;labelFlush&quot;,&quot;labelOverlap&quot;,280,241,213,285,258,&quot;Position&quot;,24,24,[196,286],44]],[0,[&quot;symbolType&quot;,9,237,235,237,&quot;Base&quot;,244,[&quot;symbols&quot;,[190,[238,[186,245]]]]]],[],0]"
+                                    data-packed=true
+                                    data-annlen="11"
+                                    data-description="[Allele, Annotation, Annotation_Impact, Gene_Name, Gene_ID, Feature_Type, Feature_ID, Transcript_BioType, Rank, HGVS.c, HGVS.p, cDNA.pos / cDNA.length, CDS.pos / CDS.length, AA.pos / AA.length, Distance, ERRORS / WARNINGS / INFO]"
+                                    
+                                        
+                                        
+                                            data-ann[1][1]="T"
+                                        
+                                            data-ann[1][2]="missense_variant"
+                                        
+                                            data-ann[1][3]="MODERATE"
+                                        
+                                            data-ann[1][4]="MFSD2A"
+                                        
+                                            data-ann[1][5]="ENSG00000168389"
+                                        
+                                            data-ann[1][6]="transcript"
+                                        
+                                            data-ann[1][7]="ENST00000372811.9"
+                                        
+                                            data-ann[1][8]="protein_coding"
+                                        
+                                            data-ann[1][9]="10/14"
+                                        
+                                            data-ann[1][10]="c.1016C>T"
+                                        
+                                            data-ann[1][11]="p.Ser339Leu"
+                                        
+                                            data-ann[1][12]="1179/2154"
+                                        
+                                            data-ann[1][13]="1016/1593"
+                                        
+                                            data-ann[1][14]="339/530"
+                                        
+                                            data-ann[1][15]=""
+                                        
+                                            data-ann[1][16]=""
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[2][1]="T"
+                                        
+                                            data-ann[2][2]="missense_variant"
+                                        
+                                            data-ann[2][3]="MODERATE"
+                                        
+                                            data-ann[2][4]="MFSD2A"
+                                        
+                                            data-ann[2][5]="ENSG00000168389"
+                                        
+                                            data-ann[2][6]="transcript"
+                                        
+                                            data-ann[2][7]="ENST00000372809.5"
+                                        
+                                            data-ann[2][8]="protein_coding"
+                                        
+                                            data-ann[2][9]="10/14"
+                                        
+                                            data-ann[2][10]="c.1055C>T"
+                                        
+                                            data-ann[2][11]="p.Ser352Leu"
+                                        
+                                            data-ann[2][12]="1198/2173"
+                                        
+                                            data-ann[2][13]="1055/1632"
+                                        
+                                            data-ann[2][14]="352/543"
+                                        
+                                            data-ann[2][15]=""
+                                        
+                                            data-ann[2][16]=""
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[3][1]="T"
+                                        
+                                            data-ann[3][2]="missense_variant"
+                                        
+                                            data-ann[3][3]="MODERATE"
+                                        
+                                            data-ann[3][4]="MFSD2A"
+                                        
+                                            data-ann[3][5]="ENSG00000168389"
+                                        
+                                            data-ann[3][6]="transcript"
+                                        
+                                            data-ann[3][7]="ENST00000420632.6"
+                                        
+                                            data-ann[3][8]="protein_coding"
+                                        
+                                            data-ann[3][9]="8/12"
+                                        
+                                            data-ann[3][10]="c.548C>T"
+                                        
+                                            data-ann[3][11]="p.Ser183Leu"
+                                        
+                                            data-ann[3][12]="937/1914"
+                                        
+                                            data-ann[3][13]="548/1125"
+                                        
+                                            data-ann[3][14]="183/374"
+                                        
+                                            data-ann[3][15]=""
+                                        
+                                            data-ann[3][16]=""
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[4][1]="T"
+                                        
+                                            data-ann[4][2]="downstream_gene_variant"
+                                        
+                                            data-ann[4][3]="MODIFIER"
+                                        
+                                            data-ann[4][4]="MFSD2A"
+                                        
+                                            data-ann[4][5]="ENSG00000168389"
+                                        
+                                            data-ann[4][6]="transcript"
+                                        
+                                            data-ann[4][7]="ENST00000434861.5"
+                                        
+                                            data-ann[4][8]="protein_coding"
+                                        
+                                            data-ann[4][9]=""
+                                        
+                                            data-ann[4][10]="c.*941C>T"
+                                        
+                                            data-ann[4][11]=""
+                                        
+                                            data-ann[4][12]=""
+                                        
+                                            data-ann[4][13]=""
+                                        
+                                            data-ann[4][14]=""
+                                        
+                                            data-ann[4][15]="941"
+                                        
+                                            data-ann[4][16]="WARNING_TRANSCRIPT_INCOMPLETE"
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[5][1]="T"
+                                        
+                                            data-ann[5][2]="downstream_gene_variant"
+                                        
+                                            data-ann[5][3]="MODIFIER"
+                                        
+                                            data-ann[5][4]="MFSD2A"
+                                        
+                                            data-ann[5][5]="ENSG00000168389"
+                                        
+                                            data-ann[5][6]="transcript"
+                                        
+                                            data-ann[5][7]="ENST00000469745.5"
+                                        
+                                            data-ann[5][8]="processed_transcript"
+                                        
+                                            data-ann[5][9]=""
+                                        
+                                            data-ann[5][10]="n.*463C>T"
+                                        
+                                            data-ann[5][11]=""
+                                        
+                                            data-ann[5][12]=""
+                                        
+                                            data-ann[5][13]=""
+                                        
+                                            data-ann[5][14]=""
+                                        
+                                            data-ann[5][15]="463"
+                                        
+                                            data-ann[5][16]=""
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[6][1]="T"
+                                        
+                                            data-ann[6][2]="downstream_gene_variant"
+                                        
+                                            data-ann[6][3]="MODIFIER"
+                                        
+                                            data-ann[6][4]="RP3-342P20.2"
+                                        
+                                            data-ann[6][5]="ENSG00000228477"
+                                        
+                                            data-ann[6][6]="transcript"
+                                        
+                                            data-ann[6][7]="ENST00000438210.1"
+                                        
+                                            data-ann[6][8]="processed_pseudogene"
+                                        
+                                            data-ann[6][9]=""
+                                        
+                                            data-ann[6][10]="n.*4228C>T"
+                                        
+                                            data-ann[6][11]=""
+                                        
+                                            data-ann[6][12]=""
+                                        
+                                            data-ann[6][13]=""
+                                        
+                                            data-ann[6][14]=""
+                                        
+                                            data-ann[6][15]="4228"
+                                        
+                                            data-ann[6][16]=""
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[7][1]="T"
+                                        
+                                            data-ann[7][2]="intron_variant"
+                                        
+                                            data-ann[7][3]="MODIFIER"
+                                        
+                                            data-ann[7][4]="MFSD2A"
+                                        
+                                            data-ann[7][5]="ENSG00000168389"
+                                        
+                                            data-ann[7][6]="transcript"
+                                        
+                                            data-ann[7][7]="ENST00000483824.5"
+                                        
+                                            data-ann[7][8]="processed_transcript"
+                                        
+                                            data-ann[7][9]="9/11"
+                                        
+                                            data-ann[7][10]="n.1146+463C>T"
+                                        
+                                            data-ann[7][11]=""
+                                        
+                                            data-ann[7][12]=""
+                                        
+                                            data-ann[7][13]=""
+                                        
+                                            data-ann[7][14]=""
+                                        
+                                            data-ann[7][15]=""
+                                        
+                                            data-ann[7][16]=""
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[8][1]="T"
+                                        
+                                            data-ann[8][2]="non_coding_transcript_exon_variant"
+                                        
+                                            data-ann[8][3]="MODIFIER"
+                                        
+                                            data-ann[8][4]="MFSD2A"
+                                        
+                                            data-ann[8][5]="ENSG00000168389"
+                                        
+                                            data-ann[8][6]="transcript"
+                                        
+                                            data-ann[8][7]="ENST00000480630.5"
+                                        
+                                            data-ann[8][8]="processed_transcript"
+                                        
+                                            data-ann[8][9]="5/9"
+                                        
+                                            data-ann[8][10]="n.1457C>T"
+                                        
+                                            data-ann[8][11]=""
+                                        
+                                            data-ann[8][12]=""
+                                        
+                                            data-ann[8][13]=""
+                                        
+                                            data-ann[8][14]=""
+                                        
+                                            data-ann[8][15]=""
+                                        
+                                            data-ann[8][16]=""
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[9][1]="T"
+                                        
+                                            data-ann[9][2]="non_coding_transcript_exon_variant"
+                                        
+                                            data-ann[9][3]="MODIFIER"
+                                        
+                                            data-ann[9][4]="MFSD2A"
+                                        
+                                            data-ann[9][5]="ENSG00000168389"
+                                        
+                                            data-ann[9][6]="transcript"
+                                        
+                                            data-ann[9][7]="ENST00000459917.1"
+                                        
+                                            data-ann[9][8]="processed_transcript"
+                                        
+                                            data-ann[9][9]="1/3"
+                                        
+                                            data-ann[9][10]="n.150C>T"
+                                        
+                                            data-ann[9][11]=""
+                                        
+                                            data-ann[9][12]=""
+                                        
+                                            data-ann[9][13]=""
+                                        
+                                            data-ann[9][14]=""
+                                        
+                                            data-ann[9][15]=""
+                                        
+                                            data-ann[9][16]=""
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[10][1]="T"
+                                        
+                                            data-ann[10][2]="non_coding_transcript_exon_variant"
+                                        
+                                            data-ann[10][3]="MODIFIER"
+                                        
+                                            data-ann[10][4]="MFSD2A"
+                                        
+                                            data-ann[10][5]="ENSG00000168389"
+                                        
+                                            data-ann[10][6]="transcript"
+                                        
+                                            data-ann[10][7]="ENST00000481612.1"
+                                        
+                                            data-ann[10][8]="processed_transcript"
+                                        
+                                            data-ann[10][9]="1/2"
+                                        
+                                            data-ann[10][10]="n.14C>T"
+                                        
+                                            data-ann[10][11]=""
+                                        
+                                            data-ann[10][12]=""
+                                        
+                                            data-ann[10][13]=""
+                                        
+                                            data-ann[10][14]=""
+                                        
+                                            data-ann[10][15]=""
+                                        
+                                            data-ann[10][16]=""
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[11][1]="T"
+                                        
+                                            data-ann[11][2]="non_coding_transcript_exon_variant"
+                                        
+                                            data-ann[11][3]="MODIFIER"
+                                        
+                                            data-ann[11][4]="MFSD2A"
+                                        
+                                            data-ann[11][5]="ENSG00000168389"
+                                        
+                                            data-ann[11][6]="transcript"
+                                        
+                                            data-ann[11][7]="ENST00000491515.5"
+                                        
+                                            data-ann[11][8]="processed_transcript"
+                                        
+                                            data-ann[11][9]="4/6"
+                                        
+                                            data-ann[11][10]="n.241C>T"
+                                        
+                                            data-ann[11][11]=""
+                                        
+                                            data-ann[11][12]=""
+                                        
+                                            data-ann[11][13]=""
+                                        
+                                            data-ann[11][14]=""
+                                        
+                                            data-ann[11][15]=""
+                                        
+                                            data-ann[11][16]=""
+                                        
+                                    
+                            >
+                                <th scope="row">chr1</th>
+                                <td>rs1057519087</td>
+                                <td>28</td>
+                                <td>C</td>
+                                <td>T</td>
+                            </tr>
+                            
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div id="vis" class="justify-content-center" style="width: 100%"></div>
+                    </div>
+                </div>
+                <script>
+                    // customize column_values to display the attributes of your choice to the sidebar
+                    let column_values = ['id', 'position', 'reference', 'alternatives', 'type'];
+                    // customize which parts of the annotation field to display at the sidebar
+                    let ann_values = [0,1,2,3,4,5,6,7,8,9,10]
+
+                    $(document).ready(function () {
+                        $("html").on('click', '.variant-row', function () {
+                            if ($(this).data('packed')) {
+                                let compressed_specs = $(this).data('vis');
+                                let unpacker = new jsonm.Unpacker();
+                                $(this).data('vis', unpacker.unpack(compressed_specs));
+                                $(this).data('packed', false);
+                            }
+                            let specs = $(this).data('vis');
+                            let d = $(this).data('description')
+                            d = d.replace(/, /g,"\",\"");
+                            d = d.replace("[","[\"");
+                            d = d.replace("]","\"]")
+                            let description = JSON.parse(d);
+
+                            specs.data[1].values.forEach(function(a) {
+                                if (a.row > 0 && Array.isArray(a.flags)) {
+                                    let flags = {};
+                                    a.flags.forEach(function(b) {
+                                        if (b === 1) {
+                                            flags[b] = "template having multiple segments in sequencing";
+                                        } else if (b === 2) {
+                                            flags[b] = "each segment properly aligned according to the aligner";
+                                        } else if (b === 4) {
+                                            flags[b] = "segment unmapped";
+                                        } else if (b === 8) {
+                                            flags[b] = "next segment in the template unmapped";
+                                        } else if (b === 16) {
+                                            flags[b] = "SEQ being reverse complemented";
+                                        } else if (b === 32) {
+                                            flags[b] = "SEQ of the next segment in the template being reverse complemented";
+                                        } else if (b === 64) {
+                                            flags[b] = "the first segment in the template";
+                                        } else if (b === 128) {
+                                            flags[b] = "the last segment in the template";
+                                        } else if (b === 256) {
+                                            flags[b] = "secondary alignment";
+                                        } else if (b === 512) {
+                                            flags[b] = "not passing filters, such as platform/vendor quality controls";
+                                        } else if (b === 1024) {
+                                            flags[b] = "PCR or optical duplicate";
+                                        } else if (b === 2048) {
+                                            flags[b] = "vega lite lines";
+                                        }
+                                    });
+                                    a.flags = flags;
+                                }
+                            });
+                            specs.width = $('#vis').width() - 40;
+                            let v = vegaEmbed('#vis', specs);
+                            $("#sidebar").empty();
+                            $.each($(this).data(), function(i, v) {
+                                if (i !== 'index' && !i.includes("ann") && column_values.includes(i)) {
+                                    $('#sidebar').append('<tr><th class="thead-dark">' + i + '</th><td>' + v + '</td></tr>');
+                                }
+                            });
+                            $("#ann-sidebar").empty();
+                            let ann_length = $(this).data('annlen');
+                            let that = this;
+                            ann_values.forEach(function (x) {
+                                let name = description[x];
+                                $('#ann-sidebar').append('<tr>');
+                                $('#ann-sidebar').append('<th class="thead-dark" style="position: sticky; left:-1px;">' + name + '</th>');
+                                for (let j = 1; j <= ann_length; j++) {
+                                    let ix = x + 1;
+                                    let field = 'ann[' + j + '][' + ix + ']';
+                                    let val = $(that).data(field);
+                                    $('#ann-sidebar').append('<td>' + val + '</td>');
+                                }
+                                $('#ann-sidebar').append('</tr>');
+                            });
+                        })
+                    })
+                </script>
+            </div>
+            <div class="col-4">
+                <table id="sidebar" class="table table-hover table-light table-bordered table-sm" style="margin-top: 58px;">
+                </table>
+                <table id="ann-sidebar" class="table table-hover table-light table-bordered table-sm" data-widht="100" data-toggle="table">
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

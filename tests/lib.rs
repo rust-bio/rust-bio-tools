@@ -17,6 +17,18 @@ fn test_output(result: &str, expected: &str) {
     fs::remove_file(result).unwrap();
 }
 
+/// Check difference of an output file and the expected output and delete the output file.
+fn test_difference(result: &str, expected: &str) -> String {
+    let diff = Command::new("diff")
+        .arg(result)
+        .arg(expected)
+        .output()
+        .unwrap();
+    fs::remove_file(result).unwrap();
+
+    String::from_utf8(diff.stdout.to_owned()).unwrap()
+}
+
 /// Compare two fastq files, ignoring the name lines
 /// Reads are sorted by their sequence, which is not 100% robust
 /// if mutations/ sequencing errors are considered.
@@ -154,37 +166,31 @@ fn vcf_baf() {
 }
 
 #[test]
-fn test_oncoprint() {
-    assert!(
-        Command::new("bash")
-            .arg("-c")
-            .arg("target/debug/rbt oncoprint a=tests/test-oncoprint.vcf b=tests/test-oncoprint.vcf > tests/oncoprint.html")
-            .spawn()
-            .unwrap()
-            .wait()
-            .unwrap()
-            .success()
-    );
-    test_output("tests/oncoprint.html", "tests/expected/oncoprint.html");
-}
-
-#[test]
 fn test_report() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt table_report tests/table_report-test.vcf.gz tests/test-table_report.bam tests/ref.fa > tests/table_report.html")
+            .arg("target/debug/rbt report tests/ref.fa a=tests/report-test.vcf.gz a=tests/test-report.bam b=tests/report-test.vcf.gz b=tests/test-report.bam -- tests")
             .spawn()
             .unwrap()
             .wait()
             .unwrap()
             .success()
     );
-    test_output(
-        "tests/table_report.html",
-        "tests/expected/table_report.html",
-    );
+    assert!(test_difference("tests/index1.html", "tests/expected/report/index1.html").starts_with("26c26\n")); // Ignore the timestamp in line 26
+    assert!(test_difference("tests/genes/C1QC.html", "tests/expected/report/genes/C1QC.html").starts_with("26c26\n")); // Ignore the timestamp in line 26
+    assert!(test_difference("tests/genes/MFSD2A.html", "tests/expected/report/genes/MFSD2A.html").starts_with("26c26\n")); // Ignore the timestamp in line 26
+    assert!(test_difference("tests/genes/RP3-342P20.2.html", "tests/expected/report/genes/RP3-342P20.2.html").starts_with("26c26\n")); // Ignore the timestamp in line 26
+    assert!(test_difference("tests/details/a/C1QC.html", "tests/expected/report/details/a/C1QC.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(test_difference("tests/details/a/MFSD2A.html", "tests/expected/report/details/a/MFSD2A.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(test_difference("tests/details/a/RP3-342P20.2.html", "tests/expected/report/details/a/RP3-342P20.2.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(test_difference("tests/details/b/C1QC.html", "tests/expected/report/details/b/C1QC.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(test_difference("tests/details/b/MFSD2A.html", "tests/expected/report/details/b/MFSD2A.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(test_difference("tests/details/b/RP3-342P20.2.html", "tests/expected/report/details/b/RP3-342P20.2.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
+    fs::remove_dir_all("tests/genes").unwrap();
+    fs::remove_dir_all("tests/details").unwrap();
 }
+
 
 #[test]
 fn test_collapse_reads_to_fragments_two_cluster() {

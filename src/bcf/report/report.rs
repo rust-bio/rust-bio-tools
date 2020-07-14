@@ -15,6 +15,7 @@ use serde_json::{json, Value};
 use std::fs::File;
 use std::path::Path;
 use chrono::{DateTime, Local};
+use std::iter::FromIterator;
 
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
@@ -23,7 +24,7 @@ pub fn oncoprint(
 ) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
-    let mut unique_genes = Vec::new();
+    let mut unique_genes = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
         let mut bcf_reader = bcf::Reader::from_path(path)?;
@@ -76,7 +77,10 @@ pub fn oncoprint(
                             str::from_utf8(fields[10])?
                         };
 
-                        unique_genes.push(gene.to_owned());
+                        let gene_rec = unique_genes
+                            .entry(gene.to_owned())
+                            .or_insert_with(|| 0);
+                        *gene_rec += 1;
 
                         let rec = genes
                             .entry(gene.to_owned())
@@ -142,24 +146,29 @@ pub fn oncoprint(
 
     let page_size = 100;
 
-    // remove dup and check genes for pagination
-    unique_genes.sort();
-    unique_genes.dedup();
 
-    let pages = unique_genes.len() / page_size;
+    let mut v = Vec::from_iter(unique_genes);
+    v.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
+
+    let pages = v.len() / page_size;
 
     for i in 0..pages + 1 {
         let current_genes = if i != pages {
-            &unique_genes[(i * page_size)..((i + 1) * page_size)] // get genes for current page
+            &v[(i * page_size)..((i + 1) * page_size)] // get genes for current page
         } else {
-            &unique_genes[(i * page_size)..] // get genes for last page
+            &v[(i * page_size)..] // get genes for last page
         };
+
+        let mut sorted_genes = Vec::new();
+        for (g,_) in current_genes {
+            sorted_genes.push(g);
+        }
 
         let page = i + 1;
 
         let page_data: Vec<_> = data
             .iter()
-            .filter(|entry| current_genes.contains(&entry.gene))
+            .filter(|entry| sorted_genes.contains(&&entry.gene))
             .collect();
 
         let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();

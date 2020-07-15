@@ -20,17 +20,17 @@
           "axis":null,
           "sort":{
             "op":"valid",
-            "field":"variants",
+            "field":"count_variants",
             "order":"descending"
           }
         },
         "y":{
-          "field":"variants",
+          "field":"count_variants",
           "aggregate":"count",
           "type":"quantitative"
         },
         "color":{
-          "field":"variants",
+          "field":"count_variants",
           "type":"nominal",
           "title":"Variants",
           "scale":{
@@ -90,7 +90,7 @@
                   },
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -99,7 +99,7 @@
                   "type":"ordinal",
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -183,7 +183,7 @@
                   },
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -192,7 +192,7 @@
                   "type":"ordinal",
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -276,7 +276,7 @@
                   },
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -285,7 +285,7 @@
                   "type":"ordinal",
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -369,7 +369,7 @@
                   },
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -378,7 +378,7 @@
                   "type":"ordinal",
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -462,7 +462,7 @@
                   },
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -471,7 +471,7 @@
                   "type":"ordinal",
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -555,7 +555,7 @@
                   },
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -564,7 +564,7 @@
                   "type":"ordinal",
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -648,7 +648,7 @@
                   },
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -657,7 +657,7 @@
                   "type":"ordinal",
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -741,7 +741,7 @@
                   },
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -750,7 +750,7 @@
                   "type":"ordinal",
                   "sort":{
                     "op":"valid",
-                    "field":"variants",
+                    "field":"count_variants",
                     "order":"descending"
                   }
                 },
@@ -820,18 +820,18 @@
               "type":"ordinal",
               "sort":{
                 "op":"valid",
-                "field":"variants",
+                "field":"count_variants",
                 "order":"descending"
               },
               "axis":null
             },
             "x":{
-              "field":"variants",
+              "field":"count_variants",
               "aggregate":"count",
               "type":"quantitative"
             },
             "color":{
-              "field":"variants",
+              "field":"count_variants",
               "type":"nominal",
               "title":"Variants",
               "scale":{

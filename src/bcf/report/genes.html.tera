@@ -60,11 +60,13 @@
                         let field = "variants" + (i+1);
                         let layer_record = JSON.parse(JSON.stringify(record));
                         layer_record[field] = variants[i];
+                        layer_record.count_variants = variants[i];
                         changed_records.push(layer_record);
                     }
                     delete_records.push(j);
                 } else {
                     record.variants1 = record.variants;
+                    record.count_variants = record.variants;
                 }
             });
             for (let i = 0; i < delete_records.length; i++) {

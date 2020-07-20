@@ -33,6 +33,7 @@
         </nav>
         <div id="oncoprint"></div>
 
+        {% if pages > 1 %}
         <div>
             <nav aria-label="gene navigation">
                 <ul class="pagination justify-content-center">
@@ -42,6 +43,7 @@
                 </ul>
             </nav>
         </div>
+        {% endif %}
 
 
         <script>

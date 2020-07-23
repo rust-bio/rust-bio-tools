@@ -67,18 +67,31 @@
             let delete_records = []
             spec.data.values.forEach(function(record, j) {
                 let variants = record.variants.split("/");
+                let impacts = record.impact.split("/");
                 if (variants.length > 1) {
                     for (var i = 0; i < variants.length; i++) {
                         let field = "variants" + (i+1);
                         let layer_record = JSON.parse(JSON.stringify(record));
                         layer_record[field] = variants[i];
                         layer_record.count_variants = variants[i];
+                        let impact = 0;
+                        console.log(impacts);
+                        impacts.forEach(function(imp) {
+                            let v = imp.split("=");
+                            if (v[0] === variants[i]) {
+                                impact = v[1];
+                            }
+                        })
+                        layer_record.count_impact = impact;
                         changed_records.push(layer_record);
+                        console.log(layer_record);
                     }
                     delete_records.push(j);
                 } else {
                     record.variants1 = record.variants;
                     record.count_variants = record.variants;
+                    let imp = record.impact.split("=");
+                    record.count_impact = imp[1];
                 }
             });
             for (let i = 0; i < delete_records.length; i++) {

@@ -65,6 +65,7 @@ pub fn oncoprint(
                             continue;
                         }
 
+                        let impact = str::from_utf8(fields[2])?;
                         let gene = str::from_utf8(fields[3])?;
                         let dna_alteration = if vep_annotation {
                             str::from_utf8(fields[10])?
@@ -90,6 +91,7 @@ pub fn oncoprint(
                             rec.protein_alterations.push(protein_alteration.to_owned());
                         }
                         rec.variants.push(variant.to_owned());
+                        rec.impact.push((variant.to_owned(), impact.to_owned()))
                     }
                 }
             }
@@ -217,6 +219,8 @@ struct Record {
     protein_alterations: Vec<String>,
     #[new(default)]
     variants: Vec<String>,
+    #[new(default)]
+    impact: Vec<(String, String)>,
 }
 
 // Record for the first stage of the report
@@ -227,6 +231,7 @@ struct FinalRecord {
     dna_alterations: String,
     protein_alterations: String,
     variants: String,
+    impact: String,
 }
 
 // Record for the second stage of the report
@@ -267,6 +272,22 @@ impl From<&Record> for Vec<GeneRecord> {
 
 impl From<&Record> for FinalRecord {
     fn from(record: &Record) -> Self {
+        let mut imp_map = HashMap::new();
+        let mut impact_vec =Vec::new();
+        for (variant, imp) in &record.impact {
+            let rec = imp_map
+                .entry(variant.to_owned())
+                .or_insert_with(|| 0);
+            if imp.to_uppercase() == "HIGH" {
+                *rec += 1;
+            }
+        }
+
+        for (variant, impact) in imp_map {
+            let i = variant + "=" + &impact.to_string();
+            impact_vec.push(i);
+        }
+
         FinalRecord {
             sample: record.sample.to_owned(),
             gene: record.gene.to_owned(),
@@ -278,6 +299,7 @@ impl From<&Record> for FinalRecord {
                 .unique()
                 .join(", "),
             variants: record.variants.iter().sorted().unique().join("/"),
+            impact: impact_vec.iter().join("/"),
         }
     }
 }

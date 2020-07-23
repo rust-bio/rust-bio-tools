@@ -27,7 +27,10 @@
         "y":{
           "field":"count_variants",
           "aggregate":"count",
-          "type":"quantitative"
+          "type":"quantitative",
+          "axis": {
+            "title": "variant distribution per sample"
+          }
         },
         "color":{
           "field":"count_variants",
@@ -860,7 +863,62 @@
             "x":{
               "field":"count_variants",
               "aggregate":"count",
-              "type":"quantitative"
+              "type":"quantitative",
+              "axis": {
+                "title": "variant distribution per gene"
+              }
+            },
+            "color":{
+              "field":"count_variants",
+              "type":"nominal",
+              "title":"Variants",
+              "scale":{
+                "domain":[
+                  "SNV",
+                  "MNV",
+                  "DEL",
+                  "INS",
+                  "DUP",
+                  "INV",
+                  "BND",
+                  "Complex"
+                ],
+                "range":[
+                  "#a6cee3",
+                  "#1f78b4",
+                  "#b2df8a",
+                  "#33a02c",
+                  "#fb9a99",
+                  "#e31a1c",
+                  "#fdbf6f",
+                  "#ff7f00"
+                ],
+                "type":"ordinal"
+              }
+            }
+          }
+        },
+        {
+          "mark":"bar",
+          "width":100,
+          "encoding":{
+            "y":{
+              "field":"gene",
+              "type":"ordinal",
+              "sort":{
+                "op":"valid",
+                "field":"count_variants",
+                "order":"descending"
+              },
+              "axis": null
+            },
+            "x":{
+              "field":"count_impact",
+              "aggregate":"sum",
+              "type":"quantitative",
+              "axis": {
+                "title": "impact"
+              }
             },
             "color":{
               "field":"count_variants",

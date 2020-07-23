@@ -27,7 +27,10 @@
         "y":{
           "field":"count_variants",
           "aggregate":"count",
-          "type":"quantitative"
+          "type":"quantitative",
+          "axis": {
+            "title": "variant distribution per sample"
+          }
         },
         "color":{
           "field":"count_variants",
@@ -828,7 +831,10 @@
             "x":{
               "field":"count_variants",
               "aggregate":"count",
-              "type":"quantitative"
+              "type":"quantitative",
+              "axis": {
+                "title": "variant distribution per alteration"
+              }
             },
             "color":{
               "field":"count_variants",

@@ -132,6 +132,7 @@ pub fn oncoprint(
         context.insert("gene", &gene);
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+        context.insert("version", &env!("CARGO_PKG_VERSION"));
         let html = gene_templates.render("genes.html.tera", &context)?;
         let filepath = String::from(gene_path.clone()) + &gene + ".html";
         let mut file = File::create(filepath)?;
@@ -189,6 +190,7 @@ pub fn oncoprint(
         context.insert("pages", &(pages + 1));
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+        context.insert("version", &env!("CARGO_PKG_VERSION"));
 
         let html = templates.render("report.html.tera", &context)?;
 

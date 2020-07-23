@@ -15,16 +15,21 @@
         <title>Oncoprint (only recurrent genes)</title>
     </head>
     <body>
-        <nav class="navbar navbar-dark bg-dark">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <a class="navbar-brand" href="#">rbt report</a>
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
-                </li>
-            </ul>
-            <span class="navbar-text">
-          created {{ time }}
-        </span>
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools/blob/master/CHANGELOG.md">{{ version }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+                    </li>
+                </ul>
+                <span class="navbar-text">
+                    created {{ time }}
+                </span>
+            </div>
         </nav>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">

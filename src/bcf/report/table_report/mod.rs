@@ -41,6 +41,7 @@ pub fn table_report(
         context.insert("description", &ann_field_description);
         context.insert("sample", &sample);
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+        context.insert("version", &env!("CARGO_PKG_VERSION"));
 
         let html = templates
             .render("table_report.html.tera", &context)

@@ -4,13 +4,13 @@ mod fasta_reader;
 mod static_reader;
 
 use crate::bcf::report::table_report::create_report_table::make_table_report;
+use chrono::{DateTime, Local};
 use std::error::Error;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use tera::{Context, Tera};
-use chrono::{DateTime, Local};
 
 pub fn table_report(
     vcf: &str,

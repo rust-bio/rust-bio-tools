@@ -9,13 +9,13 @@ use serde_derive::Serialize;
 use serde_json;
 use tera::{self, Context, Tera};
 
+use chrono::{DateTime, Local};
 use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::{self, Read};
 use serde_json::{json, Value};
 use std::fs::File;
-use std::path::Path;
-use chrono::{DateTime, Local};
 use std::iter::FromIterator;
+use std::path::Path;
 
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
@@ -78,9 +78,7 @@ pub fn oncoprint(
                             str::from_utf8(fields[10])?
                         };
 
-                        let gene_rec = unique_genes
-                            .entry(gene.to_owned())
-                            .or_insert_with(|| 0);
+                        let gene_rec = unique_genes.entry(gene.to_owned()).or_insert_with(|| 0);
                         *gene_rec += 1;
 
                         let rec = genes
@@ -149,7 +147,6 @@ pub fn oncoprint(
 
     let page_size = 100;
 
-
     let mut v = Vec::from_iter(unique_genes);
     v.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
 
@@ -163,7 +160,7 @@ pub fn oncoprint(
         };
 
         let mut sorted_genes = Vec::new();
-        for (g,_) in current_genes {
+        for (g, _) in current_genes {
             sorted_genes.push(g);
         }
 
@@ -275,11 +272,9 @@ impl From<&Record> for Vec<GeneRecord> {
 impl From<&Record> for FinalRecord {
     fn from(record: &Record) -> Self {
         let mut imp_map = HashMap::new();
-        let mut impact_vec =Vec::new();
+        let mut impact_vec = Vec::new();
         for (variant, imp) in &record.impact {
-            let rec = imp_map
-                .entry(variant.to_owned())
-                .or_insert_with(|| 0);
+            let rec = imp_map.entry(variant.to_owned()).or_insert_with(|| 0);
             if imp.to_uppercase() == "HIGH" {
                 *rec += 1;
             }

@@ -177,20 +177,58 @@ fn test_report() {
             .unwrap()
             .success()
     );
-    assert!(test_difference("tests/index1.html", "tests/expected/report/index1.html").starts_with("26c26\n")); // Ignore the timestamp in line 26
-    assert!(test_difference("tests/genes/C1QC.html", "tests/expected/report/genes/C1QC.html").starts_with("26c26\n")); // Ignore the timestamp in line 26
-    assert!(test_difference("tests/genes/MFSD2A.html", "tests/expected/report/genes/MFSD2A.html").starts_with("26c26\n")); // Ignore the timestamp in line 26
-    assert!(test_difference("tests/genes/RP3-342P20.2.html", "tests/expected/report/genes/RP3-342P20.2.html").starts_with("26c26\n")); // Ignore the timestamp in line 26
-    assert!(test_difference("tests/details/a/C1QC.html", "tests/expected/report/details/a/C1QC.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
-    assert!(test_difference("tests/details/a/MFSD2A.html", "tests/expected/report/details/a/MFSD2A.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
-    assert!(test_difference("tests/details/a/RP3-342P20.2.html", "tests/expected/report/details/a/RP3-342P20.2.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
-    assert!(test_difference("tests/details/b/C1QC.html", "tests/expected/report/details/b/C1QC.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
-    assert!(test_difference("tests/details/b/MFSD2A.html", "tests/expected/report/details/b/MFSD2A.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
-    assert!(test_difference("tests/details/b/RP3-342P20.2.html", "tests/expected/report/details/b/RP3-342P20.2.html").starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(
+        test_difference("tests/index1.html", "tests/expected/report/index1.html")
+            .starts_with("26c26\n")
+    ); // Ignore the timestamp in line 26
+    assert!(test_difference(
+        "tests/genes/C1QC.html",
+        "tests/expected/report/genes/C1QC.html"
+    )
+    .starts_with("26c26\n")); // Ignore the timestamp in line 26
+    assert!(test_difference(
+        "tests/genes/MFSD2A.html",
+        "tests/expected/report/genes/MFSD2A.html"
+    )
+    .starts_with("26c26\n")); // Ignore the timestamp in line 26
+    assert!(test_difference(
+        "tests/genes/RP3-342P20.2.html",
+        "tests/expected/report/genes/RP3-342P20.2.html"
+    )
+    .starts_with("26c26\n")); // Ignore the timestamp in line 26
+    assert!(test_difference(
+        "tests/details/a/C1QC.html",
+        "tests/expected/report/details/a/C1QC.html"
+    )
+    .starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(test_difference(
+        "tests/details/a/MFSD2A.html",
+        "tests/expected/report/details/a/MFSD2A.html"
+    )
+    .starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(test_difference(
+        "tests/details/a/RP3-342P20.2.html",
+        "tests/expected/report/details/a/RP3-342P20.2.html"
+    )
+    .starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(test_difference(
+        "tests/details/b/C1QC.html",
+        "tests/expected/report/details/b/C1QC.html"
+    )
+    .starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(test_difference(
+        "tests/details/b/MFSD2A.html",
+        "tests/expected/report/details/b/MFSD2A.html"
+    )
+    .starts_with("25c25\n")); // Ignore the timestamp in line 25
+    assert!(test_difference(
+        "tests/details/b/RP3-342P20.2.html",
+        "tests/expected/report/details/b/RP3-342P20.2.html"
+    )
+    .starts_with("25c25\n")); // Ignore the timestamp in line 25
     fs::remove_dir_all("tests/genes").unwrap();
     fs::remove_dir_all("tests/details").unwrap();
 }
-
 
 #[test]
 fn test_collapse_reads_to_fragments_two_cluster() {

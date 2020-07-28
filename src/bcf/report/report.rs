@@ -38,8 +38,8 @@ pub fn oncoprint(
                 .collect_vec();
             let alt_alleles = &alleles[1..];
             let ref_allele = alleles[0].to_owned();
-            let ann = record.info(b"ANN").string()?;
 
+            let ann = record.info(b"ANN").string()?;
             if let Some(ann) = ann {
                 for alt_allele in alt_alleles {
                     let variant = if alt_allele == b"<DEL>" {
@@ -254,17 +254,6 @@ impl From<&Record> for Vec<GeneRecord> {
             };
             gene_vec.push(alt);
         }
-
-        for protein_alt in record.protein_alterations.iter().sorted().unique() {
-            let alt = GeneRecord {
-                sample: record.sample.to_owned(),
-                gene: record.gene.to_owned(),
-                alteration: protein_alt.to_owned(),
-                variants: record.variants.iter().sorted().unique().join("/"),
-            };
-            gene_vec.push(alt);
-        }
-
         gene_vec
     }
 }

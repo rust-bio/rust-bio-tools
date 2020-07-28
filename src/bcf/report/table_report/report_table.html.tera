@@ -33,8 +33,8 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="../../index1.html">Oncoprint</a></li>
-        <li class="breadcrumb-item"><a href="../../genes/{{ gene|safe }}.html">{{ gene|safe }}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{ sample }}</li>
+        <li class="breadcrumb-item"><a href="../../genes/{{ gene|safe }}.html">gene: {{ gene|safe }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">sample: {{ sample }}</li>
     </ol>
 </nav>
 <div class="container-fluid ">

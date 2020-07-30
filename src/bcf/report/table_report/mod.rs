@@ -1,5 +1,5 @@
 mod alignment_reader;
-mod create_report_table;
+pub mod create_report_table;
 mod fasta_reader;
 mod static_reader;
 

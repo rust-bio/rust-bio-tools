@@ -9,6 +9,7 @@ use serde_derive::Serialize;
 use serde_json;
 use tera::{self, Context, Tera};
 
+use crate::bcf::report::table_report::create_report_table::get_ann_description;
 use chrono::{DateTime, Local};
 use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::{self, Read};
@@ -20,14 +21,25 @@ use std::path::Path;
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
     output_path: &str,
-    vep_annotation: bool,
 ) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
+    let mut impact_data = Vec::new();
+    let mut clin_sig_data = Vec::new();
     let mut unique_genes = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
+        let mut impacts = HashMap::new();
+        let mut clin_sigs = HashMap::new();
+        let mut ann_indices = HashMap::new();
         let mut bcf_reader = bcf::Reader::from_path(path)?;
+        let header = bcf_reader.header().clone();
+        let header_records = header.header_records();
+        let ann_fields: Vec<_> = get_ann_description(header_records).unwrap();
+
+        for (i, field) in ann_fields.iter().enumerate() {
+            ann_indices.insert(field, i);
+        }
 
         for res in bcf_reader.records() {
             let mut record = res?;
@@ -38,6 +50,10 @@ pub fn oncoprint(
                 .collect_vec();
             let alt_alleles = &alleles[1..];
             let ref_allele = alleles[0].to_owned();
+
+            let _af = record.format(b"AF").float()?[0]
+                .into_iter()
+                .fold(f32::INFINITY, |a, &b| a.min(b));
 
             let ann = record.info(b"ANN").string()?;
             if let Some(ann) = ann {
@@ -65,18 +81,21 @@ pub fn oncoprint(
                             continue;
                         }
 
-                        let impact = str::from_utf8(fields[2])?;
-                        let gene = str::from_utf8(fields[3])?;
-                        let dna_alteration = if vep_annotation {
-                            str::from_utf8(fields[10])?
-                        } else {
-                            str::from_utf8(fields[9])?
-                        };
-                        let protein_alteration = if vep_annotation {
-                            str::from_utf8(fields[11])?
-                        } else {
-                            str::from_utf8(fields[10])?
-                        };
+                        let impact = str::from_utf8(
+                            fields[*ann_indices.get(&String::from("IMPACT")).expect("No field named IMPACT found. Please only use VEP-annotated VCF-files.")],
+                        )?;
+                        let clin_sig = str::from_utf8(
+                            fields[*ann_indices.get(&String::from("CLIN_SIG")).expect("No field named CLIN_SIG found. Please only use VEP-annotated VCF-files.")],
+                        )?;
+                        let gene = str::from_utf8(
+                            fields[*ann_indices.get(&String::from("Gene")).expect("No field named Gene found. Please only use VEP-annotated VCF-files.")],
+                        )?;
+                        let dna_alteration = str::from_utf8(
+                            fields[*ann_indices.get(&String::from("HGVSc")).expect("No field named HGVSc found. Please only use VEP-annotated VCF-files.")],
+                        )?;
+                        let protein_alteration = str::from_utf8(
+                            fields[*ann_indices.get(&String::from("HGVSp")).expect("No field named HGVSp found. Please only use VEP-annotated VCF-files.")],
+                        )?;
 
                         let gene_rec = unique_genes.entry(gene.to_owned()).or_insert_with(|| 0);
                         *gene_rec += 1;
@@ -89,7 +108,18 @@ pub fn oncoprint(
                             rec.protein_alterations.push(protein_alteration.to_owned());
                         }
                         rec.variants.push(variant.to_owned());
-                        rec.impact.push((variant.to_owned(), impact.to_owned()))
+
+                        let imp_rec = impacts
+                            .entry(gene.to_owned())
+                            .or_insert_with(|| Impact::new(sample.to_owned(), gene.to_owned()));
+                        imp_rec.impact.push(impact.to_owned());
+                        let clin_rec = clin_sigs
+                            .entry(gene.to_owned())
+                            .or_insert_with(|| ClinSig::new(sample.to_owned(), gene.to_owned()));
+                        let sigs: Vec<_> = clin_sig.split('&').collect();
+                        for s in sigs {
+                            clin_rec.clin_sig.push(s.to_owned());
+                        }
                     }
                 }
             }
@@ -107,6 +137,16 @@ pub fn oncoprint(
             for rec in gene_records {
                 gene_entry.push(rec);
             }
+
+            // data for impact
+            let impact = impacts.get(gene).unwrap();
+            let final_impacts = Vec::<FinalImpact>::from(impact);
+            impact_data.push(final_impacts);
+
+            // data for clin_sig
+            let cls = clin_sigs.get(gene).unwrap();
+            let final_clin_sig = Vec::<FinalClinSig>::from(cls);
+            clin_sig_data.push(final_clin_sig);
         }
     }
 
@@ -145,6 +185,9 @@ pub fn oncoprint(
         .sorted()
         .collect();
 
+    let impact_data: Vec<_> = impact_data.iter().flatten().collect();
+    let clin_sig_data: Vec<_> = clin_sig_data.iter().flatten().collect();
+
     let page_size = 100;
 
     let mut v = Vec::from_iter(unique_genes);
@@ -171,9 +214,20 @@ pub fn oncoprint(
             .filter(|entry| sorted_genes.contains(&&entry.gene))
             .collect();
 
+        let impact_page_data: Vec<_> = impact_data
+            .iter()
+            .filter(|entry| sorted_genes.contains(&&entry.gene))
+            .collect();
+
+        let clin_sig_page_data: Vec<_> = clin_sig_data
+            .iter()
+            .filter(|entry| sorted_genes.contains(&&entry.gene))
+            .collect();
+
         let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
-        let values = json!({ "values": page_data });
-        vl_specs["data"] = values;
+        let values = json!({"main": page_data , "impact": impact_page_data , "clin_sig": clin_sig_page_data});
+
+        vl_specs["datasets"] = values;
 
         let mut packer = Packer::new();
         let options = PackOptions::new();
@@ -218,8 +272,38 @@ struct Record {
     protein_alterations: Vec<String>,
     #[new(default)]
     variants: Vec<String>,
+}
+
+#[derive(new, Debug)]
+struct Impact {
+    sample: String,
+    gene: String,
     #[new(default)]
-    impact: Vec<(String, String)>,
+    impact: Vec<String>,
+}
+
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+struct FinalImpact {
+    sample: String,
+    gene: String,
+    count: u32,
+    impact: String,
+}
+
+#[derive(new, Debug)]
+struct ClinSig {
+    sample: String,
+    gene: String,
+    #[new(default)]
+    clin_sig: Vec<String>,
+}
+
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+struct FinalClinSig {
+    sample: String,
+    gene: String,
+    count: u32,
+    clin_sig: String,
 }
 
 // Record for the first stage of the report
@@ -230,7 +314,6 @@ struct FinalRecord {
     dna_alterations: String,
     protein_alterations: String,
     variants: String,
-    impact: String,
 }
 
 // Record for the second stage of the report
@@ -260,20 +343,6 @@ impl From<&Record> for Vec<GeneRecord> {
 
 impl From<&Record> for FinalRecord {
     fn from(record: &Record) -> Self {
-        let mut imp_map = HashMap::new();
-        let mut impact_vec = Vec::new();
-        for (variant, imp) in &record.impact {
-            let rec = imp_map.entry(variant.to_owned()).or_insert_with(|| 0);
-            if imp.to_uppercase() == "HIGH" {
-                *rec += 1;
-            }
-        }
-
-        for (variant, impact) in imp_map {
-            let i = variant + "=" + &impact.to_string();
-            impact_vec.push(i);
-        }
-
         FinalRecord {
             sample: record.sample.to_owned(),
             gene: record.gene.to_owned(),
@@ -285,7 +354,56 @@ impl From<&Record> for FinalRecord {
                 .unique()
                 .join(", "),
             variants: record.variants.iter().sorted().unique().join("/"),
-            impact: impact_vec.iter().join("/"),
         }
+    }
+}
+
+impl From<&Impact> for Vec<FinalImpact> {
+    fn from(impact: &Impact) -> Self {
+        let mut imp_map = HashMap::new();
+        for i in &impact.impact {
+            let rec = imp_map.entry(i.to_owned()).or_insert_with(|| 0);
+            *rec += 1;
+        }
+
+        let mut res = Vec::new();
+
+        for (imp, count) in imp_map {
+            let record = FinalImpact {
+                sample: impact.sample.clone(),
+                gene: impact.gene.clone(),
+                count: count,
+                impact: imp,
+            };
+
+            res.push(record);
+        }
+
+        res
+    }
+}
+
+impl From<&ClinSig> for Vec<FinalClinSig> {
+    fn from(clin: &ClinSig) -> Self {
+        let mut clin_map = HashMap::new();
+        for i in &clin.clin_sig {
+            let rec = clin_map.entry(i.to_owned()).or_insert_with(|| 0);
+            *rec += 1;
+        }
+
+        let mut res = Vec::new();
+
+        for (c, count) in clin_map {
+            let record = FinalClinSig {
+                sample: clin.sample.clone(),
+                gene: clin.gene.clone(),
+                count: count,
+                clin_sig: c,
+            };
+
+            res.push(record);
+        }
+
+        res
     }
 }

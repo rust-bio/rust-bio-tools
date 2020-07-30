@@ -1,13 +1,20 @@
 {
   "$schema":"https://vega.github.io/schema/vega-lite/v4.json",
-  "data":{},
+  "datasets":{
+    "main": {},
+    "impact": {},
+    "clin_sig": {}
+  },
   "autosize":{
     "type":"fit",
     "contains":"padding"
   },
-  "spacing": 15,
+  "spacing": 30,
   "vconcat":[
-    {
+    { "data":
+      {
+        "name": "main"
+      },
       "mark":"bar",
       "height": 100,
       "encoding":{
@@ -36,6 +43,7 @@
           "field":"count_variants",
           "type":"nominal",
           "title":"Variants",
+          "legend": null,
           "scale":{
             "domain":[
               "SNV",
@@ -63,12 +71,17 @@
       }
     },
     {
-      "spacing":15,
+      "spacing":30,
       "bounds":"flush",
+      "resolve": {"scale": {"color": "independent"}},
       "hconcat":[
         {
           "layer":[
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":350,
@@ -166,6 +179,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":250,
@@ -263,6 +280,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":200,
@@ -360,6 +381,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":170,
@@ -457,6 +482,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":145,
@@ -554,6 +583,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":120,
@@ -651,6 +684,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":95,
@@ -748,6 +785,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":70,
@@ -847,6 +888,10 @@
           ]
         },
         {
+          "data":
+          {
+            "name": "main"
+          },
           "mark":"bar",
           "width":100,
           "encoding":{
@@ -872,6 +917,7 @@
               "field":"count_variants",
               "type":"nominal",
               "title":"Variants",
+              "legend": null,
               "scale":{
                 "domain":[
                   "SNV",
@@ -883,7 +929,7 @@
                   "BND",
                   "Complex"
                 ],
-                "range":[
+                "scheme":[
                   "#a6cee3",
                   "#1f78b4",
                   "#b2df8a",
@@ -899,6 +945,9 @@
           }
         },
         {
+          "data":{
+            "name":"impact"
+          },
           "mark":"bar",
           "width":100,
           "encoding":{
@@ -907,43 +956,91 @@
               "type":"ordinal",
               "sort":{
                 "op":"valid",
-                "field":"count_variants",
+                "field":"gene",
                 "order":"descending"
               },
-              "axis": null
+              "axis":null
             },
             "x":{
-              "field":"count_impact",
+              "field":"count",
               "aggregate":"sum",
               "type":"quantitative",
-              "axis": {
-                "title": "impact"
+              "axis":{
+                "title":"impact"
               }
             },
             "color":{
-              "field":"count_variants",
+              "field":"impact",
               "type":"nominal",
-              "title":"Variants",
+              "title":"Impact",
               "scale":{
                 "domain":[
-                  "SNV",
-                  "MNV",
-                  "DEL",
-                  "INS",
-                  "DUP",
-                  "INV",
-                  "BND",
-                  "Complex"
+                  "HIGH",
+                  "LOW",
+                  "MODERATE",
+                  "MODIFIER"
                 ],
-                "range":[
-                  "#a6cee3",
-                  "#1f78b4",
-                  "#b2df8a",
-                  "#33a02c",
-                  "#fb9a99",
-                  "#e31a1c",
-                  "#fdbf6f",
-                  "#ff7f00"
+                "range": [
+                  "31a354",
+                  "756bb1",
+                  "7f7f7f",
+                  "bcbd22"
+                ],
+                "type":"ordinal"
+              }
+            }
+          }
+        },
+        {
+          "data":{
+            "name":"clin_sig"
+          },
+          "mark":"bar",
+          "width":100,
+          "encoding":{
+            "y":{
+              "field":"gene",
+              "type":"ordinal",
+              "axis":null
+            },
+            "x":{
+              "field":"count",
+              "aggregate":"sum",
+              "type":"quantitative",
+              "axis":{
+                "title":"clin_sig"
+              }
+            },
+            "color":{
+              "field":"clin_sig",
+              "type":"nominal",
+              "title":"Clin Sig",
+              "scale":{
+                "domain":[
+                  "association",
+                  "benign",
+                  "drug_response",
+                  "likely_benign",
+                  "likely_pathogenic",
+                  "not_provided",
+                  "other",
+                  "pathogenic",
+                  "protective",
+                  "risk_factor",
+                  "uncertain_significance"
+                ],
+                "range": [
+                  "17becf",
+                  "e377c2",
+                  "ad494a",
+                  "e7ba52",
+                  "b3de69",
+                  "83bcb6",
+                  "e45756",
+                  "9e765f",
+                  "ce6dbd",
+                  "9edae5",
+                  "fdae6b"
                 ],
                 "type":"ordinal"
               }
@@ -952,5 +1049,11 @@
         }
       ]
     }
-  ]
+  ],
+  "config": {
+    "legend":{
+      "orient": "bottom",
+      "direction": "vertical"
+    }
+  }
 }

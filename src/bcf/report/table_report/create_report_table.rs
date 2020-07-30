@@ -35,11 +35,17 @@ pub(crate) fn make_table_report(
     fasta_path: &Path,
     bam_path: &Path,
 ) -> Result<(HashMap<String, Vec<Report>>, Vec<String>), Box<dyn Error>> {
+    // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
     let mut reports = HashMap::new();
+    let mut ann_indices = HashMap::new();
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     let header = vcf.header().clone();
     let header_records = header.header_records();
     let ann_field_description: Vec<_> = get_ann_description(header_records).unwrap();
+
+    for (i, field) in ann_field_description.iter().enumerate() {
+        ann_indices.insert(field, i);
+    }
 
     for v in vcf.records() {
         let mut variant = v.unwrap();
@@ -75,7 +81,11 @@ pub(crate) fn make_table_report(
             for entry in ann {
                 let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
 
-                let gene = std::str::from_utf8(fields[3])?;
+                let gene = std::str::from_utf8(
+                    fields[*ann_indices.get(&String::from("Gene")).expect(
+                        "No field named Gene found. Please only use VEP-annotated VCF-files.",
+                    )],
+                )?;
                 genes.push(gene);
 
                 let mut ann_strings = Vec::new();
@@ -226,7 +236,7 @@ pub(crate) fn make_table_report(
     Ok(result)
 }
 
-fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>> {
+pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>> {
     for rec in header_records {
         match rec {
             rust_htslib::bcf::HeaderRecord::Info { key: _, values } => {
@@ -235,8 +245,11 @@ fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>>
                     let fields: Vec<_> = description.split('|').collect();
                     let mut owned_fields = Vec::new();
                     for mut entry in fields {
-                        entry = entry.trim_start_matches(&"\"Functional annotations: '");
-                        entry = entry.trim_end_matches(&"'\"");
+                        entry = entry.trim();
+                        entry = entry.trim_start_matches(
+                            &"\"Consequence annotations from Ensembl VEP. Format: ",
+                        );
+                        entry = entry.trim_end_matches(&"\"");
                         entry = entry.trim();
                         owned_fields.push(entry.to_owned());
                     }

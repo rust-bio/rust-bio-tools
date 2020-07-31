@@ -97,8 +97,10 @@ pub fn oncoprint(
                             fields[*ann_indices.get(&String::from("HGVSp")).expect("No field named HGVSp found. Please only use VEP-annotated VCF-files.")],
                         )?;
 
-                        let gene_rec = unique_genes.entry(gene.to_owned()).or_insert_with(|| 0);
-                        *gene_rec += 1;
+                        let gene_rec = unique_genes
+                            .entry(gene.to_owned())
+                            .or_insert_with(|| Vec::new());
+                        gene_rec.push(sample.to_owned());
 
                         let rec = genes
                             .entry(gene.to_owned())
@@ -184,13 +186,23 @@ pub fn oncoprint(
         .flatten()
         .sorted()
         .collect();
+    let mut sort_genes = HashMap::new();
+
+    // remove duplicate samples and calculate order for oncoprint
+    for (gene, mut samples) in unique_genes {
+        samples.sort();
+        samples.dedup();
+        sort_genes.insert(gene.to_owned(), samples.len());
+    }
 
     let impact_data: Vec<_> = impact_data.iter().flatten().collect();
     let clin_sig_data: Vec<_> = clin_sig_data.iter().flatten().collect();
 
     let page_size = 100;
 
-    let mut v = Vec::from_iter(unique_genes);
+    let order = json!(sort_genes);
+
+    let mut v = Vec::from_iter(sort_genes);
     v.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
 
     let pages = v.len() / page_size;
@@ -239,6 +251,7 @@ pub fn oncoprint(
         let data = serde_json::to_string(&packed_specs)?;
         context.insert("oncoprint", &data);
         context.insert("pages", &(pages + 1));
+        context.insert("order", &serde_json::to_string(&order)?);
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
         context.insert("version", &env!("CARGO_PKG_VERSION"));
@@ -288,6 +301,7 @@ struct FinalImpact {
     gene: String,
     count: u32,
     impact: String,
+    sort: usize,
 }
 
 #[derive(new, Debug)]
@@ -304,6 +318,7 @@ struct FinalClinSig {
     gene: String,
     count: u32,
     clin_sig: String,
+    sort: usize,
 }
 
 // Record for the first stage of the report
@@ -314,6 +329,7 @@ struct FinalRecord {
     dna_alterations: String,
     protein_alterations: String,
     variants: String,
+    sort: usize,
 }
 
 // Record for the second stage of the report
@@ -354,6 +370,7 @@ impl From<&Record> for FinalRecord {
                 .unique()
                 .join(", "),
             variants: record.variants.iter().sorted().unique().join("/"),
+            sort: 0,
         }
     }
 }
@@ -374,6 +391,7 @@ impl From<&Impact> for Vec<FinalImpact> {
                 gene: impact.gene.clone(),
                 count: count,
                 impact: imp,
+                sort: 0,
             };
 
             res.push(record);
@@ -399,6 +417,7 @@ impl From<&ClinSig> for Vec<FinalClinSig> {
                 gene: clin.gene.clone(),
                 count: count,
                 clin_sig: c,
+                sort: 0,
             };
 
             res.push(record);

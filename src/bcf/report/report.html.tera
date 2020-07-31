@@ -65,12 +65,15 @@
         </script>
 
         <script>
+            var order = {{ order | safe }};
             var spec = {{ oncoprint | safe }};
             const unpacker = new jsonm.Unpacker();
             spec = unpacker.unpack(spec);
             let changed_records = []
             let delete_records = []
             spec.datasets.main.forEach(function(record, j) {
+                // create new json records if types like "Complex/SNV" occure.
+                // These are then displayed visualized in multiple layers in the vega plot.
                 let variants = record.variants.split("/");
                 if (variants.length > 1) {
                     for (var i = 0; i < variants.length; i++) {
@@ -79,7 +82,6 @@
                         layer_record[field] = variants[i];
                         layer_record.count_variants = variants[i];
                         changed_records.push(layer_record);
-                        console.log(layer_record);
                     }
                     delete_records.push(j);
                 } else {
@@ -88,11 +90,18 @@
                 }
             });
             for (let i = 0; i < delete_records.length; i++) {
-                console.log(spec.data.values[delete_records[i]-i]);
                 spec.datasets.main.splice(delete_records[i]-i, 1);
             }
             changed_records.forEach(function(record) {
                 spec.datasets.main.push(record);
+            });
+
+            // add sort attribute to data that doesnt have access to the main data
+            spec.datasets.impact.forEach(function(record) {
+                record.sort = order[record.gene];
+            });
+            spec.datasets.clin_sig.forEach(function(record) {
+                record.sort = order[record.gene];
             });
             vegaEmbed('#oncoprint', spec).then(function(result) {
                 result.view.addEventListener('click', function(event, item) {

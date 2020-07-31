@@ -954,10 +954,9 @@
             "y":{
               "field":"gene",
               "type":"ordinal",
-              "sort":{
-                "op":"valid",
-                "field":"gene",
-                "order":"descending"
+              "sort": {
+                "field": "sort",
+                "order": "descending"
               },
               "axis":null
             },
@@ -1001,7 +1000,11 @@
             "y":{
               "field":"gene",
               "type":"ordinal",
-              "axis":null
+              "sort": {
+                "field": "sort",
+                "order": "descending"
+              },
+              "axis": null
             },
             "x":{
               "field":"count",

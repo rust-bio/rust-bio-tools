@@ -65,6 +65,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             &matches.value_of("vcf").unwrap(),
             matches.value_of("api-path").unwrap().to_string(),
             &matches.value_of("field").unwrap(),
+            match matches.is_present("datasources") {
+                true => Some(matches.values_of("datasources").unwrap().collect()),
+                false => None,
+            },
             value_t!(matches, "genes-per-request", usize).unwrap(),
         ),
         ("oncoprint", Some(matches)) => {
@@ -74,7 +78,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 sample_calls.insert(e[0].to_owned(), e[1].to_owned());
             }
 
-            bcf::oncoprint::oncoprint(&sample_calls)
+            bcf::oncoprint::oncoprint(&sample_calls, matches.is_present("vep-annotation"))
         }
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {

@@ -67,6 +67,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             &matches.value_of("vcf").unwrap(),
             matches.value_of("api-path").unwrap().to_string(),
             &matches.value_of("field").unwrap(),
+            match matches.is_present("datasources") {
+                true => Some(matches.values_of("datasources").unwrap().collect()),
+                false => None,
+            },
             value_t!(matches, "genes-per-request", usize).unwrap(),
         ),
         ("report", Some(matches)) => {

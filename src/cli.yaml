@@ -187,6 +187,14 @@ subcommands:
               short: f
               default_value: dgiDB_drugs
               help: Info field name to be used for annotation.
+          - datasources:
+              long: sources
+              short: s
+              value_name: str
+              multiple: true
+              help: |
+                A list of data sources included in query. If omitted all sources are considered.
+                A list of all sources can be found at http://dgidb.org/api/v2/interaction_sources.json
           - genes-per-request:
               long: genes-per-request
               short: g

@@ -193,7 +193,7 @@ subcommands:
               value_name: str
               multiple: true
               help: |
-                A list of data sources included in query. If ommited all sources are concidered.
+                A list of data sources included in query. If omitted all sources are considered.
                 A list of all sources can be found at http://dgidb.org/api/v2/interaction_sources.json
           - genes-per-request:
               long: genes-per-request

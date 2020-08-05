@@ -265,6 +265,19 @@ fn test_vcf_annotate_dgidb() {
 }
 
 #[test]
+fn test_vcf_annotate_dgidb_drugbank() {
+    assert!(
+        Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf -s DrugBank> /tmp/annotate_dgidb_drugbank_test.bcf")
+            .spawn().unwrap().wait().unwrap().success());
+    test_output(
+        "/tmp/annotate_dgidb_drugbank_test.bcf",
+        "tests/expected/annotate_dgidb_drugbank_test.bcf",
+    );
+}
+
+#[test]
 fn test_stats_fasta_file() {
     assert!(Command::new("bash")
         .arg("-c")

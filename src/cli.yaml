@@ -190,6 +190,7 @@ subcommands:
           - datasources:
               long: sources
               short: s
+              value_name: str
               multiple: true
               help: |
                 A list of data sources included in query. If ommited all sources are concidered.

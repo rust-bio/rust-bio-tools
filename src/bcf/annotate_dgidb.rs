@@ -36,7 +36,8 @@ pub fn annotate_dgidb(
     datasources: Option<Vec<&str>>,
     genes_per_request: usize,
 ) -> Result<(), Box<dyn Error>> {
-    let gene_drug_interactions = request_interaction_drugs(vcf_path, api_path, datasources, genes_per_request)?;
+    let gene_drug_interactions =
+        request_interaction_drugs(vcf_path, api_path, datasources, genes_per_request)?;
     modify_vcf_entries(vcf_path, gene_drug_interactions, field_name)
 }
 
@@ -67,7 +68,6 @@ fn request_interaction_drugs(
         let mut slice_api_path = api_path.clone();
         slice_api_path.push_str(gene_slice.join(",").as_str());
         slice_api_path.push_str(datasources.as_str());
-        dbg!(&slice_api_path);
         let res: Dgidb = reqwest::get(&slice_api_path)?.json()?;
 
         for term in res.matched_terms {

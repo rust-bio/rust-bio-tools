@@ -108,7 +108,9 @@
             });
             vegaEmbed('#oncoprint', spec).then(function(result) {
                 result.view.addEventListener('click', function(event, item) {
-                    window.location.href = 'genes/' + item.datum.gene + '.html';
+                    if (item.datum.gene !== undefined) {
+                        window.location.href = 'genes/' + item.datum.gene + '.html';
+                    }
                 });
             });
 

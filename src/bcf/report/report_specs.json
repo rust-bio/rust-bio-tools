@@ -37,7 +37,7 @@
           "aggregate":"count",
           "type":"quantitative",
           "axis": {
-            "title": "variant distribution per sample"
+            "title": "count per sample"
           }
         },
         "color":{
@@ -911,7 +911,7 @@
               "aggregate":"count",
               "type":"quantitative",
               "axis": {
-                "title": "variant distribution per gene"
+                "title": "count per gene"
               }
             },
             "color":{
@@ -981,10 +981,10 @@
                   "MODIFIER"
                 ],
                 "range": [
-                  "31a354",
-                  "756bb1",
-                  "7f7f7f",
-                  "bcbd22"
+                  "#31a354",
+                  "#756bb1",
+                  "#7f7f7f",
+                  "#bcbd22"
                 ],
                 "type":"ordinal"
               }
@@ -1034,17 +1034,17 @@
                   "uncertain_significance"
                 ],
                 "range": [
-                  "17becf",
-                  "e377c2",
-                  "ad494a",
-                  "e7ba52",
-                  "b3de69",
-                  "83bcb6",
-                  "e45756",
-                  "9e765f",
-                  "ce6dbd",
-                  "9edae5",
-                  "fdae6b"
+                  "#17becf",
+                  "#e377c2",
+                  "#ad494a",
+                  "#e7ba52",
+                  "#b3de69",
+                  "#83bcb6",
+                  "#e45756",
+                  "#9e765f",
+                  "#ce6dbd",
+                  "#9edae5",
+                  "#fdae6b"
                 ],
                 "type":"ordinal"
               }

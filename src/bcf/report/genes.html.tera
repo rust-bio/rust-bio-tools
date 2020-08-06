@@ -83,7 +83,9 @@
             });
             vegaEmbed('#oncoprint', spec).then(function(result) {
                 result.view.addEventListener('click', function(event, item) {
-                    window.location.href = '../details/' + item.datum.sample + '/' + item.datum.gene + '.html';
+                    if (item.datum.gene !== undefined && item.datum.sample !== undefined) {
+                        window.location.href = '../details/' + item.datum.sample + '/' + item.datum.gene + '.html';
+                    }
                 });
             });
 

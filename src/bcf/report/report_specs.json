@@ -3,7 +3,8 @@
   "datasets":{
     "main": {},
     "impact": {},
-    "clin_sig": {}
+    "clin_sig": {},
+    "allel_frequency": {}
   },
   "autosize":{
     "type":"fit",
@@ -42,7 +43,7 @@
         "color":{
           "field":"count_variants",
           "type":"nominal",
-          "title":"Variants",
+          "title":"variants",
           "legend": null,
           "scale":{
             "domain":[
@@ -129,7 +130,7 @@
                 "color":{
                   "field":"variants1",
                   "type":"nominal",
-                  "title":"Variants",
+                  "title":"variants",
                   "scale":{
                     "domain":[
                       "SNV",
@@ -230,7 +231,7 @@
                 "color":{
                   "field":"variants2",
                   "type":"nominal",
-                  "title":"Variants",
+                  "title":"variants",
                   "scale":{
                     "domain":[
                       "SNV",
@@ -331,7 +332,7 @@
                 "color":{
                   "field":"variants3",
                   "type":"nominal",
-                  "title":"Variants",
+                  "title":"variants",
                   "scale":{
                     "domain":[
                       "SNV",
@@ -432,7 +433,7 @@
                 "color":{
                   "field":"variants4",
                   "type":"nominal",
-                  "title":"Variants",
+                  "title":"variants",
                   "scale":{
                     "domain":[
                       "SNV",
@@ -533,7 +534,7 @@
                 "color":{
                   "field":"variants5",
                   "type":"nominal",
-                  "title":"Variants",
+                  "title":"variants",
                   "scale":{
                     "domain":[
                       "SNV",
@@ -634,7 +635,7 @@
                 "color":{
                   "field":"variants6",
                   "type":"nominal",
-                  "title":"Variants",
+                  "title":"variants",
                   "scale":{
                     "domain":[
                       "SNV",
@@ -735,7 +736,7 @@
                 "color":{
                   "field":"variants7",
                   "type":"nominal",
-                  "title":"Variants",
+                  "title":"variants",
                   "scale":{
                     "domain":[
                       "SNV",
@@ -836,7 +837,7 @@
                 "color":{
                   "field":"variants8",
                   "type":"nominal",
-                  "title":"Variants",
+                  "title":"variants",
                   "scale":{
                     "domain":[
                       "SNV",
@@ -916,7 +917,7 @@
             "color":{
               "field":"count_variants",
               "type":"nominal",
-              "title":"Variants",
+              "title":"variants",
               "legend": null,
               "scale":{
                 "domain":[
@@ -971,7 +972,7 @@
             "color":{
               "field":"impact",
               "type":"nominal",
-              "title":"Impact",
+              "title":"impact",
               "scale":{
                 "domain":[
                   "HIGH",
@@ -1011,13 +1012,13 @@
               "aggregate":"sum",
               "type":"quantitative",
               "axis":{
-                "title":"clin_sig"
+                "title":"clinical significance"
               }
             },
             "color":{
               "field":"clin_sig",
               "type":"nominal",
-              "title":"Clin Sig",
+              "title":"clinical significance",
               "scale":{
                 "domain":[
                   "association",
@@ -1048,6 +1049,40 @@
                 "type":"ordinal"
               }
             }
+          }
+        },
+        {
+          "data":{
+            "name":"allel_frequency"
+          },
+          "mark":"point",
+          "width":100,
+          "encoding":{
+            "y":{
+              "field":"gene",
+              "type":"ordinal",
+              "sort": {
+                "field": "sort",
+                "order": "descending"
+              },
+              "axis": null
+            },
+            "x":{
+              "field":"allel_frequency",
+              "type":"quantitative",
+              "axis":{
+                "title":"allel frequency"
+              }
+            },
+            "color":{
+              "field":"sample",
+              "type":"nominal",
+              "title":"sample"
+            },
+            "tooltip": [{
+              "field": "allel_frequency",
+              "type": "quantitative"
+            }]
           }
         }
       ]

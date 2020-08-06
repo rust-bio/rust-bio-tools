@@ -26,6 +26,7 @@ pub fn oncoprint(
     let mut gene_data = HashMap::new();
     let mut impact_data = Vec::new();
     let mut clin_sig_data = Vec::new();
+    let mut af_data = Vec::new();
     let mut unique_genes = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
@@ -34,6 +35,10 @@ pub fn oncoprint(
         let mut ann_indices = HashMap::new();
         let mut bcf_reader = bcf::Reader::from_path(path)?;
         let header = bcf_reader.header().clone();
+        let mut sample_names = Vec::new();
+        for s in header.samples() {
+            sample_names.push(String::from_utf8(s.to_owned()).unwrap());
+        }
         let header_records = header.header_records();
         let ann_fields: Vec<_> = get_ann_description(header_records).unwrap();
 
@@ -51,9 +56,7 @@ pub fn oncoprint(
             let alt_alleles = &alleles[1..];
             let ref_allele = alleles[0].to_owned();
 
-            let _af = record.format(b"AF").float()?[0]
-                .into_iter()
-                .fold(f32::INFINITY, |a, &b| a.min(b));
+            let allel_frequencies = record.format(b"AF").float()?[0].to_vec();
 
             let ann = record.info(b"ANN").string()?;
             if let Some(ann) = ann {
@@ -122,6 +125,16 @@ pub fn oncoprint(
                         for s in sigs {
                             clin_rec.clin_sig.push(s.to_owned());
                         }
+
+                        for (i, name) in sample_names.iter().enumerate() {
+                            let af = AllelFrequency {
+                                sample: sample.to_owned() + ":" + name,
+                                gene: gene.to_owned(),
+                                allel_frequency: allel_frequencies[i]
+                            };
+
+                            af_data.push(af);
+                        }
                     }
                 }
             }
@@ -151,6 +164,8 @@ pub fn oncoprint(
             clin_sig_data.push(final_clin_sig);
         }
     }
+
+
 
     let gene_path = output_path.to_owned() + "/genes/";
     fs::create_dir(Path::new(&gene_path))?;
@@ -236,8 +251,13 @@ pub fn oncoprint(
             .filter(|entry| sorted_genes.contains(&&entry.gene))
             .collect();
 
+        let af_page_data: Vec<_> = af_data
+            .iter()
+            .filter(|entry| sorted_genes.contains(&&entry.gene))
+            .collect();
+
         let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
-        let values = json!({"main": page_data , "impact": impact_page_data , "clin_sig": clin_sig_page_data});
+        let values = json!({"main": page_data , "impact": impact_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
 
         vl_specs["datasets"] = values;
 
@@ -286,6 +306,14 @@ struct Record {
     #[new(default)]
     variants: Vec<String>,
 }
+
+#[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
+struct AllelFrequency {
+    sample: String,
+    gene: String,
+    allel_frequency: f32,
+}
+
 
 #[derive(new, Debug)]
 struct Impact {

@@ -103,6 +103,9 @@
             spec.datasets.clin_sig.forEach(function(record) {
                 record.sort = order[record.gene];
             });
+            spec.datasets.allel_frequency.forEach(function(record) {
+                record.sort = order[record.gene];
+            });
             vegaEmbed('#oncoprint', spec).then(function(result) {
                 result.view.addEventListener('click', function(event, item) {
                     window.location.href = 'genes/' + item.datum.gene + '.html';

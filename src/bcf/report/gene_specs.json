@@ -1,6 +1,11 @@
 {
   "$schema":"https://vega.github.io/schema/vega-lite/v4.json",
-  "data":{},
+  "datasets":{
+    "main": {},
+    "impact": {},
+    "clin_sig": {},
+    "allel_frequency": {}
+  },
   "autosize":{
     "type":"fit",
     "contains":"padding"
@@ -8,6 +13,10 @@
   "spacing":15,
   "vconcat":[
     {
+      "data":
+      {
+        "name": "main"
+      },
       "mark":"bar",
       "height":100,
       "encoding":{
@@ -29,13 +38,14 @@
           "aggregate":"count",
           "type":"quantitative",
           "axis": {
-            "title": "variant distribution per sample"
+            "title": "count per sample"
           }
         },
         "color":{
           "field":"count_variants",
           "type":"nominal",
           "title":"Variants",
+          "legend": null,
           "scale":{
             "domain":[
               "SNV",
@@ -65,10 +75,15 @@
     {
       "spacing":15,
       "bounds":"flush",
+      "resolve": {"scale": {"color": "independent"}},
       "hconcat":[
         {
           "layer":[
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":350,
@@ -100,11 +115,7 @@
                 "y":{
                   "field":"alteration",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort": {}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -162,6 +173,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":250,
@@ -193,11 +208,7 @@
                 "y":{
                   "field":"alteration",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort": {}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -255,6 +266,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":200,
@@ -286,11 +301,7 @@
                 "y":{
                   "field":"alteration",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort":{}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -348,6 +359,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":170,
@@ -379,11 +394,7 @@
                 "y":{
                   "field":"alteration",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort":{}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -441,6 +452,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":145,
@@ -472,11 +487,7 @@
                 "y":{
                   "field":"alteration",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort":{}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -534,6 +545,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":120,
@@ -565,11 +580,7 @@
                 "y":{
                   "field":"alteration",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort":{}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -627,6 +638,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":95,
@@ -658,11 +673,7 @@
                 "y":{
                   "field":"alteration",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort":{}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -720,6 +731,10 @@
               }
             },
             {
+              "data":
+              {
+                "name": "main"
+              },
               "mark":{
                 "type":"square",
                 "size":70,
@@ -751,11 +766,7 @@
                 "y":{
                   "field":"alteration",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort":{}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -815,17 +826,17 @@
           ]
         },
         {
+          "data":
+          {
+            "name": "main"
+          },
           "mark":"bar",
           "width":100,
           "encoding":{
             "y":{
               "field":"alteration",
               "type":"ordinal",
-              "sort":{
-                "op":"valid",
-                "field":"count_variants",
-                "order":"descending"
-              },
+              "sort":{},
               "axis":null
             },
             "x":{
@@ -833,13 +844,14 @@
               "aggregate":"count",
               "type":"quantitative",
               "axis": {
-                "title": "variant distribution per alteration"
+                "title": "count per alteration"
               }
             },
             "color":{
               "field":"count_variants",
               "type":"nominal",
               "title":"Variants",
+              "legend": null,
               "scale":{
                 "domain":[
                   "SNV",
@@ -865,8 +877,114 @@
               }
             }
           }
+        },
+        {
+          "data":{
+            "name":"impact"
+          },
+          "mark":"bar",
+          "width":100,
+          "encoding":{
+            "y":{
+              "field":"alteration",
+              "type":"ordinal",
+              "sort":{},
+              "axis":null
+            },
+            "x":{
+              "field":"count",
+              "aggregate":"sum",
+              "type":"quantitative",
+              "axis":{
+                "title":"impact"
+              }
+            },
+            "color":{
+              "field":"impact",
+              "type":"nominal",
+              "title":"impact",
+              "scale":{
+                "domain":[
+                  "HIGH",
+                  "LOW",
+                  "MODERATE",
+                  "MODIFIER"
+                ],
+                "range": [
+                  "#31a354",
+                  "#756bb1",
+                  "#7f7f7f",
+                  "#bcbd22"
+                ],
+                "type":"ordinal"
+              }
+            }
+          }
+        },
+        {
+          "data":{
+            "name":"clin_sig"
+          },
+          "mark":"bar",
+          "width":100,
+          "encoding":{
+            "y":{
+              "field":"alteration",
+              "type":"ordinal",
+              "sort":{},
+              "axis": null
+            },
+            "x":{
+              "field":"count",
+              "aggregate":"sum",
+              "type":"quantitative",
+              "axis":{
+                "title":"clinical significance"
+              }
+            },
+            "color":{
+              "field":"clin_sig",
+              "type":"nominal",
+              "title":"clinical significance",
+              "scale":{
+                "domain":[
+                  "association",
+                  "benign",
+                  "drug_response",
+                  "likely_benign",
+                  "likely_pathogenic",
+                  "not_provided",
+                  "other",
+                  "pathogenic",
+                  "protective",
+                  "risk_factor",
+                  "uncertain_significance"
+                ],
+                "range": [
+                  "#17becf",
+                  "#e377c2",
+                  "#ad494a",
+                  "#e7ba52",
+                  "#b3de69",
+                  "#83bcb6",
+                  "#e45756",
+                  "#9e765f",
+                  "#ce6dbd",
+                  "#9edae5",
+                  "#fdae6b"
+                ],
+                "type":"ordinal"
+              }
+            }
+          }
         }
       ]
     }
-  ]
+  ],
+  "config": {
+    "legend":{
+      "orient": "bottom",
+      "direction": "vertical"
+    }
+  }
 }

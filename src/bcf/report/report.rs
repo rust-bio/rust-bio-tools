@@ -25,13 +25,17 @@ pub fn oncoprint(
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
     let mut impact_data = Vec::new();
+    let mut gene_impact_data = HashMap::new();
     let mut clin_sig_data = Vec::new();
+    let mut gene_clin_sig_data = HashMap::new();
     let mut af_data = Vec::new();
     let mut unique_genes = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
         let mut impacts = HashMap::new();
+        let mut gene_impacts = HashMap::new();
         let mut clin_sigs = HashMap::new();
+        let mut gene_clin_sigs = HashMap::new();
         let mut ann_indices = HashMap::new();
         let mut bcf_reader = bcf::Reader::from_path(path)?;
         let header = bcf_reader.header().clone();
@@ -118,12 +122,28 @@ pub fn oncoprint(
                             .entry(gene.to_owned())
                             .or_insert_with(|| Impact::new(sample.to_owned(), gene.to_owned()));
                         imp_rec.impact.push(impact.to_owned());
+
+                        let alt = if protein_alteration.is_empty() {
+                            dna_alteration
+                        } else {
+                            protein_alteration
+                        };
+                        let gene_imp_rec = gene_impacts
+                            .entry(gene.to_owned())
+                            .or_insert_with(|| Vec::new());
+                        gene_imp_rec.push(GeneImpact::new(alt.to_owned(), impact.to_owned()));
+
+                        let gene_clin_sig_rec = gene_clin_sigs
+                            .entry(gene.to_owned())
+                            .or_insert_with(|| Vec::new());
+
                         let clin_rec = clin_sigs
                             .entry(gene.to_owned())
                             .or_insert_with(|| ClinSig::new(sample.to_owned(), gene.to_owned()));
                         let sigs: Vec<_> = clin_sig.split('&').collect();
                         for s in sigs {
                             clin_rec.clin_sig.push(s.to_owned());
+                            gene_clin_sig_rec.push(GeneClinSig::new(alt.to_owned(), s.to_owned()));
                         }
 
                         for (i, name) in sample_names.iter().enumerate() {
@@ -146,6 +166,16 @@ pub fn oncoprint(
             let entry = data.entry(gene.to_owned()).or_insert_with(&Vec::new);
             entry.push(FinalRecord::from(record));
 
+            // data for first stage impact
+            let impact = impacts.get(gene).unwrap();
+            let final_impacts = Vec::<FinalImpact>::from(impact);
+            impact_data.push(final_impacts);
+
+            // data for first stage clin_sig
+            let cls = clin_sigs.get(gene).unwrap();
+            let final_clin_sig = Vec::<FinalClinSig>::from(cls);
+            clin_sig_data.push(final_clin_sig);
+
             // data for second stage
             let gene_entry = gene_data.entry(gene.to_owned()).or_insert_with(&Vec::new);
             let gene_records: Vec<GeneRecord> = Vec::<GeneRecord>::from(record);
@@ -153,15 +183,17 @@ pub fn oncoprint(
                 gene_entry.push(rec);
             }
 
-            // data for impact
-            let impact = impacts.get(gene).unwrap();
-            let final_impacts = Vec::<FinalImpact>::from(impact);
-            impact_data.push(final_impacts);
+            // data for second stage impact
+            let gene_impact = gene_impacts.get(gene).unwrap();
+            let final_gene_impacts = make_final_gene_impacts(gene_impact);
+            let e = gene_impact_data.entry(gene.to_owned()).or_insert_with(||Vec::new());
+            e.push(final_gene_impacts);
 
-            // data for clin_sig
-            let cls = clin_sigs.get(gene).unwrap();
-            let final_clin_sig = Vec::<FinalClinSig>::from(cls);
-            clin_sig_data.push(final_clin_sig);
+            // data for second stage clin_sig
+            let gene_clin_sig = gene_clin_sigs.get(gene).unwrap();
+            let final_gene_clin_sigs = make_final_gene_clin_sigs(gene_clin_sig);
+            let f = gene_clin_sig_data.entry(gene.to_owned()).or_insert_with(||Vec::new());
+            f.push(final_gene_clin_sigs);
         }
     }
 
@@ -176,15 +208,34 @@ pub fn oncoprint(
     let gene_specs: Value = serde_json::from_str(include_str!("gene_specs.json")).unwrap();
 
     for (gene, gene_data) in gene_data {
+        let mut alterations = HashMap::new();
+        for rec in &gene_data {
+            let entry = alterations.entry(&rec.alteration).or_insert_with(|| Vec::new());
+            entry.push(rec.sample.to_owned());
+        }
+        let mut sort_alterations = HashMap::new();
+        for (alteration, mut samples) in alterations {
+            samples.sort();
+            samples.dedup();
+            sort_alterations.insert(alteration, samples.len());
+        }
+        let mut order = Vec::from_iter(sort_alterations);
+        order.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
+        let order:Vec<_> = order.iter().map(|(x,_)| x).collect();
         let mut specs = gene_specs.clone();
-        let values = json!({ "values": gene_data });
-        specs["data"] = values;
+        let impact_data = gene_impact_data.get(&gene).unwrap();
+        let final_impact: Vec<_> = impact_data.iter().flatten().collect();
+        let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
+        let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().collect();
+        let values = json!({ "main": gene_data, "impact": final_impact, "clin_sig": final_clin_sig});
+        specs["datasets"] = values;
         let mut packer = Packer::new();
         let options = PackOptions::new();
         let packed_gene_specs = packer.pack(&specs, &options).unwrap();
         let mut context = Context::new();
         context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
         context.insert("gene", &gene);
+        context.insert("order", &serde_json::to_string(&json!(order))?);
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
         context.insert("version", &env!("CARGO_PKG_VERSION"));
@@ -215,10 +266,12 @@ pub fn oncoprint(
 
     let page_size = 100;
 
-    let order = json!(sort_genes);
+
 
     let mut v = Vec::from_iter(sort_genes);
     v.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
+    let ordered_genes: Vec<_> = v.iter().map(|(x,_)| x).collect();
+    let order = json!(ordered_genes);
 
     let pages = v.len() / page_size;
 
@@ -328,8 +381,33 @@ struct FinalImpact {
     sample: String,
     gene: String,
     count: u32,
+    impact: String
+}
+
+#[derive(new, Debug)]
+struct GeneImpact {
+    alteration: String,
     impact: String,
-    sort: usize,
+}
+
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+struct FinalGeneImpact {
+    alteration: String,
+    count: u32,
+    impact: String
+}
+
+#[derive(new, Debug)]
+struct GeneClinSig{
+    alteration: String,
+    clin_sig: String,
+}
+
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+struct FinalGeneClinSig {
+    alteration: String,
+    count: u32,
+    clin_sig: String
 }
 
 #[derive(new, Debug)]
@@ -345,8 +423,7 @@ struct FinalClinSig {
     sample: String,
     gene: String,
     count: u32,
-    clin_sig: String,
-    sort: usize,
+    clin_sig: String
 }
 
 // Record for the first stage of the report
@@ -356,8 +433,7 @@ struct FinalRecord {
     gene: String,
     dna_alterations: String,
     protein_alterations: String,
-    variants: String,
-    sort: usize,
+    variants: String
 }
 
 // Record for the second stage of the report
@@ -372,13 +448,25 @@ struct GeneRecord {
 impl From<&Record> for Vec<GeneRecord> {
     fn from(record: &Record) -> Self {
         let mut gene_vec = Vec::new();
-        for dna_alt in record.dna_alterations.iter().sorted().unique() {
-            let alt = GeneRecord {
-                sample: record.sample.to_owned(),
-                gene: record.gene.to_owned(),
-                alteration: dna_alt.to_owned(),
-                variants: record.variants.iter().sorted().unique().join("/"),
+        let dna_alterations: Vec<_> = record.dna_alterations.iter().unique().collect();
+        let protein_alterations: Vec<_> = record.protein_alterations.iter().unique().collect();
+        for (i, protein_alt) in protein_alterations.into_iter().enumerate() {
+            let alt = if protein_alt.is_empty() {
+                GeneRecord {
+                    sample: record.sample.to_owned(),
+                    gene: record.gene.to_owned(),
+                    alteration: dna_alterations[i].to_owned(),
+                    variants: record.variants.iter().sorted().unique().join("/"),
+                }
+            } else {
+                GeneRecord {
+                    sample: record.sample.to_owned(),
+                    gene: record.gene.to_owned(),
+                    alteration: protein_alt.to_owned(),
+                    variants: record.variants.iter().sorted().unique().join("/"),
+                }
             };
+
             gene_vec.push(alt);
         }
         gene_vec
@@ -397,8 +485,7 @@ impl From<&Record> for FinalRecord {
                 .sorted()
                 .unique()
                 .join(", "),
-            variants: record.variants.iter().sorted().unique().join("/"),
-            sort: 0,
+            variants: record.variants.iter().sorted().unique().join("/")
         }
     }
 }
@@ -418,8 +505,7 @@ impl From<&Impact> for Vec<FinalImpact> {
                 sample: impact.sample.clone(),
                 gene: impact.gene.clone(),
                 count: count,
-                impact: imp,
-                sort: 0,
+                impact: imp
             };
 
             res.push(record);
@@ -428,6 +514,52 @@ impl From<&Impact> for Vec<FinalImpact> {
         res
     }
 }
+
+
+fn make_final_gene_impacts(impacts: &Vec<GeneImpact>) -> Vec<FinalGeneImpact> {
+    let mut count_map = HashMap::new();
+    for i in impacts {
+        let r = count_map.entry((&i.alteration,&i.impact)).or_insert_with(|| 0);
+        *r += 1;
+    }
+
+    let mut res = Vec::new();
+
+    for ((alt, imp), count) in count_map {
+        let record = FinalGeneImpact {
+            alteration: alt.to_owned(),
+            count: count,
+            impact: imp.to_owned()
+        };
+
+        res.push(record);
+    }
+
+    res
+}
+
+fn make_final_gene_clin_sigs(clin_sigs: &Vec<GeneClinSig>) -> Vec<FinalGeneClinSig> {
+    let mut count_map = HashMap::new();
+    for i in clin_sigs {
+        let r = count_map.entry((&i.alteration,&i.clin_sig)).or_insert_with(|| 0);
+        *r += 1;
+    }
+
+    let mut res = Vec::new();
+
+    for ((alt, clin_sig), count) in count_map {
+        let record = FinalGeneClinSig {
+            alteration: alt.to_owned(),
+            count: count,
+            clin_sig: clin_sig.to_owned()
+        };
+
+        res.push(record);
+    }
+
+    res
+}
+
 
 impl From<&ClinSig> for Vec<FinalClinSig> {
     fn from(clin: &ClinSig) -> Self {
@@ -444,8 +576,7 @@ impl From<&ClinSig> for Vec<FinalClinSig> {
                 sample: clin.sample.clone(),
                 gene: clin.gene.clone(),
                 count: count,
-                clin_sig: c,
-                sort: 0,
+                clin_sig: c
             };
 
             res.push(record);

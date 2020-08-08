@@ -53,12 +53,13 @@
         </script>
 
         <script>
+            var order = {{ order | safe }};
             var spec = {{ genespecs | safe }};
             const unpacker = new jsonm.Unpacker();
             spec = unpacker.unpack(spec);
             let changed_records = []
             let delete_records = []
-            spec.data.values.forEach(function(record, j) {
+            spec.datasets.main.forEach(function(record, j) {
                 let variants = record.variants.split("/");
                 if (variants.length > 1) {
                     for (var i = 0; i < variants.length; i++) {
@@ -76,11 +77,23 @@
             });
             for (let i = 0; i < delete_records.length; i++) {
                 console.log(spec.data.values[delete_records[i]-i]);
-                spec.data.values.splice(delete_records[i]-i, 1);
+                spec.datasets.main.splice(delete_records[i]-i, 1);
             }
             changed_records.forEach(function(record) {
-                spec.data.values.push(record);
+                spec.datasets.main.push(record);
             });
+            // add sort attribute to data
+            spec.vconcat[1].hconcat.forEach(function(ele) {
+                if (ele.layer === undefined) {
+                    ele.encoding.y.sort = order;
+                } else {
+                    ele.layer.forEach(function(layer) {
+                        layer.encoding.y.sort = order;
+                    })
+                }
+            })
+
+
             vegaEmbed('#oncoprint', spec).then(function(result) {
                 result.view.addEventListener('click', function(event, item) {
                     if (item.datum.gene !== undefined && item.datum.sample !== undefined) {

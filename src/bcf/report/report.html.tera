@@ -95,17 +95,16 @@
             changed_records.forEach(function(record) {
                 spec.datasets.main.push(record);
             });
-
-            // add sort attribute to data that doesnt have access to the main data
-            spec.datasets.impact.forEach(function(record) {
-                record.sort = order[record.gene];
-            });
-            spec.datasets.clin_sig.forEach(function(record) {
-                record.sort = order[record.gene];
-            });
-            spec.datasets.allel_frequency.forEach(function(record) {
-                record.sort = order[record.gene];
-            });
+            // add sort attribute to data
+            spec.vconcat[1].hconcat.forEach(function(ele) {
+                if (ele.layer === undefined) {
+                    ele.encoding.y.sort = order;
+                } else {
+                    ele.layer.forEach(function(layer) {
+                        layer.encoding.y.sort = order;
+                    })
+                }
+            })
             vegaEmbed('#oncoprint', spec).then(function(result) {
                 result.view.addEventListener('click', function(event, item) {
                     if (item.datum.gene !== undefined) {

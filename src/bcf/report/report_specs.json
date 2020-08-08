@@ -114,11 +114,7 @@
                 "y":{
                   "field":"gene",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort": {}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -215,11 +211,7 @@
                 "y":{
                   "field":"gene",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort": {}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -316,11 +308,7 @@
                 "y":{
                   "field":"gene",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort": {}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -417,11 +405,7 @@
                 "y":{
                   "field":"gene",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort": {}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -518,11 +502,7 @@
                 "y":{
                   "field":"gene",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort": {}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -619,11 +599,7 @@
                 "y":{
                   "field":"gene",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort": {}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -720,11 +696,7 @@
                 "y":{
                   "field":"gene",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort": {}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -821,11 +793,7 @@
                 "y":{
                   "field":"gene",
                   "type":"ordinal",
-                  "sort":{
-                    "op":"valid",
-                    "field":"count_variants",
-                    "order":"descending"
-                  }
+                  "sort": {}
                 },
                 "fillOpacity":{
                   "condition":{
@@ -899,11 +867,7 @@
             "y":{
               "field":"gene",
               "type":"ordinal",
-              "sort":{
-                "op":"valid",
-                "field":"count_variants",
-                "order":"descending"
-              },
+              "sort": {},
               "axis":null
             },
             "x":{
@@ -955,10 +919,7 @@
             "y":{
               "field":"gene",
               "type":"ordinal",
-              "sort": {
-                "field": "sort",
-                "order": "descending"
-              },
+              "sort": {},
               "axis":null
             },
             "x":{
@@ -1001,10 +962,7 @@
             "y":{
               "field":"gene",
               "type":"ordinal",
-              "sort": {
-                "field": "sort",
-                "order": "descending"
-              },
+              "sort": {},
               "axis": null
             },
             "x":{
@@ -1061,10 +1019,7 @@
             "y":{
               "field":"gene",
               "type":"ordinal",
-              "sort": {
-                "field": "sort",
-                "order": "descending"
-              },
+              "sort": {},
               "axis": null
             },
             "x":{

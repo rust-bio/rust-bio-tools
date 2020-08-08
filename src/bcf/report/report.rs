@@ -29,6 +29,7 @@ pub fn oncoprint(
     let mut clin_sig_data = Vec::new();
     let mut gene_clin_sig_data = HashMap::new();
     let mut af_data = Vec::new();
+    let mut gene_af_data = HashMap::new();
     let mut unique_genes = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
@@ -154,6 +155,15 @@ pub fn oncoprint(
                             };
 
                             af_data.push(af);
+
+                            let gene_af = GeneAllelFrequency {
+                                sample: sample.to_owned() + ":" + name,
+                                alteration: alt.to_owned(),
+                                allel_frequency: allel_frequencies[i]
+                            };
+
+                            let f = gene_af_data.entry(gene.to_owned()).or_insert_with(||Vec::new());
+                            f.push(gene_af);
                         }
                     }
                 }
@@ -227,7 +237,8 @@ pub fn oncoprint(
         let final_impact: Vec<_> = impact_data.iter().flatten().collect();
         let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
         let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().collect();
-        let values = json!({ "main": gene_data, "impact": final_impact, "clin_sig": final_clin_sig});
+        let allel_frequency_data = gene_af_data.get(&gene).unwrap();
+        let values = json!({ "main": gene_data, "impact": final_impact, "clin_sig": final_clin_sig, "allel_frequency": allel_frequency_data});
         specs["datasets"] = values;
         let mut packer = Packer::new();
         let options = PackOptions::new();
@@ -364,6 +375,13 @@ struct Record {
 struct AllelFrequency {
     sample: String,
     gene: String,
+    allel_frequency: f32,
+}
+
+#[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
+struct GeneAllelFrequency {
+    sample: String,
+    alteration: String,
     allel_frequency: f32,
 }
 

@@ -977,6 +977,37 @@
               }
             }
           }
+        },
+        {
+          "data":{
+            "name":"allel_frequency"
+          },
+          "mark":"point",
+          "width":100,
+          "encoding":{
+            "y":{
+              "field":"alteration",
+              "type":"ordinal",
+              "sort": {},
+              "axis": null
+            },
+            "x":{
+              "field":"allel_frequency",
+              "type":"quantitative",
+              "axis":{
+                "title":"allel frequency"
+              }
+            },
+            "color":{
+              "field":"sample",
+              "type":"nominal",
+              "title":"sample"
+            },
+            "tooltip": [{
+              "field": "allel_frequency",
+              "type": "quantitative"
+            }]
+          }
         }
       ]
     }

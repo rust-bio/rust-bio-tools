@@ -26,6 +26,8 @@ pub fn oncoprint(
     let mut gene_data = HashMap::new();
     let mut impact_data = Vec::new();
     let mut gene_impact_data = HashMap::new();
+    let mut consequence_data = Vec::new();
+    let mut gene_consequence_data = HashMap::new();
     let mut clin_sig_data = Vec::new();
     let mut gene_clin_sig_data = HashMap::new();
     let mut af_data = Vec::new();
@@ -35,6 +37,8 @@ pub fn oncoprint(
         let mut genes = HashMap::new();
         let mut impacts = HashMap::new();
         let mut gene_impacts = HashMap::new();
+        let mut consequences = HashMap::new();
+        let mut gene_consequences = HashMap::new();
         let mut clin_sigs = HashMap::new();
         let mut gene_clin_sigs = HashMap::new();
         let mut ann_indices = HashMap::new();
@@ -104,6 +108,9 @@ pub fn oncoprint(
                         let protein_alteration = str::from_utf8(
                             fields[*ann_indices.get(&String::from("HGVSp")).expect("No field named HGVSp found. Please only use VEP-annotated VCF-files.")],
                         )?;
+                        let consequence = str::from_utf8(
+                            fields[*ann_indices.get(&String::from("Consequence")).expect("No field named Consequence found. Please only use VEP-annotated VCF-files.")],
+                        )?;
 
                         let gene_rec = unique_genes
                             .entry(gene.to_owned())
@@ -124,6 +131,11 @@ pub fn oncoprint(
                             .or_insert_with(|| Impact::new(sample.to_owned(), gene.to_owned()));
                         imp_rec.impact.push(impact.to_owned());
 
+                        let cons_rec = consequences.entry(gene.to_owned()).or_insert_with(|| {
+                            Consequence::new(sample.to_owned(), gene.to_owned())
+                        });
+                        cons_rec.consequence.push(consequence.to_owned());
+
                         let alt = if protein_alteration.is_empty() {
                             dna_alteration
                         } else {
@@ -133,6 +145,12 @@ pub fn oncoprint(
                             .entry(gene.to_owned())
                             .or_insert_with(|| Vec::new());
                         gene_imp_rec.push(GeneImpact::new(alt.to_owned(), impact.to_owned()));
+
+                        let gene_cons_rec = gene_consequences
+                            .entry(gene.to_owned())
+                            .or_insert_with(|| Vec::new());
+                        gene_cons_rec
+                            .push(GeneConsequence::new(alt.to_owned(), consequence.to_owned()));
 
                         let gene_clin_sig_rec = gene_clin_sigs
                             .entry(gene.to_owned())
@@ -183,6 +201,10 @@ pub fn oncoprint(
             let final_impacts = Vec::<FinalImpact>::from(impact);
             impact_data.push(final_impacts);
 
+            let consequence = consequences.get(gene).unwrap();
+            let final_consequences = Vec::<FinalConsequence>::from(consequence);
+            consequence_data.push(final_consequences);
+
             // data for first stage clin_sig
             let cls = clin_sigs.get(gene).unwrap();
             let final_clin_sig = Vec::<FinalClinSig>::from(cls);
@@ -202,6 +224,14 @@ pub fn oncoprint(
                 .entry(gene.to_owned())
                 .or_insert_with(|| Vec::new());
             e.push(final_gene_impacts);
+
+            // data for second stage consequence
+            let gene_consequence = gene_consequences.get(gene).unwrap();
+            let final_gene_consequences = make_final_gene_consequences(gene_consequence);
+            let g = gene_consequence_data
+                .entry(gene.to_owned())
+                .or_insert_with(|| Vec::new());
+            g.push(final_gene_consequences);
 
             // data for second stage clin_sig
             let gene_clin_sig = gene_clin_sigs.get(gene).unwrap();
@@ -241,10 +271,12 @@ pub fn oncoprint(
         let mut specs = gene_specs.clone();
         let impact_data = gene_impact_data.get(&gene).unwrap();
         let final_impact: Vec<_> = impact_data.iter().flatten().collect();
+        let consequence_data = gene_consequence_data.get(&gene).unwrap();
+        let final_consequence: Vec<_> = consequence_data.iter().flatten().collect();
         let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
         let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().collect();
         let allel_frequency_data = gene_af_data.get(&gene).unwrap();
-        let values = json!({ "main": gene_data, "impact": final_impact, "clin_sig": final_clin_sig, "allel_frequency": allel_frequency_data});
+        let values = json!({ "main": gene_data, "impact": final_impact, "consequence": final_consequence, "clin_sig": final_clin_sig, "allel_frequency": allel_frequency_data});
         specs["datasets"] = values;
         let mut packer = Packer::new();
         let options = PackOptions::new();
@@ -279,6 +311,7 @@ pub fn oncoprint(
     }
 
     let impact_data: Vec<_> = impact_data.iter().flatten().collect();
+    let consequence_data: Vec<_> = consequence_data.iter().flatten().collect();
     let clin_sig_data: Vec<_> = clin_sig_data.iter().flatten().collect();
 
     let page_size = 100;
@@ -314,6 +347,11 @@ pub fn oncoprint(
             .filter(|entry| sorted_genes.contains(&&entry.gene))
             .collect();
 
+        let consequence_page_data: Vec<_> = consequence_data
+            .iter()
+            .filter(|entry| sorted_genes.contains(&&entry.gene))
+            .collect();
+
         let clin_sig_page_data: Vec<_> = clin_sig_data
             .iter()
             .filter(|entry| sorted_genes.contains(&&entry.gene))
@@ -325,7 +363,7 @@ pub fn oncoprint(
             .collect();
 
         let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
-        let values = json!({"main": page_data , "impact": impact_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+        let values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
 
         vl_specs["datasets"] = values;
 
@@ -416,6 +454,35 @@ struct FinalGeneImpact {
     alteration: String,
     count: u32,
     impact: String,
+}
+
+#[derive(new, Debug)]
+struct Consequence {
+    sample: String,
+    gene: String,
+    #[new(default)]
+    consequence: Vec<String>,
+}
+
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+struct FinalConsequence {
+    sample: String,
+    gene: String,
+    count: u32,
+    consequence: String,
+}
+
+#[derive(new, Debug)]
+struct GeneConsequence {
+    alteration: String,
+    consequence: String,
+}
+
+#[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+struct FinalGeneConsequence {
+    alteration: String,
+    count: u32,
+    consequence: String,
 }
 
 #[derive(new, Debug)]
@@ -536,6 +603,31 @@ impl From<&Impact> for Vec<FinalImpact> {
     }
 }
 
+impl From<&Consequence> for Vec<FinalConsequence> {
+    fn from(cons: &Consequence) -> Self {
+        let mut con_map = HashMap::new();
+        for i in &cons.consequence {
+            let rec = con_map.entry(i.to_owned()).or_insert_with(|| 0);
+            *rec += 1;
+        }
+
+        let mut res = Vec::new();
+
+        for (con, count) in con_map {
+            let record = FinalConsequence {
+                sample: cons.sample.clone(),
+                gene: cons.gene.clone(),
+                count: count,
+                consequence: con,
+            };
+
+            res.push(record);
+        }
+
+        res
+    }
+}
+
 fn make_final_gene_impacts(impacts: &Vec<GeneImpact>) -> Vec<FinalGeneImpact> {
     let mut count_map = HashMap::new();
     for i in impacts {
@@ -552,6 +644,30 @@ fn make_final_gene_impacts(impacts: &Vec<GeneImpact>) -> Vec<FinalGeneImpact> {
             alteration: alt.to_owned(),
             count: count,
             impact: imp.to_owned(),
+        };
+
+        res.push(record);
+    }
+
+    res
+}
+
+fn make_final_gene_consequences(consequences: &Vec<GeneConsequence>) -> Vec<FinalGeneConsequence> {
+    let mut count_map = HashMap::new();
+    for i in consequences {
+        let r = count_map
+            .entry((&i.alteration, &i.consequence))
+            .or_insert_with(|| 0);
+        *r += 1;
+    }
+
+    let mut res = Vec::new();
+
+    for ((alt, con), count) in count_map {
+        let record = FinalGeneConsequence {
+            alteration: alt.to_owned(),
+            count: count,
+            consequence: con.to_owned(),
         };
 
         res.push(record);

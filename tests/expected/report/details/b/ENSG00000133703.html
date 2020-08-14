@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>ENSG00000133703</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsonm@1.0.10/build/jsonm.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
+    <link href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">rbt report</a>
+    <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools/blob/master/CHANGELOG.md">0.11.1-alpha.0</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+            </li>
+        </ul>
+        <span class="navbar-text">
+                    created Fri Aug 14 10:58:45 2020
+                </span>
+    </div>
+</nav>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="../../index1.html">Oncoprint</a></li>
+        <li class="breadcrumb-item"><a href="../../genes/ENSG00000133703.html">gene: ENSG00000133703</a></li>
+        <li class="breadcrumb-item active" aria-current="page">sample: b</li>
+    </ol>
+</nav>
+<div class="container-fluid ">
+        <div class="row">
+            <div class="col-8">
+                <div class="row">
+                    <div class="col-12">
+                        <table id="table" class="table table-hover table-light table-bordered" data-toggle="table" data-height="510" data-search="true" data-pagination="true">
+                            <thead>
+                            <tr>
+                                <th scope="col">name</th>
+                                <th scope="col" data-sortable="true">id</th>
+                                <th scope="col" data-sortable="true">position</th>
+                                <th scope="col">reference</th>
+                                <th scope="col">alternative</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            
+                            <tr
+                                    class="variant-row"
+                                    id="."
+                                    data-name="chr1"
+                                    data-id="."
+                                    data-position="14"
+                                    data-type="Variant"
+                                    data-reference="C"
+                                    data-alternatives="T"
+                                    data-vis="[&quot;$schema&quot;,&quot;autosize&quot;,&quot;background&quot;,&quot;padding&quot;,&quot;width&quot;,&quot;height&quot;,&quot;title&quot;,&quot;style&quot;,&quot;data&quot;,&quot;signals&quot;,&quot;marks&quot;,&quot;scales&quot;,&quot;axes&quot;,&quot;legends&quot;,&quot;config&quot;,&quot;https:&#x2F;&#x2F;vega.github.io&#x2F;schema&#x2F;vega&#x2F;v5.json&quot;,[&quot;type&quot;,&quot;contains&quot;,&quot;resize&quot;,&quot;fit&quot;,&quot;content&quot;,true],&quot;white&quot;,&quot;5&quot;,&quot;700&quot;,&quot;250&quot;,[&quot;text&quot;,&quot;frame&quot;,&quot;Chromosom&quot;,&quot;group&quot;],&quot;cell&quot;,[0,[&quot;name&quot;,&quot;grid_store&quot;],[&quot;values&quot;,34,[0,[&quot;end_position&quot;,&quot;marker_type&quot;,&quot;row&quot;,&quot;start_position&quot;,&quot;base&quot;,&quot;0.5&quot;,&quot;T&quot;,&quot;0&quot;,&quot;-0.5&quot;,43],[37,38,39,40,41,&quot;1.5&quot;,43,44,42,43],[37,38,39,40,41,&quot;2.5&quot;,&quot;G&quot;,44,46,48],[37,38,39,40,41,&quot;3.5&quot;,&quot;C&quot;,44,47,50],[37,38,39,40,41,&quot;4.5&quot;,50,44,49,50],[37,38,39,40,41,&quot;5.5&quot;,48,44,51,48],[37,38,39,40,41,&quot;6.5&quot;,48,44,52,48],[37,38,39,40,41,&quot;7.5&quot;,48,44,53,48],[37,38,39,40,41,&quot;8.5&quot;,48,44,54,48],[37,38,39,40,41,&quot;9.5&quot;,43,44,55,43],[37,38,39,40,41,&quot;10.5&quot;,48,44,56,48],[37,38,39,40,41,&quot;11.5&quot;,48,44,57,48],[37,38,39,40,41,&quot;12.5&quot;,48,44,58,48],[37,38,39,40,41,&quot;13.5&quot;,48,44,59,48],[37,38,39,40,41,&quot;14.5&quot;,&quot;A&quot;,44,60,62],[37,38,39,40,41,&quot;15.5&quot;,48,44,61,48],[37,38,39,40,41,&quot;16.5&quot;,62,44,63,62],[37,38,39,40,41,&quot;17.5&quot;,48,44,64,48],[37,38,39,40,41,&quot;18.5&quot;,62,44,65,62],[37,38,39,40,41,&quot;19.5&quot;,48,44,66,48],[37,38,39,40,41,&quot;20.5&quot;,48,44,67,48],[37,38,39,40,41,&quot;21.5&quot;,62,44,68,62],[37,38,39,40,41,&quot;22.5&quot;,48,44,69,48],[37,38,39,40,41,&quot;23.5&quot;,62,44,70,62],[37,38,39,40,41,&quot;24.5&quot;,48,44,71,48],[37,38,39,40,41,&quot;25.5&quot;,50,44,72,50],[37,38,39,40,41,&quot;26.5&quot;,48,44,73,48],[37,38,39,40,41,&quot;27.5&quot;,43,44,74,43],[37,38,39,40,41,&quot;28.5&quot;,50,44,75,50],[37,38,39,40,41,&quot;29.5&quot;,48,44,76,48],[37,38,39,40,41,&quot;30.5&quot;,62,44,77,62],[37,38,39,40,41,&quot;31.5&quot;,62,44,78,62],[37,38,39,40,41,&quot;32.5&quot;,62,44,79,62],[37,38,39,40,41,&quot;33.5&quot;,50,44,80,50],[37,38,39,40,41,&quot;34.5&quot;,43,44,81,43],[37,38,39,40,41,&quot;35.5&quot;,48,44,82,48],[37,38,39,40,41,&quot;36.5&quot;,48,44,83,48],[37,38,39,40,41,&quot;37.5&quot;,48,44,84,48],[37,38,39,40,41,&quot;38.5&quot;,48,44,85,48],[37,38,39,40,41,&quot;39.5&quot;,62,44,86,62],[37,38,39,40,41,&quot;40.5&quot;,62,44,87,62],[37,38,39,40,41,&quot;41.5&quot;,48,44,88,48],[37,38,39,40,41,&quot;42.5&quot;,43,44,89,43],[37,38,39,40,41,&quot;43.5&quot;,48,44,90,48],[37,38,39,40,41,&quot;44.5&quot;,48,44,91,48],[37,38,39,40,41,&quot;45.5&quot;,48,44,92,48],[37,38,39,40,41,&quot;46.5&quot;,48,44,93,48],[37,38,39,40,41,&quot;47.5&quot;,62,44,94,62],[37,38,39,40,41,&quot;48.5&quot;,62,44,95,62],[37,38,39,40,41,&quot;49.5&quot;,50,44,96,50],[37,38,39,40,41,&quot;50.5&quot;,50,44,97,50],[37,38,39,40,41,&quot;51.5&quot;,62,44,98,62],[37,38,39,40,41,&quot;52.5&quot;,48,44,99,48],[37,38,39,40,41,&quot;53.5&quot;,62,44,100,62],[37,38,39,40,41,&quot;54.5&quot;,48,44,101,48],[37,38,39,40,41,&quot;55.5&quot;,62,44,102,62],[37,38,39,40,41,&quot;56.5&quot;,43,44,103,43],[37,38,39,40,41,&quot;57.5&quot;,48,44,104,48],[37,38,39,40,41,&quot;58.5&quot;,48,44,105,48],[37,38,39,40,41,&quot;59.5&quot;,50,44,106,50],[37,38,39,40,41,&quot;60.5&quot;,62,44,107,62],[37,38,39,40,41,&quot;61.5&quot;,62,44,108,62],[37,38,39,40,41,&quot;62.5&quot;,62,44,109,62],[37,38,39,40,41,&quot;63.5&quot;,48,44,110,48],[37,38,39,40,41,&quot;64.5&quot;,50,44,111,50],[37,38,39,40,41,&quot;65.5&quot;,50,44,112,50],[37,38,39,40,41,&quot;66.5&quot;,43,44,113,43],[37,38,39,40,41,&quot;67.5&quot;,48,44,114,48],[37,38,39,40,41,&quot;68.5&quot;,48,44,115,48],[37,38,39,40,41,&quot;69.5&quot;,48,44,116,48],[37,38,39,40,41,&quot;70.5&quot;,62,44,117,62],[37,38,39,40,41,&quot;71.5&quot;,50,44,118,50],[37,38,39,40,41,&quot;72.5&quot;,43,44,119,43],[37,38,39,40,41,&quot;73.5&quot;,43,44,120,43],[37,38,39,40,41,&quot;74.5&quot;,50,44,121,50],[37,38,39,40,41,&quot;75.5&quot;,50,44,122,50],[37,38,39,40,41,&quot;76.5&quot;,62,44,123,62],[37,38,39,40,41,&quot;77.5&quot;,48,44,124,48],[37,38,39,40,41,&quot;78.5&quot;,50,44,125,50],[37,38,39,40,41,&quot;79.5&quot;,43,44,126,43],[37,38,39,40,41,&quot;80.5&quot;,43,44,127,43],[37,38,39,40,41,&quot;81.5&quot;,50,44,128,50],[37,38,39,40,41,&quot;82.5&quot;,62,44,129,62],[37,38,39,40,41,&quot;83.5&quot;,50,44,130,50],[37,38,39,40,41,&quot;84.5&quot;,50,44,131,50],[37,38,39,40,41,&quot;85.5&quot;,50,44,132,50],[37,38,39,40,41,&quot;86.5&quot;,62,44,133,62],[37,38,39,40,41,&quot;87.5&quot;,50,44,134,50],[37,38,39,40,41,&quot;88.5&quot;,62,44,135,62],[&quot;bases&quot;,37,&quot;flags&quot;,38,34,&quot;read_end&quot;,&quot;read_start&quot;,39,40,&quot;typ&quot;,&quot;inserts&quot;,&quot;AA&quot;,&quot;20.0&quot;,[0,&quot;1&quot;,&quot;2&quot;,&quot;32&quot;,&quot;64&quot;],&quot;Insertion&quot;,&quot;sim_Som1-5-2_chr1_1_1acd6f&quot;,&quot;789364&quot;,&quot;4&quot;,145,&quot;19.0&quot;,149,143],[37,138,38,34,139,140,39,40,141,&quot;789263.5&quot;,[0,145,146,147,148],&quot;Pairing&quot;,150,151,152,145,&quot;103.5&quot;,155],[37,138,38,34,139,140,39,40,141,67,[0,145,146,147,148],&quot;Match&quot;,150,151,152,145,49,157],[37,138,38,34,139,140,39,40,141,136,[0,145,146,147,148],157,150,151,152,145,67,157],[&quot;alternatives&quot;,37,38,&quot;reference&quot;,39,40,&quot;var_type&quot;,43,61,&quot;Variant&quot;,50,&quot;-1&quot;,60,161]],&quot;fasta&quot;],[34,&quot;source&quot;,&quot;transform&quot;,&quot;vars&quot;,163,[0,[19,&quot;expr&quot;,&quot;filter&quot;,&quot;datum.row &lt; 0&quot;]]],[34,164,165,&quot;alignments&quot;,163,[0,[19,167,168,&quot;datum.row &gt;= 0&quot;]]]],[0,[34,&quot;value&quot;,&quot;on&quot;,&quot;unit&quot;,[],[0,[&quot;events&quot;,&quot;update&quot;,&quot;mousemove&quot;,&quot;isTuple(group()) ? group() : unit&quot;]]],[34,176,&quot;grid&quot;,&quot;vlSelectionResolve(\&quot;grid_store\&quot;, \&quot;union\&quot;)&quot;],[34,173,&quot;grid_start_position&quot;,[0,[175,176,[&quot;signal&quot;,&quot;grid_translate_delta&quot;],&quot;panLinear(grid_translate_anchor.extent_x, -grid_translate_delta.x &#x2F; width)&quot;],[175,176,[182,&quot;grid_zoom_delta&quot;],&quot;zoomLinear(domain(\&quot;x\&quot;), grid_zoom_anchor.x, grid_zoom_delta)&quot;],[175,176,[0,[164,19,&quot;scope&quot;,&quot;dblclick&quot;]],&quot;null&quot;]]],[34,173,&quot;grid_row&quot;,[0,[175,176,[182,183],&quot;panLinear(grid_translate_anchor.extent_y, grid_translate_delta.y &#x2F; height)&quot;],[175,176,[182,185],&quot;zoomLinear(domain(\&quot;y\&quot;), grid_zoom_anchor.y, grid_zoom_delta)&quot;],[175,176,[0,[164,19,187,188]],189]]],[34,173,&quot;grid_tuple&quot;,[0,[175,176,[0,[182,&quot;grid_start_position || grid_row&quot;]],&quot;grid_start_position &amp;&amp; grid_row ? {unit: \&quot;\&quot;, fields: grid_tuple_fields, values: [grid_start_position,grid_row]} : null&quot;]]],[34,172,&quot;grid_tuple_fields&quot;,[0,[&quot;field&quot;,&quot;channel&quot;,19,40,&quot;x&quot;,&quot;R&quot;],[197,198,19,39,&quot;y&quot;,&quot;E&quot;]]],[34,172,173,&quot;grid_translate_anchor&quot;,[],[0,[175,176,[0,[164,19,187,&quot;mousedown&quot;]],&quot;{x: x(unit), y: y(unit), extent_x: domain(\&quot;x\&quot;), extent_y: domain(\&quot;y\&quot;)}&quot;]]],[34,172,173,183,[],[0,[175,176,[0,[164,19,&quot;consume&quot;,&quot;between&quot;,&quot;window&quot;,177,24,[0,[164,19,187,204],[164,19,208,&quot;mouseup&quot;]]]],&quot;{x: grid_translate_anchor.x - x(unit), y: grid_translate_anchor.y - y(unit)}&quot;]]],[34,173,&quot;grid_zoom_anchor&quot;,[0,[175,176,[0,[164,19,206,187,&quot;wheel&quot;,24]],&quot;{x: invert(\&quot;x\&quot;, x(unit)), y: invert(\&quot;y\&quot;, y(unit))}&quot;]]],[34,173,185,[0,[175,&quot;force&quot;,176,[0,[164,19,206,187,212,24]],24,&quot;pow(1.001, event.deltaY * pow(16, event.deltaMode))&quot;]]],[34,173,&quot;grid_modify&quot;,[0,[175,176,[182,193],&quot;modify(\&quot;grid_store\&quot;, grid_tuple, true)&quot;]]]],[0,[34,19,&quot;clip&quot;,10,&quot;interactive&quot;,&quot;from&quot;,&quot;encode&quot;,13,32,24,[0,&quot;rule&quot;],24,[11,170],[176,[&quot;stroke&quot;,&quot;opacity&quot;,&quot;tooltip&quot;,199,&quot;x2&quot;,201,&quot;zindex&quot;,&quot;strokeWidth&quot;,[&quot;scale&quot;,197,&quot;color&quot;,38],[172,&quot;0.8&quot;],[182,&quot;{\&quot;type\&quot;: datum[\&quot;typ\&quot;], \&quot;base\&quot;: datum[\&quot;base\&quot;], \&quot;variant type\&quot;: datum[\&quot;var_type\&quot;],\&quot;test\&quot;: datum[\&quot;test\&quot;], \&quot;inserted base(s)\&quot;: datum[\&quot;inserts\&quot;], \&quot;reference\&quot;: datum[\&quot;reference\&quot;], \&quot;alternatives\&quot;: datum[\&quot;alternatives\&quot;], \&quot;name\&quot;: datum[\&quot;name\&quot;], \&quot;flag 1\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1\&quot;], \&quot;flag 2\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2\&quot;], \&quot;flag 4\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;4\&quot;], \&quot;flag 8\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;8\&quot;], \&quot;flag 16\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;16\&quot;], \&quot;flag 32\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;32\&quot;], \&quot;flag 64\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;64\&quot;], \&quot;flag 128\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;128\&quot;], \&quot;flag 256\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;256\&quot;], \&quot;flag 512\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;512\&quot;], \&quot;flag 1024\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;1024\&quot;], \&quot;flag 2048\&quot;: (datum[\&quot;flags\&quot;] || {})[\&quot;2048\&quot;]}&quot;],[229,197,199,40],[229,197,199,37],[229,197,&quot;band&quot;,201,39,42],[229,197,&quot;z&quot;,38],[229,197,223,38]]]],[34,19,218,10,219,220,221,&quot;marks2&quot;,32,24,[0,222],24,[11,166],[176,[223,224,225,199,226,201,227,228,[229,197,230,160],[172,231],[182,232],[229,197,199,40],[229,197,199,37],[229,197,233,201,39,42],[229,197,234,38],[229,197,223,38]]]]],[0,[34,19,&quot;range&quot;,&quot;domain&quot;,&quot;domainRaw&quot;,&quot;nice&quot;,&quot;zero&quot;,199,&quot;linear&quot;,[0,44,[182,7]],[0,44,&quot;89&quot;],[182,&quot;grid[\&quot;start_position\&quot;]&quot;],24,false],[34,19,237,236,&quot;paddingInner&quot;,&quot;paddingOuter&quot;,201,233,[11,197,&quot;sort&quot;,163,39,24],[0,44,[182,8]],44,44],[34,19,236,237,234,&quot;ordinal&quot;,[0,146,146,146,146,146,145,152,146,145,145],[0,62,50,48,43,&quot;N&quot;,161,149,&quot;Deletion&quot;,157,155]],[34,19,237,236,223,248,[0,62,50,48,43,249,161,149,250,157,155],[0,26,26,26,26,26,26,54,26,26,145]],[34,19,237,236,230,248,[0,62,50,48,43,249,161,149,250,157,155,&quot;Inversion&quot;,&quot;Duplicate&quot;],[0,&quot;#CADB69&quot;,&quot;#F2B671&quot;,&quot;#F28CC2&quot;,&quot;#7284A8&quot;,&quot;#A23E11&quot;,&quot;#000000&quot;,&quot;#047C0A&quot;,&quot;#CC1414&quot;,&quot;#BBBBBB&quot;,261,&quot;#984aff&quot;,&quot;#ffa600&quot;]],[34,138]],[0,[229,&quot;orient&quot;,&quot;gridScale&quot;,179,&quot;tickCount&quot;,237,&quot;labels&quot;,&quot;maxExtent&quot;,&quot;minExtent&quot;,&quot;ticks&quot;,227,199,&quot;bottom&quot;,201,24,[182,&quot;ceil(width&#x2F;40)&quot;],24,244,44,44,244,44],[229,264,179,9,&quot;labelFlush&quot;,&quot;labelOverlap&quot;,266,227,199,271,244,&quot;Position&quot;,24,24,[182,272],44]],[0,[&quot;symbolType&quot;,9,223,221,223,&quot;Base&quot;,230,[&quot;symbols&quot;,[176,[224,[172,231]]]]]],[],0]"
+                                    data-packed=true
+                                    data-annlen="4"
+                                    data-description="[Allele, Consequence, IMPACT, SYMBOL, Gene, Feature_type, Feature, BIOTYPE, EXON, INTRON, HGVSc, HGVSp, cDNA_position, CDS_position, Protein_position, Amino_acids, Codons, Existing_variation, DISTANCE, STRAND, FLAGS, VARIANT_CLASS, SYMBOL_SOURCE, HGNC_ID, CANONICAL, MANE, TSL, APPRIS, CCDS, ENSP, SWISSPROT, TREMBL, UNIPARC, GENE_PHENO, SIFT, PolyPhen, DOMAINS, miRNA, HGVS_OFFSET, AF, AFR_AF, AMR_AF, EAS_AF, EUR_AF, SAS_AF, AA_AF, EA_AF, gnomAD_AF, gnomAD_AFR_AF, gnomAD_AMR_AF, gnomAD_ASJ_AF, gnomAD_EAS_AF, gnomAD_FIN_AF, gnomAD_NFE_AF, gnomAD_OTH_AF, gnomAD_SAS_AF, MAX_AF, MAX_AF_POPS, CLIN_SIG, SOMATIC, PHENO, PUBMED, MOTIF_NAME, MOTIF_POS, HIGH_INF_POS, MOTIF_SCORE_CHANGE, LoFtool]"
+                                    
+                                        
+                                        
+                                            data-ann[1][1]="T"
+                                        
+                                            data-ann[1][2]="missense_variant"
+                                        
+                                            data-ann[1][3]="MODERATE"
+                                        
+                                            data-ann[1][4]="KRAS"
+                                        
+                                            data-ann[1][5]="ENSG00000133703"
+                                        
+                                            data-ann[1][6]="Transcript"
+                                        
+                                            data-ann[1][7]="ENST00000256078"
+                                        
+                                            data-ann[1][8]="protein_coding"
+                                        
+                                            data-ann[1][9]="2/6"
+                                        
+                                            data-ann[1][10]=""
+                                        
+                                            data-ann[1][11]="ENST00000256078.9:c.35G>A"
+                                        
+                                            data-ann[1][12]="ENSP00000256078.4:p.Gly12Asp"
+                                        
+                                            data-ann[1][13]="225"
+                                        
+                                            data-ann[1][14]="35"
+                                        
+                                            data-ann[1][15]="12"
+                                        
+                                            data-ann[1][16]="G/D"
+                                        
+                                            data-ann[1][17]="gGt/gAt"
+                                        
+                                            data-ann[1][18]="rs121913529&COSM1135366&COSM1140133&COSM1140134&COSM12657&COSM49168&COSM520&COSM521&COSM522"
+                                        
+                                            data-ann[1][19]=""
+                                        
+                                            data-ann[1][20]="-1"
+                                        
+                                            data-ann[1][21]=""
+                                        
+                                            data-ann[1][22]="SNV"
+                                        
+                                            data-ann[1][23]="HGNC"
+                                        
+                                            data-ann[1][24]="HGNC:6407"
+                                        
+                                            data-ann[1][25]="YES"
+                                        
+                                            data-ann[1][26]=""
+                                        
+                                            data-ann[1][27]="1"
+                                        
+                                            data-ann[1][28]="P4"
+                                        
+                                            data-ann[1][29]="CCDS8703.1"
+                                        
+                                            data-ann[1][30]="ENSP00000256078"
+                                        
+                                            data-ann[1][31]="P01116"
+                                        
+                                            data-ann[1][32]="L7RSL8"
+                                        
+                                            data-ann[1][33]="UPI0000133132"
+                                        
+                                            data-ann[1][34]="1"
+                                        
+                                            data-ann[1][35]="deleterious(0)"
+                                        
+                                            data-ann[1][36]="benign(0.303)"
+                                        
+                                            data-ann[1][37]="Gene3D:3.40.50.300&PDB-ENSP_mappings:3gft.A&PDB-ENSP_mappings:3gft.B&PDB-ENSP_mappings:3gft.C&PDB-ENSP_mappings:3gft.D&PDB-ENSP_mappings:3gft.E&PDB-ENSP_mappings:3gft.F&PDB-ENSP_mappings:4dsn.A&PDB-ENSP_mappings:4dso.A&PDB-ENSP_mappings:4dst.A&PDB-ENSP_mappings:4dsu.A&PDB-ENSP_mappings:4epr.A&PDB-ENSP_mappings:4ept.A&PDB-ENSP_mappings:4epv.A&PDB-ENSP_mappings:4epw.A&PDB-ENSP_mappings:4epx.A&PDB-ENSP_mappings:4epy.A&PDB-ENSP_mappings:4l8g.A&PDB-ENSP_mappings:4ldj.A&PDB-ENSP_mappings:4lpk.A&PDB-ENSP_mappings:4lpk.B&PDB-ENSP_mappings:4lrw.A&PDB-ENSP_mappings:4lrw.B&PDB-ENSP_mappings:4luc.A&PDB-ENSP_mappings:4luc.B&PDB-ENSP_mappings:4lv6.A&PDB-ENSP_mappings:4lv6.B&PDB-ENSP_mappings:4lyf.A&PDB-ENSP_mappings:4lyf.B&PDB-ENSP_mappings:4lyf.C&PDB-ENSP_mappings:4lyh.A&PDB-ENSP_mappings:4lyh.B&PDB-ENSP_mappings:4lyh.C&PDB-ENSP_mappings:4lyj.A&PDB-ENSP_mappings:4m1o.A&PDB-ENSP_mappings:4m1o.B&PDB-ENSP_mappings:4m1o.C&PDB-ENSP_mappings:4m1s.A&PDB-ENSP_mappings:4m1s.B&PDB-ENSP_mappings:4m1s.C&PDB-ENSP_mappings:4m1t.A&PDB-ENSP_mappings:4m1t.B&PDB-ENSP_mappings:4m1t.C&PDB-ENSP_mappings:4m1w.A&PDB-ENSP_mappings:4m1w.B&PDB-ENSP_mappings:4m1w.C&PDB-ENSP_mappings:4m1y.A&PDB-ENSP_mappings:4m1y.B&PDB-ENSP_mappings:4m1y.C&PDB-ENSP_mappings:4m21.A&PDB-ENSP_mappings:4m21.B&PDB-ENSP_mappings:4m21.C&PDB-ENSP_mappings:4m22.A&PDB-ENSP_mappings:4m22.B&PDB-ENSP_mappings:4m22.C&PDB-ENSP_mappings:4nmm.A&PDB-ENSP_mappings:4obe.A&PDB-ENSP_mappings:4obe.B&PDB-ENSP_mappings:4pzy.A&PDB-ENSP_mappings:4pzy.B&PDB-ENSP_mappings:4pzz.A&PDB-ENSP_mappings:4q01.A&PDB-ENSP_mappings:4q01.B&PDB-ENSP_mappings:4q02.A&PDB-ENSP_mappings:4q03.A&PDB-ENSP_mappings:4ql3.A&PDB-ENSP_mappings:4tq9.A&PDB-ENSP_mappings:4tq9.B&PDB-ENSP_mappings:4tqa.A&PDB-ENSP_mappings:4tqa.B&PDB-ENSP_mappings:4wa7.A&PDB-ENSP_mappings:5f2e.A&PDB-ENSP_mappings:5kyk.A&PDB-ENSP_mappings:5kyk.B&PDB-ENSP_mappings:5kyk.C&PDB-ENSP_mappings:5mla.A&PDB-ENSP_mappings:5mlb.A&PDB-ENSP_mappings:5mlb.C&PDB-ENSP_mappings:5mlb.E&PDB-ENSP_mappings:5mlb.G&PDB-ENSP_mappings:5o2s.A&PDB-ENSP_mappings:5o2s.C&PDB-ENSP_mappings:5o2s.E&PDB-ENSP_mappings:5o2s.G&PDB-ENSP_mappings:5o2t.A&PDB-ENSP_mappings:5ocg.A&PDB-ENSP_mappings:5oco.A&PDB-ENSP_mappings:5oco.B&PDB-ENSP_mappings:5oco.C&PDB-ENSP_mappings:5oco.D&PDB-ENSP_mappings:5oco.E&PDB-ENSP_mappings:5oco.F&PDB-ENSP_mappings:5oct.A&PDB-ENSP_mappings:5oct.B&PDB-ENSP_mappings:5oct.C&PDB-ENSP_mappings:5oct.D&PDB-ENSP_mappings:5oct.E&PDB-ENSP_mappings:5oct.F&PDB-ENSP_mappings:5tar.A&PDB-ENSP_mappings:5tb5.A&PDB-ENSP_mappings:5tb5.C&PDB-ENSP_mappings:5ufe.A&PDB-ENSP_mappings:5ufq.A&PDB-ENSP_mappings:5ufq.B&PDB-ENSP_mappings:5uk9.A&PDB-ENSP_mappings:5uk9.B&PDB-ENSP_mappings:5uqw.A&PDB-ENSP_mappings:5uqw.B&PDB-ENSP_mappings:5us4.A&PDB-ENSP_mappings:5us4.B&PDB-ENSP_mappings:5usj.A&PDB-ENSP_mappings:5usj.B&PDB-ENSP_mappings:5usj.C&PDB-ENSP_mappings:5usj.D&PDB-ENSP_mappings:5usj.E&PDB-ENSP_mappings:5usj.F&PDB-ENSP_mappings:5v6s.A&PDB-ENSP_mappings:5v6v.A&PDB-ENSP_mappings:5v6v.B&PDB-ENSP_mappings:5v71.A&PDB-ENSP_mappings:5v71.B&PDB-ENSP_mappings:5v71.C&PDB-ENSP_mappings:5v71.D&PDB-ENSP_mappings:5v71.E&PDB-ENSP_mappings:5v71.F&PDB-ENSP_mappings:5v9l.A&PDB-ENSP_mappings:5v9l.B&PDB-ENSP_mappings:5v9l.C&PDB-ENSP_mappings:5v9o.A&PDB-ENSP_mappings:5v9u.A&PDB-ENSP_mappings:5v9u.B&PDB-ENSP_mappings:5vbm.A&PDB-ENSP_mappings:5vp7.A&PDB-ENSP_mappings:5vp7.F&PDB-ENSP_mappings:5vpi.A&PDB-ENSP_mappings:5vpi.B&PDB-ENSP_mappings:5vpy.A&PDB-ENSP_mappings:5vpy.B&PDB-ENSP_mappings:5vpz.A&PDB-ENSP_mappings:5vpz.B&PDB-ENSP_mappings:5vq0.A&PDB-ENSP_mappings:5vq0.B&PDB-ENSP_mappings:5vq1.A&PDB-ENSP_mappings:5vq1.B&PDB-ENSP_mappings:5vq2.A&PDB-ENSP_mappings:5vq2.B&PDB-ENSP_mappings:5vq6.A&PDB-ENSP_mappings:5vq6.B&PDB-ENSP_mappings:5vq8.A&PDB-ENSP_mappings:5vq8.B&PDB-ENSP_mappings:5w22.A&PDB-ENSP_mappings:5w22.B&PDB-ENSP_mappings:5wha.A&PDB-ENSP_mappings:5wha.D&PDB-ENSP_mappings:5wha.G&PDB-ENSP_mappings:5wha.J&PDB-ENSP_mappings:5whb.A&PDB-ENSP_mappings:5whb.D&PDB-ENSP_mappings:5whb.G&PDB-ENSP_mappings:5whb.J&PDB-ENSP_mappings:5whd.A&PDB-ENSP_mappings:5whd.B&PDB-ENSP_mappings:5whd.C&PDB-ENSP_mappings:5whd.D&PDB-ENSP_mappings:5whe.A&PDB-ENSP_mappings:5whe.D&PDB-ENSP_mappings:5whe.G&PDB-ENSP_mappings:5whe.J&PDB-ENSP_mappings:5wlb.A&PDB-ENSP_mappings:5wlb.D&PDB-ENSP_mappings:5wpm.A&PDB-ENSP_mappings:5xco.A&PDB-ENSP_mappings:5yxz.A&PDB-ENSP_mappings:5yy1.A&PDB-ENSP_mappings:6ark.A&PDB-ENSP_mappings:6asa.A&PDB-ENSP_mappings:6ase.A&PDB-ENSP_mappings:6b0v.A&PDB-ENSP_mappings:6b0v.B&PDB-ENSP_mappings:6b0y.A&PDB-ENSP_mappings:6b0y.B&PDB-ENSP_mappings:6bof.A&PDB-ENSP_mappings:6bof.B&PDB-ENSP_mappings:6bp1.A&PDB-ENSP_mappings:6cc9.B&PDB-ENSP_mappings:6cch.B&PDB-ENSP_mappings:6ccx.B&PDB-ENSP_mappings:6epl.R&PDB-ENSP_mappings:6epm.R&PDB-ENSP_mappings:6epn.R&PDB-ENSP_mappings:6epo.R&PDB-ENSP_mappings:6epp.R&PDB-ENSP_mappings:6f76.A&PDB-ENSP_mappings:6f76.B&PDB-ENSP_mappings:6f76.C&PDB-ENSP_mappings:6f76.D&PDB-ENSP_mappings:6f76.E&PDB-ENSP_mappings:6f76.F&PDB-ENSP_mappings:6fa1.A&PDB-ENSP_mappings:6fa1.B&PDB-ENSP_mappings:6fa1.C&PDB-ENSP_mappings:6fa1.D&PDB-ENSP_mappings:6fa1.E&PDB-ENSP_mappings:6fa1.F&PDB-ENSP_mappings:6fa2.A&PDB-ENSP_mappings:6fa2.B&PDB-ENSP_mappings:6fa2.C&PDB-ENSP_mappings:6fa2.D&PDB-ENSP_mappings:6fa2.E&PDB-ENSP_mappings:6fa2.F&PDB-ENSP_mappings:6fa3.A&PDB-ENSP_mappings:6fa3.B&PDB-ENSP_mappings:6fa3.C&PDB-ENSP_mappings:6fa3.D&PDB-ENSP_mappings:6fa3.E&PDB-ENSP_mappings:6fa3.F&PDB-ENSP_mappings:6fa4.A&PDB-ENSP_mappings:6fa4.B&PDB-ENSP_mappings:6fa4.C&PDB-ENSP_mappings:6fa4.D&PDB-ENSP_mappings:6fa4.E&PDB-ENSP_mappings:6fa4.F&PDB-ENSP_mappings:6god.A&PDB-ENSP_mappings:6goe.A&PDB-ENSP_mappings:6gof.A&PDB-ENSP_mappings:6gog.A&PDB-ENSP_mappings:6gog.B&PDB-ENSP_mappings:6gog.C&PDB-ENSP_mappings:6gog.D&PDB-ENSP_mappings:6gog.E&PDB-ENSP_mappings:6gog.F&PDB-ENSP_mappings:6gom.A&PDB-ENSP_mappings:6gom.B&PDB-ENSP_mappings:6gom.C&PDB-ENSP_mappings:6gom.D&PDB-ENSP_mappings:6gom.E&PDB-ENSP_mappings:6gom.F&PDB-ENSP_mappings:6gqt.A&PDB-ENSP_mappings:6gqt.B&PDB-ENSP_mappings:6gqt.C&PDB-ENSP_mappings:6gqt.D&PDB-ENSP_mappings:6gqt.E&PDB-ENSP_mappings:6gqt.F&PDB-ENSP_mappings:6gqw.A&PDB-ENSP_mappings:6gqw.B&PDB-ENSP_mappings:6gqw.C&PDB-ENSP_mappings:6gqw.D&PDB-ENSP_mappings:6gqw.E&PDB-ENSP_mappings:6gqw.F&PDB-ENSP_mappings:6gqx.A&PDB-ENSP_mappings:6gqx.B&PDB-ENSP_mappings:6gqx.C&PDB-ENSP_mappings:6gqx.D&PDB-ENSP_mappings:6gqx.E&PDB-ENSP_mappings:6gqx.F&PDB-ENSP_mappings:6gqy.A&PDB-ENSP_mappings:6gqy.B&PDB-ENSP_mappings:6gqy.C&PDB-ENSP_mappings:6gqy.D&PDB-ENSP_mappings:6gqy.E&PDB-ENSP_mappings:6gqy.F&PDB-ENSP_mappings:6h46.A&PDB-ENSP_mappings:6h47.A&PDB-ENSP_mappings:6n2j.A&PDB-ENSP_mappings:6n2k.A&Pfam:PF00071&Prints:PR00449&PROSITE_profiles:PS51421&PANTHER:PTHR24070&PANTHER:PTHR24070:SF388&SMART:SM00173&SMART:SM00174&SMART:SM00175&SMART:SM00176&Superfamily:SSF52540&TIGRFAM:TIGR00231&CDD:cd04138&Low_complexity_(Seg):seg"
+                                        
+                                            data-ann[1][38]=""
+                                        
+                                            data-ann[1][39]=""
+                                        
+                                            data-ann[1][40]=""
+                                        
+                                            data-ann[1][41]=""
+                                        
+                                            data-ann[1][42]=""
+                                        
+                                            data-ann[1][43]=""
+                                        
+                                            data-ann[1][44]=""
+                                        
+                                            data-ann[1][45]=""
+                                        
+                                            data-ann[1][46]=""
+                                        
+                                            data-ann[1][47]=""
+                                        
+                                            data-ann[1][48]="4.011e-06"
+                                        
+                                            data-ann[1][49]="0"
+                                        
+                                            data-ann[1][50]="0"
+                                        
+                                            data-ann[1][51]="0"
+                                        
+                                            data-ann[1][52]="0"
+                                        
+                                            data-ann[1][53]="0"
+                                        
+                                            data-ann[1][54]="8.883e-06"
+                                        
+                                            data-ann[1][55]="0"
+                                        
+                                            data-ann[1][56]="0"
+                                        
+                                            data-ann[1][57]="8.883e-06"
+                                        
+                                            data-ann[1][58]="gnomAD_NFE"
+                                        
+                                            data-ann[1][59]="pathogenic&likely_pathogenic"
+                                        
+                                            data-ann[1][60]="0&1&1&1&1&1&1&1&1"
+                                        
+                                            data-ann[1][61]="1&1&1&1&1&1&1&1&1"
+                                        
+                                            data-ann[1][62]="25157968&19029981&22499344&17332249&21079152&2278970&3122217&12460918&16434492&19075190&22407852&17384584&18794081&19047918&19255327&19773371&23406027&22683711&19018267&21975775&17704260&15696205&16361624&16618717&18316791&19114683&19679400&20921462&20921465&21228335&19794967&21398618&23182985&7773929&8439212&15842656&17910045&19358724&19881948&20609353&20805368&20949522&21169357&22025163&22235099&22282465&22897852&23014527&25044103&26372703&27872090&29525983&30463544"
+                                        
+                                            data-ann[1][63]=""
+                                        
+                                            data-ann[1][64]=""
+                                        
+                                            data-ann[1][65]=""
+                                        
+                                            data-ann[1][66]=""
+                                        
+                                            data-ann[1][67]="0.19"
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[2][1]="T"
+                                        
+                                            data-ann[2][2]="missense_variant"
+                                        
+                                            data-ann[2][3]="MODERATE"
+                                        
+                                            data-ann[2][4]="KRAS"
+                                        
+                                            data-ann[2][5]="ENSG00000133703"
+                                        
+                                            data-ann[2][6]="Transcript"
+                                        
+                                            data-ann[2][7]="ENST00000311936"
+                                        
+                                            data-ann[2][8]="protein_coding"
+                                        
+                                            data-ann[2][9]="2/5"
+                                        
+                                            data-ann[2][10]=""
+                                        
+                                            data-ann[2][11]="ENST00000311936.8:c.35G>A"
+                                        
+                                            data-ann[2][12]="ENSP00000308495.3:p.Gly12Asp"
+                                        
+                                            data-ann[2][13]="225"
+                                        
+                                            data-ann[2][14]="35"
+                                        
+                                            data-ann[2][15]="12"
+                                        
+                                            data-ann[2][16]="G/D"
+                                        
+                                            data-ann[2][17]="gGt/gAt"
+                                        
+                                            data-ann[2][18]="rs121913529&COSM1135366&COSM1140133&COSM1140134&COSM12657&COSM49168&COSM520&COSM521&COSM522"
+                                        
+                                            data-ann[2][19]=""
+                                        
+                                            data-ann[2][20]="-1"
+                                        
+                                            data-ann[2][21]=""
+                                        
+                                            data-ann[2][22]="SNV"
+                                        
+                                            data-ann[2][23]="HGNC"
+                                        
+                                            data-ann[2][24]="HGNC:6407"
+                                        
+                                            data-ann[2][25]=""
+                                        
+                                            data-ann[2][26]=""
+                                        
+                                            data-ann[2][27]="1"
+                                        
+                                            data-ann[2][28]="A1"
+                                        
+                                            data-ann[2][29]="CCDS8702.1"
+                                        
+                                            data-ann[2][30]="ENSP00000308495"
+                                        
+                                            data-ann[2][31]="P01116"
+                                        
+                                            data-ann[2][32]="A0A024RAV5"
+                                        
+                                            data-ann[2][33]="UPI0000001252"
+                                        
+                                            data-ann[2][34]="1"
+                                        
+                                            data-ann[2][35]="deleterious(0)"
+                                        
+                                            data-ann[2][36]="benign(0.21)"
+                                        
+                                            data-ann[2][37]="Low_complexity_(Seg):seg&PROSITE_profiles:PS51421&CDD:cd04138&PANTHER:PTHR24070&PANTHER:PTHR24070:SF186&Pfam:PF00071&TIGRFAM:TIGR00231&Gene3D:3.40.50.300&SMART:SM00173&SMART:SM00174&SMART:SM00175&Superfamily:SSF52540&Prints:PR00449"
+                                        
+                                            data-ann[2][38]=""
+                                        
+                                            data-ann[2][39]=""
+                                        
+                                            data-ann[2][40]=""
+                                        
+                                            data-ann[2][41]=""
+                                        
+                                            data-ann[2][42]=""
+                                        
+                                            data-ann[2][43]=""
+                                        
+                                            data-ann[2][44]=""
+                                        
+                                            data-ann[2][45]=""
+                                        
+                                            data-ann[2][46]=""
+                                        
+                                            data-ann[2][47]=""
+                                        
+                                            data-ann[2][48]="4.011e-06"
+                                        
+                                            data-ann[2][49]="0"
+                                        
+                                            data-ann[2][50]="0"
+                                        
+                                            data-ann[2][51]="0"
+                                        
+                                            data-ann[2][52]="0"
+                                        
+                                            data-ann[2][53]="0"
+                                        
+                                            data-ann[2][54]="8.883e-06"
+                                        
+                                            data-ann[2][55]="0"
+                                        
+                                            data-ann[2][56]="0"
+                                        
+                                            data-ann[2][57]="8.883e-06"
+                                        
+                                            data-ann[2][58]="gnomAD_NFE"
+                                        
+                                            data-ann[2][59]="pathogenic&likely_pathogenic"
+                                        
+                                            data-ann[2][60]="0&1&1&1&1&1&1&1&1"
+                                        
+                                            data-ann[2][61]="1&1&1&1&1&1&1&1&1"
+                                        
+                                            data-ann[2][62]="25157968&19029981&22499344&17332249&21079152&2278970&3122217&12460918&16434492&19075190&22407852&17384584&18794081&19047918&19255327&19773371&23406027&22683711&19018267&21975775&17704260&15696205&16361624&16618717&18316791&19114683&19679400&20921462&20921465&21228335&19794967&21398618&23182985&7773929&8439212&15842656&17910045&19358724&19881948&20609353&20805368&20949522&21169357&22025163&22235099&22282465&22897852&23014527&25044103&26372703&27872090&29525983&30463544"
+                                        
+                                            data-ann[2][63]=""
+                                        
+                                            data-ann[2][64]=""
+                                        
+                                            data-ann[2][65]=""
+                                        
+                                            data-ann[2][66]=""
+                                        
+                                            data-ann[2][67]="0.19"
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[3][1]="T"
+                                        
+                                            data-ann[3][2]="missense_variant"
+                                        
+                                            data-ann[3][3]="MODERATE"
+                                        
+                                            data-ann[3][4]="KRAS"
+                                        
+                                            data-ann[3][5]="ENSG00000133703"
+                                        
+                                            data-ann[3][6]="Transcript"
+                                        
+                                            data-ann[3][7]="ENST00000556131"
+                                        
+                                            data-ann[3][8]="protein_coding"
+                                        
+                                            data-ann[3][9]="2/3"
+                                        
+                                            data-ann[3][10]=""
+                                        
+                                            data-ann[3][11]="ENST00000556131.1:c.35G>A"
+                                        
+                                            data-ann[3][12]="ENSP00000451856.1:p.Gly12Asp"
+                                        
+                                            data-ann[3][13]="212"
+                                        
+                                            data-ann[3][14]="35"
+                                        
+                                            data-ann[3][15]="12"
+                                        
+                                            data-ann[3][16]="G/D"
+                                        
+                                            data-ann[3][17]="gGt/gAt"
+                                        
+                                            data-ann[3][18]="rs121913529&COSM1135366&COSM1140133&COSM1140134&COSM12657&COSM49168&COSM520&COSM521&COSM522"
+                                        
+                                            data-ann[3][19]=""
+                                        
+                                            data-ann[3][20]="-1"
+                                        
+                                            data-ann[3][21]=""
+                                        
+                                            data-ann[3][22]="SNV"
+                                        
+                                            data-ann[3][23]="HGNC"
+                                        
+                                            data-ann[3][24]="HGNC:6407"
+                                        
+                                            data-ann[3][25]=""
+                                        
+                                            data-ann[3][26]=""
+                                        
+                                            data-ann[3][27]="1"
+                                        
+                                            data-ann[3][28]=""
+                                        
+                                            data-ann[3][29]=""
+                                        
+                                            data-ann[3][30]="ENSP00000451856"
+                                        
+                                            data-ann[3][31]=""
+                                        
+                                            data-ann[3][32]="G3V4K2"
+                                        
+                                            data-ann[3][33]="UPI00001FB7B5"
+                                        
+                                            data-ann[3][34]="1"
+                                        
+                                            data-ann[3][35]="deleterious(0)"
+                                        
+                                            data-ann[3][36]="benign(0.039)"
+                                        
+                                            data-ann[3][37]="Low_complexity_(Seg):seg&PROSITE_profiles:PS51421&PANTHER:PTHR24070&PANTHER:PTHR24070:SF397&Pfam:PF00071&Gene3D:3.40.50.300&Superfamily:SSF52540&Prints:PR00449"
+                                        
+                                            data-ann[3][38]=""
+                                        
+                                            data-ann[3][39]=""
+                                        
+                                            data-ann[3][40]=""
+                                        
+                                            data-ann[3][41]=""
+                                        
+                                            data-ann[3][42]=""
+                                        
+                                            data-ann[3][43]=""
+                                        
+                                            data-ann[3][44]=""
+                                        
+                                            data-ann[3][45]=""
+                                        
+                                            data-ann[3][46]=""
+                                        
+                                            data-ann[3][47]=""
+                                        
+                                            data-ann[3][48]="4.011e-06"
+                                        
+                                            data-ann[3][49]="0"
+                                        
+                                            data-ann[3][50]="0"
+                                        
+                                            data-ann[3][51]="0"
+                                        
+                                            data-ann[3][52]="0"
+                                        
+                                            data-ann[3][53]="0"
+                                        
+                                            data-ann[3][54]="8.883e-06"
+                                        
+                                            data-ann[3][55]="0"
+                                        
+                                            data-ann[3][56]="0"
+                                        
+                                            data-ann[3][57]="8.883e-06"
+                                        
+                                            data-ann[3][58]="gnomAD_NFE"
+                                        
+                                            data-ann[3][59]="pathogenic&likely_pathogenic"
+                                        
+                                            data-ann[3][60]="0&1&1&1&1&1&1&1&1"
+                                        
+                                            data-ann[3][61]="1&1&1&1&1&1&1&1&1"
+                                        
+                                            data-ann[3][62]="25157968&19029981&22499344&17332249&21079152&2278970&3122217&12460918&16434492&19075190&22407852&17384584&18794081&19047918&19255327&19773371&23406027&22683711&19018267&21975775&17704260&15696205&16361624&16618717&18316791&19114683&19679400&20921462&20921465&21228335&19794967&21398618&23182985&7773929&8439212&15842656&17910045&19358724&19881948&20609353&20805368&20949522&21169357&22025163&22235099&22282465&22897852&23014527&25044103&26372703&27872090&29525983&30463544"
+                                        
+                                            data-ann[3][63]=""
+                                        
+                                            data-ann[3][64]=""
+                                        
+                                            data-ann[3][65]=""
+                                        
+                                            data-ann[3][66]=""
+                                        
+                                            data-ann[3][67]="0.19"
+                                        
+                                    
+                                        
+                                        
+                                            data-ann[4][1]="T"
+                                        
+                                            data-ann[4][2]="missense_variant"
+                                        
+                                            data-ann[4][3]="MODERATE"
+                                        
+                                            data-ann[4][4]="KRAS"
+                                        
+                                            data-ann[4][5]="ENSG00000133703"
+                                        
+                                            data-ann[4][6]="Transcript"
+                                        
+                                            data-ann[4][7]="ENST00000557334"
+                                        
+                                            data-ann[4][8]="protein_coding"
+                                        
+                                            data-ann[4][9]="2/3"
+                                        
+                                            data-ann[4][10]=""
+                                        
+                                            data-ann[4][11]="ENST00000557334.5:c.35G>A"
+                                        
+                                            data-ann[4][12]="ENSP00000452512.1:p.Gly12Asp"
+                                        
+                                            data-ann[4][13]="232"
+                                        
+                                            data-ann[4][14]="35"
+                                        
+                                            data-ann[4][15]="12"
+                                        
+                                            data-ann[4][16]="G/D"
+                                        
+                                            data-ann[4][17]="gGt/gAt"
+                                        
+                                            data-ann[4][18]="rs121913529&COSM1135366&COSM1140133&COSM1140134&COSM12657&COSM49168&COSM520&COSM521&COSM522"
+                                        
+                                            data-ann[4][19]=""
+                                        
+                                            data-ann[4][20]="-1"
+                                        
+                                            data-ann[4][21]=""
+                                        
+                                            data-ann[4][22]="SNV"
+                                        
+                                            data-ann[4][23]="HGNC"
+                                        
+                                            data-ann[4][24]="HGNC:6407"
+                                        
+                                            data-ann[4][25]=""
+                                        
+                                            data-ann[4][26]=""
+                                        
+                                            data-ann[4][27]="5"
+                                        
+                                            data-ann[4][28]=""
+                                        
+                                            data-ann[4][29]=""
+                                        
+                                            data-ann[4][30]="ENSP00000452512"
+                                        
+                                            data-ann[4][31]=""
+                                        
+                                            data-ann[4][32]="G3V5T7"
+                                        
+                                            data-ann[4][33]="UPI00021CF477"
+                                        
+                                            data-ann[4][34]="1"
+                                        
+                                            data-ann[4][35]="deleterious_low_confidence(0)"
+                                        
+                                            data-ann[4][36]="probably_damaging(0.969)"
+                                        
+                                            data-ann[4][37]="Gene3D:3.40.50.300&Pfam:PF00071&Prints:PR00449&PROSITE_profiles:PS51421&PANTHER:PTHR24070&PANTHER:PTHR24070:SF186&SMART:SM00173&Superfamily:SSF52540&Low_complexity_(Seg):seg"
+                                        
+                                            data-ann[4][38]=""
+                                        
+                                            data-ann[4][39]=""
+                                        
+                                            data-ann[4][40]=""
+                                        
+                                            data-ann[4][41]=""
+                                        
+                                            data-ann[4][42]=""
+                                        
+                                            data-ann[4][43]=""
+                                        
+                                            data-ann[4][44]=""
+                                        
+                                            data-ann[4][45]=""
+                                        
+                                            data-ann[4][46]=""
+                                        
+                                            data-ann[4][47]=""
+                                        
+                                            data-ann[4][48]="4.011e-06"
+                                        
+                                            data-ann[4][49]="0"
+                                        
+                                            data-ann[4][50]="0"
+                                        
+                                            data-ann[4][51]="0"
+                                        
+                                            data-ann[4][52]="0"
+                                        
+                                            data-ann[4][53]="0"
+                                        
+                                            data-ann[4][54]="8.883e-06"
+                                        
+                                            data-ann[4][55]="0"
+                                        
+                                            data-ann[4][56]="0"
+                                        
+                                            data-ann[4][57]="8.883e-06"
+                                        
+                                            data-ann[4][58]="gnomAD_NFE"
+                                        
+                                            data-ann[4][59]="pathogenic&likely_pathogenic"
+                                        
+                                            data-ann[4][60]="0&1&1&1&1&1&1&1&1"
+                                        
+                                            data-ann[4][61]="1&1&1&1&1&1&1&1&1"
+                                        
+                                            data-ann[4][62]="25157968&19029981&22499344&17332249&21079152&2278970&3122217&12460918&16434492&19075190&22407852&17384584&18794081&19047918&19255327&19773371&23406027&22683711&19018267&21975775&17704260&15696205&16361624&16618717&18316791&19114683&19679400&20921462&20921465&21228335&19794967&21398618&23182985&7773929&8439212&15842656&17910045&19358724&19881948&20609353&20805368&20949522&21169357&22025163&22235099&22282465&22897852&23014527&25044103&26372703&27872090&29525983&30463544"
+                                        
+                                            data-ann[4][63]=""
+                                        
+                                            data-ann[4][64]=""
+                                        
+                                            data-ann[4][65]=""
+                                        
+                                            data-ann[4][66]=""
+                                        
+                                            data-ann[4][67]="0.19"
+                                        
+                                    
+                            >
+                                <th scope="row">chr1</th>
+                                <td>.</td>
+                                <td>14</td>
+                                <td>C</td>
+                                <td>T</td>
+                            </tr>
+                            
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div id="vis" class="justify-content-center" style="width: 100%"></div>
+                    </div>
+                </div>
+                <script>
+                    // customize column_values to display the attributes of your choice to the sidebar
+                    let column_values = ['id', 'position', 'reference', 'alternatives', 'type'];
+                    // customize which parts of the annotation field to display at the sidebar
+                    let ann_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+
+                    $(document).ready(function () {
+                        $("html").on('click', '.variant-row', function () {
+                            if ($(this).data('packed')) {
+                                let compressed_specs = $(this).data('vis');
+                                let unpacker = new jsonm.Unpacker();
+                                $(this).data('vis', unpacker.unpack(compressed_specs));
+                                $(this).data('packed', false);
+                            }
+                            let specs = $(this).data('vis');
+                            let d = $(this).data('description')
+                            d = d.replace(/, /g,"\",\"");
+                            d = d.replace("[","[\"");
+                            d = d.replace("]","\"]")
+                            let description = JSON.parse(d);
+
+                            specs.data[1].values.forEach(function(a) {
+                                if (a.row > 0 && Array.isArray(a.flags)) {
+                                    let flags = {};
+                                    a.flags.forEach(function(b) {
+                                        if (b === 1) {
+                                            flags[b] = "template having multiple segments in sequencing";
+                                        } else if (b === 2) {
+                                            flags[b] = "each segment properly aligned according to the aligner";
+                                        } else if (b === 4) {
+                                            flags[b] = "segment unmapped";
+                                        } else if (b === 8) {
+                                            flags[b] = "next segment in the template unmapped";
+                                        } else if (b === 16) {
+                                            flags[b] = "SEQ being reverse complemented";
+                                        } else if (b === 32) {
+                                            flags[b] = "SEQ of the next segment in the template being reverse complemented";
+                                        } else if (b === 64) {
+                                            flags[b] = "the first segment in the template";
+                                        } else if (b === 128) {
+                                            flags[b] = "the last segment in the template";
+                                        } else if (b === 256) {
+                                            flags[b] = "secondary alignment";
+                                        } else if (b === 512) {
+                                            flags[b] = "not passing filters, such as platform/vendor quality controls";
+                                        } else if (b === 1024) {
+                                            flags[b] = "PCR or optical duplicate";
+                                        } else if (b === 2048) {
+                                            flags[b] = "vega lite lines";
+                                        }
+                                    });
+                                    a.flags = flags;
+                                }
+                            });
+                            specs.width = $('#vis').width() - 40;
+                            let v = vegaEmbed('#vis', specs);
+                            $("#sidebar").empty();
+                            $.each($(this).data(), function(i, v) {
+                                if (i !== 'index' && !i.includes("ann") && column_values.includes(i)) {
+                                    $('#sidebar').append('<tr><th class="thead-dark">' + i + '</th><td>' + v + '</td></tr>');
+                                }
+                            });
+                            $("#ann-sidebar").empty();
+                            let ann_length = $(this).data('annlen');
+                            let that = this;
+                            ann_values.forEach(function (x) {
+                                let name = description[x];
+                                $('#ann-sidebar').append('<tr>');
+                                $('#ann-sidebar').append('<th class="thead-dark" style="position: sticky; left:-1px;">' + name + '</th>');
+                                for (let j = 1; j <= ann_length; j++) {
+                                    let ix = x + 1;
+                                    let field = 'ann[' + j + '][' + ix + ']';
+                                    let val = $(that).data(field);
+                                    $('#ann-sidebar').append('<td>' + val + '</td>');
+                                }
+                                $('#ann-sidebar').append('</tr>');
+                            });
+                        })
+                    })
+                </script>
+            </div>
+            <div class="col-4">
+                <table id="sidebar" class="table table-hover table-light table-bordered table-sm" style="margin-top: 58px;">
+                </table>
+                <table id="ann-sidebar" class="table table-hover table-light table-bordered table-sm" data-widht="100" data-toggle="table">
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

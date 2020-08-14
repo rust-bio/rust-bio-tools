@@ -1,0 +1,222 @@
+##fileformat=VCFv4.2
+##FILTER=<ID=PASS,Description="All filters passed">
+##INFO=<ID=SVLEN,Number=A,Type=Integer,Description="Difference in length between REF and ALT alleles">
+##INFO=<ID=END,Number=A,Type=Integer,Description="End position of structural variant (inclusive, 1-based).">
+##INFO=<ID=SVTYPE,Number=A,Type=String,Description="Structural variant type">
+##INFO=<ID=EVENT,Number=A,Type=String,Description="ID of event associated to breakend">
+##INFO=<ID=MATEID,Number=1,Type=String,Description="ID of mate breakend">
+##contig=<ID=chr1,length=100>
+##contig=<ID=10,length=133797422>
+##contig=<ID=11,length=135086622>
+##contig=<ID=12,length=133275309>
+##contig=<ID=13,length=114364328>
+##contig=<ID=14,length=107043718>
+##contig=<ID=15,length=101991189>
+##contig=<ID=16,length=90338345>
+##contig=<ID=17,length=83257441>
+##contig=<ID=18,length=80373285>
+##contig=<ID=19,length=58617616>
+##contig=<ID=2,length=242193529>
+##contig=<ID=20,length=64444167>
+##contig=<ID=21,length=46709983>
+##contig=<ID=22,length=50818468>
+##contig=<ID=3,length=198295559>
+##contig=<ID=4,length=190214555>
+##contig=<ID=5,length=181538259>
+##contig=<ID=6,length=170805979>
+##contig=<ID=7,length=159345973>
+##contig=<ID=8,length=145138636>
+##contig=<ID=9,length=138394717>
+##contig=<ID=MT,length=16569>
+##contig=<ID=X,length=156040895>
+##contig=<ID=Y,length=57227415>
+##contig=<ID=KI270728.1,length=1872759>
+##contig=<ID=KI270727.1,length=448248>
+##contig=<ID=KI270442.1,length=392061>
+##contig=<ID=KI270729.1,length=280839>
+##contig=<ID=GL000225.1,length=211173>
+##contig=<ID=KI270743.1,length=210658>
+##contig=<ID=GL000008.2,length=209709>
+##contig=<ID=GL000009.2,length=201709>
+##contig=<ID=KI270747.1,length=198735>
+##contig=<ID=KI270722.1,length=194050>
+##contig=<ID=GL000194.1,length=191469>
+##contig=<ID=KI270742.1,length=186739>
+##contig=<ID=GL000205.2,length=185591>
+##contig=<ID=GL000195.1,length=182896>
+##contig=<ID=KI270736.1,length=181920>
+##contig=<ID=KI270733.1,length=179772>
+##contig=<ID=GL000224.1,length=179693>
+##contig=<ID=GL000219.1,length=179198>
+##contig=<ID=KI270719.1,length=176845>
+##contig=<ID=GL000216.2,length=176608>
+##contig=<ID=KI270712.1,length=176043>
+##contig=<ID=KI270706.1,length=175055>
+##contig=<ID=KI270725.1,length=172810>
+##contig=<ID=KI270744.1,length=168472>
+##contig=<ID=KI270734.1,length=165050>
+##contig=<ID=GL000213.1,length=164239>
+##contig=<ID=GL000220.1,length=161802>
+##contig=<ID=KI270715.1,length=161471>
+##contig=<ID=GL000218.1,length=161147>
+##contig=<ID=KI270749.1,length=158759>
+##contig=<ID=KI270741.1,length=157432>
+##contig=<ID=GL000221.1,length=155397>
+##contig=<ID=KI270716.1,length=153799>
+##contig=<ID=KI270731.1,length=150754>
+##contig=<ID=KI270751.1,length=150742>
+##contig=<ID=KI270750.1,length=148850>
+##contig=<ID=KI270519.1,length=138126>
+##contig=<ID=GL000214.1,length=137718>
+##contig=<ID=KI270708.1,length=127682>
+##contig=<ID=KI270730.1,length=112551>
+##contig=<ID=KI270438.1,length=112505>
+##contig=<ID=KI270737.1,length=103838>
+##contig=<ID=KI270721.1,length=100316>
+##contig=<ID=KI270738.1,length=99375>
+##contig=<ID=KI270748.1,length=93321>
+##contig=<ID=KI270435.1,length=92983>
+##contig=<ID=GL000208.1,length=92689>
+##contig=<ID=KI270538.1,length=91309>
+##contig=<ID=KI270756.1,length=79590>
+##contig=<ID=KI270739.1,length=73985>
+##contig=<ID=KI270757.1,length=71251>
+##contig=<ID=KI270709.1,length=66860>
+##contig=<ID=KI270746.1,length=66486>
+##contig=<ID=KI270753.1,length=62944>
+##contig=<ID=KI270589.1,length=44474>
+##contig=<ID=KI270726.1,length=43739>
+##contig=<ID=KI270735.1,length=42811>
+##contig=<ID=KI270711.1,length=42210>
+##contig=<ID=KI270745.1,length=41891>
+##contig=<ID=KI270714.1,length=41717>
+##contig=<ID=KI270732.1,length=41543>
+##contig=<ID=KI270713.1,length=40745>
+##contig=<ID=KI270754.1,length=40191>
+##contig=<ID=KI270710.1,length=40176>
+##contig=<ID=KI270717.1,length=40062>
+##contig=<ID=KI270724.1,length=39555>
+##contig=<ID=KI270720.1,length=39050>
+##contig=<ID=KI270723.1,length=38115>
+##contig=<ID=KI270718.1,length=38054>
+##contig=<ID=KI270317.1,length=37690>
+##contig=<ID=KI270740.1,length=37240>
+##contig=<ID=KI270755.1,length=36723>
+##contig=<ID=KI270707.1,length=32032>
+##contig=<ID=KI270579.1,length=31033>
+##contig=<ID=KI270752.1,length=27745>
+##contig=<ID=KI270512.1,length=22689>
+##contig=<ID=KI270322.1,length=21476>
+##contig=<ID=GL000226.1,length=15008>
+##contig=<ID=KI270311.1,length=12399>
+##contig=<ID=KI270366.1,length=8320>
+##contig=<ID=KI270511.1,length=8127>
+##contig=<ID=KI270448.1,length=7992>
+##contig=<ID=KI270521.1,length=7642>
+##contig=<ID=KI270581.1,length=7046>
+##contig=<ID=KI270582.1,length=6504>
+##contig=<ID=KI270515.1,length=6361>
+##contig=<ID=KI270588.1,length=6158>
+##contig=<ID=KI270591.1,length=5796>
+##contig=<ID=KI270522.1,length=5674>
+##contig=<ID=KI270507.1,length=5353>
+##contig=<ID=KI270590.1,length=4685>
+##contig=<ID=KI270584.1,length=4513>
+##contig=<ID=KI270320.1,length=4416>
+##contig=<ID=KI270382.1,length=4215>
+##contig=<ID=KI270468.1,length=4055>
+##contig=<ID=KI270467.1,length=3920>
+##contig=<ID=KI270362.1,length=3530>
+##contig=<ID=KI270517.1,length=3253>
+##contig=<ID=KI270593.1,length=3041>
+##contig=<ID=KI270528.1,length=2983>
+##contig=<ID=KI270587.1,length=2969>
+##contig=<ID=KI270364.1,length=2855>
+##contig=<ID=KI270371.1,length=2805>
+##contig=<ID=KI270333.1,length=2699>
+##contig=<ID=KI270374.1,length=2656>
+##contig=<ID=KI270411.1,length=2646>
+##contig=<ID=KI270414.1,length=2489>
+##contig=<ID=KI270510.1,length=2415>
+##contig=<ID=KI270390.1,length=2387>
+##contig=<ID=KI270375.1,length=2378>
+##contig=<ID=KI270420.1,length=2321>
+##contig=<ID=KI270509.1,length=2318>
+##contig=<ID=KI270315.1,length=2276>
+##contig=<ID=KI270302.1,length=2274>
+##contig=<ID=KI270518.1,length=2186>
+##contig=<ID=KI270530.1,length=2168>
+##contig=<ID=KI270304.1,length=2165>
+##contig=<ID=KI270418.1,length=2145>
+##contig=<ID=KI270424.1,length=2140>
+##contig=<ID=KI270417.1,length=2043>
+##contig=<ID=KI270508.1,length=1951>
+##contig=<ID=KI270303.1,length=1942>
+##contig=<ID=KI270381.1,length=1930>
+##contig=<ID=KI270529.1,length=1899>
+##contig=<ID=KI270425.1,length=1884>
+##contig=<ID=KI270396.1,length=1880>
+##contig=<ID=KI270363.1,length=1803>
+##contig=<ID=KI270386.1,length=1788>
+##contig=<ID=KI270465.1,length=1774>
+##contig=<ID=KI270383.1,length=1750>
+##contig=<ID=KI270384.1,length=1658>
+##contig=<ID=KI270330.1,length=1652>
+##contig=<ID=KI270372.1,length=1650>
+##contig=<ID=KI270548.1,length=1599>
+##contig=<ID=KI270580.1,length=1553>
+##contig=<ID=KI270387.1,length=1537>
+##contig=<ID=KI270391.1,length=1484>
+##contig=<ID=KI270305.1,length=1472>
+##contig=<ID=KI270373.1,length=1451>
+##contig=<ID=KI270422.1,length=1445>
+##contig=<ID=KI270316.1,length=1444>
+##contig=<ID=KI270340.1,length=1428>
+##contig=<ID=KI270338.1,length=1428>
+##contig=<ID=KI270583.1,length=1400>
+##contig=<ID=KI270334.1,length=1368>
+##contig=<ID=KI270429.1,length=1361>
+##contig=<ID=KI270393.1,length=1308>
+##contig=<ID=KI270516.1,length=1300>
+##contig=<ID=KI270389.1,length=1298>
+##contig=<ID=KI270466.1,length=1233>
+##contig=<ID=KI270388.1,length=1216>
+##contig=<ID=KI270544.1,length=1202>
+##contig=<ID=KI270310.1,length=1201>
+##contig=<ID=KI270412.1,length=1179>
+##contig=<ID=KI270395.1,length=1143>
+##contig=<ID=KI270376.1,length=1136>
+##contig=<ID=KI270337.1,length=1121>
+##contig=<ID=KI270335.1,length=1048>
+##contig=<ID=KI270378.1,length=1048>
+##contig=<ID=KI270379.1,length=1045>
+##contig=<ID=KI270329.1,length=1040>
+##contig=<ID=KI270419.1,length=1029>
+##contig=<ID=KI270336.1,length=1026>
+##contig=<ID=KI270312.1,length=998>
+##contig=<ID=KI270539.1,length=993>
+##contig=<ID=KI270385.1,length=990>
+##contig=<ID=KI270423.1,length=981>
+##contig=<ID=KI270392.1,length=971>
+##contig=<ID=KI270394.1,length=970>
+##varlociraptor_preprocess_args={"Preprocess":{"kind":{"Variants":{"reference":"resources/genome.fasta","candidates":"results/candidate-calls/C-2019-03679-3A.freebayes.bcf","bam":"results/recal/C-2019-03679-3A.sorted.bam","alignment_properties":null,"output":"results/observations/C-2019-03679-3A/C-2019-03679-3A.freebayes.bcf","spurious_ins_rate":2.8e-6,"spurious_del_rate":5.1e-6,"spurious_insext_rate":0.0,"spurious_delext_rate":0.0,"protocol_strandedness":"Opposite","realignment_window":64,"max_depth":200,"omit_insert_size":true}}}}
+##varlociraptor_observation_format_version=2
+##INFO=<ID=PROB_FFPE_ARTIFACT,Number=A,Type=Float,Description="Posterior probability for event ffpe_artifact (PHRED)">
+##INFO=<ID=PROB_PRESENT,Number=A,Type=Float,Description="Posterior probability for event present (PHRED)">
+##INFO=<ID=PROB_ARTIFACT,Number=A,Type=Float,Description="Posterior probability for strand bias artifact (PHRED)">
+##INFO=<ID=PROB_ABSENT,Number=A,Type=Float,Description="Posterior probability for not having a variant (PHRED)">
+##FORMAT=<ID=DP,Number=A,Type=Integer,Description="Expected sequencing depth, while considering mapping uncertainty">
+##FORMAT=<ID=OBS,Number=A,Type=String,Description="Posterior odds for alt allele of each fragment as Kass Raftery scores: N=none, B=barely, P=positive, S=strong, V=very strong (lower case if probability for correct mapping of fragment is <95%)">
+##FORMAT=<ID=AF,Number=A,Type=Float,Description="Maximum a posteriori probability estimate of allele frequency">
+##FORMAT=<ID=SB,Number=A,Type=String,Description="Strand bias estimate: + indicates that ALT allele is associated with forward strand, - indicates that ALT allele is associated with reverse strand, - indicates no strand bias.">
+##bcftools_concatVersion=1.10+htslib-1.10.2
+##bcftools_concatCommand=concat -a -Ob -o results/calls/C-2019-03679-3A.bcf results/calls/C-2019-03679-3A.freebayes.bcf results/calls/C-2019-03679-3A.delly.bcf; Date=Mon Jul 13 20:42:10 2020
+##bcftools_viewVersion=1.9+htslib-1.9
+##bcftools_viewCommand=view results/calls/C-2019-03679-3A.bcf; Date=Mon Jul 13 20:42:12 2020
+##VEP="v100" time="2020-07-13 20:42:12" cache="resources/vep/cache/homo_sapiens/98_GRCh38" ensembl-funcgen=100.f0c3948 ensembl-variation=100.b220ff4 ensembl=100.7e964b7 ensembl-io=100.f87ae4f 1000genomes="phase3" COSMIC="89" ClinVar="201907" ESP="V2-SSA137" HGMD-PUBLIC="20184" assembly="GRCh38.p13" dbSNP="152" gencode="GENCODE 32" genebuild="2014-07" gnomAD="r2.1" polyphen="2.2.2" regbuild="1.0" sift="sift5.2.2"
+##INFO=<ID=ANN,Number=.,Type=String,Description="Consequence annotations from Ensembl VEP. Format: Allele|Consequence|IMPACT|SYMBOL|Gene|Feature_type|Feature|BIOTYPE|EXON|INTRON|HGVSc|HGVSp|cDNA_position|CDS_position|Protein_position|Amino_acids|Codons|Existing_variation|DISTANCE|STRAND|FLAGS|VARIANT_CLASS|SYMBOL_SOURCE|HGNC_ID|CANONICAL|MANE|TSL|APPRIS|CCDS|ENSP|SWISSPROT|TREMBL|UNIPARC|GENE_PHENO|SIFT|PolyPhen|DOMAINS|miRNA|HGVS_OFFSET|AF|AFR_AF|AMR_AF|EAS_AF|EUR_AF|SAS_AF|AA_AF|EA_AF|gnomAD_AF|gnomAD_AFR_AF|gnomAD_AMR_AF|gnomAD_ASJ_AF|gnomAD_EAS_AF|gnomAD_FIN_AF|gnomAD_NFE_AF|gnomAD_OTH_AF|gnomAD_SAS_AF|MAX_AF|MAX_AF_POPS|CLIN_SIG|SOMATIC|PHENO|PUBMED|MOTIF_NAME|MOTIF_POS|HIGH_INF_POS|MOTIF_SCORE_CHANGE|LoFtool">
+##LoFtool=LoFtool score for gene
+##bcftools_viewCommand=view -Ob; Date=Mon Jul 13 20:42:13 2020
+##bcftools_viewCommand=view -h /vol/tiny/siveke-mapktron-pdac/dna-seq-varlociraptor/results/calls/C-2019-03679-3A.annotated.bcf; Date=Tue Jul 28 11:01:12 2020
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	tumor
+chr1	15	.	C	T	.	.	SVLEN=.;PROB_ARTIFACT=1266.25;PROB_ABSENT=2436.16;PROB_FFPE_ARTIFACT=801.151;PROB_PRESENT=0;ANN=T|missense_variant|MODERATE|KRAS|ENSG00000133703|Transcript|ENST00000256078|protein_coding|2/6||ENST00000256078.9:c.35G>A|ENSP00000256078.4:p.Gly12Asp|225|35|12|G/D|gGt/gAt|rs121913529&COSM1135366&COSM1140133&COSM1140134&COSM12657&COSM49168&COSM520&COSM521&COSM522||-1||SNV|HGNC|HGNC:6407|YES||1|P4|CCDS8703.1|ENSP00000256078|P01116|L7RSL8|UPI0000133132|1|deleterious(0)|benign(0.303)|Gene3D:3.40.50.300&PDB-ENSP_mappings:3gft.A&PDB-ENSP_mappings:3gft.B&PDB-ENSP_mappings:3gft.C&PDB-ENSP_mappings:3gft.D&PDB-ENSP_mappings:3gft.E&PDB-ENSP_mappings:3gft.F&PDB-ENSP_mappings:4dsn.A&PDB-ENSP_mappings:4dso.A&PDB-ENSP_mappings:4dst.A&PDB-ENSP_mappings:4dsu.A&PDB-ENSP_mappings:4epr.A&PDB-ENSP_mappings:4ept.A&PDB-ENSP_mappings:4epv.A&PDB-ENSP_mappings:4epw.A&PDB-ENSP_mappings:4epx.A&PDB-ENSP_mappings:4epy.A&PDB-ENSP_mappings:4l8g.A&PDB-ENSP_mappings:4ldj.A&PDB-ENSP_mappings:4lpk.A&PDB-ENSP_mappings:4lpk.B&PDB-ENSP_mappings:4lrw.A&PDB-ENSP_mappings:4lrw.B&PDB-ENSP_mappings:4luc.A&PDB-ENSP_mappings:4luc.B&PDB-ENSP_mappings:4lv6.A&PDB-ENSP_mappings:4lv6.B&PDB-ENSP_mappings:4lyf.A&PDB-ENSP_mappings:4lyf.B&PDB-ENSP_mappings:4lyf.C&PDB-ENSP_mappings:4lyh.A&PDB-ENSP_mappings:4lyh.B&PDB-ENSP_mappings:4lyh.C&PDB-ENSP_mappings:4lyj.A&PDB-ENSP_mappings:4m1o.A&PDB-ENSP_mappings:4m1o.B&PDB-ENSP_mappings:4m1o.C&PDB-ENSP_mappings:4m1s.A&PDB-ENSP_mappings:4m1s.B&PDB-ENSP_mappings:4m1s.C&PDB-ENSP_mappings:4m1t.A&PDB-ENSP_mappings:4m1t.B&PDB-ENSP_mappings:4m1t.C&PDB-ENSP_mappings:4m1w.A&PDB-ENSP_mappings:4m1w.B&PDB-ENSP_mappings:4m1w.C&PDB-ENSP_mappings:4m1y.A&PDB-ENSP_mappings:4m1y.B&PDB-ENSP_mappings:4m1y.C&PDB-ENSP_mappings:4m21.A&PDB-ENSP_mappings:4m21.B&PDB-ENSP_mappings:4m21.C&PDB-ENSP_mappings:4m22.A&PDB-ENSP_mappings:4m22.B&PDB-ENSP_mappings:4m22.C&PDB-ENSP_mappings:4nmm.A&PDB-ENSP_mappings:4obe.A&PDB-ENSP_mappings:4obe.B&PDB-ENSP_mappings:4pzy.A&PDB-ENSP_mappings:4pzy.B&PDB-ENSP_mappings:4pzz.A&PDB-ENSP_mappings:4q01.A&PDB-ENSP_mappings:4q01.B&PDB-ENSP_mappings:4q02.A&PDB-ENSP_mappings:4q03.A&PDB-ENSP_mappings:4ql3.A&PDB-ENSP_mappings:4tq9.A&PDB-ENSP_mappings:4tq9.B&PDB-ENSP_mappings:4tqa.A&PDB-ENSP_mappings:4tqa.B&PDB-ENSP_mappings:4wa7.A&PDB-ENSP_mappings:5f2e.A&PDB-ENSP_mappings:5kyk.A&PDB-ENSP_mappings:5kyk.B&PDB-ENSP_mappings:5kyk.C&PDB-ENSP_mappings:5mla.A&PDB-ENSP_mappings:5mlb.A&PDB-ENSP_mappings:5mlb.C&PDB-ENSP_mappings:5mlb.E&PDB-ENSP_mappings:5mlb.G&PDB-ENSP_mappings:5o2s.A&PDB-ENSP_mappings:5o2s.C&PDB-ENSP_mappings:5o2s.E&PDB-ENSP_mappings:5o2s.G&PDB-ENSP_mappings:5o2t.A&PDB-ENSP_mappings:5ocg.A&PDB-ENSP_mappings:5oco.A&PDB-ENSP_mappings:5oco.B&PDB-ENSP_mappings:5oco.C&PDB-ENSP_mappings:5oco.D&PDB-ENSP_mappings:5oco.E&PDB-ENSP_mappings:5oco.F&PDB-ENSP_mappings:5oct.A&PDB-ENSP_mappings:5oct.B&PDB-ENSP_mappings:5oct.C&PDB-ENSP_mappings:5oct.D&PDB-ENSP_mappings:5oct.E&PDB-ENSP_mappings:5oct.F&PDB-ENSP_mappings:5tar.A&PDB-ENSP_mappings:5tb5.A&PDB-ENSP_mappings:5tb5.C&PDB-ENSP_mappings:5ufe.A&PDB-ENSP_mappings:5ufq.A&PDB-ENSP_mappings:5ufq.B&PDB-ENSP_mappings:5uk9.A&PDB-ENSP_mappings:5uk9.B&PDB-ENSP_mappings:5uqw.A&PDB-ENSP_mappings:5uqw.B&PDB-ENSP_mappings:5us4.A&PDB-ENSP_mappings:5us4.B&PDB-ENSP_mappings:5usj.A&PDB-ENSP_mappings:5usj.B&PDB-ENSP_mappings:5usj.C&PDB-ENSP_mappings:5usj.D&PDB-ENSP_mappings:5usj.E&PDB-ENSP_mappings:5usj.F&PDB-ENSP_mappings:5v6s.A&PDB-ENSP_mappings:5v6v.A&PDB-ENSP_mappings:5v6v.B&PDB-ENSP_mappings:5v71.A&PDB-ENSP_mappings:5v71.B&PDB-ENSP_mappings:5v71.C&PDB-ENSP_mappings:5v71.D&PDB-ENSP_mappings:5v71.E&PDB-ENSP_mappings:5v71.F&PDB-ENSP_mappings:5v9l.A&PDB-ENSP_mappings:5v9l.B&PDB-ENSP_mappings:5v9l.C&PDB-ENSP_mappings:5v9o.A&PDB-ENSP_mappings:5v9u.A&PDB-ENSP_mappings:5v9u.B&PDB-ENSP_mappings:5vbm.A&PDB-ENSP_mappings:5vp7.A&PDB-ENSP_mappings:5vp7.F&PDB-ENSP_mappings:5vpi.A&PDB-ENSP_mappings:5vpi.B&PDB-ENSP_mappings:5vpy.A&PDB-ENSP_mappings:5vpy.B&PDB-ENSP_mappings:5vpz.A&PDB-ENSP_mappings:5vpz.B&PDB-ENSP_mappings:5vq0.A&PDB-ENSP_mappings:5vq0.B&PDB-ENSP_mappings:5vq1.A&PDB-ENSP_mappings:5vq1.B&PDB-ENSP_mappings:5vq2.A&PDB-ENSP_mappings:5vq2.B&PDB-ENSP_mappings:5vq6.A&PDB-ENSP_mappings:5vq6.B&PDB-ENSP_mappings:5vq8.A&PDB-ENSP_mappings:5vq8.B&PDB-ENSP_mappings:5w22.A&PDB-ENSP_mappings:5w22.B&PDB-ENSP_mappings:5wha.A&PDB-ENSP_mappings:5wha.D&PDB-ENSP_mappings:5wha.G&PDB-ENSP_mappings:5wha.J&PDB-ENSP_mappings:5whb.A&PDB-ENSP_mappings:5whb.D&PDB-ENSP_mappings:5whb.G&PDB-ENSP_mappings:5whb.J&PDB-ENSP_mappings:5whd.A&PDB-ENSP_mappings:5whd.B&PDB-ENSP_mappings:5whd.C&PDB-ENSP_mappings:5whd.D&PDB-ENSP_mappings:5whe.A&PDB-ENSP_mappings:5whe.D&PDB-ENSP_mappings:5whe.G&PDB-ENSP_mappings:5whe.J&PDB-ENSP_mappings:5wlb.A&PDB-ENSP_mappings:5wlb.D&PDB-ENSP_mappings:5wpm.A&PDB-ENSP_mappings:5xco.A&PDB-ENSP_mappings:5yxz.A&PDB-ENSP_mappings:5yy1.A&PDB-ENSP_mappings:6ark.A&PDB-ENSP_mappings:6asa.A&PDB-ENSP_mappings:6ase.A&PDB-ENSP_mappings:6b0v.A&PDB-ENSP_mappings:6b0v.B&PDB-ENSP_mappings:6b0y.A&PDB-ENSP_mappings:6b0y.B&PDB-ENSP_mappings:6bof.A&PDB-ENSP_mappings:6bof.B&PDB-ENSP_mappings:6bp1.A&PDB-ENSP_mappings:6cc9.B&PDB-ENSP_mappings:6cch.B&PDB-ENSP_mappings:6ccx.B&PDB-ENSP_mappings:6epl.R&PDB-ENSP_mappings:6epm.R&PDB-ENSP_mappings:6epn.R&PDB-ENSP_mappings:6epo.R&PDB-ENSP_mappings:6epp.R&PDB-ENSP_mappings:6f76.A&PDB-ENSP_mappings:6f76.B&PDB-ENSP_mappings:6f76.C&PDB-ENSP_mappings:6f76.D&PDB-ENSP_mappings:6f76.E&PDB-ENSP_mappings:6f76.F&PDB-ENSP_mappings:6fa1.A&PDB-ENSP_mappings:6fa1.B&PDB-ENSP_mappings:6fa1.C&PDB-ENSP_mappings:6fa1.D&PDB-ENSP_mappings:6fa1.E&PDB-ENSP_mappings:6fa1.F&PDB-ENSP_mappings:6fa2.A&PDB-ENSP_mappings:6fa2.B&PDB-ENSP_mappings:6fa2.C&PDB-ENSP_mappings:6fa2.D&PDB-ENSP_mappings:6fa2.E&PDB-ENSP_mappings:6fa2.F&PDB-ENSP_mappings:6fa3.A&PDB-ENSP_mappings:6fa3.B&PDB-ENSP_mappings:6fa3.C&PDB-ENSP_mappings:6fa3.D&PDB-ENSP_mappings:6fa3.E&PDB-ENSP_mappings:6fa3.F&PDB-ENSP_mappings:6fa4.A&PDB-ENSP_mappings:6fa4.B&PDB-ENSP_mappings:6fa4.C&PDB-ENSP_mappings:6fa4.D&PDB-ENSP_mappings:6fa4.E&PDB-ENSP_mappings:6fa4.F&PDB-ENSP_mappings:6god.A&PDB-ENSP_mappings:6goe.A&PDB-ENSP_mappings:6gof.A&PDB-ENSP_mappings:6gog.A&PDB-ENSP_mappings:6gog.B&PDB-ENSP_mappings:6gog.C&PDB-ENSP_mappings:6gog.D&PDB-ENSP_mappings:6gog.E&PDB-ENSP_mappings:6gog.F&PDB-ENSP_mappings:6gom.A&PDB-ENSP_mappings:6gom.B&PDB-ENSP_mappings:6gom.C&PDB-ENSP_mappings:6gom.D&PDB-ENSP_mappings:6gom.E&PDB-ENSP_mappings:6gom.F&PDB-ENSP_mappings:6gqt.A&PDB-ENSP_mappings:6gqt.B&PDB-ENSP_mappings:6gqt.C&PDB-ENSP_mappings:6gqt.D&PDB-ENSP_mappings:6gqt.E&PDB-ENSP_mappings:6gqt.F&PDB-ENSP_mappings:6gqw.A&PDB-ENSP_mappings:6gqw.B&PDB-ENSP_mappings:6gqw.C&PDB-ENSP_mappings:6gqw.D&PDB-ENSP_mappings:6gqw.E&PDB-ENSP_mappings:6gqw.F&PDB-ENSP_mappings:6gqx.A&PDB-ENSP_mappings:6gqx.B&PDB-ENSP_mappings:6gqx.C&PDB-ENSP_mappings:6gqx.D&PDB-ENSP_mappings:6gqx.E&PDB-ENSP_mappings:6gqx.F&PDB-ENSP_mappings:6gqy.A&PDB-ENSP_mappings:6gqy.B&PDB-ENSP_mappings:6gqy.C&PDB-ENSP_mappings:6gqy.D&PDB-ENSP_mappings:6gqy.E&PDB-ENSP_mappings:6gqy.F&PDB-ENSP_mappings:6h46.A&PDB-ENSP_mappings:6h47.A&PDB-ENSP_mappings:6n2j.A&PDB-ENSP_mappings:6n2k.A&Pfam:PF00071&Prints:PR00449&PROSITE_profiles:PS51421&PANTHER:PTHR24070&PANTHER:PTHR24070:SF388&SMART:SM00173&SMART:SM00174&SMART:SM00175&SMART:SM00176&Superfamily:SSF52540&TIGRFAM:TIGR00231&CDD:cd04138&Low_complexity_(Seg):seg|||||||||||4.011e-06|0|0|0|0|0|8.883e-06|0|0|8.883e-06|gnomAD_NFE|pathogenic&likely_pathogenic|0&1&1&1&1&1&1&1&1|1&1&1&1&1&1&1&1&1|25157968&19029981&22499344&17332249&21079152&2278970&3122217&12460918&16434492&19075190&22407852&17384584&18794081&19047918&19255327&19773371&23406027&22683711&19018267&21975775&17704260&15696205&16361624&16618717&18316791&19114683&19679400&20921462&20921465&21228335&19794967&21398618&23182985&7773929&8439212&15842656&17910045&19358724&19881948&20609353&20805368&20949522&21169357&22025163&22235099&22282465&22897852&23014527&25044103&26372703&27872090&29525983&30463544|||||0.19,T|missense_variant|MODERATE|KRAS|ENSG00000133703|Transcript|ENST00000311936|protein_coding|2/5||ENST00000311936.8:c.35G>A|ENSP00000308495.3:p.Gly12Asp|225|35|12|G/D|gGt/gAt|rs121913529&COSM1135366&COSM1140133&COSM1140134&COSM12657&COSM49168&COSM520&COSM521&COSM522||-1||SNV|HGNC|HGNC:6407|||1|A1|CCDS8702.1|ENSP00000308495|P01116|A0A024RAV5|UPI0000001252|1|deleterious(0)|benign(0.21)|Low_complexity_(Seg):seg&PROSITE_profiles:PS51421&CDD:cd04138&PANTHER:PTHR24070&PANTHER:PTHR24070:SF186&Pfam:PF00071&TIGRFAM:TIGR00231&Gene3D:3.40.50.300&SMART:SM00173&SMART:SM00174&SMART:SM00175&Superfamily:SSF52540&Prints:PR00449|||||||||||4.011e-06|0|0|0|0|0|8.883e-06|0|0|8.883e-06|gnomAD_NFE|pathogenic&likely_pathogenic|0&1&1&1&1&1&1&1&1|1&1&1&1&1&1&1&1&1|25157968&19029981&22499344&17332249&21079152&2278970&3122217&12460918&16434492&19075190&22407852&17384584&18794081&19047918&19255327&19773371&23406027&22683711&19018267&21975775&17704260&15696205&16361624&16618717&18316791&19114683&19679400&20921462&20921465&21228335&19794967&21398618&23182985&7773929&8439212&15842656&17910045&19358724&19881948&20609353&20805368&20949522&21169357&22025163&22235099&22282465&22897852&23014527&25044103&26372703&27872090&29525983&30463544|||||0.19,T|missense_variant|MODERATE|KRAS|ENSG00000133703|Transcript|ENST00000556131|protein_coding|2/3||ENST00000556131.1:c.35G>A|ENSP00000451856.1:p.Gly12Asp|212|35|12|G/D|gGt/gAt|rs121913529&COSM1135366&COSM1140133&COSM1140134&COSM12657&COSM49168&COSM520&COSM521&COSM522||-1||SNV|HGNC|HGNC:6407|||1|||ENSP00000451856||G3V4K2|UPI00001FB7B5|1|deleterious(0)|benign(0.039)|Low_complexity_(Seg):seg&PROSITE_profiles:PS51421&PANTHER:PTHR24070&PANTHER:PTHR24070:SF397&Pfam:PF00071&Gene3D:3.40.50.300&Superfamily:SSF52540&Prints:PR00449|||||||||||4.011e-06|0|0|0|0|0|8.883e-06|0|0|8.883e-06|gnomAD_NFE|pathogenic&likely_pathogenic|0&1&1&1&1&1&1&1&1|1&1&1&1&1&1&1&1&1|25157968&19029981&22499344&17332249&21079152&2278970&3122217&12460918&16434492&19075190&22407852&17384584&18794081&19047918&19255327&19773371&23406027&22683711&19018267&21975775&17704260&15696205&16361624&16618717&18316791&19114683&19679400&20921462&20921465&21228335&19794967&21398618&23182985&7773929&8439212&15842656&17910045&19358724&19881948&20609353&20805368&20949522&21169357&22025163&22235099&22282465&22897852&23014527&25044103&26372703&27872090&29525983&30463544|||||0.19,T|missense_variant|MODERATE|KRAS|ENSG00000133703|Transcript|ENST00000557334|protein_coding|2/3||ENST00000557334.5:c.35G>A|ENSP00000452512.1:p.Gly12Asp|232|35|12|G/D|gGt/gAt|rs121913529&COSM1135366&COSM1140133&COSM1140134&COSM12657&COSM49168&COSM520&COSM521&COSM522||-1||SNV|HGNC|HGNC:6407|||5|||ENSP00000452512||G3V5T7|UPI00021CF477|1|deleterious_low_confidence(0)|probably_damaging(0.969)|Gene3D:3.40.50.300&Pfam:PF00071&Prints:PR00449&PROSITE_profiles:PS51421&PANTHER:PTHR24070&PANTHER:PTHR24070:SF186&SMART:SM00173&Superfamily:SSF52540&Low_complexity_(Seg):seg|||||||||||4.011e-06|0|0|0|0|0|8.883e-06|0|0|8.883e-06|gnomAD_NFE|pathogenic&likely_pathogenic|0&1&1&1&1&1&1&1&1|1&1&1&1&1&1&1&1&1|25157968&19029981&22499344&17332249&21079152&2278970&3122217&12460918&16434492&19075190&22407852&17384584&18794081&19047918&19255327&19773371&23406027&22683711&19018267&21975775&17704260&15696205&16361624&16618717&18316791&19114683&19679400&20921462&20921465&21228335&19794967&21398618&23182985&7773929&8439212&15842656&17910045&19358724&19881948&20609353&20805368&20949522&21169357&22025163&22235099&22282465&22897852&23014527&25044103&26372703&27872090&29525983&30463544|||||0.19	DP:AF:OBS:SB	118:0.677288:38V+37V-19N-19N+3S-2S+:.

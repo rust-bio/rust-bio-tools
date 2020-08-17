@@ -918,7 +918,7 @@
           "width":100,
           "encoding":{
             "y":{
-              "field":"gene",
+              "field":"key",
               "type":"ordinal",
               "sort": {},
               "axis":null
@@ -932,7 +932,7 @@
               }
             },
             "color":{
-              "field":"impact",
+              "field":"value",
               "type":"nominal",
               "title":"impact",
               "scale":{
@@ -961,7 +961,7 @@
           "width":100,
           "encoding":{
             "y":{
-              "field":"gene",
+              "field":"key",
               "type":"ordinal",
               "sort": {},
               "axis":null
@@ -975,7 +975,7 @@
               }
             },
             "color":{
-              "field":"consequence",
+              "field":"value",
               "type":"nominal",
               "title":"consequence",
               "scale":{
@@ -1070,7 +1070,7 @@
           "width":100,
           "encoding":{
             "y":{
-              "field":"gene",
+              "field":"key",
               "type":"ordinal",
               "sort": {},
               "axis": null
@@ -1084,7 +1084,7 @@
               }
             },
             "color":{
-              "field":"clin_sig",
+              "field":"value",
               "type":"nominal",
               "title":"clinical significance",
               "scale":{
@@ -1127,7 +1127,7 @@
           "width":100,
           "encoding":{
             "y":{
-              "field":"gene",
+              "field":"key",
               "type":"ordinal",
               "sort": {},
               "axis": null

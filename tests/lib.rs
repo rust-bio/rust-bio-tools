@@ -17,18 +17,6 @@ fn test_output(result: &str, expected: &str) {
     fs::remove_file(result).unwrap();
 }
 
-/// Check difference of an output file and the expected output and delete the output file.
-fn test_difference(result: &str, expected: &str) -> String {
-    let diff = Command::new("diff")
-        .arg(result)
-        .arg(expected)
-        .output()
-        .unwrap();
-    fs::remove_file(result).unwrap();
-
-    String::from_utf8(diff.stdout.to_owned()).unwrap()
-}
-
 /// Compare two fastq files, ignoring the name lines
 /// Reads are sorted by their sequence, which is not 100% robust
 /// if mutations/ sequencing errors are considered.
@@ -177,26 +165,37 @@ fn test_report() {
             .unwrap()
             .success()
     );
+    let files = vec![
+        ("tests/index1.html", "tests/expected/report/index1.html"),
+        (
+            "tests/genes/ENSG00000133703.html",
+            "tests/expected/report/genes/ENSG00000133703.html"
+        ),
+        (
+            "tests/details/a/ENSG00000133703.html",
+            "tests/expected/report/details/a/ENSG00000133703.html"
+        ),
+        (
+            "tests/details/b/ENSG00000133703.html",
+            "tests/expected/report/details/b/ENSG00000133703.html"
+        )
+    ];
 
-    assert!(
-        test_difference("tests/index1.html", "tests/expected/report/index1.html")
-            .starts_with("30c30\n")
-    ); // Ignore the timestamp in line 30
-    assert!(test_difference(
-        "tests/genes/ENSG00000133703.html",
-        "tests/expected/report/genes/ENSG00000133703.html"
-    )
-    .starts_with("30c30\n")); // Ignore the timestamp in line 30
-    assert!(test_difference(
-        "tests/details/a/ENSG00000133703.html",
-        "tests/expected/report/details/a/ENSG00000133703.html"
-    )
-    .starts_with("29c29\n")); // Ignore the timestamp in line 29
-    assert!(test_difference(
-        "tests/details/b/ENSG00000133703.html",
-        "tests/expected/report/details/b/ENSG00000133703.html"
-    )
-    .starts_with("29c29\n")); // Ignore the timestamp in line 29
+    for (result, expected) in files {
+        // delete line 30 with timestamp
+        // this may fail on OS X due to the wrong sed being installed
+        assert!(
+            Command::new("bash")
+                .arg("-c")
+                .arg("sed -i '30d' ".to_owned() + result)
+                .spawn()
+                .unwrap()
+                .wait()
+                .unwrap()
+                .success()
+        );
+        test_output(result, expected)
+    }
     fs::remove_dir_all("tests/genes").unwrap();
     fs::remove_dir_all("tests/details").unwrap();
 }

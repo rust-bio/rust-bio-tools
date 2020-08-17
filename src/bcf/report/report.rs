@@ -266,13 +266,7 @@ pub fn oncoprint(
             sort_alterations.insert(alteration, samples.len());
         }
         let mut order = Vec::from_iter(sort_alterations);
-        order.sort_by(|(a, b), (c, d)| {
-            if b == d {
-                a.cmp(&c)
-            } else {
-                d.cmp(&b)
-            }
-        });
+        order.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
         let order: Vec<_> = order.iter().map(|(x, _)| x).collect();
         let mut specs = gene_specs.clone();
         let impact_data = gene_impact_data.get(&gene).unwrap();
@@ -323,13 +317,7 @@ pub fn oncoprint(
     let page_size = 100;
 
     let mut v = Vec::from_iter(sort_genes);
-    v.sort_by(|(a, b), (c, d)| {
-        if b == d {
-            a.cmp(&c)
-        } else {
-            d.cmp(&b)
-        }
-    });
+    v.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
     let ordered_genes: Vec<_> = v.iter().map(|(x, _)| x).collect();
     let order = json!(ordered_genes);
 

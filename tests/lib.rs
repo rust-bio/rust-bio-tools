@@ -169,31 +169,29 @@ fn test_report() {
         ("tests/index1.html", "tests/expected/report/index1.html"),
         (
             "tests/genes/ENSG00000133703.html",
-            "tests/expected/report/genes/ENSG00000133703.html"
+            "tests/expected/report/genes/ENSG00000133703.html",
         ),
         (
             "tests/details/a/ENSG00000133703.html",
-            "tests/expected/report/details/a/ENSG00000133703.html"
+            "tests/expected/report/details/a/ENSG00000133703.html",
         ),
         (
             "tests/details/b/ENSG00000133703.html",
-            "tests/expected/report/details/b/ENSG00000133703.html"
-        )
+            "tests/expected/report/details/b/ENSG00000133703.html",
+        ),
     ];
 
     for (result, expected) in files {
         // delete line 30 with timestamp
         // this may fail on OS X due to the wrong sed being installed
-        assert!(
-            Command::new("bash")
-                .arg("-c")
-                .arg("sed -i '30d' ".to_owned() + result)
-                .spawn()
-                .unwrap()
-                .wait()
-                .unwrap()
-                .success()
-        );
+        assert!(Command::new("bash")
+            .arg("-c")
+            .arg("sed -i '30d' ".to_owned() + result)
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success());
         test_output(result, expected)
     }
     fs::remove_dir_all("tests/genes").unwrap();

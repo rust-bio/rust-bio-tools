@@ -154,33 +154,50 @@ fn vcf_baf() {
 }
 
 #[test]
-fn test_oncoprint() {
-    assert!(
-        Command::new("bash")
-            .arg("-c")
-            .arg("target/debug/rbt oncoprint a=tests/test-oncoprint.vcf b=tests/test-oncoprint.vcf > tests/oncoprint.html")
-            .spawn()
-            .unwrap()
-            .wait()
-            .unwrap()
-            .success()
-    );
-    test_output("tests/oncoprint.html", "tests/expected/oncoprint.html");
-}
-
-#[test]
 fn test_report() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt report tests/report-test.vcf.gz tests/test-report.bam tests/ref.fa > tests/report.html")
+            .arg("target/debug/rbt report tests/ref.fa a=tests/report-test.vcf a=tests/test-report.bam b=tests/report-test.vcf b=tests/test-report.bam -- tests")
             .spawn()
             .unwrap()
             .wait()
             .unwrap()
             .success()
     );
-    test_output("tests/report.html", "tests/expected/report.html");
+    let files = vec![
+        ("tests/index1.html", "tests/expected/report/index1.html"),
+        (
+            "tests/genes/ENSG00000133703.html",
+            "tests/expected/report/genes/ENSG00000133703.html"
+        ),
+        (
+            "tests/details/a/ENSG00000133703.html",
+            "tests/expected/report/details/a/ENSG00000133703.html"
+        ),
+        (
+            "tests/details/b/ENSG00000133703.html",
+            "tests/expected/report/details/b/ENSG00000133703.html"
+        )
+    ];
+
+    for (result, expected) in files {
+        // delete line 30 with timestamp
+        // this may fail on OS X due to the wrong sed being installed
+        assert!(
+            Command::new("bash")
+                .arg("-c")
+                .arg("sed -i '30d' ".to_owned() + result)
+                .spawn()
+                .unwrap()
+                .wait()
+                .unwrap()
+                .success()
+        );
+        test_output(result, expected)
+    }
+    fs::remove_dir_all("tests/genes").unwrap();
+    fs::remove_dir_all("tests/details").unwrap();
 }
 
 #[test]

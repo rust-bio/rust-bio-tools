@@ -1,6 +1,6 @@
 extern crate rust_htslib;
 
-use crate::bcf::report::fasta_reader::read_fasta;
+use crate::bcf::report::table_report::fasta_reader::read_fasta;
 use rust_htslib::bam::record::CigarStringView;
 use rust_htslib::{bam, bam::Read};
 use serde::Serialize;

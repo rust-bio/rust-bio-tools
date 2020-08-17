@@ -1,10 +1,11 @@
-use crate::bcf::report::fasta_reader::{get_fasta_length, read_fasta};
-use crate::bcf::report::static_reader::{get_static_reads, Variant};
+use crate::bcf::report::table_report::fasta_reader::{get_fasta_length, read_fasta};
+use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
 use jsonm::packer::{PackOptions, Packer};
-use rust_htslib::bcf::Read;
+use rust_htslib::bcf::{HeaderRecord, Read};
 use rustc_serialize::json::Json;
 use serde::Serialize;
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::error::Error;
 use std::path::Path;
 
@@ -29,15 +30,22 @@ pub struct Report {
     vis: String,
 }
 
-pub(crate) fn make_report(
+pub(crate) fn make_table_report(
     vcf_path: &Path,
     fasta_path: &Path,
     bam_path: &Path,
-) -> Result<Vec<Report>, Box<dyn Error>> {
+) -> Result<(HashMap<String, Vec<Report>>, Vec<String>), Box<dyn Error>> {
+    // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
+    let mut reports = HashMap::new();
+    let mut ann_indices = HashMap::new();
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     let header = vcf.header().clone();
+    let header_records = header.header_records();
+    let ann_field_description: Vec<_> = get_ann_description(header_records).unwrap();
 
-    let mut reports = Vec::new();
+    for (i, field) in ann_field_description.iter().enumerate() {
+        ann_indices.insert(field, i);
+    }
 
     for v in vcf.records() {
         let mut variant = v.unwrap();
@@ -59,22 +67,38 @@ pub(crate) fn make_report(
             _ => None,
         };
 
-        let mut ann_strings = Vec::new();
-        let ann = variant.info(b"ANN").string()?;
+        let alleles: Vec<_> = variant
+            .alleles()
+            .into_iter()
+            .map(|allele| allele.to_owned())
+            .collect();
 
-        if let Some(ann) = ann {
+        let mut annotations = Vec::new();
+
+        let mut genes = Vec::new();
+
+        if let Some(ann) = variant.info(b"ANN").string()? {
             for entry in ann {
                 let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
-                let mut s = Vec::new();
+
+                let gene = std::str::from_utf8(
+                    fields[*ann_indices.get(&String::from("Gene")).expect(
+                        "No field named Gene found. Please only use VEP-annotated VCF-files.",
+                    )],
+                )?;
+                genes.push(gene);
+
+                let mut ann_strings = Vec::new();
                 for f in fields {
                     let attr = String::from_utf8(f.to_owned()).unwrap();
-                    s.push(attr);
+                    ann_strings.push(attr);
                 }
-                ann_strings.push(s);
+                annotations.push(ann_strings);
             }
         }
 
-        let alleles = variant.alleles();
+        genes.sort();
+        genes.dedup();
 
         if alleles.len() > 0 {
             let ref_vec = alleles[0].to_owned();
@@ -83,7 +107,7 @@ pub(crate) fn make_report(
             let len: u8 = ref_allele.len() as u8;
 
             for i in 1..alleles.len() {
-                let alt = alleles[i];
+                let alt = alleles[i].as_slice();
                 let var_string = String::from("Variant");
                 let var_type: VariantType;
                 let alternatives: Option<String>;
@@ -156,7 +180,7 @@ pub(crate) fn make_report(
                 let visualization: Value;
                 let fasta_length = get_fasta_length(fasta_path);
 
-                if variant.pos() < 75 {
+                if pos < 75 {
                     let content = create_report_data(
                         fasta_path,
                         var.clone(),
@@ -166,50 +190,76 @@ pub(crate) fn make_report(
                         end_position as u64 + 75,
                     );
                     visualization = manipulate_json(content, 0, end_position as u64 + 75);
-                } else if variant.pos() + 75 >= fasta_length as i64 {
+                } else if pos + 75 >= fasta_length as i64 {
                     let content = create_report_data(
                         fasta_path,
                         var.clone(),
                         bam_path,
                         chrom.clone(),
-                        variant.pos() as u64 - 75,
+                        pos as u64 - 75,
                         fasta_length - 1,
                     );
-                    visualization =
-                        manipulate_json(content, variant.pos() as u64 - 75, fasta_length - 1);
+                    visualization = manipulate_json(content, pos as u64 - 75, fasta_length - 1);
                 } else {
                     let content = create_report_data(
                         fasta_path,
                         var.clone(),
                         bam_path,
                         chrom.clone(),
-                        variant.pos() as u64 - 75,
+                        pos as u64 - 75,
                         end_position as u64 + 75,
                     );
-                    visualization = manipulate_json(
-                        content,
-                        variant.pos() as u64 - 75,
-                        end_position as u64 + 75,
-                    );
+                    visualization =
+                        manipulate_json(content, pos as u64 - 75, end_position as u64 + 75);
                 }
 
                 let r = Report {
                     id: id.clone(),
                     name: chrom.clone(),
-                    position: variant.pos(),
+                    position: pos,
                     reference: ref_allele.clone(),
                     var_type: var.var_type,
                     alternatives: var.alternatives,
-                    ann: Some(ann_strings.clone()),
+                    ann: Some(annotations.clone()),
                     vis: visualization.to_string(),
                 };
 
-                reports.push(r);
+                for g in &genes {
+                    let reps = reports.entry((*g).to_owned()).or_insert_with(|| Vec::new());
+                    reps.push(r.clone());
+                }
             }
         }
     }
 
-    Ok(reports.clone())
+    let result = (reports, ann_field_description);
+    Ok(result)
+}
+
+pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>> {
+    for rec in header_records {
+        match rec {
+            rust_htslib::bcf::HeaderRecord::Info { key: _, values } => {
+                if values.get("ID").unwrap() == "ANN" {
+                    let description = values.get("Description").unwrap();
+                    let fields: Vec<_> = description.split('|').collect();
+                    let mut owned_fields = Vec::new();
+                    for mut entry in fields {
+                        entry = entry.trim();
+                        entry = entry.trim_start_matches(
+                            &"\"Consequence annotations from Ensembl VEP. Format: ",
+                        );
+                        entry = entry.trim_end_matches(&"\"");
+                        entry = entry.trim();
+                        owned_fields.push(entry.to_owned());
+                    }
+                    return Some(owned_fields);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 fn create_report_data(

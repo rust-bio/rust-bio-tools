@@ -96,9 +96,7 @@ pub fn oncoprint(
                         let get_field = |field: &str| {
                             str::from_utf8(
                                 fields[*ann_indices.get(&field.to_owned()).expect(
-                                    &("No field named ".to_owned()
-                                        + field
-                                        + " found. Please only use VEP-annotated VCF-files."),
+                                    &format!("No field named {} found. Please only use VEP-annotated VCF-files.", field)
                                 )],
                             )
                         };

@@ -248,48 +248,19 @@ pub fn oncoprint(
 
     let gene_specs: Value = serde_json::from_str(include_str!("gene_specs.json")).unwrap();
 
+    // create html for second stage
     for (gene, data) in gene_data {
-        let gene_data: Vec<_> = data.iter().sorted().collect();
-        let mut alterations = HashMap::new();
-        for rec in &gene_data {
-            let entry = alterations
-                .entry(&rec.alteration)
-                .or_insert_with(|| Vec::new());
-            entry.push(rec.sample.to_owned());
-        }
-        let mut sort_alterations = HashMap::new();
-        for (alteration, mut samples) in alterations {
-            samples.sort();
-            samples.dedup();
-            sort_alterations.insert(alteration, samples.len());
-        }
-        let mut order = Vec::from_iter(sort_alterations);
-        order.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
-        let order: Vec<_> = order.iter().map(|(x, _)| x).collect();
-        let mut specs = gene_specs.clone();
-        let impact_data = gene_impact_data.get(&gene).unwrap();
-        let final_impact: Vec<_> = impact_data.iter().flatten().sorted().collect();
-        let consequence_data = gene_consequence_data.get(&gene).unwrap();
-        let final_consequence: Vec<_> = consequence_data.iter().flatten().sorted().collect();
-        let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
-        let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().sorted().collect();
-        let allel_frequency_data = gene_af_data.get(&gene).unwrap();
-        let values = json!({ "main": gene_data, "impact": final_impact, "consequence": final_consequence, "clin_sig": final_clin_sig, "allel_frequency": allel_frequency_data});
-        specs["datasets"] = values;
-        let mut packer = Packer::new();
-        let options = PackOptions::new();
-        let packed_gene_specs = packer.pack(&specs, &options).unwrap();
-        let mut context = Context::new();
-        context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
-        context.insert("gene", &gene);
-        context.insert("order", &serde_json::to_string(&json!(order))?);
-        let local: DateTime<Local> = Local::now();
-        context.insert("time", &local.format("%a %b %e %T %Y").to_string());
-        context.insert("version", &env!("CARGO_PKG_VERSION"));
-        let html = gene_templates.render("genes.html.tera", &context)?;
-        let filepath = String::from(gene_path.clone()) + &gene + ".html";
-        let mut file = File::create(filepath)?;
-        file.write_all(html.as_bytes())?;
+        create_second_stage(
+            gene,
+            data,
+            &gene_impact_data,
+            &gene_consequence_data,
+            &gene_clin_sig_data,
+            &gene_af_data,
+            &gene_templates,
+            &gene_specs,
+            &gene_path,
+        )?;
     }
 
     // only keep recurrent entries
@@ -391,6 +362,61 @@ pub fn oncoprint(
         file.write_all(html.as_bytes())?;
     }
 
+    Ok(())
+}
+
+fn create_second_stage(
+    gene: String,
+    data: Vec<SecondStageRecord>,
+    gene_impact_data: &HashMap<String, Vec<Vec<Counter>>>,
+    gene_consequence_data: &HashMap<String, Vec<Vec<Counter>>>,
+    gene_clin_sig_data: &HashMap<String, Vec<Vec<Counter>>>,
+    gene_af_data: &HashMap<String, Vec<AlleleFrequency>>,
+    gene_templates: &Tera,
+    gene_specs: &Value,
+    gene_path: &String,
+) -> Result<(), Box<dyn Error>> {
+    let gene_data: Vec<_> = data.iter().sorted().collect();
+    let mut alterations = HashMap::new();
+    for rec in &gene_data {
+        let entry = alterations
+            .entry(&rec.alteration)
+            .or_insert_with(|| Vec::new());
+        entry.push(rec.sample.to_owned());
+    }
+    let mut sort_alterations = HashMap::new();
+    for (alteration, mut samples) in alterations {
+        samples.sort();
+        samples.dedup();
+        sort_alterations.insert(alteration, samples.len());
+    }
+    let mut order = Vec::from_iter(sort_alterations);
+    order.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
+    let order: Vec<_> = order.iter().map(|(x, _)| x).collect();
+    let mut specs = gene_specs.clone();
+    let impact_data = gene_impact_data.get(&gene).unwrap();
+    let final_impact: Vec<_> = impact_data.iter().flatten().sorted().collect();
+    let consequence_data = gene_consequence_data.get(&gene).unwrap();
+    let final_consequence: Vec<_> = consequence_data.iter().flatten().sorted().collect();
+    let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
+    let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().sorted().collect();
+    let allel_frequency_data = gene_af_data.get(&gene).unwrap();
+    let values = json!({ "main": gene_data, "impact": final_impact, "consequence": final_consequence, "clin_sig": final_clin_sig, "allel_frequency": allel_frequency_data});
+    specs["datasets"] = values;
+    let mut packer = Packer::new();
+    let options = PackOptions::new();
+    let packed_gene_specs = packer.pack(&specs, &options).unwrap();
+    let mut context = Context::new();
+    context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
+    context.insert("gene", &gene);
+    context.insert("order", &serde_json::to_string(&json!(order))?);
+    let local: DateTime<Local> = Local::now();
+    context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+    context.insert("version", &env!("CARGO_PKG_VERSION"));
+    let html = gene_templates.render("genes.html.tera", &context)?;
+    let filepath = String::from(gene_path.clone()) + &gene + ".html";
+    let mut file = File::create(filepath)?;
+    file.write_all(html.as_bytes())?;
     Ok(())
 }
 

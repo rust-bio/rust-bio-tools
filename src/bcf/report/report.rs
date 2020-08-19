@@ -93,11 +93,11 @@ pub fn oncoprint(
                             continue;
                         }
 
-                        let get_field = |str| {
+                        let get_field = |field: &str| {
                             str::from_utf8(
-                                fields[*ann_indices.get(&String::from(str)).expect(
+                                fields[*ann_indices.get(&field.to_owned()).expect(
                                     &("No field named ".to_owned()
-                                        + str
+                                        + field
                                         + " found. Please only use VEP-annotated VCF-files."),
                                 )],
                             )

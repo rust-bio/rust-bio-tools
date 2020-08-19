@@ -154,18 +154,48 @@ fn vcf_baf() {
 }
 
 #[test]
-fn test_oncoprint() {
+fn test_report() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt oncoprint a=tests/test-oncoprint.vcf b=tests/test-oncoprint.vcf > tests/oncoprint.html")
+            .arg("target/debug/rbt vcf-report tests/ref.fa --vcfs a=tests/report-test.vcf b=tests/report-test.vcf --bams a=tests/test-report.bam b=tests/test-report.bam -- tests")
             .spawn()
             .unwrap()
             .wait()
             .unwrap()
             .success()
     );
-    test_output("tests/oncoprint.html", "tests/expected/oncoprint.html");
+    let files = vec![
+        ("tests/index1.html", "tests/expected/report/index1.html"),
+        (
+            "tests/genes/ENSG00000133703.html",
+            "tests/expected/report/genes/ENSG00000133703.html",
+        ),
+        (
+            "tests/details/a/ENSG00000133703.html",
+            "tests/expected/report/details/a/ENSG00000133703.html",
+        ),
+        (
+            "tests/details/b/ENSG00000133703.html",
+            "tests/expected/report/details/b/ENSG00000133703.html",
+        ),
+    ];
+
+    for (result, expected) in files {
+        // delete line 30 with timestamp
+        // this may fail on OS X due to the wrong sed being installed
+        assert!(Command::new("bash")
+            .arg("-c")
+            .arg("sed -i '30d' ".to_owned() + result)
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success());
+        test_output(result, expected)
+    }
+    fs::remove_dir_all("tests/genes").unwrap();
+    fs::remove_dir_all("tests/details").unwrap();
 }
 
 #[test]

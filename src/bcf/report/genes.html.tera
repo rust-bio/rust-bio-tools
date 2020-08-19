@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <style>
+            body {
+                text-align: center;
+            }
+            #oncoprint {
+                margin-top: 15px;
+                text-align: center;
+            }
+        </style>
+        <title>{{ gene|safe }}</title>
+    </head>
+    <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">rbt report</a>
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools/blob/master/CHANGELOG.md">{{ version }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+                </li>
+            </ul>
+            <span class="navbar-text">
+                    created {{ time }}
+                </span>
+        </div>
+    </nav>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../index1.html">Oncoprint</a></li>
+                <li class="breadcrumb-item active" aria-current="page">gene: {{ gene|safe }}</li>
+            </ol>
+        </nav>
+        <div id="oncoprint"></div>
+
+        <script>
+            {{ "https://cdn.jsdelivr.net/npm/vega@5.10.1"|embed_source|safe }}
+        </script>
+        <script>
+            {{ "https://cdn.jsdelivr.net/npm/jsonm@1.0.10/build/jsonm.min.js"|embed_source|safe }}
+        </script>
+        <script>
+            {{ "https://cdn.jsdelivr.net/npm/vega-lite@4.10.4"|embed_source|safe }}
+        </script>
+        <script>
+            {{ "https://cdn.jsdelivr.net/npm/vega-embed@6.5.2"|embed_source|safe }}
+        </script>
+
+        <script>
+            var order = {{ order | safe }};
+            var spec = {{ genespecs | safe }};
+            const unpacker = new jsonm.Unpacker();
+            spec = unpacker.unpack(spec);
+            let changed_records = []
+            let delete_records = []
+            spec.datasets.main.forEach(function(record, j) {
+                let variants = record.variants.split("/");
+                if (variants.length > 1) {
+                    for (var i = 0; i < variants.length; i++) {
+                        let field = "variants" + (i+1);
+                        let layer_record = JSON.parse(JSON.stringify(record));
+                        layer_record[field] = variants[i];
+                        layer_record.count_variants = variants[i];
+                        changed_records.push(layer_record);
+                    }
+                    delete_records.push(j);
+                } else {
+                    record.variants1 = record.variants;
+                    record.count_variants = record.variants;
+                }
+            });
+            for (let i = 0; i < delete_records.length; i++) {
+                console.log(spec.data.values[delete_records[i]-i]);
+                spec.datasets.main.splice(delete_records[i]-i, 1);
+            }
+            changed_records.forEach(function(record) {
+                spec.datasets.main.push(record);
+            });
+            // add sort attribute to data
+            spec.vconcat[1].hconcat.forEach(function(ele) {
+                if (ele.layer === undefined) {
+                    ele.encoding.y.sort = order;
+                } else {
+                    ele.layer.forEach(function(layer) {
+                        layer.encoding.y.sort = order;
+                    })
+                }
+            })
+
+
+            vegaEmbed('#oncoprint', spec).then(function(result) {
+                result.view.addEventListener('click', function(event, item) {
+                    if (item.datum.gene !== undefined && item.datum.sample !== undefined) {
+                        window.location.href = '../details/' + item.datum.sample + '/' + item.datum.gene + '.html';
+                    }
+                });
+            });
+
+        </script>
+    </body>
+</html>

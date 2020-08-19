@@ -7,6 +7,8 @@ use fern;
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::error::Error;
+use std::fs;
+use std::path::Path;
 
 pub mod bam;
 pub mod bcf;
@@ -71,14 +73,42 @@ fn main() -> Result<(), Box<dyn Error>> {
             },
             value_t!(matches, "genes-per-request", usize).unwrap(),
         ),
-        ("oncoprint", Some(matches)) => {
+        ("vcf-report", Some(matches)) => {
             let mut sample_calls = HashMap::new();
-            for entry in matches.values_of("vcfs").unwrap() {
-                let e: Vec<_> = entry.split('=').collect();
-                sample_calls.insert(e[0].to_owned(), e[1].to_owned());
+            let mut bam_paths = HashMap::new();
+            let output_path = matches.value_of("output-path").unwrap();
+            let fasta_path = matches.value_of("fasta").unwrap();
+            let detail_path = output_path.to_owned() + "/details/";
+            fs::create_dir(Path::new(&detail_path))?;
+            let vcfs = matches.values_of("vcfs").unwrap();
+            let bams = matches.values_of("bams").unwrap();
+            for vcf in vcfs {
+                let v: Vec<_> = vcf.split('=').collect();
+                match sample_calls.insert(v[0].to_owned(), v[1].to_owned()) {
+                    None => {}
+                    _ => panic!("Found duplicate sample name {}. Please make sure the provided sample names are unique.", v[0].to_owned())
+                }
+            }
+            for bam in bams {
+                let b: Vec<_> = bam.split('=').collect();
+                match bam_paths.insert(b[0].to_owned(), b[1].to_owned()) {
+                    None => {}
+                    _ => panic!("Found duplicate sample name {}. Please make sure the provided sample names are unique.", b[0].to_owned())
+                }
+            }
+            for sample in sample_calls.keys().sorted() {
+                bcf::report::table_report::table_report(
+                    sample_calls.get(sample).unwrap(),
+                    fasta_path,
+                    bam_paths
+                        .get(sample)
+                        .expect(&format!("No bam provided for sample {}", sample)),
+                    output_path,
+                    sample,
+                )?;
             }
 
-            bcf::oncoprint::oncoprint(&sample_calls, matches.is_present("vep-annotation"))
+            bcf::report::report::oncoprint(&sample_calls, output_path)
         }
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {

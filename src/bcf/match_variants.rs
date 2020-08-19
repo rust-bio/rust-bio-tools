@@ -19,13 +19,13 @@ use std::error::Error;
 use std::str;
 
 pub struct VarIndex {
-    inner: HashMap<Vec<u8>, BTreeMap<u32, Vec<Variant>>>,
-    max_dist: u32,
+    inner: HashMap<Vec<u8>, BTreeMap<u64, Vec<Variant>>>,
+    max_dist: u64,
 }
 
 impl VarIndex {
-    pub fn new(mut reader: bcf::Reader, max_dist: u32) -> Result<Self, Box<dyn Error>> {
-        let mut inner = HashMap::new();
+    pub fn new(mut reader: bcf::Reader, max_dist: u64) -> Result<Self, Box<dyn Error>> {
+        let mut inner: HashMap<Vec<u8>, BTreeMap<u64, Vec<Variant>>> = HashMap::new();
         let mut i = 0;
         let mut rec = reader.empty_record();
         loop {
@@ -37,7 +37,7 @@ impl VarIndex {
             if let Some(rid) = rec.rid() {
                 let chrom = reader.header().rid2name(rid)?;
                 let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
-                recs.entry(rec.pos())
+                recs.entry(rec.pos() as u64)
                     .or_insert_with(|| Vec::new())
                     .push(Variant::new(&mut rec, &mut i)?);
             //recs.insert(rec.pos(), Variant::new(&mut rec, &mut i)?);
@@ -51,7 +51,7 @@ impl VarIndex {
         Ok(VarIndex { inner, max_dist })
     }
 
-    pub fn range(&self, chrom: &[u8], pos: u32) -> Option<btree_map::Range<'_, u32, Vec<Variant>>> {
+    pub fn range(&self, chrom: &[u8], pos: u64) -> Option<btree_map::Range<'_, u64, Vec<Variant>>> {
         self.inner
             .get(chrom)
             .map(|recs| recs.range(pos.saturating_sub(self.max_dist)..pos + self.max_dist))
@@ -74,7 +74,7 @@ pub fn match_variants(
         lengths <= {}\">", max_dist, max_len_diff).as_bytes()
     );
     let mut outbcf = bcf::Writer::from_path(&"-", &header, false, Format::BCF)?;
-    let index = VarIndex::new(bcf::Reader::from_path(matchbcf)?, max_dist)?;
+    let index = VarIndex::new(bcf::Reader::from_path(matchbcf)?, max_dist as u64)?;
 
     let mut rec = inbcf.empty_record();
     let mut i = 0;
@@ -95,7 +95,7 @@ pub fn match_variants(
                 .alleles
                 .iter()
                 .map(|a| {
-                    if let Some(range) = index.range(chrom, pos) {
+                    if let Some(range) = index.range(chrom, pos as u64) {
                         for v in range.map(|(_, idx_vars)| idx_vars).flatten() {
                             if let Some(id) = var.matches(v, a, max_dist, max_len_diff) {
                                 return id as i32;
@@ -125,7 +125,7 @@ pub fn match_variants(
 pub struct Variant {
     id: u32,
     rid: u32,
-    pos: u32,
+    pos: u64,
     alleles: Vec<VariantType>,
 }
 
@@ -159,8 +159,8 @@ impl Variant {
         let _alleles: Vec<VariantType> = if let Some(svtype) = svtype {
             vec![if svtype == b"INS" {
                 match (svlens, inslen) {
-                    (Some(svlens), _) => VariantType::Insertion(svlens[0]),
-                    (None, Some(inslen)) => VariantType::Insertion(inslen),
+                    (Some(svlens), _) => VariantType::Insertion(svlens[0] as u64),
+                    (None, Some(inslen)) => VariantType::Insertion(inslen as u64),
                     _ => {
                         warn!("Unsupported variant INS without SVLEN or INSLEN");
                         VariantType::Unsupported
@@ -168,8 +168,8 @@ impl Variant {
                 }
             } else if svtype == b"DEL" {
                 let svlen = match (svlens, end) {
-                    (Some(svlens), _) => svlens[0],
-                    (None, Some(end)) => end - 1 - pos,
+                    (Some(svlens), _) => svlens[0] as u64,
+                    (None, Some(end)) => end as u64 - 1 - pos as u64,
                     _ => {
                         return Err(Box::new(MatchError::MissingTag("SVLEN or END".to_owned())));
                     }
@@ -184,14 +184,14 @@ impl Variant {
             for (i, a) in alleles[1..].iter().enumerate() {
                 _alleles.push(if a == b"<DEL>" {
                     if let Some(ref svlens) = svlens {
-                        VariantType::Deletion(svlens[i])
+                        VariantType::Deletion(svlens[i] as u64)
                     } else {
                         return Err(Box::new(MatchError::MissingTag("SVLEN".to_owned())));
                     }
                 } else if a.len() < refallele.len() {
-                    VariantType::Deletion((refallele.len() - a.len()) as u32)
+                    VariantType::Deletion((refallele.len() - a.len()) as u64)
                 } else if a.len() > refallele.len() {
-                    VariantType::Insertion((a.len() - refallele.len()) as u32)
+                    VariantType::Insertion((a.len() - refallele.len()) as u64)
                 } else if a.len() == 1 {
                     VariantType::SNV(a[0])
                 } else {
@@ -208,18 +208,18 @@ impl Variant {
         let var = Variant {
             id: *id,
             rid: rec.rid().unwrap(),
-            pos,
+            pos: pos as u64,
             alleles: _alleles,
         };
         *id += alleles.len() as u32 - 1;
         Ok(var)
     }
 
-    pub fn centerpoint(&self, allele: &VariantType) -> u32 {
+    pub fn centerpoint(&self, allele: &VariantType) -> u64 {
         match allele {
             &VariantType::SNV(_) => self.pos,
             &VariantType::Insertion(_) => self.pos,
-            &VariantType::Deletion(len) => (self.pos as f64 + len as f64 / 2.0) as u32,
+            &VariantType::Deletion(len) => (self.pos as f64 + len as f64 / 2.0) as u64,
             &VariantType::Unsupported => panic!("Unsupported variant."),
         }
     }
@@ -266,8 +266,8 @@ impl Variant {
 #[derive(Debug)]
 pub enum VariantType {
     SNV(u8),
-    Insertion(u32),
-    Deletion(u32),
+    Insertion(u64),
+    Deletion(u64),
     Unsupported,
 }
 

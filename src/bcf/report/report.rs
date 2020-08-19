@@ -93,24 +93,22 @@ pub fn oncoprint(
                             continue;
                         }
 
-                        let impact = str::from_utf8(
-                            fields[*ann_indices.get(&String::from("IMPACT")).expect("No field named IMPACT found. Please only use VEP-annotated VCF-files.")],
-                        )?;
-                        let clin_sig = str::from_utf8(
-                            fields[*ann_indices.get(&String::from("CLIN_SIG")).expect("No field named CLIN_SIG found. Please only use VEP-annotated VCF-files.")],
-                        )?;
-                        let gene = str::from_utf8(
-                            fields[*ann_indices.get(&String::from("Gene")).expect("No field named Gene found. Please only use VEP-annotated VCF-files.")],
-                        )?;
-                        let dna_alteration = str::from_utf8(
-                            fields[*ann_indices.get(&String::from("HGVSc")).expect("No field named HGVSc found. Please only use VEP-annotated VCF-files.")],
-                        )?;
-                        let protein_alteration = str::from_utf8(
-                            fields[*ann_indices.get(&String::from("HGVSp")).expect("No field named HGVSp found. Please only use VEP-annotated VCF-files.")],
-                        )?;
-                        let consequence = str::from_utf8(
-                            fields[*ann_indices.get(&String::from("Consequence")).expect("No field named Consequence found. Please only use VEP-annotated VCF-files.")],
-                        )?;
+                        let get_field = |str| {
+                            str::from_utf8(
+                                fields[*ann_indices.get(&String::from(str)).expect(
+                                    &("No field named ".to_owned()
+                                        + str
+                                        + " found. Please only use VEP-annotated VCF-files."),
+                                )],
+                            )
+                        };
+
+                        let impact = get_field("IMPACT")?;
+                        let clin_sig = get_field("CLIN_SIG")?;
+                        let gene = get_field("Gene")?;
+                        let dna_alteration = get_field("HGVSc")?;
+                        let protein_alteration = get_field("HGVSp")?;
+                        let consequence = get_field("Consequence")?;
 
                         let gene_rec = unique_genes
                             .entry(gene.to_owned())
@@ -165,7 +163,7 @@ pub fn oncoprint(
                         }
 
                         for (i, name) in sample_names.iter().enumerate() {
-                            let af = AllelFrequency {
+                            let af = AlleleFrequency {
                                 sample: sample.to_owned() + ":" + name,
                                 key: gene.to_owned(),
                                 allel_frequency: allel_frequencies[i],
@@ -173,7 +171,7 @@ pub fn oncoprint(
 
                             af_data.push(af);
 
-                            let gene_af = AllelFrequency {
+                            let gene_af = AlleleFrequency {
                                 sample: sample.to_owned() + ":" + name,
                                 key: alt.to_owned(),
                                 allel_frequency: allel_frequencies[i],
@@ -418,7 +416,7 @@ struct Record {
 }
 
 #[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
-struct AllelFrequency {
+struct AlleleFrequency {
     sample: String,
     key: String,
     allel_frequency: f32,

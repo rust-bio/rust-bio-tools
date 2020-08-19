@@ -73,7 +73,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             },
             value_t!(matches, "genes-per-request", usize).unwrap(),
         ),
-        ("report", Some(matches)) => {
+        ("vcf-report", Some(matches)) => {
             let mut sample_calls = HashMap::new();
             let mut bam_paths = HashMap::new();
             let output_path = matches.value_of("output-path").unwrap();

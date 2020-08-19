@@ -203,16 +203,16 @@ subcommands:
                 Number of genes to submit per api request. A lower value increases the number of api requests in return. 
                 Too many requests could be rejected by the DGIdb server.
         author: Felix Mölder <felix.moelder@uni-due.de>
-  - report:
+  - vcf-report:
       about: |
         Creates report from a given VCF file including a visual plot
         for every variant with the given BAM and FASTA file.
 
         Examples:
           With current directory as default ouput path:
-            rbt report fasta.fa a=a.vcf a=a.bam b=b.vcf b=b.bam
+            rbt vcf-report fasta.fa a=a.vcf a=a.bam b=b.vcf b=b.bam
           With custom directory as default ouput path:
-            rbt report fasta.fa a=a.vcf a=a.bam b=b.vcf b=b.bam -- my/output/path/
+            rbt vcf-report fasta.fa a=a.vcf a=a.bam b=b.vcf b=b.bam -- my/output/path/
       author: Johannes Köster <johannes.koester@uni-due.de>, Felix Wiegand <felix.wiegand@tu-dortmund.de>
       args:
         - fasta:

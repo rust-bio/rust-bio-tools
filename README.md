@@ -11,7 +11,7 @@ Rust-Bio-Tools provides a command `rbt`, which currently supports the following 
 * a linear time extraction of depth information from BAMs at given loci (`rbt bam-depth`)
 * a utility to quickly filter records from a FASTQ file (`rbt fastq-filter`)
 * a tool to merge BAM or FASTQ reads using marked duplicates respectively unique molecular identifiers (UMIs) (`rbt collapse-reads-to-fragments bam|fastq`)
-* a tool to generate interactive HTML based reports that offer multiple plots visualizing the provided genomics data (`rbt report`)
+* a tool to generate interactive HTML based reports that offer multiple plots visualizing the provided genomics data in VCF and BAM format (`rbt vcf-report`)
 
 Further functionality is added as it is needed by the authors. Any contributions are highly welcome.
 For a list of changes, take a look at the [CHANGELOG](CHANGELOG.md).

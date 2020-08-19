@@ -80,17 +80,32 @@ fn main() -> Result<(), Box<dyn Error>> {
             let fasta_path = matches.value_of("fasta").unwrap();
             let detail_path = output_path.to_owned() + "/details/";
             fs::create_dir(Path::new(&detail_path))?;
-            for (vcf, bam) in matches
-                .values_of("vcf-bam-pairs")
-                .unwrap()
-                .tuples::<(&str, &str)>()
-            {
+            let vcfs = matches.values_of("vcfs").unwrap();
+            let bams = matches.values_of("bams").unwrap();
+            for vcf in vcfs {
                 let v: Vec<_> = vcf.split('=').collect();
+                match sample_calls.insert(v[0].to_owned(), v[1].to_owned()) {
+                    None => {}
+                    _ => panic!("Found duplicate sample name {}. Please make sure the provided sample names are unique.", v[0].to_owned())
+                }
+            }
+            for bam in bams {
                 let b: Vec<_> = bam.split('=').collect();
-                bcf::report::table_report::table_report(v[1], fasta_path, b[1], output_path, v[0])?;
-
-                sample_calls.insert(v[0].to_owned(), v[1].to_owned());
-                bam_paths.insert(b[0].to_owned(), b[1].to_owned());
+                match bam_paths.insert(b[0].to_owned(), b[1].to_owned()) {
+                    None => {}
+                    _ => panic!("Found duplicate sample name {}. Please make sure the provided sample names are unique.", b[0].to_owned())
+                }
+            }
+            for sample in sample_calls.keys().sorted() {
+                bcf::report::table_report::table_report(
+                    sample_calls.get(sample).unwrap(),
+                    fasta_path,
+                    bam_paths
+                        .get(sample)
+                        .expect(&format!("No bam provided for sample {}", sample)),
+                    output_path,
+                    sample,
+                )?;
             }
 
             bcf::report::report::oncoprint(&sample_calls, output_path)

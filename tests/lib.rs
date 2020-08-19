@@ -158,7 +158,7 @@ fn test_report() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt vcf-report tests/ref.fa a=tests/report-test.vcf a=tests/test-report.bam b=tests/report-test.vcf b=tests/test-report.bam -- tests")
+            .arg("target/debug/rbt vcf-report tests/ref.fa --vcfs a=tests/report-test.vcf b=tests/report-test.vcf --bams a=tests/test-report.bam b=tests/test-report.bam -- tests")
             .spawn()
             .unwrap()
             .wait()

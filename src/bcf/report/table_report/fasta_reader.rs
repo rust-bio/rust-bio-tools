@@ -32,9 +32,7 @@ pub fn get_fasta_length(path: &Path) -> u64 {
     let index = fasta::Index::with_fasta_file(&path).unwrap();
     let sequences = index.sequences();
 
-    let length = sequences[0].len;
-
-    length
+    sequences[0].len
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]

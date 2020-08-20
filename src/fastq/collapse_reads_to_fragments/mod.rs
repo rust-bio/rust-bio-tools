@@ -87,11 +87,13 @@ use std::fs;
 use std::io::BufReader;
 use std::str;
 
+// TODO: reduce arguments for clippy to <= 7
 /// Build readers for the given input and output FASTQ files and pass them to
 /// `call_consensus_reads`.
 ///
 /// The type of the readers (writers) depends on the file ending.
 /// If the input file names end with '.gz' a gzipped reader (writer) is used.
+#[allow(clippy::too_many_arguments)]
 pub fn call_consensus_reads_from_paths(
     fq1: &str,
     fq2: &str,
@@ -116,12 +118,13 @@ pub fn call_consensus_reads_from_paths(
                     &mut fastq::Reader::from_file(fq2)?,
                     &mut fastq::Writer::to_file(fq1_out)?,
                     &mut fastq::Writer::to_file(fq2_out)?,
-                    umi_len,
-                    seq_dist,
+                umi_len,
+                seq_dist,
                     umi_dist,
                     reverse_umi,
                     verbose_read_names,
-                ).call_consensus_reads(),
+                )
+                .call_consensus_reads(),
                 (true, true, false, false) => CallNonOverlappingConsensusRead::new(
                     &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new)?),
                     &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(MultiGzDecoder::new)?),

@@ -44,7 +44,7 @@ pub fn stats(fastq: bool) -> Result<(), Box<dyn Error>> {
         return Err(Box::new(InputError::NoSequence));
     }
     // Sort lengths one time
-    lengths.sort();
+    lengths.sort_unstable();
 
     let nb_bases = lengths.iter().sum::<usize>();
 
@@ -103,7 +103,7 @@ fn n50(numbers: &[usize], nb_bases_total: usize) -> usize {
         }
     }
 
-    return numbers[numbers.len() - 1];
+    numbers[numbers.len() - 1]
 }
 
 fn average(numbers: &[usize]) -> f64 {

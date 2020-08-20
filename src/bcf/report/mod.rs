@@ -1,2 +1,2 @@
-pub mod report;
+pub mod oncoprint;
 pub mod table_report;

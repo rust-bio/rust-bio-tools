@@ -1,6 +1,5 @@
 use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
 use derive_new::new;
-use indicatif;
 use rust_htslib::bam;
 use rust_htslib::bam::record::Cigar;
 use rust_htslib::bam::Read;
@@ -31,7 +30,7 @@ impl CallConsensusRead {
         let mut duplicate_groups: HashMap<GroupID, RecordIDS> = HashMap::new();
         let mut record_storage: HashMap<RecordID, RecordStorage> = HashMap::new();
 
-        for (i, result) in self.bam_reader.records().into_iter().enumerate() {
+        for (i, result) in self.bam_reader.records().enumerate() {
             let mut record = result?;
             if !record.is_unmapped() {
                 //Process completed duplicate groups
@@ -204,10 +203,8 @@ pub fn calc_consensus_complete_groups(
 
     // prepare spinner for user feedback
     let pb = indicatif::ProgressBar::new_spinner();
-    pb.set_style(spinner_style.clone());
-    pb.set_prefix(&format!(
-        "Clustering duplicated records by sequence using starcode."
-    ));
+    pb.set_style(spinner_style);
+    pb.set_prefix(&"Clustering duplicated records by sequence using starcode.".to_string());
     for (i, group_id) in group_ids.into_iter().enumerate() {
         pb.inc(1);
         let mut read_id_storage = Vec::new();
@@ -230,8 +227,8 @@ pub fn calc_consensus_complete_groups(
                 .concat(),
                 RecordStorage::SingleRecord { rec } => rec.seq().as_bytes(),
             };
-            seq_cluster.stdin.as_mut().unwrap().write(&seq)?;
-            seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+            seq_cluster.stdin.as_mut().unwrap().write_all(&seq)?;
+            seq_cluster.stdin.as_mut().unwrap().write_all(b"\n")?;
             read_id_storage.push(rec_id);
         }
         seq_cluster.stdin.as_mut().unwrap().flush()?;

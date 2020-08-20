@@ -6,7 +6,6 @@ use std::{fs, str};
 use derive_new::new;
 use itertools::Itertools;
 use serde_derive::Serialize;
-use serde_json;
 use tera::{self, Context, Tera};
 
 use crate::bcf::report::table_report::create_report_table::get_ann_description;
@@ -95,9 +94,7 @@ pub fn oncoprint(
 
                         let get_field = |field: &str| {
                             str::from_utf8(
-                                fields[*ann_indices.get(&field.to_owned()).expect(
-                                    &format!("No field named {} found. Please only use VEP-annotated VCF-files.", field)
-                                )],
+                                fields[*ann_indices.get(&field.to_owned()).unwrap_or_else(|| panic!("No field named {} found. Please only use VEP-annotated VCF-files.", field))],
                             )
                         };
 
@@ -108,26 +105,22 @@ pub fn oncoprint(
                         let protein_alteration = get_field("HGVSp")?;
                         let consequence = get_field("Consequence")?;
 
-                        let gene_rec = unique_genes
-                            .entry(gene.to_owned())
-                            .or_insert_with(|| Vec::new());
+                        let gene_rec = unique_genes.entry(gene.to_owned()).or_insert_with(Vec::new);
                         gene_rec.push(sample.to_owned());
 
                         let rec = genes
                             .entry(gene.to_owned())
                             .or_insert_with(|| Record::new(sample.to_owned(), gene.to_owned()));
                         rec.dna_alterations.push(dna_alteration.to_owned());
-                        if protein_alteration.len() > 0 {
+                        if !protein_alteration.is_empty() {
                             rec.protein_alterations.push(protein_alteration.to_owned());
                         }
                         rec.variants.push(variant.to_owned());
 
-                        let imp_rec = impacts.entry(gene.to_owned()).or_insert_with(|| Vec::new());
+                        let imp_rec = impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
                         imp_rec.push(BarPlotRecord::new(gene.to_owned(), impact.to_owned()));
 
-                        let cons_rec = consequences
-                            .entry(gene.to_owned())
-                            .or_insert_with(|| Vec::new());
+                        let cons_rec = consequences.entry(gene.to_owned()).or_insert_with(Vec::new);
                         cons_rec.push(BarPlotRecord::new(gene.to_owned(), consequence.to_owned()));
 
                         let alt = if protein_alteration.is_empty() {
@@ -135,24 +128,21 @@ pub fn oncoprint(
                         } else {
                             protein_alteration
                         };
-                        let gene_imp_rec = gene_impacts
-                            .entry(gene.to_owned())
-                            .or_insert_with(|| Vec::new());
+                        let gene_imp_rec =
+                            gene_impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
                         gene_imp_rec.push(BarPlotRecord::new(alt.to_owned(), impact.to_owned()));
 
                         let gene_cons_rec = gene_consequences
                             .entry(gene.to_owned())
-                            .or_insert_with(|| Vec::new());
+                            .or_insert_with(Vec::new);
                         gene_cons_rec
                             .push(BarPlotRecord::new(alt.to_owned(), consequence.to_owned()));
 
                         let gene_clin_sig_rec = gene_clin_sigs
                             .entry(gene.to_owned())
-                            .or_insert_with(|| Vec::new());
+                            .or_insert_with(Vec::new);
 
-                        let clin_rec = clin_sigs
-                            .entry(gene.to_owned())
-                            .or_insert_with(|| Vec::new());
+                        let clin_rec = clin_sigs.entry(gene.to_owned()).or_insert_with(Vec::new);
                         let sigs: Vec<_> = clin_sig.split('&').collect();
                         for s in sigs {
                             clin_rec.push(BarPlotRecord::new(gene.to_owned(), s.to_owned()));
@@ -175,9 +165,7 @@ pub fn oncoprint(
                                 allel_frequency: allel_frequencies[i],
                             };
 
-                            let f = gene_af_data
-                                .entry(gene.to_owned())
-                                .or_insert_with(|| Vec::new());
+                            let f = gene_af_data.entry(gene.to_owned()).or_insert_with(Vec::new);
                             f.push(gene_af);
                         }
                     }
@@ -217,7 +205,7 @@ pub fn oncoprint(
             let final_gene_impacts = make_final_bar_plot_records(gene_impact);
             let e = gene_impact_data
                 .entry(gene.to_owned())
-                .or_insert_with(|| Vec::new());
+                .or_insert_with(Vec::new);
             e.push(final_gene_impacts);
 
             // data for second stage consequence
@@ -225,7 +213,7 @@ pub fn oncoprint(
             let final_gene_consequences = make_final_bar_plot_records(gene_consequence);
             let g = gene_consequence_data
                 .entry(gene.to_owned())
-                .or_insert_with(|| Vec::new());
+                .or_insert_with(Vec::new);
             g.push(final_gene_consequences);
 
             // data for second stage clin_sig
@@ -233,7 +221,7 @@ pub fn oncoprint(
             let final_gene_clin_sigs = make_final_bar_plot_records(gene_clin_sig);
             let f = gene_clin_sig_data
                 .entry(gene.to_owned())
-                .or_insert_with(|| Vec::new());
+                .or_insert_with(Vec::new);
             f.push(final_gene_clin_sigs);
         }
     }
@@ -248,23 +236,51 @@ pub fn oncoprint(
 
     // create html for second stage
     for (gene, data) in gene_data {
-        create_second_stage(
-            gene,
-            data,
-            &gene_impact_data,
-            &gene_consequence_data,
-            &gene_clin_sig_data,
-            &gene_af_data,
-            &gene_templates,
-            &gene_specs,
-            &gene_path,
-        )?;
+        let gene_data: Vec<_> = data.iter().sorted().collect();
+        let mut alterations = HashMap::new();
+        for rec in &gene_data {
+            let entry = alterations.entry(&rec.alteration).or_insert_with(Vec::new);
+            entry.push(rec.sample.to_owned());
+        }
+        let mut sort_alterations = HashMap::new();
+        for (alteration, mut samples) in alterations {
+            samples.sort();
+            samples.dedup();
+            sort_alterations.insert(alteration, samples.len());
+        }
+        let mut order = Vec::from_iter(sort_alterations);
+        order.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
+        let order: Vec<_> = order.iter().map(|(x, _)| x).collect();
+        let mut specs = gene_specs.clone();
+        let impact_data = gene_impact_data.get(&gene).unwrap();
+        let final_impact: Vec<_> = impact_data.iter().flatten().sorted().collect();
+        let consequence_data = gene_consequence_data.get(&gene).unwrap();
+        let final_consequence: Vec<_> = consequence_data.iter().flatten().sorted().collect();
+        let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
+        let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().sorted().collect();
+        let allel_frequency_data = gene_af_data.get(&gene).unwrap();
+        let values = json!({ "main": gene_data, "impact": final_impact, "consequence": final_consequence, "clin_sig": final_clin_sig, "allel_frequency": allel_frequency_data});
+        specs["datasets"] = values;
+        let mut packer = Packer::new();
+        let options = PackOptions::new();
+        let packed_gene_specs = packer.pack(&specs, &options).unwrap();
+        let mut context = Context::new();
+        context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
+        context.insert("gene", &gene);
+        context.insert("order", &serde_json::to_string(&json!(order))?);
+        let local: DateTime<Local> = Local::now();
+        context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+        context.insert("version", &env!("CARGO_PKG_VERSION"));
+        let html = gene_templates.render("genes.html.tera", &context)?;
+        let filepath = gene_path.clone() + &gene + ".html";
+        let mut file = File::create(filepath)?;
+        file.write_all(html.as_bytes())?;
     }
 
     // only keep recurrent entries
     let data: Vec<_> = data
         .values()
-        .filter(|entry| entry.len() >= 1)
+        .filter(|entry| !entry.is_empty())
         .flatten()
         .sorted()
         .collect();
@@ -360,61 +376,6 @@ pub fn oncoprint(
         file.write_all(html.as_bytes())?;
     }
 
-    Ok(())
-}
-
-fn create_second_stage(
-    gene: String,
-    data: Vec<SecondStageRecord>,
-    gene_impact_data: &HashMap<String, Vec<Vec<Counter>>>,
-    gene_consequence_data: &HashMap<String, Vec<Vec<Counter>>>,
-    gene_clin_sig_data: &HashMap<String, Vec<Vec<Counter>>>,
-    gene_af_data: &HashMap<String, Vec<AlleleFrequency>>,
-    gene_templates: &Tera,
-    gene_specs: &Value,
-    gene_path: &String,
-) -> Result<(), Box<dyn Error>> {
-    let gene_data: Vec<_> = data.iter().sorted().collect();
-    let mut alterations = HashMap::new();
-    for rec in &gene_data {
-        let entry = alterations
-            .entry(&rec.alteration)
-            .or_insert_with(|| Vec::new());
-        entry.push(rec.sample.to_owned());
-    }
-    let mut sort_alterations = HashMap::new();
-    for (alteration, mut samples) in alterations {
-        samples.sort();
-        samples.dedup();
-        sort_alterations.insert(alteration, samples.len());
-    }
-    let mut order = Vec::from_iter(sort_alterations);
-    order.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
-    let order: Vec<_> = order.iter().map(|(x, _)| x).collect();
-    let mut specs = gene_specs.clone();
-    let impact_data = gene_impact_data.get(&gene).unwrap();
-    let final_impact: Vec<_> = impact_data.iter().flatten().sorted().collect();
-    let consequence_data = gene_consequence_data.get(&gene).unwrap();
-    let final_consequence: Vec<_> = consequence_data.iter().flatten().sorted().collect();
-    let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
-    let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().sorted().collect();
-    let allel_frequency_data = gene_af_data.get(&gene).unwrap();
-    let values = json!({ "main": gene_data, "impact": final_impact, "consequence": final_consequence, "clin_sig": final_clin_sig, "allel_frequency": allel_frequency_data});
-    specs["datasets"] = values;
-    let mut packer = Packer::new();
-    let options = PackOptions::new();
-    let packed_gene_specs = packer.pack(&specs, &options).unwrap();
-    let mut context = Context::new();
-    context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
-    context.insert("gene", &gene);
-    context.insert("order", &serde_json::to_string(&json!(order))?);
-    let local: DateTime<Local> = Local::now();
-    context.insert("time", &local.format("%a %b %e %T %Y").to_string());
-    context.insert("version", &env!("CARGO_PKG_VERSION"));
-    let html = gene_templates.render("genes.html.tera", &context)?;
-    let filepath = String::from(gene_path.clone()) + &gene + ".html";
-    let mut file = File::create(filepath)?;
-    file.write_all(html.as_bytes())?;
     Ok(())
 }
 
@@ -523,7 +484,7 @@ impl From<&Record> for FinalRecord {
     }
 }
 
-fn make_final_bar_plot_records(records: &Vec<BarPlotRecord>) -> Vec<Counter> {
+fn make_final_bar_plot_records(records: &[BarPlotRecord]) -> Vec<Counter> {
     let mut count_map = HashMap::new();
     for i in records {
         let r = count_map.entry((&i.key, &i.value)).or_insert_with(|| 0);
@@ -538,7 +499,7 @@ fn make_final_bar_plot_records(records: &Vec<BarPlotRecord>) -> Vec<Counter> {
             value: imp.to_owned(),
         };
         let record = Counter {
-            count: count,
+            count,
             record: plot_rec,
         };
 

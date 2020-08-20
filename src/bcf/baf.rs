@@ -39,8 +39,7 @@ pub fn calculate_baf() -> Result<(), Box<dyn Error>> {
                 if allele_lens[0] != 1 || sample_ref_depth[0].is_missing() {
                     bafs.extend(repeat_n(f32::missing(), allele_lens.len() - 1));
                 } else {
-                    let total_depth =
-                        sample_ref_depth[0] + sample_alt_depth.into_iter().sum::<i32>();
+                    let total_depth = sample_ref_depth[0] + sample_alt_depth.iter().sum::<i32>();
                     bafs.extend(allele_lens[1..].iter().zip(sample_alt_depth.iter()).map(
                         |(alen, d)| {
                             if *alen == 1 {

@@ -1,13 +1,10 @@
 use bio::io::fastq;
 use bio::io::fastq::{FastqRead, Record};
 use bio::stats::probs::LogProb;
-use csv;
 use derive_new::new;
-use indicatif;
 use ordered_float::NotNaN;
 use rgsl::randist::gaussian::ugaussian_P;
 use rocksdb::DB;
-use serde_json;
 use std::error::Error;
 use std::io;
 use std::io::Write;
@@ -44,7 +41,7 @@ fn median_hamming_distance(
         if (insert_size < f_rec.seq().len()) | (insert_size < r_rec.seq().len()) {
             return None;
         }
-        if insert_size >= (&f_rec.seq().len() + &r_rec.seq().len()) {
+        if insert_size >= (f_rec.seq().len() + r_rec.seq().len()) {
             return None;
         }
         let overlap = (f_rec.seq().len() + r_rec.seq().len()) - insert_size;
@@ -82,7 +79,8 @@ impl FASTQStorage {
         })
     }
 
-    fn as_key<'a>(i: u64) -> [u8; 8] {
+    #[allow(clippy::wrong_self_convention)]
+    fn as_key(i: u64) -> [u8; 8] {
         unsafe { mem::transmute::<u64, [u8; 8]>(i) }
     }
 
@@ -159,9 +157,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         // prepare spinner for user feedback
         let pb = indicatif::ProgressBar::new_spinner();
         pb.set_style(spinner_style.clone());
-        pb.set_prefix(&format!(
-            "[1/2] Clustering input reads by UMI using starcode."
-        ));
+        pb.set_prefix(&"[1/2] Clustering input reads by UMI using starcode.".to_string());
 
         loop {
             // update spinner
@@ -188,8 +184,8 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
             } else {
                 f_rec.seq()[..self.umi_len()].to_owned()
             };
-            umi_cluster.stdin.as_mut().unwrap().write(&umi)?;
-            umi_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+            umi_cluster.stdin.as_mut().unwrap().write_all(&umi)?;
+            umi_cluster.stdin.as_mut().unwrap().write_all(b"\n")?;
             // remove umi from read sequence for all further clustering steps
             if self.reverse_umi() {
                 r_rec = self.strip_umi_from_record(&r_rec)
@@ -207,10 +203,8 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         // prepare user feedback
         let mut j = 0;
         let pb = indicatif::ProgressBar::new_spinner();
-        pb.set_style(spinner_style.clone());
-        pb.set_prefix(&format!(
-            "[2/2] Merge eligable reads within each cluster.    "
-        ));
+        pb.set_style(spinner_style);
+        pb.set_prefix(&"[1/2] Clustering input reads by UMI using starcode.".to_string());
         // read clusters identified by the first starcode run
         // the first run clustered by UMI, hence all reads in
         // the clusters handled here had similar UMIs
@@ -243,8 +237,8 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                     .stdin
                     .as_mut()
                     .unwrap()
-                    .write(&[&f_rec.seq()[..], &r_rec.seq()[..]].concat())?;
-                seq_cluster.stdin.as_mut().unwrap().write(b"\n")?;
+                    .write_all(&[&f_rec.seq()[..], &r_rec.seq()[..]].concat())?;
+                seq_cluster.stdin.as_mut().unwrap().write_all(b"\n")?;
             }
             seq_cluster.stdin.as_mut().unwrap().flush()?;
             drop(seq_cluster.stdin.take());
@@ -309,6 +303,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
 
 /// Struct for calling non-overlapping consensus reads
 /// Implements Trait CallConsensusReads
+#[allow(clippy::too_many_arguments)]
 #[derive(new)]
 pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     fq1_reader: &'a mut fastq::Reader<R>,
@@ -386,6 +381,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
 }
 
 ///Clusters fastq reads by UMIs and calls consensus for overlapping reads
+#[allow(clippy::too_many_arguments)]
 #[derive(new)]
 pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     fq1_reader: &'a mut fastq::Reader<R>,
@@ -405,19 +401,19 @@ pub struct CallOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
 impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
     fn isize_highest_probability(&mut self, f_seq_len: usize, r_seq_len: usize) -> f64 {
         if f_seq_len + f_seq_len < self.insert_size {
-            return self.insert_size as f64;
+            self.insert_size as f64
         } else if f_seq_len + r_seq_len > self.insert_size + 2 * self.std_dev {
-            return (self.insert_size + 2 * self.std_dev) as f64;
+            (self.insert_size + 2 * self.std_dev) as f64
         } else {
-            return (f_seq_len + r_seq_len) as f64;
+            (f_seq_len + r_seq_len) as f64
         }
     }
 
     fn maximum_likelihood_overlapping_consensus(
         &mut self,
-        f_recs: &Vec<Record>,
-        r_recs: &Vec<Record>,
-        outer_seqids: &Vec<usize>,
+        f_recs: &[Record],
+        r_recs: &[Record],
+        outer_seqids: &[usize],
         uuid: &str,
     ) -> OverlappingConsensus {
         //Returns consensus record by filtering overlaps with lowest hamming distance.
@@ -459,9 +455,9 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
 
     fn maximum_likelihood_nonoverlapping_consensus(
         &mut self,
-        f_recs: &Vec<Record>,
-        r_recs: &Vec<Record>,
-        outer_seqids: &Vec<usize>,
+        f_recs: &[Record],
+        r_recs: &[Record],
+        outer_seqids: &[usize],
         uuid: &str,
     ) -> NonOverlappingConsensus {
         //Calculate non-overlapping consensus records and shared lh

@@ -48,7 +48,7 @@ fn calc_rows(
         if read_names.contains_key(&r.name) {
             row = *read_names.get(&r.name).unwrap();
         } else {
-            for i in 1..30 {
+            for (i, _) in row_ends.iter().enumerate().take(30).skip(1) {
                 if r.read_start > row_ends[i] {
                     row = i as u8;
                     row_ends[i] = r.read_end;
@@ -60,7 +60,7 @@ fn calc_rows(
 
         let base = StaticAlignmentMatch {
             alignment: r.clone(),
-            row: row,
+            row,
         };
 
         matches_wr.push(base);
@@ -72,7 +72,7 @@ fn calc_rows(
         if read_names.contains_key(&r.name) {
             row = *read_names.get(&r.name).unwrap();
         } else {
-            for i in 1..30 {
+            for (i, _) in row_ends.iter().enumerate().take(30).skip(1) {
                 if r.read_start > row_ends[i] {
                     row = i as u8;
                     row_ends[i] = r.read_end;
@@ -84,7 +84,7 @@ fn calc_rows(
 
         let base = StaticAlignmentNucleobase {
             nucleobase: r.clone(),
-            row: row,
+            row,
         };
 
         reads_wr.push(base);
@@ -102,7 +102,5 @@ pub fn get_static_reads(
 ) -> (Vec<StaticAlignmentNucleobase>, Vec<StaticAlignmentMatch>) {
     let alignments = read_indexed_bam(path, chrom.clone(), from, to);
     let (msm, m) = make_nucleobases(fasta_path, chrom, alignments, from, to);
-    let static_bases = calc_rows(msm, m);
-
-    static_bases
+    calc_rows(msm, m)
 }

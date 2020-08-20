@@ -22,8 +22,8 @@ jobs:
       
       - name: Check format
         run: cargo fmt -- --check
-     
-   Linting:
+  
+  Linting:
      runs-on: ubuntu-latest
      steps:
        - name: Checkout repository
@@ -40,7 +40,6 @@ jobs:
          uses: actions-rs/clippy-check@v1
          with:
            token: ${{ secrets.GITHUB_TOKEN }}
-
 
   Testing:
     needs: Formatting

@@ -22,7 +22,7 @@ pub fn fix_iupac_alleles() -> Result<(), Box<dyn Error>> {
                 .into_iter()
                 .map(|allele| {
                     let fixed = allele
-                        .into_iter()
+                        .iter()
                         .map(|base| {
                             if valid_alphabet.is_word(&[*base]) {
                                 *base

@@ -30,11 +30,13 @@ pub struct Report {
     vis: String,
 }
 
+type Reports = (HashMap<String, Vec<Report>>, Vec<String>);
+
 pub(crate) fn make_table_report(
     vcf_path: &Path,
     fasta_path: &Path,
     bam_path: &Path,
-) -> Result<(HashMap<String, Vec<Report>>, Vec<String>), Box<dyn Error>> {
+) -> Result<Reports, Box<dyn Error>> {
     // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
     let mut reports = HashMap::new();
     let mut ann_indices = HashMap::new();
@@ -97,17 +99,17 @@ pub(crate) fn make_table_report(
             }
         }
 
-        genes.sort();
+        genes.sort_unstable();
         genes.dedup();
 
-        if alleles.len() > 0 {
+        if !alleles.is_empty() {
             let ref_vec = alleles[0].to_owned();
             let ref_allele = String::from_utf8(ref_vec).unwrap();
 
             let len: u8 = ref_allele.len() as u8;
 
-            for i in 1..alleles.len() {
-                let alt = alleles[i].as_slice();
+            for allel in alleles.iter().skip(1) {
+                let alt = allel.as_slice();
                 let var_string = String::from("Variant");
                 let var_type: VariantType;
                 let alternatives: Option<String>;
@@ -170,11 +172,11 @@ pub(crate) fn make_table_report(
                 let var = Variant {
                     marker_type: var_string,
                     reference: ref_allele.clone(),
-                    alternatives: alternatives,
+                    alternatives,
                     start_position: plot_start_position,
-                    end_position: end_position,
+                    end_position,
                     row: -1,
-                    var_type: var_type,
+                    var_type,
                 };
 
                 let visualization: Value;
@@ -225,7 +227,7 @@ pub(crate) fn make_table_report(
                 };
 
                 for g in &genes {
-                    let reps = reports.entry((*g).to_owned()).or_insert_with(|| Vec::new());
+                    let reps = reports.entry((*g).to_owned()).or_insert_with(Vec::new);
                     reps.push(r.clone());
                 }
             }
@@ -238,25 +240,22 @@ pub(crate) fn make_table_report(
 
 pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>> {
     for rec in header_records {
-        match rec {
-            rust_htslib::bcf::HeaderRecord::Info { key: _, values } => {
-                if values.get("ID").unwrap() == "ANN" {
-                    let description = values.get("Description").unwrap();
-                    let fields: Vec<_> = description.split('|').collect();
-                    let mut owned_fields = Vec::new();
-                    for mut entry in fields {
-                        entry = entry.trim();
-                        entry = entry.trim_start_matches(
-                            &"\"Consequence annotations from Ensembl VEP. Format: ",
-                        );
-                        entry = entry.trim_end_matches(&"\"");
-                        entry = entry.trim();
-                        owned_fields.push(entry.to_owned());
-                    }
-                    return Some(owned_fields);
+        if let rust_htslib::bcf::HeaderRecord::Info { key: _, values } = rec {
+            if values.get("ID").unwrap() == "ANN" {
+                let description = values.get("Description").unwrap();
+                let fields: Vec<_> = description.split('|').collect();
+                let mut owned_fields = Vec::new();
+                for mut entry in fields {
+                    entry = entry.trim();
+                    entry = entry.trim_start_matches(
+                        &"\"Consequence annotations from Ensembl VEP. Format: ",
+                    );
+                    entry = entry.trim_end_matches(&"\"");
+                    entry = entry.trim();
+                    owned_fields.push(entry.to_owned());
                 }
+                return Some(owned_fields);
             }
-            _ => {}
         }
     }
     None
@@ -272,12 +271,12 @@ fn create_report_data(
 ) -> Json {
     let mut data = Vec::new();
 
-    for f in read_fasta(fasta_path.clone(), chrom.clone(), from, to) {
+    for f in read_fasta(fasta_path, chrom.clone(), from, to) {
         let nucleobase = json!(f);
         data.push(nucleobase);
     }
 
-    let (bases, matches) = get_static_reads(bam_path, fasta_path, chrom.clone(), from, to);
+    let (bases, matches) = get_static_reads(bam_path, fasta_path, chrom, from, to);
 
     for b in bases {
         let base = json!(b);
@@ -291,9 +290,7 @@ fn create_report_data(
 
     data.push(json!(variant));
 
-    let values = Json::from_str(&json!(data).to_string()).unwrap();
-
-    values
+    Json::from_str(&json!(data).to_string()).unwrap()
 }
 
 /// Inserts the json containing the genome data into the vega specs.
@@ -307,7 +304,7 @@ fn manipulate_json(data: Json, from: u64, to: u64) -> Value {
 
     let v = values["values"].as_array().unwrap().clone();
 
-    for i in 0..v.len() {
+    for (i, _) in v.iter().enumerate() {
         let k = v[i]["marker_type"].clone().as_str().unwrap().to_owned();
 
         if k == "A" || k == "T" || k == "G" || k == "C" || k == "U" {
@@ -333,7 +330,5 @@ fn manipulate_json(data: Json, from: u64, to: u64) -> Value {
 
     let mut packer = Packer::new();
     let options = PackOptions::new();
-    let packed_specs = packer.pack(&vega_specs, &options).unwrap();
-
-    packed_specs
+    packer.pack(&vega_specs, &options).unwrap()
 }

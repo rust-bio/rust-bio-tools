@@ -36,9 +36,9 @@ impl VarIndex {
             };
             if let Some(rid) = rec.rid() {
                 let chrom = reader.header().rid2name(rid)?;
-                let recs = inner.entry(chrom.to_owned()).or_insert(BTreeMap::new());
+                let recs = inner.entry(chrom.to_owned()).or_insert_with(BTreeMap::new);
                 recs.entry(rec.pos() as u64)
-                    .or_insert_with(|| Vec::new())
+                    .or_insert_with(Vec::new)
                     .push(Variant::new(&mut rec, &mut i)?);
             //recs.insert(rec.pos(), Variant::new(&mut rec, &mut i)?);
             } else {
@@ -134,7 +134,7 @@ impl Variant {
         let pos = rec.pos();
 
         let svlens = if let Ok(Some(svlens)) = rec.info(b"SVLEN").integer() {
-            Some(svlens.into_iter().map(|l| l.abs() as u32).collect_vec())
+            Some(svlens.iter().map(|l| l.abs() as u32).collect_vec())
         } else {
             None
         };
@@ -216,11 +216,11 @@ impl Variant {
     }
 
     pub fn centerpoint(&self, allele: &VariantType) -> u64 {
-        match allele {
-            &VariantType::SNV(_) => self.pos,
-            &VariantType::Insertion(_) => self.pos,
-            &VariantType::Deletion(len) => (self.pos as f64 + len as f64 / 2.0) as u64,
-            &VariantType::Unsupported => panic!("Unsupported variant."),
+        match *allele {
+            VariantType::SNV(_) => self.pos,
+            VariantType::Insertion(_) => self.pos,
+            VariantType::Deletion(len) => (self.pos as f64 + len as f64 / 2.0) as u64,
+            VariantType::Unsupported => panic!("Unsupported variant."),
         }
     }
 
@@ -273,10 +273,7 @@ pub enum VariantType {
 
 impl VariantType {
     pub fn is_unsupported(&self) -> bool {
-        match self {
-            &VariantType::Unsupported => true,
-            _ => false,
-        }
+        matches!(self, &VariantType::Unsupported)
     }
 }
 

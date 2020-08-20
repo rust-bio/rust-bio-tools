@@ -3,7 +3,6 @@ use clap::{load_yaml, value_t};
 use log::LevelFilter;
 
 use clap::App;
-use fern;
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::error::Error;
@@ -49,11 +48,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             &matches
                 .values_of("info")
                 .map(|values| values.collect_vec())
-                .unwrap_or(vec![]),
+                .unwrap_or_default(),
             &matches
                 .values_of("format")
                 .map(|values| values.collect_vec())
-                .unwrap_or(vec![]),
+                .unwrap_or_default(),
             matches.is_present("genotypes"),
         ),
         ("vcf-match", Some(matches)) => bcf::match_variants::match_variants(
@@ -102,13 +101,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                     fasta_path,
                     bam_paths
                         .get(sample)
-                        .expect(&format!("No bam provided for sample {}", sample)),
+                        .unwrap_or_else(|| panic!("No bam provided for sample {}", sample)),
                     output_path,
                     sample,
                 )?;
             }
 
-            bcf::report::report::oncoprint(&sample_calls, output_path)
+            bcf::report::oncoprint::oncoprint(&sample_calls, output_path)
         }
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {

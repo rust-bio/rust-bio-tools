@@ -46,7 +46,7 @@ pub fn table_report(
         let html = templates
             .render("table_report.html.tera", &context)
             .unwrap();
-        let filepath = String::from(detail_path.clone()) + "/" + &gene + ".html";
+        let filepath = detail_path.clone() + "/" + &gene + ".html";
         let mut file = File::create(filepath)?;
         file.write_all(html.as_bytes())?;
     }

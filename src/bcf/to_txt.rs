@@ -48,21 +48,21 @@ impl Writer {
 
     fn write_field(&mut self, value: &[u8]) -> Result<(), Box<dyn Error>> {
         if self.field_count > 0 {
-            self.inner.write(b"\t")?;
+            self.inner.write_all(b"\t")?;
         }
-        self.inner.write(value)?;
+        self.inner.write_all(value)?;
         self.field_count += 1;
         Ok(())
     }
 
     fn newline(&mut self) -> Result<(), Box<dyn Error>> {
-        self.inner.write(b"\n")?;
+        self.inner.write_all(b"\n")?;
         self.field_count = 0;
         Ok(())
     }
 }
 
-const HEADER_COMMON: &'static [u8] = b"VARIANT";
+const HEADER_COMMON: &[u8] = b"VARIANT";
 
 pub fn to_txt(
     info_tags: &[&str],

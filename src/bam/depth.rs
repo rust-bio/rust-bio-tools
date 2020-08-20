@@ -5,11 +5,11 @@
 //! The positions file contains the name of one reference sequence and one position per line (tab separated).
 //! Example:
 //! ```
-//! 16	1
-//! 17	1
-//! 17	2
-//! 17	38
-//! 17	39
+//! 16    1
+//! 17    1
+//! 17    2
+//! 17    38
+//! 17    39
 //! ```
 //!
 //! Positions are read from stdin, the BAM file is the first argument.
@@ -18,11 +18,11 @@
 //! Depth are written to stdout as tab-separated lines, similar to the positions input.
 //! Example:
 //! ```
-//! 16	1	0
-//! 17	1	5
-//! 17	2	5
-//! 17	38	14
-//! 17	39	13
+//! 16    1    0
+//! 17    1    5
+//! 17    2    5
+//! 17    38    14
+//! 17    39    13
 //! ```
 //!
 //! ## Usage:
@@ -38,7 +38,6 @@ use std::cmp;
 use std::error::Error;
 use std::io;
 
-use csv;
 use serde::Deserialize;
 
 use rust_htslib::bam;

@@ -384,13 +384,6 @@ pub fn make_nucleobases(
 
                     soft_clip_begin = false;
                 }
-                rust_htslib::bam::record::Cigar::HardClip(c) => {
-                    for _i in 0..rust_htslib::bam::record::Cigar::HardClip(*c).len() {
-                        cigar_offset += 1;
-                    }
-
-                    soft_clip_begin = false;
-                }
                 _ => {
                     soft_clip_begin = false;
                 }

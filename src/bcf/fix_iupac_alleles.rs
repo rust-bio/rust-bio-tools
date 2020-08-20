@@ -21,7 +21,7 @@ pub fn fix_iupac_alleles() -> Result<(), Box<dyn Error>> {
             let fixed = alleles
                 .into_iter()
                 .map(|allele| {
-                    let fixed = allele
+                    allele
                         .iter()
                         .map(|base| {
                             if valid_alphabet.is_word(&[*base]) {
@@ -30,8 +30,7 @@ pub fn fix_iupac_alleles() -> Result<(), Box<dyn Error>> {
                                 b'N'
                             }
                         })
-                        .collect_vec();
-                    fixed
+                        .collect_vec()
                 })
                 .collect_vec();
 

@@ -30,7 +30,7 @@ impl CallConsensusRead {
         let mut duplicate_groups: HashMap<GroupID, RecordIDS> = HashMap::new();
         let mut record_storage: HashMap<RecordID, RecordStorage> = HashMap::new();
 
-        for (i, result) in self.bam_reader.records().into_iter().enumerate() {
+        for (i, result) in self.bam_reader.records().enumerate() {
             let mut record = result?;
             if !record.is_unmapped() {
                 //Process completed duplicate groups

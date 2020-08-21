@@ -9,10 +9,6 @@
   "padding": 5,
   "width": 200,
   "height": 250,
-  "title": {
-    "text": "Chromosom",
-    "frame": "group"
-  },
   "style": "cell",
   "data": [
     {

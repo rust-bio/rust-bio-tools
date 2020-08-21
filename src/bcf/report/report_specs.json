@@ -926,6 +926,7 @@
             "x":{
               "field":"count",
               "aggregate":"sum",
+              "stack":  "normalize",
               "type":"quantitative",
               "axis":{
                 "title":"impact"
@@ -969,6 +970,7 @@
             "x":{
               "field":"count",
               "aggregate":"sum",
+              "stack":  "normalize",
               "type":"quantitative",
               "axis":{
                 "title":"consequence"
@@ -1078,6 +1080,7 @@
             "x":{
               "field":"count",
               "aggregate":"sum",
+              "stack":  "normalize",
               "type":"quantitative",
               "axis":{
                 "title":"clinical significance"

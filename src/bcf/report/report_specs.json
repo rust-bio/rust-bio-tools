@@ -1123,7 +1123,7 @@
           "data":{
             "name":"allel_frequency"
           },
-          "mark":"point",
+          "mark":"tick",
           "width":100,
           "encoding":{
             "y":{

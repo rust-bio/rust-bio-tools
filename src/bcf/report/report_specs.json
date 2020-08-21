@@ -120,7 +120,7 @@
                 "fillOpacity":{
                   "condition":{
                     "selection":"highlight1",
-                    "value":0.8
+                    "value":0.5
                   },
                   "value":1
                 },
@@ -217,7 +217,7 @@
                 "fillOpacity":{
                   "condition":{
                     "selection":"highlight2",
-                    "value":0.8
+                    "value":0.5
                   },
                   "value":1
                 },
@@ -314,7 +314,7 @@
                 "fillOpacity":{
                   "condition":{
                     "selection":"highlight3",
-                    "value":0.8
+                    "value":0.5
                   },
                   "value":1
                 },
@@ -411,7 +411,7 @@
                 "fillOpacity":{
                   "condition":{
                     "selection":"highlight4",
-                    "value":0.8
+                    "value":0.5
                   },
                   "value":1
                 },
@@ -508,7 +508,7 @@
                 "fillOpacity":{
                   "condition":{
                     "selection":"highlight5",
-                    "value":0.8
+                    "value":0.5
                   },
                   "value":1
                 },
@@ -605,7 +605,7 @@
                 "fillOpacity":{
                   "condition":{
                     "selection":"highlight6",
-                    "value":0.8
+                    "value":0.5
                   },
                   "value":1
                 },
@@ -702,7 +702,7 @@
                 "fillOpacity":{
                   "condition":{
                     "selection":"highlight7",
-                    "value":0.8
+                    "value":0.5
                   },
                   "value":1
                 },
@@ -799,7 +799,7 @@
                 "fillOpacity":{
                   "condition":{
                     "selection":"highlight8",
-                    "value":0.8
+                    "value":0.5
                   },
                   "value":1
                 },

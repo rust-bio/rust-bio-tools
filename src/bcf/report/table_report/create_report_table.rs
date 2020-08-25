@@ -84,8 +84,8 @@ pub(crate) fn make_table_report(
                 let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
 
                 let gene = std::str::from_utf8(
-                    fields[*ann_indices.get(&String::from("Gene")).expect(
-                        "No field named Gene found. Please only use VEP-annotated VCF-files.",
+                    fields[*ann_indices.get(&String::from("SYMBOL")).expect(
+                        "No field named SYMBOL found. Please only use VEP-annotated VCF-files.",
                     )],
                 )?;
                 genes.push(gene);

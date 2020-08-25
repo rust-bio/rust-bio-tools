@@ -100,7 +100,7 @@ pub fn oncoprint(
 
                         let impact = get_field("IMPACT")?;
                         let clin_sig = get_field("CLIN_SIG")?;
-                        let gene = get_field("Gene")?;
+                        let gene = get_field("SYMBOL")?;
                         let dna_alteration = get_field("HGVSc")?;
                         let protein_alteration = get_field("HGVSp")?;
                         let consequence = get_field("Consequence")?;

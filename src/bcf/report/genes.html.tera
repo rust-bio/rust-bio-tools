@@ -40,6 +40,9 @@
         <div id="oncoprint"></div>
 
         <script>
+            {{ "https://code.jquery.com/jquery-3.3.1.slim.min.js"|embed_source|safe }}
+        </script>
+        <script>
             {{ "https://cdn.jsdelivr.net/npm/vega@5.10.1"|embed_source|safe }}
         </script>
         <script>
@@ -82,6 +85,12 @@
             changed_records.forEach(function(record) {
                 spec.datasets.main.push(record);
             });
+            let page_width =  $(window).width();
+            let samples = {{ samples | safe }};
+            let matrix_width = Math.min(page_width - 740, samples*20);
+            if (matrix_width < 20 && samples > 2) {
+                matrix_width = 40;
+            }
             // add sort attribute to data
             spec.vconcat[1].hconcat.forEach(function(ele) {
                 if (ele.layer === undefined) {
@@ -89,11 +98,11 @@
                 } else {
                     ele.layer.forEach(function(layer) {
                         layer.encoding.y.sort = order;
+                        layer.width = matrix_width;
                     })
                 }
             })
-
-
+            spec.vconcat[0].width = matrix_width;
             vegaEmbed('#oncoprint', spec).then(function(result) {
                 result.view.addEventListener('click', function(event, item) {
                     if (item.datum.gene !== undefined && item.datum.sample !== undefined) {
@@ -102,6 +111,29 @@
                 });
             });
 
+            window.addEventListener('resize', function(event){
+                let page_width =  $(window).width();
+                let matrix_width = Math.min(page_width - 740, samples*20);
+                if (matrix_width < 20 && samples > 2) {
+                    matrix_width = 40;
+                }
+                spec.vconcat[0].width = matrix_width;
+                spec.vconcat[1].hconcat.forEach(function(ele) {
+                    if (ele.layer !== undefined) {
+                        ele.layer.forEach(function(layer) {
+                            layer.width = matrix_width;
+                        })
+                    }
+                });
+
+                vegaEmbed('#oncoprint', spec).then(function(result) {
+                    result.view.addEventListener('click', function(event, item) {
+                        if (item.datum.gene !== undefined && item.datum.sample !== undefined) {
+                            window.location.href = '../details/' + item.datum.sample + '/' + item.datum.gene + '.html';
+                        }
+                    });
+                });
+            });
         </script>
     </body>
 </html>

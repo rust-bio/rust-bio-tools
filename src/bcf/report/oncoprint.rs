@@ -267,6 +267,7 @@ pub fn oncoprint(
         let mut context = Context::new();
         context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
         context.insert("gene", &gene);
+        context.insert("samples", &sample_calls.len());
         context.insert("order", &serde_json::to_string(&json!(order))?);
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
@@ -365,6 +366,7 @@ pub fn oncoprint(
         context.insert("oncoprint", &data);
         context.insert("pages", &(pages + 1));
         context.insert("order", &serde_json::to_string(&order)?);
+        context.insert("samples", &sample_calls.len());
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
         context.insert("version", &env!("CARGO_PKG_VERSION"));

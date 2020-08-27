@@ -18,6 +18,7 @@
       {
         "name": "main"
       },
+      "selection": {"brush": {"type": "interval", "encodings": ["x"]}},
       "mark":"bar",
       "height":100,
       "encoding":{
@@ -85,6 +86,7 @@
               {
                 "name": "main"
               },
+              "transform": [{"filter": {"selection": "brush"}}],
               "mark":{
                 "type":"square",
                 "size":350,
@@ -104,9 +106,7 @@
                 "x":{
                   "field":"sample",
                   "type":"ordinal",
-                  "scale":{
-
-                  },
+                  "scale": {"domain": {"selection": "brush"}},
                   "sort":{
                     "op":"valid",
                     "field":"count_variants",
@@ -178,6 +178,7 @@
               {
                 "name": "main"
               },
+              "transform": [{"filter": {"selection": "brush"}}],
               "mark":{
                 "type":"square",
                 "size":250,
@@ -197,9 +198,7 @@
                 "x":{
                   "field":"sample",
                   "type":"ordinal",
-                  "scale":{
-
-                  },
+                  "scale": {"domain": {"selection": "brush"}},
                   "sort":{
                     "op":"valid",
                     "field":"count_variants",
@@ -271,6 +270,7 @@
               {
                 "name": "main"
               },
+              "transform": [{"filter": {"selection": "brush"}}],
               "mark":{
                 "type":"square",
                 "size":200,
@@ -290,9 +290,7 @@
                 "x":{
                   "field":"sample",
                   "type":"ordinal",
-                  "scale":{
-
-                  },
+                  "scale": {"domain": {"selection": "brush"}},
                   "sort":{
                     "op":"valid",
                     "field":"count_variants",
@@ -364,6 +362,7 @@
               {
                 "name": "main"
               },
+              "transform": [{"filter": {"selection": "brush"}}],
               "mark":{
                 "type":"square",
                 "size":170,
@@ -383,9 +382,7 @@
                 "x":{
                   "field":"sample",
                   "type":"ordinal",
-                  "scale":{
-
-                  },
+                  "scale": {"domain": {"selection": "brush"}},
                   "sort":{
                     "op":"valid",
                     "field":"count_variants",
@@ -457,6 +454,7 @@
               {
                 "name": "main"
               },
+              "transform": [{"filter": {"selection": "brush"}}],
               "mark":{
                 "type":"square",
                 "size":145,
@@ -476,9 +474,7 @@
                 "x":{
                   "field":"sample",
                   "type":"ordinal",
-                  "scale":{
-
-                  },
+                  "scale": {"domain": {"selection": "brush"}},
                   "sort":{
                     "op":"valid",
                     "field":"count_variants",
@@ -550,6 +546,7 @@
               {
                 "name": "main"
               },
+              "transform": [{"filter": {"selection": "brush"}}],
               "mark":{
                 "type":"square",
                 "size":120,
@@ -569,9 +566,7 @@
                 "x":{
                   "field":"sample",
                   "type":"ordinal",
-                  "scale":{
-
-                  },
+                  "scale": {"domain": {"selection": "brush"}},
                   "sort":{
                     "op":"valid",
                     "field":"count_variants",
@@ -643,6 +638,7 @@
               {
                 "name": "main"
               },
+              "transform": [{"filter": {"selection": "brush"}}],
               "mark":{
                 "type":"square",
                 "size":95,
@@ -662,9 +658,7 @@
                 "x":{
                   "field":"sample",
                   "type":"ordinal",
-                  "scale":{
-
-                  },
+                  "scale": {"domain": {"selection": "brush"}},
                   "sort":{
                     "op":"valid",
                     "field":"count_variants",
@@ -736,6 +730,7 @@
               {
                 "name": "main"
               },
+              "transform": [{"filter": {"selection": "brush"}}],
               "mark":{
                 "type":"square",
                 "size":70,
@@ -755,9 +750,7 @@
                 "x":{
                   "field":"sample",
                   "type":"ordinal",
-                  "scale":{
-
-                  },
+                  "scale": {"domain": {"selection": "brush"}},
                   "sort":{
                     "op":"valid",
                     "field":"count_variants",

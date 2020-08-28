@@ -79,7 +79,6 @@
                 }
             });
             for (let i = 0; i < delete_records.length; i++) {
-                console.log(spec.data.values[delete_records[i]-i]);
                 spec.datasets.main.splice(delete_records[i]-i, 1);
             }
             changed_records.forEach(function(record) {

@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
         <style>
             body {
                 text-align: center;
@@ -39,21 +39,11 @@
         </nav>
         <div id="oncoprint"></div>
 
-        <script>
-            {{ "https://code.jquery.com/jquery-3.3.1.slim.min.js"|embed_source|safe }}
-        </script>
-        <script>
-            {{ "https://cdn.jsdelivr.net/npm/vega@5.10.1"|embed_source|safe }}
-        </script>
-        <script>
-            {{ "https://cdn.jsdelivr.net/npm/jsonm@1.0.10/build/jsonm.min.js"|embed_source|safe }}
-        </script>
-        <script>
-            {{ "https://cdn.jsdelivr.net/npm/vega-lite@4.10.4"|embed_source|safe }}
-        </script>
-        <script>
-            {{ "https://cdn.jsdelivr.net/npm/vega-embed@6.5.2"|embed_source|safe }}
-        </script>
+        <script src="../js/jquery.min.js"></script>
+        <script src="../js/jsonm.min.js"></script>
+        <script src="../js/vega.min.js"></script>
+        <script src="../js/vega-lite.min.js"></script>
+        <script src="../js/vega-embed.min.js"></script>
 
         <script>
             var order = {{ order | safe }};

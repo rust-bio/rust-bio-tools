@@ -229,7 +229,6 @@ pub fn oncoprint(
     let gene_path = output_path.to_owned() + "/genes/";
     fs::create_dir(Path::new(&gene_path))?;
     let mut gene_templates = Tera::default();
-    gene_templates.register_filter("embed_source", embed_source);
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
 
     let gene_specs: Value = serde_json::from_str(include_str!("gene_specs.json")).unwrap();
@@ -359,7 +358,6 @@ pub fn oncoprint(
         let options = PackOptions::new();
         let packed_specs = packer.pack(&vl_specs, &options).unwrap();
         let mut templates = Tera::default();
-        templates.register_filter("embed_source", embed_source);
         templates.add_raw_template("report.html.tera", include_str!("report.html.tera"))?;
         let mut context = Context::new();
         let data = serde_json::to_string(&packed_specs)?;
@@ -379,15 +377,6 @@ pub fn oncoprint(
     }
 
     Ok(())
-}
-
-fn embed_source(
-    value: &tera::Value,
-    _: &HashMap<String, tera::Value>,
-) -> tera::Result<tera::Value> {
-    let url = tera::try_get_value!("upper", "value", String, value);
-    let source = reqwest::get(&url).unwrap().text().unwrap();
-    Ok(tera::to_value(source).unwrap())
 }
 
 #[derive(new, Debug)]

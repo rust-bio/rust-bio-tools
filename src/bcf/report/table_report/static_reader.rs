@@ -35,7 +35,7 @@ fn calc_rows(
     reads: Vec<AlignmentNucleobase>,
     matches: Vec<AlignmentMatch>,
 ) -> (Vec<StaticAlignmentNucleobase>, Vec<StaticAlignmentMatch>) {
-    let mut row_ends = vec![0; 30];
+    let mut row_ends = vec![0; 100];
 
     let mut read_names: BTreeMap<String, u8> = BTreeMap::new();
 
@@ -48,7 +48,7 @@ fn calc_rows(
         if read_names.contains_key(&r.name) {
             row = *read_names.get(&r.name).unwrap();
         } else {
-            for (i, _) in row_ends.iter().enumerate().take(30).skip(1) {
+            for (i, _) in row_ends.iter().enumerate().take(100).skip(1) {
                 if r.read_start > row_ends[i] {
                     row = i as u8;
                     row_ends[i] = r.read_end;
@@ -72,7 +72,7 @@ fn calc_rows(
         if read_names.contains_key(&r.name) {
             row = *read_names.get(&r.name).unwrap();
         } else {
-            for (i, _) in row_ends.iter().enumerate().take(30).skip(1) {
+            for (i, _) in row_ends.iter().enumerate().take(100).skip(1) {
                 if r.read_start > row_ends[i] {
                     row = i as u8;
                     row_ends[i] = r.read_end;

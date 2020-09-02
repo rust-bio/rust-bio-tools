@@ -20,6 +20,7 @@ use std::path::Path;
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
     output_path: &str,
+    max_cells: u32
 ) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
@@ -312,13 +313,17 @@ pub fn oncoprint(
     let consequence_data: Vec<_> = consequence_data.iter().flatten().collect();
     let clin_sig_data: Vec<_> = clin_sig_data.iter().flatten().collect();
 
-    let page_size = 100;
+    let page_size = max_cells as usize / sample_calls.len();
 
     let mut v = Vec::from_iter(sort_genes);
     v.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
     let ordered_genes: Vec<_> = v.iter().map(|(x, _)| x).collect();
 
-    let pages = v.len() / page_size;
+    let pages = if v.len() % page_size == 0 {
+        (v.len() / page_size) - 1
+    } else {
+        v.len() / page_size
+    };
 
     let index_path = output_path.to_owned() + "/indexes/";
     fs::create_dir(Path::new(&index_path))?;
@@ -330,73 +335,75 @@ pub fn oncoprint(
             &v[(i * page_size)..] // get genes for last page
         };
 
-        let mut sorted_genes = Vec::new();
-        for (g, _) in current_genes {
-            sorted_genes.push(g);
+        if !current_genes.is_empty() {
+            let mut sorted_genes = Vec::new();
+            for (g, _) in current_genes {
+                sorted_genes.push(g);
+            }
+
+            let page = i + 1;
+
+            let page_data: Vec<_> = data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.gene))
+                .sorted()
+                .collect();
+
+            let impact_page_data: Vec<_> = impact_data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.record.key))
+                .sorted()
+                .collect();
+
+            let consequence_page_data: Vec<_> = consequence_data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.record.key))
+                .sorted()
+                .collect();
+
+            let clin_sig_page_data: Vec<_> = clin_sig_data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.record.key))
+                .sorted()
+                .collect();
+
+            let af_page_data: Vec<_> = af_data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.key))
+                .collect();
+
+            let order: Vec<_> = ordered_genes
+                .iter()
+                .filter(|gene| sorted_genes.contains(gene))
+                .collect();
+
+            let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
+            let values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+
+            vl_specs["datasets"] = values;
+
+            let mut packer = Packer::new();
+            let options = PackOptions::new();
+            let packed_specs = packer.pack(&vl_specs, &options).unwrap();
+            let mut templates = Tera::default();
+            templates.add_raw_template("report.html.tera", include_str!("report.html.tera"))?;
+            let mut context = Context::new();
+            let data = serde_json::to_string(&packed_specs)?;
+            context.insert("oncoprint", &data);
+            context.insert("current_page", &page);
+            context.insert("pages", &(pages + 1));
+            context.insert("order", &serde_json::to_string(&json!(order))?);
+            context.insert("samples", &sample_calls.len());
+            let local: DateTime<Local> = Local::now();
+            context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+            context.insert("version", &env!("CARGO_PKG_VERSION"));
+
+            let html = templates.render("report.html.tera", &context)?;
+
+            let index = index_path.to_owned() + "/index" + &page.to_string() + ".html";
+            let mut file = File::create(index)?;
+            file.write_all(html.as_bytes())?;
         }
-
-        let page = i + 1;
-
-        let page_data: Vec<_> = data
-            .iter()
-            .filter(|entry| sorted_genes.contains(&&entry.gene))
-            .sorted()
-            .collect();
-
-        let impact_page_data: Vec<_> = impact_data
-            .iter()
-            .filter(|entry| sorted_genes.contains(&&entry.record.key))
-            .sorted()
-            .collect();
-
-        let consequence_page_data: Vec<_> = consequence_data
-            .iter()
-            .filter(|entry| sorted_genes.contains(&&entry.record.key))
-            .sorted()
-            .collect();
-
-        let clin_sig_page_data: Vec<_> = clin_sig_data
-            .iter()
-            .filter(|entry| sorted_genes.contains(&&entry.record.key))
-            .sorted()
-            .collect();
-
-        let af_page_data: Vec<_> = af_data
-            .iter()
-            .filter(|entry| sorted_genes.contains(&&entry.key))
-            .collect();
-
-        let order: Vec<_> = ordered_genes
-            .iter()
-            .filter(|gene| sorted_genes.contains(gene))
-            .collect();
-
-        let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
-        let values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
-
-        vl_specs["datasets"] = values;
-
-        let mut packer = Packer::new();
-        let options = PackOptions::new();
-        let packed_specs = packer.pack(&vl_specs, &options).unwrap();
-        let mut templates = Tera::default();
-        templates.add_raw_template("report.html.tera", include_str!("report.html.tera"))?;
-        let mut context = Context::new();
-        let data = serde_json::to_string(&packed_specs)?;
-        context.insert("oncoprint", &data);
-        context.insert("current_page", &page);
-        context.insert("pages", &(pages + 1));
-        context.insert("order", &serde_json::to_string(&json!(order))?);
-        context.insert("samples", &sample_calls.len());
-        let local: DateTime<Local> = Local::now();
-        context.insert("time", &local.format("%a %b %e %T %Y").to_string());
-        context.insert("version", &env!("CARGO_PKG_VERSION"));
-
-        let html = templates.render("report.html.tera", &context)?;
-
-        let index = index_path.to_owned() + "/index" + &page.to_string() + ".html";
-        let mut file = File::create(index)?;
-        file.write_all(html.as_bytes())?;
     }
 
     Ok(())

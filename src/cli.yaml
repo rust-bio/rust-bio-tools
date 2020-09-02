@@ -232,6 +232,11 @@ subcommands:
             short: b
             value_name: NAME=BAM_FILE
             help: VCF/BCF files to include (single-sample). Name is the sample name that will be used in the oncoprint. There needs to be one corresponding BAM file for each VCF/BCF file. Please only use VCF/BCF files annotated by VEP.
+        - max-cells:
+            required: false
+            short: c
+            default_value: "1000"
+            help: Set the maximum number of cells in the oncoprint per page. Default value is 1000.
         - output-path:
             last: true
             required: false

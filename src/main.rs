@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
+use std::str::FromStr;
 
 pub mod bam;
 pub mod bcf;
@@ -76,6 +77,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut sample_calls = HashMap::new();
             let mut bam_paths = HashMap::new();
             let output_path = matches.value_of("output-path").unwrap();
+            let max_cells = u32::from_str(matches.value_of("max-cells").unwrap()).unwrap();
             bcf::report::embed_js(output_path)?;
             bcf::report::embed_css(output_path)?;
             bcf::report::embed_html(output_path)?;
@@ -110,7 +112,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 )?;
             }
 
-            bcf::report::oncoprint::oncoprint(&sample_calls, output_path)
+            bcf::report::oncoprint::oncoprint(&sample_calls, output_path, max_cells)
         }
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {

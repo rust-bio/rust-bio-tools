@@ -78,6 +78,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let output_path = matches.value_of("output-path").unwrap();
             bcf::report::embed_js(output_path)?;
             bcf::report::embed_css(output_path)?;
+            bcf::report::embed_html(output_path)?;
             let fasta_path = matches.value_of("fasta").unwrap();
             let detail_path = output_path.to_owned() + "/details/";
             fs::create_dir(Path::new(&detail_path))?;

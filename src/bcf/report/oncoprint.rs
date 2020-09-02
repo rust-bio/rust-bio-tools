@@ -98,7 +98,7 @@ pub fn oncoprint(
                             )
                         };
 
-                        let impact = get_field("IMPACT")?;
+                        let mut impact = get_field("IMPACT")?;
                         let clin_sig = get_field("CLIN_SIG")?;
                         let gene = get_field("SYMBOL")?;
                         let dna_alteration = get_field("HGVSc")?;
@@ -118,10 +118,10 @@ pub fn oncoprint(
                         rec.variants.push(variant.to_owned());
 
                         let imp_rec = impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
+                        if impact == "" {
+                            impact = "unknown";
+                        }
                         imp_rec.push(BarPlotRecord::new(gene.to_owned(), impact.to_owned()));
-
-                        let cons_rec = consequences.entry(gene.to_owned()).or_insert_with(Vec::new);
-                        cons_rec.push(BarPlotRecord::new(gene.to_owned(), consequence.to_owned()));
 
                         let alt = if protein_alteration.is_empty() {
                             dna_alteration
@@ -132,11 +132,22 @@ pub fn oncoprint(
                             gene_impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
                         gene_imp_rec.push(BarPlotRecord::new(alt.to_owned(), impact.to_owned()));
 
+                        let split_consequences: Vec<_> = consequence.split('&').collect();
+
+                        let cons_rec = consequences.entry(gene.to_owned()).or_insert_with(Vec::new);
+
                         let gene_cons_rec = gene_consequences
                             .entry(gene.to_owned())
                             .or_insert_with(Vec::new);
-                        gene_cons_rec
-                            .push(BarPlotRecord::new(alt.to_owned(), consequence.to_owned()));
+
+                        for mut c in split_consequences {
+                            if c == "" {
+                                c = "unknown";
+                            }
+                            cons_rec.push(BarPlotRecord::new(gene.to_owned(), c.to_owned()));
+                            gene_cons_rec
+                                .push(BarPlotRecord::new(alt.to_owned(), c.to_owned()));
+                        }
 
                         let gene_clin_sig_rec = gene_clin_sigs
                             .entry(gene.to_owned())
@@ -144,7 +155,11 @@ pub fn oncoprint(
 
                         let clin_rec = clin_sigs.entry(gene.to_owned()).or_insert_with(Vec::new);
                         let sigs: Vec<_> = clin_sig.split('&').collect();
-                        for s in sigs {
+                        for mut s in sigs {
+                            if s == "" {
+                                s = "unknown";
+                            }
+                            s = s.trim_matches('_');
                             clin_rec.push(BarPlotRecord::new(gene.to_owned(), s.to_owned()));
                             gene_clin_sig_rec
                                 .push(BarPlotRecord::new(alt.to_owned(), s.to_owned()));
@@ -305,6 +320,9 @@ pub fn oncoprint(
 
     let pages = v.len() / page_size;
 
+    let index_path = output_path.to_owned() + "/indexes/";
+    fs::create_dir(Path::new(&index_path))?;
+
     for i in 0..pages + 1 {
         let current_genes = if i != pages {
             &v[(i * page_size)..((i + 1) * page_size)] // get genes for current page
@@ -376,7 +394,7 @@ pub fn oncoprint(
 
         let html = templates.render("report.html.tera", &context)?;
 
-        let index = output_path.to_owned() + "/index" + &page.to_string() + ".html";
+        let index = index_path.to_owned() + "/index" + &page.to_string() + ".html";
         let mut file = File::create(index)?;
         file.write_all(html.as_bytes())?;
     }

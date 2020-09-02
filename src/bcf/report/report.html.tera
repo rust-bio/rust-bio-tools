@@ -2,8 +2,8 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-        <link rel="stylesheet" type="text/css" href="css/oncoprint.css">
+        <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="../css/oncoprint.css">
         <title>Oncoprint (only recurrent genes)</title>
     </head>
     <body>
@@ -54,16 +54,16 @@
         </div>
         {% endif %}
 
-        <script src="js/jquery.min.js"></script>
-        <script src="js/jsonm.min.js"></script>
-        <script src="js/vega.min.js"></script>
-        <script src="js/vega-lite.min.js"></script>
-        <script src="js/vega-embed.min.js"></script>
+        <script src="../js/jquery.min.js"></script>
+        <script src="../js/jsonm.min.js"></script>
+        <script src="../js/vega.min.js"></script>
+        <script src="../js/vega-lite.min.js"></script>
+        <script src="../js/vega-embed.min.js"></script>
         <script>
             var order = {{ order | safe }};
             var spec = {{ oncoprint | safe }};
             let samples = {{ samples | safe }};
         </script>
-        <script src="js/report.js"></script>
+        <script src="../js/report.js"></script>
     </body>
 </html>

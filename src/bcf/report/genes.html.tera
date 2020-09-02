@@ -25,7 +25,7 @@
     </nav>
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="../index1.html">Oncoprint</a></li>
+                <li class="breadcrumb-item"><a href="../indexes/index1.html">Oncoprint</a></li>
                 <li class="breadcrumb-item active" aria-current="page">gene: {{ gene|safe }}</li>
             </ol>
         </nav>

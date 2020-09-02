@@ -46,7 +46,7 @@ spec.vconcat[0].width = matrix_width;
 vegaEmbed('#oncoprint', spec).then(function(result) {
     result.view.addEventListener('click', function(event, item) {
         if (item.datum.gene !== undefined) {
-            window.location.href = 'genes/' + item.datum.gene + '.html';
+            window.location.href = '../genes/' + item.datum.gene + '.html';
         }
     });
 });
@@ -69,7 +69,7 @@ window.addEventListener('resize', function(event){
     vegaEmbed('#oncoprint', spec).then(function(result) {
         result.view.addEventListener('click', function(event, item) {
             if (item.datum.gene !== undefined) {
-                window.location.href = 'genes/' + item.datum.gene + '.html';
+                window.location.href = '../genes/' + item.datum.gene + '.html';
             }
         });
     });

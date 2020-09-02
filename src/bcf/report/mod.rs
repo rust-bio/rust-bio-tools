@@ -48,3 +48,14 @@ pub fn embed_css(output_path: &str) -> Result<(), Box<dyn Error>> {
     }
     Ok(())
 }
+
+pub fn embed_html(output_path: &str) -> Result<(), Box<dyn Error>> {
+    let files = vec![
+        ("index.html", include_str!("html/index.html")),
+    ];
+    for (name, file) in files {
+        let mut out_file = File::create(output_path.to_owned() + "/"+ name)?;
+        out_file.write_all(file.as_bytes())?;
+    }
+    Ok(())
+}

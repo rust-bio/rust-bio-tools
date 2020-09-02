@@ -933,13 +933,15 @@
                   "HIGH",
                   "LOW",
                   "MODERATE",
-                  "MODIFIER"
+                  "MODIFIER",
+                  "unknown"
                 ],
                 "range": [
                   "#31a354",
                   "#756bb1",
                   "#7f7f7f",
-                  "#bcbd22"
+                  "#bcbd22",
+                  "#d4d4d4"
                 ],
                 "type":"ordinal"
               }
@@ -987,7 +989,6 @@
                   "missense_variant",
                   "protein_altering_variant",
                   "splice_region_variant",
-                  "incomplete_terminal_codon_variant",
                   "start_retained_variant",
                   "stop_retained_variant",
                   "synonymous_variant",
@@ -995,6 +996,7 @@
                   "mature_miRNA_variant",
                   "5_prime_UTR_variant",
                   "3_prime_UTR_variant",
+                  "incomplete_terminal_codon_variant",
                   "non_coding_transcript_exon_variant",
                   "intron_variant",
                   "NMD_transcript_variant",
@@ -1009,7 +1011,8 @@
                   "feature_elongation",
                   "regulatory_region_variant",
                   "feature_truncation",
-                  "intergenic_variant"
+                  "intergenic_variant",
+                  "unknown"
                 ],
                 "range": [
                   "#809693",
@@ -1046,7 +1049,8 @@
                   "#004D43",
                   "#8FB0FF",
                   "#997D87",
-                  "#5A0007"
+                  "#5A0007",
+                  "#D4D4D4"
                 ],
                 "type":"ordinal"
               },
@@ -1094,7 +1098,10 @@
                   "pathogenic",
                   "protective",
                   "risk_factor",
-                  "uncertain_significance"
+                  "uncertain_significance",
+                  "benign/likely_benign",
+                  "likely_pathogenic/pathogenic",
+                  "unknown"
                 ],
                 "range": [
                   "#17becf",
@@ -1107,7 +1114,10 @@
                   "#9e765f",
                   "#ce6dbd",
                   "#9edae5",
-                  "#fdae6b"
+                  "#fdae6b",
+                  "#000035",
+                  "#7B4F4B",
+                  "#d4d4d4"
                 ],
                 "type":"ordinal"
               }

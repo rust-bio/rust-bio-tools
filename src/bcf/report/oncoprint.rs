@@ -302,7 +302,6 @@ pub fn oncoprint(
     let mut v = Vec::from_iter(sort_genes);
     v.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
     let ordered_genes: Vec<_> = v.iter().map(|(x, _)| x).collect();
-    let order = json!(ordered_genes);
 
     let pages = v.len() / page_size;
 
@@ -349,6 +348,11 @@ pub fn oncoprint(
             .filter(|entry| sorted_genes.contains(&&entry.key))
             .collect();
 
+        let order: Vec<_> = ordered_genes
+            .iter()
+            .filter(|gene| sorted_genes.contains(gene))
+            .collect();
+
         let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
         let values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
 
@@ -362,8 +366,9 @@ pub fn oncoprint(
         let mut context = Context::new();
         let data = serde_json::to_string(&packed_specs)?;
         context.insert("oncoprint", &data);
+        context.insert("current_page", &page);
         context.insert("pages", &(pages + 1));
-        context.insert("order", &serde_json::to_string(&order)?);
+        context.insert("order", &serde_json::to_string(&json!(order))?);
         context.insert("samples", &sample_calls.len());
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());

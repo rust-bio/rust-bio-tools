@@ -236,7 +236,7 @@ subcommands:
             required: false
             short: c
             default_value: "1000"
-            help: Set the maximum number of cells in the oncoprint per page. Default value is 1000.
+            help: Set the maximum number of cells in the oncoprint per page. Lowering max-cells should improve the performance of the plots in the browser. Default value is 1000.
         - output-path:
             last: true
             required: false

@@ -154,7 +154,7 @@ pub fn make_nucleobases(
     let mut bases: Vec<AlignmentNucleobase> = Vec::new();
     let mut matches: Vec<AlignmentMatch> = Vec::new();
 
-    let ref_bases = read_fasta(fasta_path, chrom, from, to);
+    let ref_bases = read_fasta(fasta_path, chrom, from, to, false);
 
     for snippet in snippets {
         let mut cigar_offset: i64 = 0;
@@ -271,8 +271,8 @@ pub fn make_nucleobases(
                     let base = AlignmentNucleobase {
                         marker_type: m,
                         bases: b,
-                        start_position: p as f64 - 0.5,
-                        end_position: p as f64 + 0.5,
+                        start_position: p as f64 + 0.5,
+                        end_position: p as f64 + 1.5,
                         flags: snip.flags,
                         name: snip.name,
                         read_start: rs as u32,
@@ -314,8 +314,8 @@ pub fn make_nucleobases(
                         let base = AlignmentNucleobase {
                             marker_type: marker,
                             bases: empty_bases,
-                            start_position: position as f64 - 0.5,
-                            end_position: position as f64 + 0.5,
+                            start_position: position as f64 + 0.5,
+                            end_position: position as f64 + 1.5,
                             flags,
                             name,
                             read_start: read_start as u32,
@@ -439,8 +439,8 @@ fn make_markers(
         // First mismatch detection must lead to new creation of all previous matches
         mtch = Some(AlignmentMatch {
             marker_type: Marker::Match,
-            start_position: match_start as f64 - 0.5,
-            end_position: (match_start + match_count - 1) as f64 + 0.5,
+            start_position: match_start as f64 + 0.5,
+            end_position: (match_start + match_count - 1) as f64 + 1.5,
             flags: flags.clone(),
             name: name.clone(),
             read_start: read_start as u32,
@@ -451,8 +451,8 @@ fn make_markers(
     let base = AlignmentNucleobase {
         marker_type: marker,
         bases: base.to_string(),
-        start_position: position as f64 - 0.5,
-        end_position: position as f64 + 0.5,
+        start_position: position as f64 + 0.5,
+        end_position: position as f64 + 1.5,
         flags,
         name,
         read_start: read_start as u32,
@@ -483,8 +483,8 @@ fn end_mismatch_detection(snip: Alignment, match_start: i64, match_count: i64) -
 
     AlignmentMatch {
         marker_type: Marker::Match,
-        start_position: match_start as f64 - 0.5,
-        end_position: (match_start + match_count - 1) as f64 + 0.5,
+        start_position: match_start as f64 + 0.5,
+        end_position: (match_start + match_count - 1) as f64 + 1.5,
         flags: f,
         name: n,
         read_start: rs as u32,

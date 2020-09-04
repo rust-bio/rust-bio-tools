@@ -40,11 +40,15 @@ spec.vconcat[1].hconcat.forEach(function(ele) {
         })
     }
 })
+
+var fileName = location.href.split("/").slice(-1).toString();
+var gene = fileName.split(".").slice(0,1);
+
 spec.vconcat[0].width = matrix_width;
 vegaEmbed('#oncoprint', spec).then(function(result) {
     result.view.addEventListener('click', function(event, item) {
-        if (item.datum.gene !== undefined && item.datum.sample !== undefined) {
-            window.location.href = '../details/' + item.datum.sample + '/' + item.datum.gene + '.html';
+        if (item.datum.sample !== undefined) {
+            window.location.href = '../details/' + item.datum.sample + '/' + gene + '.html';
         }
     });
 });
@@ -66,8 +70,8 @@ window.addEventListener('resize', function(event){
 
     vegaEmbed('#oncoprint', spec).then(function(result) {
         result.view.addEventListener('click', function(event, item) {
-            if (item.datum.gene !== undefined && item.datum.sample !== undefined) {
-                window.location.href = '../details/' + item.datum.sample + '/' + item.datum.gene + '.html';
+            if (item.datum.sample !== undefined) {
+                window.location.href = '../details/' + item.datum.sample + '/' + gene + '.html';
             }
         });
     });

@@ -728,6 +728,16 @@
           },
           "mark":"bar",
           "width":100,
+          "selection":{
+            "highlight_aggregate":{
+              "type":"single",
+              "empty":"none",
+              "on":"mouseover",
+              "fields":[
+                "gene"
+              ]
+            }
+          },
           "encoding":{
             "y":{
               "field":"gene",
@@ -742,6 +752,13 @@
               "axis": {
                 "title": "count per gene"
               }
+            },
+            "fillOpacity":{
+              "condition":{
+                "selection":"highlight_aggregate",
+                "value":0.5
+              },
+              "value":1
             },
             "color":{
               "field":"count_variants",
@@ -780,6 +797,16 @@
           },
           "mark":"bar",
           "width":100,
+          "selection":{
+            "highlight_impact":{
+              "type":"single",
+              "empty":"none",
+              "on":"mouseover",
+              "fields":[
+                "key"
+              ]
+            }
+          },
           "encoding":{
             "y":{
               "field":"key",
@@ -795,6 +822,13 @@
               "axis":{
                 "title":"impact"
               }
+            },
+            "fillOpacity":{
+              "condition":{
+                "selection":"highlight_impact",
+                "value":0.5
+              },
+              "value":1
             },
             "color":{
               "field":"value",
@@ -826,6 +860,16 @@
           },
           "mark":"bar",
           "width":100,
+          "selection":{
+            "highlight_consequence":{
+              "type":"single",
+              "empty":"none",
+              "on":"mouseover",
+              "fields":[
+                "key"
+              ]
+            }
+          },
           "encoding":{
             "y":{
               "field":"key",
@@ -841,6 +885,13 @@
               "axis":{
                 "title":"consequence"
               }
+            },
+            "fillOpacity":{
+              "condition":{
+                "selection":"highlight_consequence",
+                "value":0.5
+              },
+              "value":1
             },
             "color":{
               "field":"value",
@@ -938,6 +989,16 @@
           },
           "mark":"bar",
           "width":100,
+          "selection":{
+            "highlight_clin_sig":{
+              "type":"single",
+              "empty":"none",
+              "on":"mouseover",
+              "fields":[
+                "key"
+              ]
+            }
+          },
           "encoding":{
             "y":{
               "field":"key",
@@ -953,6 +1014,13 @@
               "axis":{
                 "title":"clinical significance"
               }
+            },
+            "fillOpacity":{
+              "condition":{
+                "selection":"highlight_clin_sig",
+                "value":0.5
+              },
+              "value":1
             },
             "color":{
               "field":"value",
@@ -1002,6 +1070,16 @@
           },
           "mark":"tick",
           "width":100,
+          "selection":{
+            "highlight_af":{
+              "type":"single",
+              "empty":"none",
+              "on":"mouseover",
+              "fields":[
+                "key"
+              ]
+            }
+          },
           "encoding":{
             "y":{
               "field":"key",
@@ -1015,6 +1093,13 @@
               "axis":{
                 "title":"allele frequency"
               }
+            },
+            "fillOpacity":{
+              "condition":{
+                "selection":"highlight_af",
+                "value":0.5
+              },
+              "value":1
             },
             "color":{
               "field":"sample",

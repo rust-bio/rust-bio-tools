@@ -42,7 +42,7 @@
             <div class="col-8">
                 <div class="row">
                     <div class="col-12">
-                        <table id="table" class="table table-hover table-light table-bordered" data-toggle="table" data-height="510" data-search="true" data-pagination="true">
+                        <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="true">
                             <thead>
                             <tr>
                                 <th scope="col">name</th>
@@ -92,9 +92,9 @@
                 </div>
             </div>
             <div class="col-4">
-                <table id="sidebar" class="table table-hover table-light table-bordered table-sm" style="margin-top: 58px;">
+                <table id="sidebar" class="table table-hover table-sm" style="margin-top: 58px;">
                 </table>
-                <table id="ann-sidebar" class="table table-hover table-light table-bordered table-sm" data-widht="100" data-toggle="table">
+                <table id="ann-sidebar" class="table table-hover table-sm" data-widht="100" data-toggle="table">
                 </table>
             </div>
         </div>

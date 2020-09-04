@@ -446,8 +446,6 @@ struct Counter {
 struct FinalRecord {
     sample: String,
     gene: String,
-    dna_alterations: String,
-    protein_alterations: String,
     variants: String,
 }
 
@@ -455,7 +453,6 @@ struct FinalRecord {
 #[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 struct SecondStageRecord {
     sample: String,
-    gene: String,
     alteration: String,
     variants: String,
 }
@@ -469,14 +466,12 @@ impl From<&Record> for Vec<SecondStageRecord> {
             let alt = if protein_alt.is_empty() {
                 SecondStageRecord {
                     sample: record.sample.to_owned(),
-                    gene: record.gene.to_owned(),
                     alteration: dna_alterations[i].to_owned(),
                     variants: record.variants.iter().sorted().unique().join("/"),
                 }
             } else {
                 SecondStageRecord {
                     sample: record.sample.to_owned(),
-                    gene: record.gene.to_owned(),
                     alteration: protein_alt.to_owned(),
                     variants: record.variants.iter().sorted().unique().join("/"),
                 }
@@ -493,13 +488,6 @@ impl From<&Record> for FinalRecord {
         FinalRecord {
             sample: record.sample.to_owned(),
             gene: record.gene.to_owned(),
-            dna_alterations: record.dna_alterations.iter().sorted().unique().join(", "),
-            protein_alterations: record
-                .protein_alterations
-                .iter()
-                .sorted()
-                .unique()
-                .join(", "),
             variants: record.variants.iter().sorted().unique().join("/"),
         }
     }

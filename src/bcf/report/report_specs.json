@@ -154,24 +154,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"dna_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"protein_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -250,24 +234,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"dna_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"protein_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -346,24 +314,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"dna_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"protein_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -442,24 +394,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"dna_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"protein_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -538,24 +474,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"dna_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"protein_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -634,24 +554,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"dna_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"protein_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -730,24 +634,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"dna_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"protein_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -825,24 +713,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"dna_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"protein_alterations",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }

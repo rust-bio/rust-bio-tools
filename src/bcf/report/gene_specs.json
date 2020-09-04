@@ -155,20 +155,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"alteration",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -247,20 +235,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"alteration",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -339,20 +315,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"alteration",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -431,20 +395,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"alteration",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -523,20 +475,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"alteration",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -615,20 +555,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"alteration",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -707,20 +635,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"alteration",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }
@@ -799,20 +715,8 @@
                 },
                 "tooltip":[
                   {
-                    "field":"gene",
-                    "type":"nominal"
-                  },
-                  {
                     "field":"sample",
                     "type":"nominal"
-                  },
-                  {
-                    "field":"alteration",
-                    "type":"nominal"
-                  },
-                  {
-                    "field":"variants",
-                    "type":"ordinal"
                   }
                 ]
               }

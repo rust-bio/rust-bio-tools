@@ -65,7 +65,7 @@ $(document).ready(function () {
         ann_values.forEach(function (x) {
             let name = description[x];
             $('#ann-sidebar').append('<tr>');
-            $('#ann-sidebar').append('<th class="thead-dark" style="position: sticky; left:-1px;">' + name + '</th>');
+            $('#ann-sidebar').append('<th class="thead-dark" style="position: sticky; left:-1px; z-index: 1; background: white">' + name + '</th>');
             for (let j = 1; j <= ann_length; j++) {
                 let ix = x + 1;
                 let field = 'ann[' + j + '][' + ix + ']';

@@ -42,7 +42,8 @@ spec.vconcat[1].hconcat.forEach(function(ele) {
 })
 
 var fileName = location.href.split("/").slice(-1).toString();
-var gene = fileName.split(".").slice(0,1);
+var genewithnumbers = fileName.split(".").slice(0,1).toString();
+var gene = genewithnumbers.replace(/[0-9]/g, '');
 
 spec.vconcat[0].width = matrix_width;
 vegaEmbed('#oncoprint', spec).then(function(result) {

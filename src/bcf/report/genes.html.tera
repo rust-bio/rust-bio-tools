@@ -31,6 +31,30 @@
         </nav>
         <div id="oncoprint"></div>
 
+        {% if pages > 1 %}
+        <div>
+            <nav aria-label="gene navigation">
+                <ul class="pagination justify-content-center">
+                    {% if current_page > 1 %}
+                        {% if current_page != 2 %}
+                            <li class="page-item"><a class="page-link" href="{{ gene|safe }}1.html">First</a></li>
+                            <li class="page-item disabled"><a class="page-link" href="">...</a></li>
+                        {% endif %}
+                        <li class="page-item"><a class="page-link" href="{{ gene|safe }}{{ current_page - 1 }}.html">{{  current_page - 1 }}</a></li>
+                    {% endif %}
+                    <li class="page-item active"><a class="page-link" href="{{ gene|safe }}{{ current_page }}.html">{{  current_page  }}</a></li>
+                    {% if current_page < pages %}
+                        <li class="page-item"><a class="page-link" href="{{ gene|safe }}{{ current_page + 1 }}.html">{{  current_page + 1 }}</a></li>
+                        {% if current_page != (pages - 1) %}
+                            <li class="page-item disabled"><a class="page-link" href="">...</a></li>
+                            <li class="page-item"><a class="page-link" href="{{ gene|safe }}{{ pages }}.html">Last</a></li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
         <script src="../js/jquery.min.js"></script>
         <script src="../js/jsonm.min.js"></script>
         <script src="../js/vega.min.js"></script>

@@ -47,9 +47,9 @@ vegaEmbed('#oncoprint', spec).then(function(result) {
     result.view.addEventListener('click', function(event, item) {
         if (item.datum.gene !== undefined || item.datum.key !== undefined) {
             if (item.datum.gene !== undefined ) {
-                window.location.href = '../genes/' + item.datum.gene + '.html';
+                window.location.href = '../genes/' + item.datum.gene + '1.html';
             } else {
-                window.location.href = '../genes/' + item.datum.key + '.html';
+                window.location.href = '../genes/' + item.datum.key + '1.html';
             }
 
         }
@@ -75,9 +75,9 @@ window.addEventListener('resize', function(event){
         result.view.addEventListener('click', function(event, item) {
             if (item.datum.gene !== undefined || item.datum.key !== undefined) {
                 if (item.datum.gene !== undefined ) {
-                    window.location.href = '../genes/' + item.datum.gene + '.html';
+                    window.location.href = '../genes/' + item.datum.gene + '1.html';
                 } else {
-                    window.location.href = '../genes/' + item.datum.key + '.html';
+                    window.location.href = '../genes/' + item.datum.key + '1.html';
                 }
 
             }

@@ -249,6 +249,8 @@ pub fn oncoprint(
 
     let gene_specs: Value = serde_json::from_str(include_str!("gene_specs.json")).unwrap();
 
+    let page_size = max_cells as usize / sample_calls.len();
+
     // create html for second stage
     for (gene, data) in gene_data {
         let gene_data: Vec<_> = data.iter().sorted().collect();
@@ -265,7 +267,8 @@ pub fn oncoprint(
         }
         let mut order = Vec::from_iter(sort_alterations);
         order.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
-        let order: Vec<_> = order.iter().map(|(x, _)| x).collect();
+        let ordered_alts: Vec<_> = order.iter().map(|(x, _)| x).collect();
+
         let mut specs = gene_specs.clone();
         let impact_data = gene_impact_data.get(&gene).unwrap();
         let final_impact: Vec<_> = impact_data.iter().flatten().sorted().collect();
@@ -274,23 +277,83 @@ pub fn oncoprint(
         let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
         let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().sorted().collect();
         let allel_frequency_data = gene_af_data.get(&gene).unwrap();
-        let values = json!({ "main": gene_data, "impact": final_impact, "consequence": final_consequence, "clin_sig": final_clin_sig, "allel_frequency": allel_frequency_data});
-        specs["datasets"] = values;
-        let mut packer = Packer::new();
-        let options = PackOptions::new();
-        let packed_gene_specs = packer.pack(&specs, &options).unwrap();
-        let mut context = Context::new();
-        context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
-        context.insert("gene", &gene);
-        context.insert("samples", &sample_calls.len());
-        context.insert("order", &serde_json::to_string(&json!(order))?);
-        let local: DateTime<Local> = Local::now();
-        context.insert("time", &local.format("%a %b %e %T %Y").to_string());
-        context.insert("version", &env!("CARGO_PKG_VERSION"));
-        let html = gene_templates.render("genes.html.tera", &context)?;
-        let filepath = gene_path.clone() + &gene + ".html";
-        let mut file = File::create(filepath)?;
-        file.write_all(html.as_bytes())?;
+
+        let pages = if order.len() % page_size == 0 {
+            (order.len() / page_size) - 1
+        } else {
+            order.len() / page_size
+        };
+
+        for i in 0..pages + 1 {
+            let current_alterations = if i != pages {
+                &order[(i * page_size)..((i + 1) * page_size)] // get genes for current page
+            } else {
+                &order[(i * page_size)..] // get genes for last page
+            };
+
+            if !current_alterations.is_empty() {
+                let mut sorted_alterations = Vec::new();
+                for (g, _) in current_alterations {
+                    sorted_alterations.push(g);
+                }
+
+                let page = i + 1;
+
+                let page_data: Vec<_> = gene_data
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.alteration))
+                    .sorted()
+                    .collect();
+
+                let impact_page_data: Vec<_> = final_impact
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .sorted()
+                    .collect();
+
+                let consequence_page_data: Vec<_> = final_consequence
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .sorted()
+                    .collect();
+
+                let clin_sig_page_data: Vec<_> = final_clin_sig
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .sorted()
+                    .collect();
+
+                let af_page_data: Vec<_> = allel_frequency_data
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.key))
+                    .collect();
+
+                let order: Vec<_> = ordered_alts
+                    .iter()
+                    .filter(|gene| sorted_alterations.contains(gene))
+                    .collect();
+
+                let values = json!({ "main": page_data, "impact": impact_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+                specs["datasets"] = values;
+                let mut packer = Packer::new();
+                let options = PackOptions::new();
+                let packed_gene_specs = packer.pack(&specs, &options).unwrap();
+                let mut context = Context::new();
+                context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
+                context.insert("gene", &gene);
+                context.insert("samples", &sample_calls.len());
+                context.insert("current_page", &page);
+                context.insert("pages", &(pages + 1));
+                context.insert("order", &serde_json::to_string(&json!(order))?);
+                let local: DateTime<Local> = Local::now();
+                context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+                context.insert("version", &env!("CARGO_PKG_VERSION"));
+                let html = gene_templates.render("genes.html.tera", &context)?;
+                let filepath = gene_path.clone() + &gene + &page.to_string() + ".html";
+                let mut file = File::create(filepath)?;
+                file.write_all(html.as_bytes())?;
+            }
+        }
     }
 
     // only keep recurrent entries
@@ -312,8 +375,6 @@ pub fn oncoprint(
     let impact_data: Vec<_> = impact_data.iter().flatten().collect();
     let consequence_data: Vec<_> = consequence_data.iter().flatten().collect();
     let clin_sig_data: Vec<_> = clin_sig_data.iter().flatten().collect();
-
-    let page_size = max_cells as usize / sample_calls.len();
 
     let mut v = Vec::from_iter(sort_genes);
     v.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });

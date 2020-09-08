@@ -14,13 +14,13 @@ use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::{self, Read};
 use serde_json::{json, Value};
 use std::fs::File;
-use std::iter::FromIterator;
 use std::path::Path;
+use std::str::FromStr;
 
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
     output_path: &str,
-    max_cells: u32
+    max_cells: u32,
 ) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
@@ -143,11 +143,10 @@ pub fn oncoprint(
 
                         for mut c in split_consequences {
                             if c == "" {
-                                c = "unknown";
+                                c = "Unknown";
                             }
                             cons_rec.push(BarPlotRecord::new(gene.to_owned(), c.to_owned()));
-                            gene_cons_rec
-                                .push(BarPlotRecord::new(alt.to_owned(), c.to_owned()));
+                            gene_cons_rec.push(BarPlotRecord::new(alt.to_owned(), c.to_owned()));
                         }
 
                         let gene_clin_sig_rec = gene_clin_sigs
@@ -158,7 +157,7 @@ pub fn oncoprint(
                         let sigs: Vec<_> = clin_sig.split('&').collect();
                         for mut s in sigs {
                             if s == "" {
-                                s = "unknown";
+                                s = "Unknown";
                             }
                             s = s.trim_matches('_');
                             clin_rec.push(BarPlotRecord::new(gene.to_owned(), s.to_owned()));
@@ -265,9 +264,6 @@ pub fn oncoprint(
             samples.dedup();
             sort_alterations.insert(alteration, samples.len());
         }
-        let mut order = Vec::from_iter(sort_alterations);
-        order.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
-        let ordered_alts: Vec<_> = order.iter().map(|(x, _)| x).collect();
 
         let mut specs = gene_specs.clone();
         let impact_data = gene_impact_data.get(&gene).unwrap();
@@ -277,6 +273,24 @@ pub fn oncoprint(
         let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
         let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().sorted().collect();
         let allel_frequency_data = gene_af_data.get(&gene).unwrap();
+
+        let sorted_impacts = order_by_impact(final_impact.clone());
+        let sorted_clin_sigs = order_by_clin_sig(final_clin_sig.clone());
+        let mut order = Vec::new();
+        for (alt, sample_count) in sort_alterations {
+            let impact_order = sorted_impacts.get(alt).unwrap();
+            let clin_sig_order = sorted_clin_sigs.get(alt).unwrap();
+            order.push((alt.to_owned(), sample_count, impact_order, clin_sig_order))
+        }
+
+        order.sort_by(|(g1, c1, i1, cs1), (g2, c2, i2, cs2)| {
+            c2.cmp(c1) // first order by different sample occurrences
+                .then(i2.cmp(i1)) // then by impact
+                .then(cs2.cmp(cs1)) // then by clin_sig
+                .then(g2.cmp(g1)) // lastly by alteration name for consistency
+        });
+
+        let ordered_alts: Vec<_> = order.iter().map(|(x, _, _, _)| x).collect();
 
         let pages = if order.len() % page_size == 0 {
             (order.len() / page_size) - 1
@@ -293,7 +307,7 @@ pub fn oncoprint(
 
             if !current_alterations.is_empty() {
                 let mut sorted_alterations = Vec::new();
-                for (g, _) in current_alterations {
+                for (g, _, _, _) in current_alterations {
                     sorted_alterations.push(g);
                 }
 
@@ -376,9 +390,22 @@ pub fn oncoprint(
     let consequence_data: Vec<_> = consequence_data.iter().flatten().collect();
     let clin_sig_data: Vec<_> = clin_sig_data.iter().flatten().collect();
 
-    let mut v = Vec::from_iter(sort_genes);
-    v.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
-    let ordered_genes: Vec<_> = v.iter().map(|(x, _)| x).collect();
+    let sorted_impacts = order_by_impact(impact_data.clone());
+    let sorted_clin_sigs = order_by_clin_sig(clin_sig_data.clone());
+    let mut v = Vec::new();
+    for (gene, sample_count) in sort_genes {
+        let impact_order = sorted_impacts.get(&gene).unwrap();
+        let clin_sig_order = sorted_clin_sigs.get(&gene).unwrap();
+        v.push((gene, sample_count, impact_order, clin_sig_order))
+    }
+
+    v.sort_by(|(g1, c1, i1, cs1), (g2, c2, i2, cs2)| {
+        c2.cmp(c1) // first order by different sample occurrences
+            .then(i2.cmp(i1)) // then by impact
+            .then(cs2.cmp(cs1)) // then by clin_sig
+            .then(g2.cmp(g1)) // lastly by gene name for consistency
+    });
+    let ordered_genes: Vec<_> = v.iter().map(|(x, _, _, _)| x).collect();
 
     let pages = if v.len() % page_size == 0 {
         (v.len() / page_size) - 1
@@ -398,7 +425,7 @@ pub fn oncoprint(
 
         if !current_genes.is_empty() {
             let mut sorted_genes = Vec::new();
-            for (g, _) in current_genes {
+            for (g, _, _, _) in current_genes {
                 sorted_genes.push(g);
             }
 
@@ -438,7 +465,8 @@ pub fn oncoprint(
                 .filter(|gene| sorted_genes.contains(gene))
                 .collect();
 
-            let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
+            let mut vl_specs: Value =
+                serde_json::from_str(include_str!("report_specs.json")).unwrap();
             let values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
 
             vl_specs["datasets"] = values;
@@ -518,6 +546,72 @@ struct SecondStageRecord {
     variants: String,
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+enum Impact {
+    Unknown,
+    Low,
+    Modifier,
+    Moderate,
+    High,
+}
+
+impl FromStr for Impact {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let impact;
+        match s {
+            "HIGH" => impact = Impact::High,
+            "MODERATE" => impact = Impact::Moderate,
+            "MODIFIER" => impact = Impact::Modifier,
+            "LOW" => impact = Impact::Low,
+            _ => impact = Impact::Unknown,
+        }
+        Ok(impact)
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+enum ClinSig {
+    Unknown,
+    NotProvided,
+    Other,
+    Benign,
+    LikelyBenign,
+    Protective,
+    UncertainSignificance,
+    Association,
+    Affects,
+    DrugResponse,
+    RiskFactor,
+    LikelyPathogenic,
+    Pathogenic,
+}
+
+impl FromStr for ClinSig {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let clin_sig;
+        match s {
+            "Pathogenic" => clin_sig = ClinSig::Pathogenic,
+            "LikelyPathogenic" => clin_sig = ClinSig::LikelyPathogenic,
+            "RiskFactor" => clin_sig = ClinSig::RiskFactor,
+            "DrugResponse" => clin_sig = ClinSig::DrugResponse,
+            "Affects" => clin_sig = ClinSig::Affects,
+            "Association" => clin_sig = ClinSig::Association,
+            "UncertainSignificance" => clin_sig = ClinSig::UncertainSignificance,
+            "Protective" => clin_sig = ClinSig::Protective,
+            "LikelyBenign" => clin_sig = ClinSig::LikelyBenign,
+            "Benign" => clin_sig = ClinSig::Benign,
+            "Other" => clin_sig = ClinSig::Other,
+            "NotProvided" => clin_sig = ClinSig::NotProvided,
+            _ => clin_sig = ClinSig::Unknown,
+        }
+        Ok(clin_sig)
+    }
+}
+
 impl From<&Record> for Vec<SecondStageRecord> {
     fn from(record: &Record) -> Self {
         let mut gene_vec = Vec::new();
@@ -577,4 +671,48 @@ fn make_final_bar_plot_records(records: &[BarPlotRecord]) -> Vec<Counter> {
     }
 
     res
+}
+
+fn order_by_impact(impacts: Vec<&Counter>) -> HashMap<String, Vec<Impact>> {
+    let mut order = HashMap::new();
+    let mut order_tuples = HashMap::new();
+    for c in impacts {
+        let impact = Impact::from_str(&c.record.value).unwrap();
+        let rec = order_tuples
+            .entry(c.record.key.to_owned())
+            .or_insert_with(Vec::new);
+        rec.push((impact, c.count))
+    }
+
+    for v in order_tuples.values_mut() {
+        v.sort_by(|(_, a), (_, b)| a.cmp(&b))
+    }
+
+    for (k, v) in order_tuples {
+        let removed_count = v.into_iter().map(|(x, _)| x).collect();
+        order.insert(k, removed_count);
+    }
+    order
+}
+
+fn order_by_clin_sig(clin_sigs: Vec<&Counter>) -> HashMap<String, Vec<ClinSig>> {
+    let mut order = HashMap::new();
+    let mut order_tuples = HashMap::new();
+    for c in clin_sigs {
+        let impact = ClinSig::from_str(&c.record.value).unwrap();
+        let rec = order_tuples
+            .entry(c.record.key.to_owned())
+            .or_insert_with(Vec::new);
+        rec.push((impact, c.count))
+    }
+
+    for v in order_tuples.values_mut() {
+        v.sort_by(|(_, a), (_, b)| a.cmp(&b))
+    }
+
+    for (k, v) in order_tuples {
+        let removed_count = v.into_iter().map(|(x, _)| x).collect();
+        order.insert(k, removed_count);
+    }
+    order
 }

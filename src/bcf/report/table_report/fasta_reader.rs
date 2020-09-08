@@ -2,7 +2,13 @@ use bio::io::fasta;
 use serde::Serialize;
 use std::path::Path;
 
-pub fn read_fasta(path: &Path, chrom: String, start: u64, stop: u64, compensate_0_basing: bool) -> Vec<Nucleobase> {
+pub fn read_fasta(
+    path: &Path,
+    chrom: String,
+    start: u64,
+    stop: u64,
+    compensate_0_basing: bool,
+) -> Vec<Nucleobase> {
     let mut reader = fasta::IndexedReader::from_file(&path).unwrap();
     let index = fasta::Index::with_fasta_file(&path).unwrap();
     let _sequences = index.sequences();

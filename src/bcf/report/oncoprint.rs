@@ -143,7 +143,7 @@ pub fn oncoprint(
 
                         for mut c in split_consequences {
                             if c == "" {
-                                c = "Unknown";
+                                c = "unknown";
                             }
                             cons_rec.push(BarPlotRecord::new(gene.to_owned(), c.to_owned()));
                             gene_cons_rec.push(BarPlotRecord::new(alt.to_owned(), c.to_owned()));
@@ -157,7 +157,7 @@ pub fn oncoprint(
                         let sigs: Vec<_> = clin_sig.split('&').collect();
                         for mut s in sigs {
                             if s == "" {
-                                s = "Unknown";
+                                s = "unknown";
                             }
                             s = s.trim_matches('_');
                             clin_rec.push(BarPlotRecord::new(gene.to_owned(), s.to_owned()));
@@ -594,18 +594,18 @@ impl FromStr for ClinSig {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let clin_sig;
         match s {
-            "Pathogenic" => clin_sig = ClinSig::Pathogenic,
-            "LikelyPathogenic" => clin_sig = ClinSig::LikelyPathogenic,
-            "RiskFactor" => clin_sig = ClinSig::RiskFactor,
-            "DrugResponse" => clin_sig = ClinSig::DrugResponse,
-            "Affects" => clin_sig = ClinSig::Affects,
-            "Association" => clin_sig = ClinSig::Association,
-            "UncertainSignificance" => clin_sig = ClinSig::UncertainSignificance,
-            "Protective" => clin_sig = ClinSig::Protective,
-            "LikelyBenign" => clin_sig = ClinSig::LikelyBenign,
-            "Benign" => clin_sig = ClinSig::Benign,
-            "Other" => clin_sig = ClinSig::Other,
-            "NotProvided" => clin_sig = ClinSig::NotProvided,
+            "pathogenic" => clin_sig = ClinSig::Pathogenic,
+            "likely_pathogenic" => clin_sig = ClinSig::LikelyPathogenic,
+            "risk_factor" => clin_sig = ClinSig::RiskFactor,
+            "drug_response" => clin_sig = ClinSig::DrugResponse,
+            "affects" => clin_sig = ClinSig::Affects,
+            "association" => clin_sig = ClinSig::Association,
+            "uncertain_significance" => clin_sig = ClinSig::UncertainSignificance,
+            "protective" => clin_sig = ClinSig::Protective,
+            "likely_benign" => clin_sig = ClinSig::LikelyBenign,
+            "benign" => clin_sig = ClinSig::Benign,
+            "other" => clin_sig = ClinSig::Other,
+            "not_provided" => clin_sig = ClinSig::NotProvided,
             _ => clin_sig = ClinSig::Unknown,
         }
         Ok(clin_sig)

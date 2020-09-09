@@ -166,11 +166,14 @@ fn test_vcf_report() {
             .success()
     );
     let files1 = vec![
-        ("tests/indexes/index1.html", "tests/expected/report/indexes/index1.html"),
+        (
+            "tests/indexes/index1.html",
+            "tests/expected/report/indexes/index1.html",
+        ),
         (
             "tests/genes/KRAS1.html",
             "tests/expected/report/genes/KRAS1.html",
-        )
+        ),
     ];
 
     let files2 = vec![

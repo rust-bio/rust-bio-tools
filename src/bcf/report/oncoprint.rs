@@ -597,7 +597,7 @@ impl FromStr for ClinSig {
         let clin_sig;
         match s {
             "pathogenic" => clin_sig = ClinSig::Pathogenic,
-            "likely_pathogenic/pathogenic"=> clin_sig = ClinSig::LikelyPathogenicPathogenic,
+            "likely_pathogenic/pathogenic" => clin_sig = ClinSig::LikelyPathogenicPathogenic,
             "likely_pathogenic" => clin_sig = ClinSig::LikelyPathogenic,
             "risk_factor" => clin_sig = ClinSig::RiskFactor,
             "drug_response" => clin_sig = ClinSig::DrugResponse,

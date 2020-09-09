@@ -577,6 +577,7 @@ enum ClinSig {
     NotProvided,
     Other,
     Benign,
+    BenignLikelyBenign,
     LikelyBenign,
     Protective,
     UncertainSignificance,
@@ -585,6 +586,7 @@ enum ClinSig {
     DrugResponse,
     RiskFactor,
     LikelyPathogenic,
+    LikelyPathogenicPathogenic,
     Pathogenic,
 }
 
@@ -595,6 +597,7 @@ impl FromStr for ClinSig {
         let clin_sig;
         match s {
             "pathogenic" => clin_sig = ClinSig::Pathogenic,
+            "likely_pathogenic/pathogenic"=> clin_sig = ClinSig::LikelyPathogenicPathogenic,
             "likely_pathogenic" => clin_sig = ClinSig::LikelyPathogenic,
             "risk_factor" => clin_sig = ClinSig::RiskFactor,
             "drug_response" => clin_sig = ClinSig::DrugResponse,
@@ -603,6 +606,7 @@ impl FromStr for ClinSig {
             "uncertain_significance" => clin_sig = ClinSig::UncertainSignificance,
             "protective" => clin_sig = ClinSig::Protective,
             "likely_benign" => clin_sig = ClinSig::LikelyBenign,
+            "benign/likely_benign" => clin_sig = ClinSig::BenignLikelyBenign,
             "benign" => clin_sig = ClinSig::Benign,
             "other" => clin_sig = ClinSig::Other,
             "not_provided" => clin_sig = ClinSig::NotProvided,

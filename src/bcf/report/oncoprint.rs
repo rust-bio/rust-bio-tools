@@ -689,7 +689,7 @@ fn order_by_impact(impacts: Vec<&Counter>) -> HashMap<String, Vec<Impact>> {
     }
 
     for v in order_tuples.values_mut() {
-        v.sort_by(|(_, a), (_, b)| a.cmp(&b))
+        v.sort_by(|(_, a), (_, b)| b.cmp(&a))
     }
 
     for (k, v) in order_tuples {
@@ -711,7 +711,7 @@ fn order_by_clin_sig(clin_sigs: Vec<&Counter>) -> HashMap<String, Vec<ClinSig>> 
     }
 
     for v in order_tuples.values_mut() {
-        v.sort_by(|(_, a), (_, b)| a.cmp(&b))
+        v.sort_by(|(_, a), (_, b)| b.cmp(&a))
     }
 
     for (k, v) in order_tuples {

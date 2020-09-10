@@ -605,7 +605,9 @@ impl FromStr for ClinSig {
             "affects" => clin_sig = ClinSig::Affects,
             "association" => clin_sig = ClinSig::Association,
             "uncertain_significance" => clin_sig = ClinSig::UncertainSignificance,
-            "conflicting_interpretations_of_pathogenicity" => clin_sig = ClinSig::ConflictingInterpretationsOfPathogenicity,
+            "conflicting_interpretations_of_pathogenicity" => {
+                clin_sig = ClinSig::ConflictingInterpretationsOfPathogenicity
+            }
             "protective" => clin_sig = ClinSig::Protective,
             "likely_benign" => clin_sig = ClinSig::LikelyBenign,
             "benign/likely_benign" => clin_sig = ClinSig::BenignLikelyBenign,

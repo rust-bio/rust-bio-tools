@@ -975,6 +975,7 @@
                   "uncertain_significance",
                   "benign/likely_benign",
                   "likely_pathogenic/pathogenic",
+                  "conflicting_interpretations_of_pathogenicity",
                   "unknown"
                 ],
                 "range": [
@@ -991,6 +992,7 @@
                   "#fdae6b",
                   "#000035",
                   "#7B4F4B",
+                  "#5A0007",
                   "#d4d4d4"
                 ],
                 "type":"ordinal"

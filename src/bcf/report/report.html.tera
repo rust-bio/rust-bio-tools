@@ -2,16 +2,8 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-        <style>
-            body {
-                text-align: center;
-            }
-            #oncoprint {
-                margin-top: 15px;
-                text-align: center;
-            }
-        </style>
+        <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="../css/oncoprint.css">
         <title>Oncoprint (only recurrent genes)</title>
     </head>
     <body>
@@ -42,77 +34,36 @@
         <div>
             <nav aria-label="gene navigation">
                 <ul class="pagination justify-content-center">
-                {% for i in range(start=1,end=pages+1) %}
-                    <li class="page-item"><a class="page-link" href="index{{ i }}.html">{{ i }}</a></li>
-                {% endfor %}
+                {% if current_page > 1 %}
+                    {% if current_page != 2 %}
+                        <li class="page-item"><a class="page-link" href="index1.html">First</a></li>
+                        <li class="page-item disabled"><a class="page-link" href="">...</a></li>
+                    {% endif %}
+                    <li class="page-item"><a class="page-link" href="index{{ current_page - 1 }}.html">{{  current_page - 1 }}</a></li>
+                {% endif %}
+                <li class="page-item active"><a class="page-link" href="index{{ current_page }}.html">{{  current_page  }}</a></li>
+                {% if current_page < pages %}
+                    <li class="page-item"><a class="page-link" href="index{{ current_page + 1 }}.html">{{  current_page + 1 }}</a></li>
+                    {% if current_page != (pages - 1) %}
+                        <li class="page-item disabled"><a class="page-link" href="">...</a></li>
+                        <li class="page-item"><a class="page-link" href="index{{ pages }}.html">Last</a></li>
+                    {% endif %}
+                {% endif %}
                 </ul>
             </nav>
         </div>
         {% endif %}
 
-
-        <script>
-            {{ "https://cdn.jsdelivr.net/npm/vega@5.10.1"|embed_source|safe }}
-        </script>
-        <script>
-            {{ "https://cdn.jsdelivr.net/npm/jsonm@1.0.10/build/jsonm.min.js"|embed_source|safe }}
-        </script>
-        <script>
-            {{ "https://cdn.jsdelivr.net/npm/vega-lite@4.10.4"|embed_source|safe }}
-        </script>
-        <script>
-            {{ "https://cdn.jsdelivr.net/npm/vega-embed@6.5.2"|embed_source|safe }}
-        </script>
-
+        <script src="../js/jquery.min.js"></script>
+        <script src="../js/jsonm.min.js"></script>
+        <script src="../js/vega.min.js"></script>
+        <script src="../js/vega-lite.min.js"></script>
+        <script src="../js/vega-embed.min.js"></script>
         <script>
             var order = {{ order | safe }};
             var spec = {{ oncoprint | safe }};
-            const unpacker = new jsonm.Unpacker();
-            spec = unpacker.unpack(spec);
-            let changed_records = []
-            let delete_records = []
-            spec.datasets.main.forEach(function(record, j) {
-                // create new json records if types like "Complex/SNV" occure.
-                // These are then displayed visualized in multiple layers in the vega plot.
-                let variants = record.variants.split("/");
-                if (variants.length > 1) {
-                    for (var i = 0; i < variants.length; i++) {
-                        let field = "variants" + (i+1);
-                        let layer_record = JSON.parse(JSON.stringify(record));
-                        layer_record[field] = variants[i];
-                        layer_record.count_variants = variants[i];
-                        changed_records.push(layer_record);
-                    }
-                    delete_records.push(j);
-                } else {
-                    record.variants1 = record.variants;
-                    record.count_variants = record.variants;
-                }
-            });
-            for (let i = 0; i < delete_records.length; i++) {
-                spec.datasets.main.splice(delete_records[i]-i, 1);
-            }
-            changed_records.forEach(function(record) {
-                spec.datasets.main.push(record);
-            });
-            // add sort attribute to data
-            spec.vconcat[1].hconcat.forEach(function(ele) {
-                if (ele.layer === undefined) {
-                    ele.encoding.y.sort = order;
-                } else {
-                    ele.layer.forEach(function(layer) {
-                        layer.encoding.y.sort = order;
-                    })
-                }
-            })
-            vegaEmbed('#oncoprint', spec).then(function(result) {
-                result.view.addEventListener('click', function(event, item) {
-                    if (item.datum.gene !== undefined) {
-                        window.location.href = 'genes/' + item.datum.gene + '.html';
-                    }
-                });
-            });
-
+            let samples = {{ samples | safe }};
         </script>
+        <script src="../js/report.js"></script>
     </body>
 </html>

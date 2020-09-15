@@ -2,19 +2,18 @@
 <html lang="en">
 <head>
     <title>{{ gene }}</title>
-
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsonm@1.0.10/build/jsonm.min.js"></script>
-    <script src="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.js"></script>
-    <link href="https://unpkg.com/bootstrap-table@1.16.0/dist/bootstrap-table.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../../css/bootstrap-table.min.css">
 </head>
 
 <body>
+<script src="../../js/jquery.min.js"></script>
+<script src="../../js/bootstrap-table.min.js"></script>
+<script src="../../js/jsonm.min.js"></script>
+<script src="../../js/vega.min.js"></script>
+<script src="../../js/vega-lite.min.js"></script>
+<script src="../../js/vega-embed.min.js"></script>
+<script src="../../js/table-report.js"></script>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">rbt report</a>
     <div class="collapse navbar-collapse" id="navbarText">
@@ -33,8 +32,8 @@
 </nav>
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="../../index1.html">Oncoprint</a></li>
-        <li class="breadcrumb-item"><a href="../../genes/{{ gene|safe }}.html">gene: {{ gene|safe }}</a></li>
+        <li class="breadcrumb-item"><a href="../../indexes/index1.html">Oncoprint</a></li>
+        <li class="breadcrumb-item"><a href="../../genes/{{ gene|safe }}1.html">gene: {{ gene|safe }}</a></li>
         <li class="breadcrumb-item active" aria-current="page">sample: {{ sample }}</li>
     </ol>
 </nav>
@@ -43,7 +42,7 @@
             <div class="col-8">
                 <div class="row">
                     <div class="col-12">
-                        <table id="table" class="table table-hover table-light table-bordered" data-toggle="table" data-height="510" data-search="true" data-pagination="true">
+                        <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="true">
                             <thead>
                             <tr>
                                 <th scope="col">name</th>
@@ -91,91 +90,11 @@
                         <div id="vis" class="justify-content-center" style="width: 100%"></div>
                     </div>
                 </div>
-                <script>
-                    // customize column_values to display the attributes of your choice to the sidebar
-                    let column_values = ['id', 'position', 'reference', 'alternatives', 'type'];
-                    // customize which parts of the annotation field to display at the sidebar
-                    let ann_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-
-                    $(document).ready(function () {
-                        $("html").on('click', '.variant-row', function () {
-                            if ($(this).data('packed')) {
-                                let compressed_specs = $(this).data('vis');
-                                let unpacker = new jsonm.Unpacker();
-                                $(this).data('vis', unpacker.unpack(compressed_specs));
-                                $(this).data('packed', false);
-                            }
-                            let specs = $(this).data('vis');
-                            let d = $(this).data('description')
-                            d = d.replace(/, /g,"\",\"");
-                            d = d.replace("[","[\"");
-                            d = d.replace("]","\"]")
-                            let description = JSON.parse(d);
-
-                            specs.data[1].values.forEach(function(a) {
-                                if (a.row > 0 && Array.isArray(a.flags)) {
-                                    let flags = {};
-                                    a.flags.forEach(function(b) {
-                                        if (b === 1) {
-                                            flags[b] = "template having multiple segments in sequencing";
-                                        } else if (b === 2) {
-                                            flags[b] = "each segment properly aligned according to the aligner";
-                                        } else if (b === 4) {
-                                            flags[b] = "segment unmapped";
-                                        } else if (b === 8) {
-                                            flags[b] = "next segment in the template unmapped";
-                                        } else if (b === 16) {
-                                            flags[b] = "SEQ being reverse complemented";
-                                        } else if (b === 32) {
-                                            flags[b] = "SEQ of the next segment in the template being reverse complemented";
-                                        } else if (b === 64) {
-                                            flags[b] = "the first segment in the template";
-                                        } else if (b === 128) {
-                                            flags[b] = "the last segment in the template";
-                                        } else if (b === 256) {
-                                            flags[b] = "secondary alignment";
-                                        } else if (b === 512) {
-                                            flags[b] = "not passing filters, such as platform/vendor quality controls";
-                                        } else if (b === 1024) {
-                                            flags[b] = "PCR or optical duplicate";
-                                        } else if (b === 2048) {
-                                            flags[b] = "vega lite lines";
-                                        }
-                                    });
-                                    a.flags = flags;
-                                }
-                            });
-                            specs.width = $('#vis').width() - 40;
-                            let v = vegaEmbed('#vis', specs);
-                            $("#sidebar").empty();
-                            $.each($(this).data(), function(i, v) {
-                                if (i !== 'index' && !i.includes("ann") && column_values.includes(i)) {
-                                    $('#sidebar').append('<tr><th class="thead-dark">' + i + '</th><td>' + v + '</td></tr>');
-                                }
-                            });
-                            $("#ann-sidebar").empty();
-                            let ann_length = $(this).data('annlen');
-                            let that = this;
-                            ann_values.forEach(function (x) {
-                                let name = description[x];
-                                $('#ann-sidebar').append('<tr>');
-                                $('#ann-sidebar').append('<th class="thead-dark" style="position: sticky; left:-1px;">' + name + '</th>');
-                                for (let j = 1; j <= ann_length; j++) {
-                                    let ix = x + 1;
-                                    let field = 'ann[' + j + '][' + ix + ']';
-                                    let val = $(that).data(field);
-                                    $('#ann-sidebar').append('<td>' + val + '</td>');
-                                }
-                                $('#ann-sidebar').append('</tr>');
-                            });
-                        })
-                    })
-                </script>
             </div>
             <div class="col-4">
-                <table id="sidebar" class="table table-hover table-light table-bordered table-sm" style="margin-top: 58px;">
+                <table id="sidebar" class="table table-hover table-sm" style="margin-top: 58px;">
                 </table>
-                <table id="ann-sidebar" class="table table-hover table-light table-bordered table-sm" data-widht="100" data-toggle="table">
+                <table id="ann-sidebar" class="table table-hover table-sm" data-widht="100" data-toggle="table">
                 </table>
             </div>
         </div>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="../css/oncoprint.css">
+        <title>KRAS</title>
+    </head>
+    <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">rbt report</a>
+        <div class="collapse navbar-collapse" id="navbarText">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools/blob/master/CHANGELOG.md">0.11.1-alpha.0</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+                </li>
+            </ul>
+            <span class="navbar-text">
+                </span>
+        </div>
+    </nav>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="../indexes/index1.html">Oncoprint</a></li>
+                <li class="breadcrumb-item active" aria-current="page">gene: KRAS</li>
+            </ol>
+        </nav>
+        <div id="oncoprint"></div>
+
+        
+
+        <script src="../js/jquery.min.js"></script>
+        <script src="../js/jsonm.min.js"></script>
+        <script src="../js/vega.min.js"></script>
+        <script src="../js/vega-lite.min.js"></script>
+        <script src="../js/vega-embed.min.js"></script>
+        <script>
+            var order = ["ENSP00000452512.1:p.Gly12Asp","ENSP00000451856.1:p.Gly12Asp","ENSP00000308495.3:p.Gly12Asp","ENSP00000256078.4:p.Gly12Asp"];
+            var spec = ["$schema","datasets","autosize","spacing","vconcat","config","https://vega.github.io/schema/vega-lite/v4.json",["main","impact","consequence","clin_sig","allel_frequency",[0,["sample","alteration","variants","a","ENSP00000256078.4:p.Gly12Asp","SNV"],[15,16,17,18,"ENSP00000308495.3:p.Gly12Asp",20],[15,16,17,18,"ENSP00000451856.1:p.Gly12Asp",20],[15,16,17,18,"ENSP00000452512.1:p.Gly12Asp",20],[15,16,17,"b",19,20],[15,16,17,24,21,20],[15,16,17,24,22,20],[15,16,17,24,23,20]],[0,["count","key","value","1",19,"MODERATE"],[25,26,27,28,19,29],[25,26,27,28,21,29],[25,26,27,28,21,29],[25,26,27,28,22,29],[25,26,27,28,22,29],[25,26,27,28,23,29],[25,26,27,28,23,29]],[0,[25,26,27,28,19,"missense_variant"],[25,26,27,28,19,30],[25,26,27,28,21,30],[25,26,27,28,21,30],[25,26,27,28,22,30],[25,26,27,28,22,30],[25,26,27,28,23,30],[25,26,27,28,23,30]],[0,[25,26,27,28,19,"likely_pathogenic"],[25,26,27,28,19,31],[25,26,27,28,19,"pathogenic"],[25,26,27,28,19,32],[25,26,27,28,21,31],[25,26,27,28,21,31],[25,26,27,28,21,32],[25,26,27,28,21,32],[25,26,27,28,22,31],[25,26,27,28,22,31],[25,26,27,28,22,32],[25,26,27,28,22,32],[25,26,27,28,23,31],[25,26,27,28,23,31],[25,26,27,28,23,32],[25,26,27,28,23,32]],[0,[15,26,14,"a:tumor",19,"0.6772879958152771"],[15,26,14,33,21,34],[15,26,14,33,22,34],[15,26,14,33,23,34],[15,26,14,"b:tumor",19,34],[15,26,14,35,21,34],[15,26,14,35,22,34],[15,26,14,35,23,34]]],["type","contains","fit","padding"],"30",[0,["data","selection","mark","height","encoding",["name",10],["brush",[36,"encodings","interval",[0,"x"]]],"bar","100",[50,"y","color",["field",36,"scale","axis","sort",15,"ordinal",[],null,["op",55,"order","valid","count_variants","descending"]],[55,"aggregate",36,57,64,25,"quantitative",["title","count per sample"]],[55,36,68,"legend",56,64,"nominal","Variants",60,["domain","range",36,[0,20,"MNV","DEL","INS","DUP","INV","BND","Complex"],[0,"#a6cee3","#1f78b4","#b2df8a","#33a02c","#fb9a99","#e31a1c","#fdbf6f","#ff7f00"],59]]]],[6,"bounds","resolve","hconcat",40,"flush",[56,[54,"independent"]],[0,["layer",[0,[41,"transform",43,42,45,[46,10],[0,["filter",[42,47]]],[36,"size","opacity","square","350",28],["highlight1",[36,"empty","on","fields","single","none","mouseover",[0,15]]],[50,53,"fillOpacity",54,"tooltip",[55,36,56,58,15,59,[73,[42,47]],[61,55,62,63,64,65]],[55,36,58,16,59,[]],["condition",27,[42,27,102,"0.5"],28],[55,36,68,56,"variants1",71,72,[73,74,36,[0,20,75,76,77,78,79,80,81],[0,82,83,84,85,86,87,88,89],59]],[0,[55,36,15,71]]]],[41,96,43,42,45,[46,10],[0,[97,[42,47]]],[36,98,99,100,"250",28],["highlight2",[36,103,104,105,106,107,108,[0,15]]],[50,53,109,54,110,[55,36,56,58,15,59,[73,[42,47]],[61,55,62,63,64,65]],[55,36,58,16,59,[]],[111,27,[42,27,115,112],28],[55,36,68,56,"variants2",71,72,[73,74,36,[0,20,75,76,77,78,79,80,81],[0,82,83,84,85,86,87,88,89],59]],[0,[55,36,15,71]]]],[41,96,43,42,45,[46,10],[0,[97,[42,47]]],[36,98,99,100,"200",28],["highlight3",[36,103,104,105,106,107,108,[0,15]]],[50,53,109,54,110,[55,36,56,58,15,59,[73,[42,47]],[61,55,62,63,64,65]],[55,36,58,16,59,[]],[111,27,[42,27,118,112],28],[55,36,68,56,"variants3",71,72,[73,74,36,[0,20,75,76,77,78,79,80,81],[0,82,83,84,85,86,87,88,89],59]],[0,[55,36,15,71]]]],[41,96,43,42,45,[46,10],[0,[97,[42,47]]],[36,98,99,100,"170",28],["highlight4",[36,103,104,105,106,107,108,[0,15]]],[50,53,109,54,110,[55,36,56,58,15,59,[73,[42,47]],[61,55,62,63,64,65]],[55,36,58,16,59,[]],[111,27,[42,27,121,112],28],[55,36,68,56,"variants4",71,72,[73,74,36,[0,20,75,76,77,78,79,80,81],[0,82,83,84,85,86,87,88,89],59]],[0,[55,36,15,71]]]],[41,96,43,42,45,[46,10],[0,[97,[42,47]]],[36,98,99,100,"145",28],["highlight5",[36,103,104,105,106,107,108,[0,15]]],[50,53,109,54,110,[55,36,56,58,15,59,[73,[42,47]],[61,55,62,63,64,65]],[55,36,58,16,59,[]],[111,27,[42,27,124,112],28],[55,36,68,56,"variants5",71,72,[73,74,36,[0,20,75,76,77,78,79,80,81],[0,82,83,84,85,86,87,88,89],59]],[0,[55,36,15,71]]]],[41,96,43,42,45,[46,10],[0,[97,[42,47]]],[36,98,99,100,"120",28],["highlight6",[36,103,104,105,106,107,108,[0,15]]],[50,53,109,54,110,[55,36,56,58,15,59,[73,[42,47]],[61,55,62,63,64,65]],[55,36,58,16,59,[]],[111,27,[42,27,127,112],28],[55,36,68,56,"variants6",71,72,[73,74,36,[0,20,75,76,77,78,79,80,81],[0,82,83,84,85,86,87,88,89],59]],[0,[55,36,15,71]]]],[41,96,43,42,45,[46,10],[0,[97,[42,47]]],[36,98,99,100,"95",28],["highlight7",[36,103,104,105,106,107,108,[0,15]]],[50,53,109,54,110,[55,36,56,58,15,59,[73,[42,47]],[61,55,62,63,64,65]],[55,36,58,16,59,[]],[111,27,[42,27,130,112],28],[55,36,68,56,"variants7",71,72,[73,74,36,[0,20,75,76,77,78,79,80,81],[0,82,83,84,85,86,87,88,89],59]],[0,[55,36,15,71]]]],[41,96,43,42,45,[46,10],[0,[97,[42,47]]],[36,98,99,100,"70",28],["highlight8",[36,103,104,105,106,107,108,[0,15]]],[50,53,109,54,110,[55,36,56,58,15,59,[73,[42,47]],[61,55,62,63,64,65]],[55,36,58,16,59,[]],[111,27,[42,27,133,112],28],[55,36,68,56,"variants8",71,72,[73,74,36,[0,20,75,76,77,78,79,80,81],[0,82,83,84,85,86,87,88,89],59]],[0,[55,36,15,71]]]]]],[41,43,"width",45,[46,10],51,52,[53,50,54,[55,36,58,57,16,59,[],60],[55,66,36,57,64,25,67,[68,"count per alteration"]],[55,36,68,70,56,64,71,72,60,[73,74,36,[0,20,75,76,77,78,79,80,81],[0,82,83,84,85,86,87,88,89],59]]]],[41,43,135,45,[46,11],51,52,[53,50,54,[55,36,58,57,26,59,[],60],[55,66,"stack",36,57,25,"sum","normalize",67,[68,11]],[55,36,68,56,27,71,11,[73,74,36,[0,"HIGH","LOW",29,"MODIFIER","unknown"],[0,"#31a354","#756bb1","#7f7f7f","#bcbd22","#d4d4d4"],59]]]],[41,43,135,45,[46,12],51,52,[53,50,54,[55,36,58,57,26,59,[],60],[55,66,137,36,57,25,138,139,67,[68,12]],[55,36,68,56,70,27,71,12,[73,74,36,[0,"transcript_ablation","splice_acceptor_variant","splice_donor_variant","stop_gained","frameshift_variant","stop_lost","start_lost","transcript_amplification","inframe_insertion","inframe_deletion",30,"protein_altering_variant","splice_region_variant","start_retained_variant","stop_retained_variant","synonymous_variant","coding_sequence_variant","mature_miRNA_variant","~5_prime_UTR_variant","~3_prime_UTR_variant","incomplete_terminal_codon_variant","non_coding_transcript_exon_variant","intron_variant","NMD_transcript_variant","non_coding_transcript_variant","upstream_gene_variant","downstream_gene_variant","TFBS_ablation","TFBS_amplification","TF_binding_site_variant","regulatory_region_ablation","regulatory_region_amplification","feature_elongation","regulatory_region_variant","feature_truncation","intergenic_variant",143],[0,"#809693","#FEFFE6","#1B4400","#4FC601","#3B5DFF","#4A3B53","#FF2F80","#61615A","#BA0900","#6B7900","#00C2A0","#FFAA92","#FF90C9","#B903AA","#D16100","#DDEFFF","#000035","#7B4F4B","#000000","#FFFF00","#1CE6FF","#FF34FF","#FF4A46","#008941","#006FA6","#A30059","#FFDBE5","#7A4900","#0000A6","#63FFAC","#B79762","#004D43","#8FB0FF","#997D87","#5A0007","#D4D4D4"],59],["symbolLimit","40"]]]],[41,43,135,45,[46,13],51,52,[53,50,54,[55,36,58,57,26,59,[],60],[55,66,137,36,57,25,138,139,67,[68,"clinical significance"]],[55,36,68,56,27,71,222,[73,74,36,[0,"association","benign","drug_response","likely_benign",31,"not_provided","other",32,"protective","risk_factor","uncertain_significance","benign/likely_benign","likely_pathogenic/pathogenic","conflicting_interpretations_of_pathogenicity",143],[0,"#17becf","#e377c2","#ad494a","#e7ba52","#b3de69","#83bcb6","#e45756","#9e765f","#ce6dbd","#9edae5","#fdae6b",200,201,218,148],59]]]],[41,43,135,45,[46,14],"tick",52,[53,50,54,110,[55,36,58,57,26,59,[],60],[55,36,57,14,67,[68,"allele frequency"]],[55,36,68,15,71,15],[0,[55,36,14,67]]]]]]],[70,["orient","direction","bottom","vertical"]],0];
+            let samples = 2;
+        </script>
+        <script src="../js/gene-report.js"></script>
+    </body>
+</html>

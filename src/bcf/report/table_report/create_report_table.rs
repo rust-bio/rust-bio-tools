@@ -84,8 +84,8 @@ pub(crate) fn make_table_report(
                 let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
 
                 let gene = std::str::from_utf8(
-                    fields[*ann_indices.get(&String::from("Gene")).expect(
-                        "No field named Gene found. Please only use VEP-annotated VCF-files.",
+                    fields[*ann_indices.get(&String::from("SYMBOL")).expect(
+                        "No field named SYMBOL found. Please only use VEP-annotated VCF-files.",
                     )],
                 )?;
                 genes.push(gene);
@@ -173,8 +173,8 @@ pub(crate) fn make_table_report(
                     marker_type: var_string,
                     reference: ref_allele.clone(),
                     alternatives,
-                    start_position: plot_start_position,
-                    end_position,
+                    start_position: plot_start_position + 1.0,
+                    end_position: end_position + 1.0,
                     row: -1,
                     var_type,
                 };
@@ -271,7 +271,7 @@ fn create_report_data(
 ) -> Json {
     let mut data = Vec::new();
 
-    for f in read_fasta(fasta_path, chrom.clone(), from, to) {
+    for f in read_fasta(fasta_path, chrom.clone(), from, to, true) {
         let nucleobase = json!(f);
         data.push(nucleobase);
     }

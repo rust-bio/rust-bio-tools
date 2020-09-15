@@ -14,12 +14,13 @@ use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::{self, Read};
 use serde_json::{json, Value};
 use std::fs::File;
-use std::iter::FromIterator;
 use std::path::Path;
+use std::str::FromStr;
 
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
     output_path: &str,
+    max_cells: u32,
 ) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
@@ -98,9 +99,9 @@ pub fn oncoprint(
                             )
                         };
 
-                        let impact = get_field("IMPACT")?;
+                        let mut impact = get_field("IMPACT")?;
                         let clin_sig = get_field("CLIN_SIG")?;
-                        let gene = get_field("Gene")?;
+                        let gene = get_field("SYMBOL")?;
                         let dna_alteration = get_field("HGVSc")?;
                         let protein_alteration = get_field("HGVSp")?;
                         let consequence = get_field("Consequence")?;
@@ -118,10 +119,10 @@ pub fn oncoprint(
                         rec.variants.push(variant.to_owned());
 
                         let imp_rec = impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
+                        if impact == "" {
+                            impact = "unknown";
+                        }
                         imp_rec.push(BarPlotRecord::new(gene.to_owned(), impact.to_owned()));
-
-                        let cons_rec = consequences.entry(gene.to_owned()).or_insert_with(Vec::new);
-                        cons_rec.push(BarPlotRecord::new(gene.to_owned(), consequence.to_owned()));
 
                         let alt = if protein_alteration.is_empty() {
                             dna_alteration
@@ -132,11 +133,21 @@ pub fn oncoprint(
                             gene_impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
                         gene_imp_rec.push(BarPlotRecord::new(alt.to_owned(), impact.to_owned()));
 
+                        let split_consequences: Vec<_> = consequence.split('&').collect();
+
+                        let cons_rec = consequences.entry(gene.to_owned()).or_insert_with(Vec::new);
+
                         let gene_cons_rec = gene_consequences
                             .entry(gene.to_owned())
                             .or_insert_with(Vec::new);
-                        gene_cons_rec
-                            .push(BarPlotRecord::new(alt.to_owned(), consequence.to_owned()));
+
+                        for mut c in split_consequences {
+                            if c == "" {
+                                c = "unknown";
+                            }
+                            cons_rec.push(BarPlotRecord::new(gene.to_owned(), c.to_owned()));
+                            gene_cons_rec.push(BarPlotRecord::new(alt.to_owned(), c.to_owned()));
+                        }
 
                         let gene_clin_sig_rec = gene_clin_sigs
                             .entry(gene.to_owned())
@@ -144,7 +155,11 @@ pub fn oncoprint(
 
                         let clin_rec = clin_sigs.entry(gene.to_owned()).or_insert_with(Vec::new);
                         let sigs: Vec<_> = clin_sig.split('&').collect();
-                        for s in sigs {
+                        for mut s in sigs {
+                            if s == "" {
+                                s = "unknown";
+                            }
+                            s = s.trim_matches('_');
                             clin_rec.push(BarPlotRecord::new(gene.to_owned(), s.to_owned()));
                             gene_clin_sig_rec
                                 .push(BarPlotRecord::new(alt.to_owned(), s.to_owned()));
@@ -229,10 +244,11 @@ pub fn oncoprint(
     let gene_path = output_path.to_owned() + "/genes/";
     fs::create_dir(Path::new(&gene_path))?;
     let mut gene_templates = Tera::default();
-    gene_templates.register_filter("embed_source", embed_source);
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
 
     let gene_specs: Value = serde_json::from_str(include_str!("gene_specs.json")).unwrap();
+
+    let page_size = max_cells as usize / sample_calls.len();
 
     // create html for second stage
     for (gene, data) in gene_data {
@@ -248,9 +264,7 @@ pub fn oncoprint(
             samples.dedup();
             sort_alterations.insert(alteration, samples.len());
         }
-        let mut order = Vec::from_iter(sort_alterations);
-        order.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
-        let order: Vec<_> = order.iter().map(|(x, _)| x).collect();
+
         let mut specs = gene_specs.clone();
         let impact_data = gene_impact_data.get(&gene).unwrap();
         let final_impact: Vec<_> = impact_data.iter().flatten().sorted().collect();
@@ -259,22 +273,101 @@ pub fn oncoprint(
         let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
         let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().sorted().collect();
         let allel_frequency_data = gene_af_data.get(&gene).unwrap();
-        let values = json!({ "main": gene_data, "impact": final_impact, "consequence": final_consequence, "clin_sig": final_clin_sig, "allel_frequency": allel_frequency_data});
-        specs["datasets"] = values;
-        let mut packer = Packer::new();
-        let options = PackOptions::new();
-        let packed_gene_specs = packer.pack(&specs, &options).unwrap();
-        let mut context = Context::new();
-        context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
-        context.insert("gene", &gene);
-        context.insert("order", &serde_json::to_string(&json!(order))?);
-        let local: DateTime<Local> = Local::now();
-        context.insert("time", &local.format("%a %b %e %T %Y").to_string());
-        context.insert("version", &env!("CARGO_PKG_VERSION"));
-        let html = gene_templates.render("genes.html.tera", &context)?;
-        let filepath = gene_path.clone() + &gene + ".html";
-        let mut file = File::create(filepath)?;
-        file.write_all(html.as_bytes())?;
+
+        let sorted_impacts = order_by_impact(final_impact.clone());
+        let sorted_clin_sigs = order_by_clin_sig(final_clin_sig.clone());
+        let mut order = Vec::new();
+        for (alt, sample_count) in sort_alterations {
+            let impact_order = sorted_impacts.get(alt).unwrap();
+            let clin_sig_order = sorted_clin_sigs.get(alt).unwrap();
+            order.push((alt.to_owned(), sample_count, impact_order, clin_sig_order))
+        }
+
+        order.sort_by(|(g1, c1, i1, cs1), (g2, c2, i2, cs2)| {
+            c2.cmp(c1) // first order by different sample occurrences
+                .then(i2.cmp(i1)) // then by impact
+                .then(cs2.cmp(cs1)) // then by clin_sig
+                .then(g2.cmp(g1)) // lastly by alteration name for consistency
+        });
+
+        let ordered_alts: Vec<_> = order.iter().map(|(x, _, _, _)| x).collect();
+
+        let pages = if order.len() % page_size == 0 {
+            (order.len() / page_size) - 1
+        } else {
+            order.len() / page_size
+        };
+
+        for i in 0..pages + 1 {
+            let current_alterations = if i != pages {
+                &order[(i * page_size)..((i + 1) * page_size)] // get genes for current page
+            } else {
+                &order[(i * page_size)..] // get genes for last page
+            };
+
+            if !current_alterations.is_empty() {
+                let mut sorted_alterations = Vec::new();
+                for (g, _, _, _) in current_alterations {
+                    sorted_alterations.push(g);
+                }
+
+                let page = i + 1;
+
+                let page_data: Vec<_> = gene_data
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.alteration))
+                    .sorted()
+                    .collect();
+
+                let impact_page_data: Vec<_> = final_impact
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .sorted()
+                    .collect();
+
+                let consequence_page_data: Vec<_> = final_consequence
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .sorted()
+                    .collect();
+
+                let clin_sig_page_data: Vec<_> = final_clin_sig
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .sorted()
+                    .collect();
+
+                let af_page_data: Vec<_> = allel_frequency_data
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.key))
+                    .collect();
+
+                let order: Vec<_> = ordered_alts
+                    .iter()
+                    .filter(|gene| sorted_alterations.contains(gene))
+                    .collect();
+
+                let values = json!({ "main": page_data, "impact": impact_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+                specs["datasets"] = values;
+                let mut packer = Packer::new();
+                let options = PackOptions::new();
+                let packed_gene_specs = packer.pack(&specs, &options).unwrap();
+                let mut context = Context::new();
+                context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
+                context.insert("gene", &gene);
+                context.insert("samples", &sample_calls.len());
+                context.insert("current_page", &page);
+                context.insert("pages", &(pages + 1));
+                context.insert("order", &serde_json::to_string(&json!(order))?);
+                let local: DateTime<Local> = Local::now();
+                context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+                context.insert("version", &env!("CARGO_PKG_VERSION"));
+                let html = gene_templates.render("genes.html.tera", &context)?;
+                let filepath = gene_path.clone() + &gene + &page.to_string() + ".html";
+                let mut file = File::create(filepath)?;
+                file.write_all(html.as_bytes())?;
+            }
+        }
     }
 
     // only keep recurrent entries
@@ -297,14 +390,31 @@ pub fn oncoprint(
     let consequence_data: Vec<_> = consequence_data.iter().flatten().collect();
     let clin_sig_data: Vec<_> = clin_sig_data.iter().flatten().collect();
 
-    let page_size = 100;
+    let sorted_impacts = order_by_impact(impact_data.clone());
+    let sorted_clin_sigs = order_by_clin_sig(clin_sig_data.clone());
+    let mut v = Vec::new();
+    for (gene, sample_count) in sort_genes {
+        let impact_order = sorted_impacts.get(&gene).unwrap();
+        let clin_sig_order = sorted_clin_sigs.get(&gene).unwrap();
+        v.push((gene, sample_count, impact_order, clin_sig_order))
+    }
 
-    let mut v = Vec::from_iter(sort_genes);
-    v.sort_by(|(a, b), (c, d)| if b == d { a.cmp(&c) } else { d.cmp(&b) });
-    let ordered_genes: Vec<_> = v.iter().map(|(x, _)| x).collect();
-    let order = json!(ordered_genes);
+    v.sort_by(|(g1, c1, i1, cs1), (g2, c2, i2, cs2)| {
+        c2.cmp(c1) // first order by different sample occurrences
+            .then(i2.cmp(i1)) // then by impact
+            .then(cs2.cmp(cs1)) // then by clin_sig
+            .then(g2.cmp(g1)) // lastly by gene name for consistency
+    });
+    let ordered_genes: Vec<_> = v.iter().map(|(x, _, _, _)| x).collect();
 
-    let pages = v.len() / page_size;
+    let pages = if v.len() % page_size == 0 {
+        (v.len() / page_size) - 1
+    } else {
+        v.len() / page_size
+    };
+
+    let index_path = output_path.to_owned() + "/indexes/";
+    fs::create_dir(Path::new(&index_path))?;
 
     for i in 0..pages + 1 {
         let current_genes = if i != pages {
@@ -313,79 +423,79 @@ pub fn oncoprint(
             &v[(i * page_size)..] // get genes for last page
         };
 
-        let mut sorted_genes = Vec::new();
-        for (g, _) in current_genes {
-            sorted_genes.push(g);
+        if !current_genes.is_empty() {
+            let mut sorted_genes = Vec::new();
+            for (g, _, _, _) in current_genes {
+                sorted_genes.push(g);
+            }
+
+            let page = i + 1;
+
+            let page_data: Vec<_> = data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.gene))
+                .sorted()
+                .collect();
+
+            let impact_page_data: Vec<_> = impact_data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.record.key))
+                .sorted()
+                .collect();
+
+            let consequence_page_data: Vec<_> = consequence_data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.record.key))
+                .sorted()
+                .collect();
+
+            let clin_sig_page_data: Vec<_> = clin_sig_data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.record.key))
+                .sorted()
+                .collect();
+
+            let af_page_data: Vec<_> = af_data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.key))
+                .collect();
+
+            let order: Vec<_> = ordered_genes
+                .iter()
+                .filter(|gene| sorted_genes.contains(gene))
+                .collect();
+
+            let mut vl_specs: Value =
+                serde_json::from_str(include_str!("report_specs.json")).unwrap();
+            let values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+
+            vl_specs["datasets"] = values;
+
+            let mut packer = Packer::new();
+            let options = PackOptions::new();
+            let packed_specs = packer.pack(&vl_specs, &options).unwrap();
+            let mut templates = Tera::default();
+            templates.add_raw_template("report.html.tera", include_str!("report.html.tera"))?;
+            let mut context = Context::new();
+            let data = serde_json::to_string(&packed_specs)?;
+            context.insert("oncoprint", &data);
+            context.insert("current_page", &page);
+            context.insert("pages", &(pages + 1));
+            context.insert("order", &serde_json::to_string(&json!(order))?);
+            context.insert("samples", &sample_calls.len());
+            let local: DateTime<Local> = Local::now();
+            context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+            context.insert("version", &env!("CARGO_PKG_VERSION"));
+
+            let html = templates.render("report.html.tera", &context)?;
+
+            let index = index_path.to_owned() + "/index" + &page.to_string() + ".html";
+            let mut file = File::create(index)?;
+            file.write_all(html.as_bytes())?;
         }
-
-        let page = i + 1;
-
-        let page_data: Vec<_> = data
-            .iter()
-            .filter(|entry| sorted_genes.contains(&&entry.gene))
-            .sorted()
-            .collect();
-
-        let impact_page_data: Vec<_> = impact_data
-            .iter()
-            .filter(|entry| sorted_genes.contains(&&entry.record.key))
-            .sorted()
-            .collect();
-
-        let consequence_page_data: Vec<_> = consequence_data
-            .iter()
-            .filter(|entry| sorted_genes.contains(&&entry.record.key))
-            .sorted()
-            .collect();
-
-        let clin_sig_page_data: Vec<_> = clin_sig_data
-            .iter()
-            .filter(|entry| sorted_genes.contains(&&entry.record.key))
-            .sorted()
-            .collect();
-
-        let af_page_data: Vec<_> = af_data
-            .iter()
-            .filter(|entry| sorted_genes.contains(&&entry.key))
-            .collect();
-
-        let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json")).unwrap();
-        let values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
-
-        vl_specs["datasets"] = values;
-
-        let mut packer = Packer::new();
-        let options = PackOptions::new();
-        let packed_specs = packer.pack(&vl_specs, &options).unwrap();
-        let mut templates = Tera::default();
-        templates.register_filter("embed_source", embed_source);
-        templates.add_raw_template("report.html.tera", include_str!("report.html.tera"))?;
-        let mut context = Context::new();
-        let data = serde_json::to_string(&packed_specs)?;
-        context.insert("oncoprint", &data);
-        context.insert("pages", &(pages + 1));
-        context.insert("order", &serde_json::to_string(&order)?);
-        let local: DateTime<Local> = Local::now();
-        context.insert("time", &local.format("%a %b %e %T %Y").to_string());
-        context.insert("version", &env!("CARGO_PKG_VERSION"));
-
-        let html = templates.render("report.html.tera", &context)?;
-
-        let index = output_path.to_owned() + "/index" + &page.to_string() + ".html";
-        let mut file = File::create(index)?;
-        file.write_all(html.as_bytes())?;
     }
 
     Ok(())
-}
-
-fn embed_source(
-    value: &tera::Value,
-    _: &HashMap<String, tera::Value>,
-) -> tera::Result<tera::Value> {
-    let url = tera::try_get_value!("upper", "value", String, value);
-    let source = reqwest::get(&url).unwrap().text().unwrap();
-    Ok(tera::to_value(source).unwrap())
 }
 
 #[derive(new, Debug)]
@@ -425,8 +535,6 @@ struct Counter {
 struct FinalRecord {
     sample: String,
     gene: String,
-    dna_alterations: String,
-    protein_alterations: String,
     variants: String,
 }
 
@@ -434,9 +542,82 @@ struct FinalRecord {
 #[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 struct SecondStageRecord {
     sample: String,
-    gene: String,
     alteration: String,
     variants: String,
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+enum Impact {
+    Unknown,
+    Low,
+    Modifier,
+    Moderate,
+    High,
+}
+
+impl FromStr for Impact {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let impact;
+        match s {
+            "HIGH" => impact = Impact::High,
+            "MODERATE" => impact = Impact::Moderate,
+            "MODIFIER" => impact = Impact::Modifier,
+            "LOW" => impact = Impact::Low,
+            _ => impact = Impact::Unknown,
+        }
+        Ok(impact)
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
+enum ClinSig {
+    Unknown,
+    NotProvided,
+    Other,
+    Benign,
+    BenignLikelyBenign,
+    LikelyBenign,
+    Protective,
+    UncertainSignificance,
+    ConflictingInterpretationsOfPathogenicity,
+    Association,
+    Affects,
+    DrugResponse,
+    RiskFactor,
+    LikelyPathogenic,
+    LikelyPathogenicPathogenic,
+    Pathogenic,
+}
+
+impl FromStr for ClinSig {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let clin_sig;
+        match s {
+            "pathogenic" => clin_sig = ClinSig::Pathogenic,
+            "likely_pathogenic/pathogenic" => clin_sig = ClinSig::LikelyPathogenicPathogenic,
+            "likely_pathogenic" => clin_sig = ClinSig::LikelyPathogenic,
+            "risk_factor" => clin_sig = ClinSig::RiskFactor,
+            "drug_response" => clin_sig = ClinSig::DrugResponse,
+            "affects" => clin_sig = ClinSig::Affects,
+            "association" => clin_sig = ClinSig::Association,
+            "uncertain_significance" => clin_sig = ClinSig::UncertainSignificance,
+            "conflicting_interpretations_of_pathogenicity" => {
+                clin_sig = ClinSig::ConflictingInterpretationsOfPathogenicity
+            }
+            "protective" => clin_sig = ClinSig::Protective,
+            "likely_benign" => clin_sig = ClinSig::LikelyBenign,
+            "benign/likely_benign" => clin_sig = ClinSig::BenignLikelyBenign,
+            "benign" => clin_sig = ClinSig::Benign,
+            "other" => clin_sig = ClinSig::Other,
+            "not_provided" => clin_sig = ClinSig::NotProvided,
+            _ => clin_sig = ClinSig::Unknown,
+        }
+        Ok(clin_sig)
+    }
 }
 
 impl From<&Record> for Vec<SecondStageRecord> {
@@ -448,14 +629,12 @@ impl From<&Record> for Vec<SecondStageRecord> {
             let alt = if protein_alt.is_empty() {
                 SecondStageRecord {
                     sample: record.sample.to_owned(),
-                    gene: record.gene.to_owned(),
                     alteration: dna_alterations[i].to_owned(),
                     variants: record.variants.iter().sorted().unique().join("/"),
                 }
             } else {
                 SecondStageRecord {
                     sample: record.sample.to_owned(),
-                    gene: record.gene.to_owned(),
                     alteration: protein_alt.to_owned(),
                     variants: record.variants.iter().sorted().unique().join("/"),
                 }
@@ -472,13 +651,6 @@ impl From<&Record> for FinalRecord {
         FinalRecord {
             sample: record.sample.to_owned(),
             gene: record.gene.to_owned(),
-            dna_alterations: record.dna_alterations.iter().sorted().unique().join(", "),
-            protein_alterations: record
-                .protein_alterations
-                .iter()
-                .sorted()
-                .unique()
-                .join(", "),
             variants: record.variants.iter().sorted().unique().join("/"),
         }
     }
@@ -507,4 +679,48 @@ fn make_final_bar_plot_records(records: &[BarPlotRecord]) -> Vec<Counter> {
     }
 
     res
+}
+
+fn order_by_impact(impacts: Vec<&Counter>) -> HashMap<String, Vec<Impact>> {
+    let mut order = HashMap::new();
+    let mut order_tuples = HashMap::new();
+    for c in impacts {
+        let impact = Impact::from_str(&c.record.value).unwrap();
+        let rec = order_tuples
+            .entry(c.record.key.to_owned())
+            .or_insert_with(Vec::new);
+        rec.push((impact, c.count))
+    }
+
+    for v in order_tuples.values_mut() {
+        v.sort_by(|(i1, a), (i2, b)| b.cmp(&a).then(i2.cmp(&i1)))
+    }
+
+    for (k, v) in order_tuples {
+        let removed_count = v.into_iter().map(|(x, _)| x).collect();
+        order.insert(k, removed_count);
+    }
+    order
+}
+
+fn order_by_clin_sig(clin_sigs: Vec<&Counter>) -> HashMap<String, Vec<ClinSig>> {
+    let mut order = HashMap::new();
+    let mut order_tuples = HashMap::new();
+    for c in clin_sigs {
+        let impact = ClinSig::from_str(&c.record.value).unwrap();
+        let rec = order_tuples
+            .entry(c.record.key.to_owned())
+            .or_insert_with(Vec::new);
+        rec.push((impact, c.count))
+    }
+
+    for v in order_tuples.values_mut() {
+        v.sort_by(|(c1, a), (c2, b)| b.cmp(&a).then(c2.cmp(&c1)));
+    }
+
+    for (k, v) in order_tuples {
+        let removed_count = v.into_iter().map(|(x, _)| x).collect();
+        order.insert(k, removed_count);
+    }
+    order
 }

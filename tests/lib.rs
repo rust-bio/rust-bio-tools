@@ -154,39 +154,58 @@ fn vcf_baf() {
 }
 
 #[test]
-fn test_report() {
+fn test_vcf_report() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt vcf-report tests/ref.fa --vcfs a=tests/report-test.vcf b=tests/report-test.vcf --bams a=tests/test-report.bam b=tests/test-report.bam -- tests")
+            .arg("target/debug/rbt vcf-report tests/ref.fa -v a=tests/report-test.vcf -v b=tests/report-test.vcf -b a=tests/test-report.bam -b b=tests/test-report.bam -- tests")
             .spawn()
             .unwrap()
             .wait()
             .unwrap()
             .success()
     );
-    let files = vec![
-        ("tests/index1.html", "tests/expected/report/index1.html"),
+    let files1 = vec![
         (
-            "tests/genes/ENSG00000133703.html",
-            "tests/expected/report/genes/ENSG00000133703.html",
+            "tests/indexes/index1.html",
+            "tests/expected/report/indexes/index1.html",
         ),
         (
-            "tests/details/a/ENSG00000133703.html",
-            "tests/expected/report/details/a/ENSG00000133703.html",
-        ),
-        (
-            "tests/details/b/ENSG00000133703.html",
-            "tests/expected/report/details/b/ENSG00000133703.html",
+            "tests/genes/KRAS1.html",
+            "tests/expected/report/genes/KRAS1.html",
         ),
     ];
 
-    for (result, expected) in files {
-        // delete line 30 with timestamp
+    let files2 = vec![
+        (
+            "tests/details/a/KRAS.html",
+            "tests/expected/report/details/a/KRAS.html",
+        ),
+        (
+            "tests/details/b/KRAS.html",
+            "tests/expected/report/details/b/KRAS.html",
+        ),
+    ];
+
+    for (result, expected) in files1 {
+        // delete line 22 with timestamp
         // this may fail on OS X due to the wrong sed being installed
         assert!(Command::new("bash")
             .arg("-c")
-            .arg("sed -i '30d' ".to_owned() + result)
+            .arg("sed -i '22d' ".to_owned() + result)
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success());
+        test_output(result, expected)
+    }
+    for (result, expected) in files2 {
+        // delete line 29 with timestamp
+        // this may fail on OS X due to the wrong sed being installed
+        assert!(Command::new("bash")
+            .arg("-c")
+            .arg("sed -i '29d' ".to_owned() + result)
             .spawn()
             .unwrap()
             .wait()
@@ -196,6 +215,10 @@ fn test_report() {
     }
     fs::remove_dir_all("tests/genes").unwrap();
     fs::remove_dir_all("tests/details").unwrap();
+    fs::remove_dir_all("tests/js").unwrap();
+    fs::remove_dir_all("tests/css").unwrap();
+    fs::remove_dir_all("tests/indexes").unwrap();
+    fs::remove_file("tests/index.html").unwrap();
 }
 
 #[test]

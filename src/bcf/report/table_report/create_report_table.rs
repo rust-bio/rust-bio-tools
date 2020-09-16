@@ -146,9 +146,6 @@ pub(crate) fn make_table_report(
             None
         };
 
-        println!("{:?}", info_tags);
-        println!("{:?}", format_tags);
-
         let alleles: Vec<_> = variant
             .alleles()
             .into_iter()

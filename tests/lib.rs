@@ -188,11 +188,11 @@ fn test_vcf_report() {
     ];
 
     for (result, expected) in files1 {
-        // delete line 22 with timestamp
+        // delete line 22 with timestamp and 15 with version
         // this may fail on OS X due to the wrong sed being installed
         assert!(Command::new("bash")
             .arg("-c")
-            .arg("sed -i '22d' ".to_owned() + result)
+            .arg("sed -i '22d;15d' ".to_owned() + result)
             .spawn()
             .unwrap()
             .wait()
@@ -201,11 +201,11 @@ fn test_vcf_report() {
         test_output(result, expected)
     }
     for (result, expected) in files2 {
-        // delete line 29 with timestamp
+        // delete line 29 with timestamp and 22 with version
         // this may fail on OS X due to the wrong sed being installed
         assert!(Command::new("bash")
             .arg("-c")
-            .arg("sed -i '29d' ".to_owned() + result)
+            .arg("sed -i '29d;22d' ".to_owned() + result)
             .spawn()
             .unwrap()
             .wait()

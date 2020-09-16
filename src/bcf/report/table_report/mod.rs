@@ -5,6 +5,8 @@ mod static_reader;
 
 use crate::bcf::report::table_report::create_report_table::make_table_report;
 use chrono::{DateTime, Local};
+use clap::Values;
+use itertools::__std_iter::FromIterator;
 use std::error::Error;
 use std::fs;
 use std::fs::File;
@@ -18,9 +20,30 @@ pub fn table_report(
     bam: &str,
     output_path: &str,
     sample: &str,
+    info: Option<Values>,
+    format: Option<Values>,
 ) -> Result<(), Box<dyn Error>> {
-    let (reports, ann_field_description) =
-        make_table_report(Path::new(vcf), Path::new(fasta), Path::new(bam))?;
+    let info_strings = if let Some(value) = info {
+        let strings = Vec::from_iter(value);
+        Some(strings)
+    } else {
+        None
+    };
+
+    let format_strings = if let Some(value) = format {
+        let strings = Vec::from_iter(value);
+        Some(strings)
+    } else {
+        None
+    };
+
+    let (reports, ann_field_description) = make_table_report(
+        Path::new(vcf),
+        Path::new(fasta),
+        Path::new(bam),
+        info_strings,
+        format_strings,
+    )?;
 
     let detail_path = output_path.to_owned() + "/details/" + sample;
     fs::create_dir(Path::new(&detail_path))?;

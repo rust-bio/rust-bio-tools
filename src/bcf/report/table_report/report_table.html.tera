@@ -63,6 +63,12 @@
                                     data-type="{{ variant.var_type }}"
                                     data-reference="{{ variant.reference }}"
                                     data-alternatives="{{ variant.alternatives | safe }}"
+                                    {% if variant.format %}
+                                    data-format="{{ variant.format | escape  }}"
+                                    {% endif %}
+                                    {% if variant.info %}
+                                    data-info="{{ variant.info | escape  }}"
+                                    {% endif %}
                                     data-vis="{{ variant.vis | escape }}"
                                     data-packed=true
                                     data-annlen="{{ variant.ann | length }}"
@@ -96,6 +102,8 @@
                 </table>
                 <table id="ann-sidebar" class="table table-hover table-sm" data-widht="100" data-toggle="table">
                 </table>
+                <div id="custom-sidebar">
+                </div>
             </div>
         </div>
     </div>

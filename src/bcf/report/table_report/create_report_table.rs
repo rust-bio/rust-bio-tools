@@ -1,6 +1,7 @@
 use crate::bcf::report::table_report::fasta_reader::{get_fasta_length, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
 use jsonm::packer::{PackOptions, Packer};
+use rust_htslib::bcf::header::TagType;
 use rust_htslib::bcf::{HeaderRecord, Read};
 use rustc_serialize::json::Json;
 use serde::Serialize;
@@ -27,6 +28,8 @@ pub struct Report {
     var_type: VariantType,
     alternatives: Option<String>,
     ann: Option<Vec<Vec<String>>>,
+    format: Option<String>,
+    info: Option<String>,
     vis: String,
 }
 
@@ -36,6 +39,8 @@ pub(crate) fn make_table_report(
     vcf_path: &Path,
     fasta_path: &Path,
     bam_path: &Path,
+    infos: Option<Vec<&str>>,
+    formats: Option<Vec<&str>>,
 ) -> Result<Reports, Box<dyn Error>> {
     // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
     let mut reports = HashMap::new();
@@ -67,6 +72,78 @@ pub(crate) fn make_table_report(
                 Some(end_pos)
             }
             _ => None,
+        };
+
+        let info_tags = if infos.is_some() {
+            let mut info_map = HashMap::new();
+            for tag in infos.clone().unwrap() {
+                let (tag_type, _) = header.info_type(tag.as_bytes())?;
+                match tag_type {
+                    TagType::String => {
+                        let values = variant.info(tag.as_bytes()).string()?.unwrap();
+                        for v in values {
+                            let value = String::from_utf8(v.to_owned())?;
+                            let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                            entry.push(json!(value));
+                        }
+                    }
+                    TagType::Float => {
+                        let values = variant.info(tag.as_bytes()).float()?;
+                        for v in values.unwrap() {
+                            let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                            entry.push(json!(v));
+                        }
+                    }
+                    TagType::Integer => {
+                        let values = variant.info(tag.as_bytes()).integer()?;
+                        for v in values.unwrap() {
+                            let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                            entry.push(json!(v));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            Some(serde_json::to_string(&json!(info_map))?)
+        } else {
+            None
+        };
+
+        let format_tags = if formats.is_some() {
+            let mut format_map = HashMap::new();
+            for tag in formats.clone().unwrap() {
+                let (tag_type, _) = header.format_type(tag.as_bytes())?;
+                match tag_type {
+                    TagType::String => {
+                        let values = variant.format(tag.as_bytes()).string()?;
+                        for v in values {
+                            let value = String::from_utf8(v.to_owned())?;
+                            let entry = format_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                            entry.push(json!(value));
+                        }
+                    }
+                    TagType::Float => {
+                        let values = variant.format(tag.as_bytes()).float()?;
+                        for v in values {
+                            let value = v.to_vec();
+                            let entry = format_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                            entry.push(json!(value));
+                        }
+                    }
+                    TagType::Integer => {
+                        let values = variant.format(tag.as_bytes()).integer()?;
+                        for v in values {
+                            let value = v.to_vec();
+                            let entry = format_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                            entry.push(json!(value));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            Some(serde_json::to_string(&json!(format_map))?)
+        } else {
+            None
         };
 
         let alleles: Vec<_> = variant
@@ -223,6 +300,8 @@ pub(crate) fn make_table_report(
                     var_type: var.var_type,
                     alternatives: var.alternatives,
                     ann: Some(annotations.clone()),
+                    format: format_tags.clone(),
+                    info: info_tags.clone(),
                     vis: visualization.to_string(),
                 };
 

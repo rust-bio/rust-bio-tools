@@ -86,6 +86,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             fs::create_dir(Path::new(&detail_path))?;
             let vcfs = matches.values_of("vcfs").unwrap();
             let bams = matches.values_of("bams").unwrap();
+            let infos = matches.values_of("info");
+            let formats = matches.values_of("format");
             for vcf in vcfs {
                 let v: Vec<_> = vcf.split('=').collect();
                 match sample_calls.insert(v[0].to_owned(), v[1].to_owned()) {
@@ -100,6 +102,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     _ => panic!("Found duplicate sample name {}. Please make sure the provided sample names are unique.", b[0].to_owned())
                 }
             }
+
             for sample in sample_calls.keys().sorted() {
                 bcf::report::table_report::table_report(
                     sample_calls.get(sample).unwrap(),
@@ -109,6 +112,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                         .unwrap_or_else(|| panic!("No bam provided for sample {}", sample)),
                     output_path,
                     sample,
+                    infos.clone(),
+                    formats.clone(),
                 )?;
             }
 

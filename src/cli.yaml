@@ -213,6 +213,8 @@ subcommands:
             rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a=a.bam b=b.bam
           With custom directory as default ouput path:
             rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a=a.bam b=b.bam -- my/output/path/
+          With custom info tags in table report:
+            rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a=a.bam b=b.bam --info PROB_SOMATIC PROB_GERMLINE
       author: Johannes Köster <johannes.koester@uni-due.de>, Felix Wiegand <felix.wiegand@tu-dortmund.de>
       args:
         - fasta:
@@ -237,6 +239,20 @@ subcommands:
             short: c
             default_value: "1000"
             help: Set the maximum number of cells in the oncoprint per page. Lowering max-cells should improve the performance of the plots in the browser. Default value is 1000.
+        - info:
+            multiple: true
+            required: false
+            long: info
+            short: i
+            value_name: INFO_TAG
+            help: Add custom values from the info field to each variant into the table report.
+        - format:
+            multiple: true
+            required: false
+            long: format
+            short: f
+            value_name: FORMAT_TAG
+            help: Add custom values from the format field to each variant into the table report.
         - output-path:
             last: true
             required: false

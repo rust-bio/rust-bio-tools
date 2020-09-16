@@ -78,7 +78,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut bam_paths = HashMap::new();
             let output_path = matches.value_of("output-path").unwrap();
             let max_cells = u32::from_str(matches.value_of("max-cells").unwrap()).unwrap();
-            bcf::report::embed_js(output_path)?;
+            let custom_js = matches.value_of("custom-js");
+            bcf::report::embed_js(output_path, custom_js)?;
             bcf::report::embed_css(output_path)?;
             bcf::report::embed_html(output_path)?;
             let fasta_path = matches.value_of("fasta").unwrap();

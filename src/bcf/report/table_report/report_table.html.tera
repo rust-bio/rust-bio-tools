@@ -102,6 +102,8 @@
                 </table>
                 <table id="ann-sidebar" class="table table-hover table-sm" data-widht="100" data-toggle="table">
                 </table>
+                <div id="custom-sidebar">
+                </div>
             </div>
         </div>
     </div>

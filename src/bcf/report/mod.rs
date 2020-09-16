@@ -1,13 +1,16 @@
 use std::error::Error;
 use std::fs;
 use std::fs::File;
-use std::io::{Write, Read};
+use std::io::{Read, Write};
 use std::path::Path;
 
 pub mod oncoprint;
 pub mod table_report;
 
-pub fn embed_js(output_path: &str, custom_table_report_js: Option<&str>) -> Result<(), Box<dyn Error>> {
+pub fn embed_js(
+    output_path: &str,
+    custom_table_report_js: Option<&str>,
+) -> Result<(), Box<dyn Error>> {
     let js_path = output_path.to_owned() + "/js/";
     fs::create_dir(Path::new(&js_path))?;
     let mut files = vec![
@@ -27,7 +30,9 @@ pub fn embed_js(output_path: &str, custom_table_report_js: Option<&str>) -> Resu
     if let Some(path) = custom_table_report_js {
         let mut file_string = String::new();
         let mut custom_file = File::open(path).expect("Unable to open custom JS file");
-        custom_file.read_to_string(&mut file_string).expect("Unable to read string");
+        custom_file
+            .read_to_string(&mut file_string)
+            .expect("Unable to read string");
         let mut out_file = File::create(js_path.to_owned() + "report.js")?;
         out_file.write_all(file_string.as_bytes())?;
     } else {

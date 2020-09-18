@@ -1,14 +1,13 @@
 {
   "data":{
   },
-  "mark":"square",
+  "mark":"rect",
   "encoding":{
     "x":{
       "field":"key",
       "type":"ordinal",
-      "axis":{
-        "title":"sample"
-      }
+      "scale": {"domain": {"selection": "brush"}},
+      "title": null
     },
     "color":{
       "field":"value",

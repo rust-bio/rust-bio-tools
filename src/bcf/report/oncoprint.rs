@@ -493,6 +493,7 @@ pub fn oncoprint(
                 for title in tsv.keys() {
                     let mut tsv_plot = tsv_specs.clone();
                     tsv_plot["data"] = json!({"name": title});
+                    tsv_plot["encoding"]["color"]["title"] = json!(title);
                     let vconcat = vl_specs["vconcat"].as_array_mut().unwrap();
                     vconcat.push(tsv_plot);
                     vl_specs["vconcat"] = json!(vconcat);

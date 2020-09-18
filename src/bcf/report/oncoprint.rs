@@ -14,15 +14,15 @@ use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::{self, Read};
 use serde_json::{json, Value};
 use std::fs::File;
+use std::iter::FromIterator;
 use std::path::Path;
 use std::str::FromStr;
-use std::iter::FromIterator;
 
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
     output_path: &str,
     max_cells: u32,
-    tsv_data_path: Option<&str>
+    tsv_data_path: Option<&str>,
 ) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
@@ -673,7 +673,9 @@ impl From<&Record> for FinalRecord {
     }
 }
 
-fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<BarPlotRecord>>, Box<dyn Error>> {
+fn make_tsv_records(
+    tsv_path: String,
+) -> Result<HashMap<String, Vec<BarPlotRecord>>, Box<dyn Error>> {
     let mut tsv_values = HashMap::new();
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(b'\t')
@@ -684,8 +686,10 @@ fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<BarPlotRecor
     for res in rdr.records() {
         let row = res?;
         let sample = row[0].to_owned();
-        for (i,value) in row.iter().skip(1).enumerate() {
-            let rec = tsv_values.entry(titles[i].to_owned()).or_insert_with(Vec::new);
+        for (i, value) in row.iter().skip(1).enumerate() {
+            let rec = tsv_values
+                .entry(titles[i].to_owned())
+                .or_insert_with(Vec::new);
             let entry = BarPlotRecord {
                 key: sample.clone(),
                 value: value.to_owned(),

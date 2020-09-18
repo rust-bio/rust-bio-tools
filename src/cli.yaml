@@ -259,6 +259,12 @@ subcommands:
             long: js
             value_name: JS_FILE_PATH
             help: Change the default javascript file for the table-report to a custom one to add own plots or tables to the sidebar by appending these to an empty div in the HTML template.
+        - tsv:
+            required: false
+            short: t
+            long: tsv
+            value_name: TSV_FILE_PATH
+            help: Add a TSV file that contains one or multiple custom values for each sample for the oncoprint. First column has to be the sample name, followed by one or more columns with custom values.
         - output-path:
             last: true
             required: false

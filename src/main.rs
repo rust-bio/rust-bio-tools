@@ -79,6 +79,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let output_path = matches.value_of("output-path").unwrap();
             let max_cells = u32::from_str(matches.value_of("max-cells").unwrap()).unwrap();
             let custom_js = matches.value_of("custom-js");
+            let tsv_data = matches.value_of("tsv");
             bcf::report::embed_js(output_path, custom_js)?;
             bcf::report::embed_css(output_path)?;
             bcf::report::embed_html(output_path)?;
@@ -118,7 +119,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 )?;
             }
 
-            bcf::report::oncoprint::oncoprint(&sample_calls, output_path, max_cells)
+            bcf::report::oncoprint::oncoprint(&sample_calls, output_path, max_cells, tsv_data)
         }
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {

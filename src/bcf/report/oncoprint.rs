@@ -16,11 +16,13 @@ use serde_json::{json, Value};
 use std::fs::File;
 use std::path::Path;
 use std::str::FromStr;
+use std::iter::FromIterator;
 
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
     output_path: &str,
     max_cells: u32,
+    tsv_data_path: Option<&str>
 ) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
@@ -33,6 +35,13 @@ pub fn oncoprint(
     let mut af_data = Vec::new();
     let mut gene_af_data = HashMap::new();
     let mut unique_genes = HashMap::new();
+
+    let tsv_data = if let Some(tsv) = tsv_data_path {
+        Some(make_tsv_records(tsv.to_owned())?)
+    } else {
+        None
+    };
+
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
         let mut impacts = HashMap::new();
@@ -467,9 +476,17 @@ pub fn oncoprint(
 
             let mut vl_specs: Value =
                 serde_json::from_str(include_str!("report_specs.json")).unwrap();
-            let values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+            let mut values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+
+            if let Some(ref tsv) = tsv_data {
+                for (title, data) in tsv {
+                    values[title] = json!(data);
+                }
+            }
 
             vl_specs["datasets"] = values;
+
+            // TODO: Create vega specs for additional plot and insert into vl_specs for each HashMap entry
 
             let mut packer = Packer::new();
             let options = PackOptions::new();
@@ -654,6 +671,29 @@ impl From<&Record> for FinalRecord {
             variants: record.variants.iter().sorted().unique().join("/"),
         }
     }
+}
+
+fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<BarPlotRecord>>, Box<dyn Error>> {
+    let mut tsv_values = HashMap::new();
+    let mut rdr = csv::ReaderBuilder::new()
+        .delimiter(b'\t')
+        .from_path(tsv_path)?;
+
+    let header = rdr.headers()?.clone();
+    let titles = Vec::from_iter(header.iter().skip(1));
+    for res in rdr.records() {
+        let row = res?;
+        let sample = row[0].to_owned();
+        for (i,value) in row.iter().skip(1).enumerate() {
+            let rec = tsv_values.entry(titles[i].to_owned()).or_insert_with(Vec::new);
+            let entry = BarPlotRecord {
+                key: sample.clone(),
+                value: value.to_owned(),
+            };
+            rec.push(entry);
+        }
+    }
+    Ok(tsv_values)
 }
 
 fn make_final_bar_plot_records(records: &[BarPlotRecord]) -> Vec<Counter> {

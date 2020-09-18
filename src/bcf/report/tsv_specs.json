@@ -1,0 +1,19 @@
+{
+  "data":{
+  },
+  "mark":"square",
+  "encoding":{
+    "x":{
+      "field":"key",
+      "type":"ordinal",
+      "axis":{
+        "title":"sample"
+      }
+    },
+    "color":{
+      "field":"value",
+      "type":"ordinal",
+      "title":""
+    }
+  }
+}

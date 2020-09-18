@@ -486,7 +486,18 @@ pub fn oncoprint(
 
             vl_specs["datasets"] = values;
 
-            // TODO: Create vega specs for additional plot and insert into vl_specs for each HashMap entry
+            if let Some(ref tsv) = tsv_data {
+                let tsv_specs: Value =
+                    serde_json::from_str(include_str!("tsv_specs.json")).unwrap();
+
+                for title in tsv.keys() {
+                    let mut tsv_plot = tsv_specs.clone();
+                    tsv_plot["data"] = json!({"name": title});
+                    let vconcat = vl_specs["vconcat"].as_array_mut().unwrap();
+                    vconcat.push(tsv_plot);
+                    vl_specs["vconcat"] = json!(vconcat);
+                }
+            }
 
             let mut packer = Packer::new();
             let options = PackOptions::new();

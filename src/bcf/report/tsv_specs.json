@@ -1,7 +1,10 @@
 {
   "data":{
   },
-  "mark":"rect",
+  "mark":{
+    "type":"square",
+    "size":350
+  },
   "encoding":{
     "x":{
       "field":"key",
@@ -12,7 +15,11 @@
     "color":{
       "field":"value",
       "type":"ordinal",
-      "title":""
+      "title":"",
+      "legend": {
+        "orient": "right",
+        "direction": "horizontal"
+      }
     }
   }
 }

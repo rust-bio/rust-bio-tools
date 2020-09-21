@@ -492,7 +492,7 @@ pub fn oncoprint(
 
                 for title in tsv.keys() {
                     let mut tsv_plot = tsv_specs.clone();
-                    tsv_plot["data"] = json!({"name": title});
+                    tsv_plot["data"] = json!({ "name": title });
                     tsv_plot["encoding"]["color"]["title"] = json!(title);
                     let vconcat = vl_specs["vconcat"].as_array_mut().unwrap();
                     vconcat.insert(1, tsv_plot);
@@ -691,9 +691,7 @@ impl From<&Record> for FinalRecord {
     }
 }
 
-fn make_tsv_records(
-    tsv_path: String,
-) -> Result<HashMap<String, Vec<TSVRecord>>, Box<dyn Error>> {
+fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TSVRecord>>, Box<dyn Error>> {
     let mut tsv_values = HashMap::new();
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(b'\t')

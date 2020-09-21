@@ -28,8 +28,10 @@ changed_records.forEach(function(record) {
 });
 let page_width =  $(window).width();
 let matrix_width = Math.min(page_width - 740, samples*20);
-if (matrix_width < 20 && samples > 2) {
+if (matrix_width < 20 && samples >= 2) {
     matrix_width = 40;
+} else if (samples == 1) {
+    matrix_width = 20;
 }
 let pl = spec.vconcat.length - 1;
 // add sort attribute and width to data plots
@@ -44,7 +46,7 @@ spec.vconcat[pl].hconcat.forEach(function(ele) {
     }
 })
 for (let z = 0; z < pl; z++) {
-    spec.vconcat[0].width = matrix_width;
+    spec.vconcat[z].width = matrix_width;
 }
 vegaEmbed('#oncoprint', spec).then(function(result) {
     result.view.addEventListener('click', function(event, item) {
@@ -62,11 +64,13 @@ vegaEmbed('#oncoprint', spec).then(function(result) {
 window.addEventListener('resize', function(event){
     let page_width =  $(window).width();
     let matrix_width = Math.min(page_width - 740, samples*20);
-    if (matrix_width < 20 && samples > 2) {
+    if (matrix_width < 20 && samples >= 2) {
         matrix_width = 40;
+    } else if (samples == 1) {
+        matrix_width = 20;
     }
     for (let z = 0; z < pl; z++) {
-        spec.vconcat[0].width = matrix_width;
+        spec.vconcat[z].width = matrix_width;
     }
     spec.vconcat[pl].hconcat.forEach(function(ele) {
         if (ele.layer !== undefined) {

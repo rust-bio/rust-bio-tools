@@ -1,16 +1,19 @@
 {
   "data":{
   },
+  "width": 0,
+  "transform": [{"filter": {"selection": "brush"}}],
   "mark":{
     "type":"square",
     "size":350
   },
   "encoding":{
     "x":{
-      "field":"key",
+      "field":"sample",
       "type":"ordinal",
       "scale": {"domain": {"selection": "brush"}},
-      "title": null
+      "title": null,
+      "axis": null
     },
     "color":{
       "field":"value",

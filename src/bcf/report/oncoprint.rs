@@ -552,6 +552,12 @@ struct BarPlotRecord {
     value: String,
 }
 
+#[derive(new, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+struct TSVRecord {
+    sample: String,
+    value: String,
+}
+
 #[derive(Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 struct Counter {
     count: u32,
@@ -687,7 +693,7 @@ impl From<&Record> for FinalRecord {
 
 fn make_tsv_records(
     tsv_path: String,
-) -> Result<HashMap<String, Vec<BarPlotRecord>>, Box<dyn Error>> {
+) -> Result<HashMap<String, Vec<TSVRecord>>, Box<dyn Error>> {
     let mut tsv_values = HashMap::new();
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(b'\t')
@@ -702,8 +708,8 @@ fn make_tsv_records(
             let rec = tsv_values
                 .entry(titles[i].to_owned())
                 .or_insert_with(Vec::new);
-            let entry = BarPlotRecord {
-                key: sample.clone(),
+            let entry = TSVRecord {
+                sample: sample.clone(),
                 value: value.to_owned(),
             };
             rec.push(entry);

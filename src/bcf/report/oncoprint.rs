@@ -251,7 +251,10 @@ pub fn oncoprint(
     }
 
     let gene_path = output_path.to_owned() + "/genes/";
-    fs::create_dir(Path::new(&gene_path))?;
+    fs::create_dir(Path::new(&gene_path)).expect(&format!(
+        "Could not create directory for gene plot files at location: {:?}",
+        gene_path
+    ));
     let mut gene_templates = Tera::default();
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
 
@@ -423,7 +426,10 @@ pub fn oncoprint(
     };
 
     let index_path = output_path.to_owned() + "/indexes/";
-    fs::create_dir(Path::new(&index_path))?;
+    fs::create_dir(Path::new(&index_path)).expect(&format!(
+        "Could not create directory for oncoprint files at location: {:?}",
+        index_path
+    ));
 
     for i in 0..pages + 1 {
         let current_genes = if i != pages {

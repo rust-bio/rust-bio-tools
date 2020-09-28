@@ -46,7 +46,10 @@ pub fn table_report(
     )?;
 
     let detail_path = output_path.to_owned() + "/details/" + sample;
-    fs::create_dir(Path::new(&detail_path))?;
+    fs::create_dir(Path::new(&detail_path)).expect(&format!(
+        "Could not create directory for table report files at location: {:?}",
+        detail_path
+    ));
 
     let local: DateTime<Local> = Local::now();
 

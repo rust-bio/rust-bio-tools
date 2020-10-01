@@ -359,8 +359,28 @@ pub fn oncoprint(
                     .filter(|gene| sorted_alterations.contains(gene))
                     .collect();
 
-                let values = json!({ "main": page_data, "impact": impact_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+                let mut values = json!({ "main": page_data, "impact": impact_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+                if let Some(ref tsv) = tsv_data {
+                    for (title, data) in tsv {
+                        values[title] = json!(data);
+                    }
+                }
                 specs["datasets"] = values;
+
+                if let Some(ref tsv) = tsv_data {
+                    let tsv_specs: Value =
+                        serde_json::from_str(include_str!("tsv_specs.json")).unwrap();
+
+                    for title in tsv.keys() {
+                        let mut tsv_plot = tsv_specs.clone();
+                        tsv_plot["data"] = json!({ "name": title });
+                        tsv_plot["encoding"]["color"]["title"] = json!(title);
+                        let vconcat = specs["vconcat"].as_array_mut().unwrap();
+                        vconcat.insert(1, tsv_plot);
+                        specs["vconcat"] = json!(vconcat);
+                    }
+                }
+
                 let mut packer = Packer::new();
                 let options = PackOptions::new();
                 let packed_gene_specs = packer.pack(&specs, &options).unwrap();

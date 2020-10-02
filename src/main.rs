@@ -98,10 +98,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             for bam in bams {
                 let b: Vec<_> = bam.split('=').collect();
-                match bam_paths.insert(b[0].to_owned(), b[1].to_owned()) {
-                    None => {}
-                    _ => panic!("Found duplicate sample name {}. Please make sure the provided sample names are unique.", b[0].to_owned())
-                }
+                let c: Vec<_> = b[0].split(':').collect();
+                let rec = bam_paths.entry(c[0].to_owned()).or_insert_with(Vec::new);
+                rec.push((c[1].to_owned(), b[1].to_owned()))
             }
 
             for sample in sample_calls.keys().sorted() {

@@ -17,7 +17,7 @@ use tera::{Context, Tera};
 pub fn table_report(
     vcf: &str,
     fasta: &str,
-    bam: &str,
+    bam: &Vec<(String,String)>,
     output_path: &str,
     sample: &str,
     info: Option<Values>,
@@ -40,7 +40,7 @@ pub fn table_report(
     let (reports, ann_field_description) = make_table_report(
         Path::new(vcf),
         Path::new(fasta),
-        Path::new(bam),
+        bam,
         info_strings,
         format_strings,
     )?;

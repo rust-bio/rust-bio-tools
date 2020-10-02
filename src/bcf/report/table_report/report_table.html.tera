@@ -69,7 +69,11 @@
                                     {% if variant.info %}
                                     data-info="{{ variant.info | escape  }}"
                                     {% endif %}
-                                    data-vis="{{ variant.vis | escape }}"
+                                    {% for k,v in variant.vis %}
+                                        data-vis{{ loop.index }}="{{ v | escape }}"
+                                        data-vis-sample{{ loop.index }}="{{ k }}"
+                                    {% endfor %}
+                                    data-vislen="{{ variant.vis | length }}"
                                     data-packed=true
                                     data-annlen="{{ variant.ann | length }}"
                                     data-description="{{ description }}"

@@ -30,7 +30,7 @@ pub struct Report {
     ann: Option<Vec<Vec<String>>>,
     format: Option<String>,
     info: Option<String>,
-    vis: String,
+    vis: HashMap<String, String>,
 }
 
 type Reports = (HashMap<String, Vec<Report>>, Vec<String>);
@@ -38,7 +38,7 @@ type Reports = (HashMap<String, Vec<Report>>, Vec<String>);
 pub(crate) fn make_table_report(
     vcf_path: &Path,
     fasta_path: &Path,
-    bam_path: &Path,
+    bam_sample_path: &Vec<(String,String)>,
     infos: Option<Vec<&str>>,
     formats: Option<Vec<&str>>,
 ) -> Result<Reports, Box<dyn Error>> {
@@ -256,40 +256,46 @@ pub(crate) fn make_table_report(
                     var_type,
                 };
 
-                let visualization: Value;
-                let fasta_length = get_fasta_length(fasta_path);
+                let mut visualizations = HashMap::new();
 
-                if pos < 75 {
-                    let content = create_report_data(
-                        fasta_path,
-                        var.clone(),
-                        bam_path,
-                        chrom.clone(),
-                        0,
-                        end_position as u64 + 75,
-                    );
-                    visualization = manipulate_json(content, 0, end_position as u64 + 75);
-                } else if pos + 75 >= fasta_length as i64 {
-                    let content = create_report_data(
-                        fasta_path,
-                        var.clone(),
-                        bam_path,
-                        chrom.clone(),
-                        pos as u64 - 75,
-                        fasta_length - 1,
-                    );
-                    visualization = manipulate_json(content, pos as u64 - 75, fasta_length - 1);
-                } else {
-                    let content = create_report_data(
-                        fasta_path,
-                        var.clone(),
-                        bam_path,
-                        chrom.clone(),
-                        pos as u64 - 75,
-                        end_position as u64 + 75,
-                    );
-                    visualization =
-                        manipulate_json(content, pos as u64 - 75, end_position as u64 + 75);
+                for (sample, bam) in bam_sample_path {
+                    let bam_path = Path::new(bam);
+                    let fasta_length = get_fasta_length(fasta_path);
+                    let visualization: Value;
+                    if pos < 75 {
+                        let content = create_report_data(
+                            fasta_path,
+                            var.clone(),
+                            bam_path,
+                            chrom.clone(),
+                            0,
+                            end_position as u64 + 75,
+                        );
+                        visualization = manipulate_json(content, 0, end_position as u64 + 75);
+                    } else if pos + 75 >= fasta_length as i64 {
+                        let content = create_report_data(
+                            fasta_path,
+                            var.clone(),
+                            bam_path,
+                            chrom.clone(),
+                            pos as u64 - 75,
+                            fasta_length - 1,
+                        );
+                        visualization = manipulate_json(content, pos as u64 - 75, fasta_length - 1);
+                    } else {
+                        let content = create_report_data(
+                            fasta_path,
+                            var.clone(),
+                            bam_path,
+                            chrom.clone(),
+                            pos as u64 - 75,
+                            end_position as u64 + 75,
+                        );
+                        visualization =
+                            manipulate_json(content, pos as u64 - 75, end_position as u64 + 75);
+                    }
+
+                    visualizations.insert(sample.to_owned(),visualization.to_string());
                 }
 
                 let r = Report {
@@ -302,7 +308,7 @@ pub(crate) fn make_table_report(
                     ann: Some(annotations.clone()),
                     format: format_tags.clone(),
                     info: info_tags.clone(),
-                    vis: visualization.to_string(),
+                    vis: visualizations,
                 };
 
                 for g in &genes {

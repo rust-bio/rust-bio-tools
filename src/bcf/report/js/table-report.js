@@ -5,54 +5,63 @@ let ann_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 
 $(document).ready(function () {
     $("html").on('click', '.variant-row', function () {
+        let vis_len = $(this).data('vislen');
         if ($(this).data('packed')) {
-            let compressed_specs = $(this).data('vis');
-            let unpacker = new jsonm.Unpacker();
-            $(this).data('vis', unpacker.unpack(compressed_specs));
+            for (let t = 1; t <= vis_len; t++) {
+                let compressed_specs = $(this).data('vis' + t.toString());
+                let unpacker = new jsonm.Unpacker();
+                $(this).data('vis' + t.toString(), unpacker.unpack(compressed_specs));
+            }
             $(this).data('packed', false);
         }
-        let specs = $(this).data('vis');
+
         let d = $(this).data('description')
         d = d.replace(/, /g,"\",\"");
         d = d.replace("[","[\"");
         d = d.replace("]","\"]")
         let description = JSON.parse(d);
 
-        specs.data[1].values.forEach(function(a) {
-            if (a.row > 0 && Array.isArray(a.flags)) {
-                let flags = {};
-                a.flags.forEach(function(b) {
-                    if (b === 1) {
-                        flags[b] = "template having multiple segments in sequencing";
-                    } else if (b === 2) {
-                        flags[b] = "each segment properly aligned according to the aligner";
-                    } else if (b === 4) {
-                        flags[b] = "segment unmapped";
-                    } else if (b === 8) {
-                        flags[b] = "next segment in the template unmapped";
-                    } else if (b === 16) {
-                        flags[b] = "SEQ being reverse complemented";
-                    } else if (b === 32) {
-                        flags[b] = "SEQ of the next segment in the template being reverse complemented";
-                    } else if (b === 64) {
-                        flags[b] = "the first segment in the template";
-                    } else if (b === 128) {
-                        flags[b] = "the last segment in the template";
-                    } else if (b === 256) {
-                        flags[b] = "secondary alignment";
-                    } else if (b === 512) {
-                        flags[b] = "not passing filters, such as platform/vendor quality controls";
-                    } else if (b === 1024) {
-                        flags[b] = "PCR or optical duplicate";
-                    } else if (b === 2048) {
-                        flags[b] = "vega lite lines";
-                    }
-                });
-                a.flags = flags;
-            }
-        });
-        specs.width = $('#vis').width() - 40;
-        let v = vegaEmbed('#vis', specs);
+        for (let t = 1; t <= vis_len; t++) {
+            let specs = $(this).data('vis' + t.toString());
+            console.log(specs);
+            specs.data[1].values.forEach(function(a) {
+                if (a.row > 0 && Array.isArray(a.flags)) {
+                    let flags = {};
+                    a.flags.forEach(function(b) {
+                        if (b === 1) {
+                            flags[b] = "template having multiple segments in sequencing";
+                        } else if (b === 2) {
+                            flags[b] = "each segment properly aligned according to the aligner";
+                        } else if (b === 4) {
+                            flags[b] = "segment unmapped";
+                        } else if (b === 8) {
+                            flags[b] = "next segment in the template unmapped";
+                        } else if (b === 16) {
+                            flags[b] = "SEQ being reverse complemented";
+                        } else if (b === 32) {
+                            flags[b] = "SEQ of the next segment in the template being reverse complemented";
+                        } else if (b === 64) {
+                            flags[b] = "the first segment in the template";
+                        } else if (b === 128) {
+                            flags[b] = "the last segment in the template";
+                        } else if (b === 256) {
+                            flags[b] = "secondary alignment";
+                        } else if (b === 512) {
+                            flags[b] = "not passing filters, such as platform/vendor quality controls";
+                        } else if (b === 1024) {
+                            flags[b] = "PCR or optical duplicate";
+                        } else if (b === 2048) {
+                            flags[b] = "vega lite lines";
+                        }
+                    });
+                    a.flags = flags;
+                }
+            });
+            specs.title = 'Sample: ' + $(this).data('vis-sample' + t.toString());
+            specs.width = $('#vis').width() - 40;
+            let v = vegaEmbed('#vis', specs);
+        }
+
         $("#sidebar").empty();
         $.each($(this).data(), function(i, v) {
             if (i !== 'index' && !i.includes("ann") && column_values.includes(i)) {

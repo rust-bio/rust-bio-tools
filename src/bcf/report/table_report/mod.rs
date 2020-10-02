@@ -17,7 +17,7 @@ use tera::{Context, Tera};
 pub fn table_report(
     vcf: &str,
     fasta: &str,
-    bam: &Vec<(String,String)>,
+    bam: &Vec<(String, String)>,
     output_path: &str,
     sample: &str,
     info: Option<Values>,

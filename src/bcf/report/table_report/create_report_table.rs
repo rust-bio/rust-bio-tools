@@ -38,7 +38,7 @@ type Reports = (HashMap<String, Vec<Report>>, Vec<String>);
 pub(crate) fn make_table_report(
     vcf_path: &Path,
     fasta_path: &Path,
-    bam_sample_path: &Vec<(String,String)>,
+    bam_sample_path: &Vec<(String, String)>,
     infos: Option<Vec<&str>>,
     formats: Option<Vec<&str>>,
 ) -> Result<Reports, Box<dyn Error>> {
@@ -295,7 +295,7 @@ pub(crate) fn make_table_report(
                             manipulate_json(content, pos as u64 - 75, end_position as u64 + 75);
                     }
 
-                    visualizations.insert(sample.to_owned(),visualization.to_string());
+                    visualizations.insert(sample.to_owned(), visualization.to_string());
                 }
 
                 let r = Report {

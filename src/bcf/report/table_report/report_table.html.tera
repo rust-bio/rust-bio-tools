@@ -97,11 +97,11 @@
                 </div>
                 <div class="row">
                     <div class="col-12">
-                        {% for variant in variants %}
-                            {% for k,v in variant.vis %}
-                                <div id="vis{{ loop.index }}" class="justify-content-center" style="width: 100%"></div>
-                            {% endfor %}
-                        {% endfor %}
+                    {% for variant in variants %}
+                    {% for k,v in variant.vis %}
+                        <div id="vis{{ loop.index }}" class="justify-content-center" style="width: 100%"></div>
+                    {% endfor %}
+                    {% endfor %}
                     </div>
                 </div>
             </div>

@@ -38,7 +38,7 @@ type Reports = (HashMap<String, Vec<Report>>, Vec<String>);
 pub(crate) fn make_table_report(
     vcf_path: &Path,
     fasta_path: &Path,
-    bam_sample_path: &Vec<(String, String)>,
+    bam_sample_path: &[(String, String)],
     infos: Option<Vec<&str>>,
     formats: Option<Vec<&str>>,
 ) -> Result<Reports, Box<dyn Error>> {

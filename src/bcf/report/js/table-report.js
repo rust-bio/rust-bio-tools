@@ -58,8 +58,8 @@ $(document).ready(function () {
                 }
             });
             specs.title = 'Sample: ' + $(this).data('vis-sample' + t.toString());
-            specs.width = $('#vis').width() - 40;
-            let v = vegaEmbed('#vis', specs);
+            specs.width = $('#vis' + t.toString()).width() - 40;
+            let v = vegaEmbed('#vis' + t.toString(), specs);
         }
 
         $("#sidebar").empty();

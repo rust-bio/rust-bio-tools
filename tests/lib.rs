@@ -296,7 +296,7 @@ fn test_vcf_annotate_dgidb() {
             .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf | bcftools view - | wc -l").output()
             .expect("failed to execute process");
     assert!(exec_test.status.success());
-    assert_eq!(exec_test.stdout, vec![32, 32, 32, 32, 32, 32, 54, 53, 10]);
+    assert_eq!(String::from_utf8(exec_test.stdout).unwrap().trim(), "65");
 }
 
 #[test]

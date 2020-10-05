@@ -291,11 +291,12 @@ fn test_collapse_reads_to_fragments_from_bam() {
 
 #[test]
 fn test_vcf_annotate_dgidb() {
-    assert!(
-        Command::new("bash")
+    let exec_test = Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf | bcftools view - | wc -l")
-            .status().expect("64").success());
+            .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf | bcftools view - | wc -l").output()
+            .expect("failed to execute process");
+    assert!(exec_test.status.success());
+    assert_eq!(exec_test.stdout, vec![32, 32, 32, 32, 32, 32, 54, 53, 10]);
 }
 
 #[test]

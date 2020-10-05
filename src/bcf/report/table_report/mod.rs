@@ -17,7 +17,7 @@ use tera::{Context, Tera};
 pub fn table_report(
     vcf: &str,
     fasta: &str,
-    bam: &str,
+    bam: &[(String, String)],
     output_path: &str,
     sample: &str,
     info: Option<Values>,
@@ -40,16 +40,18 @@ pub fn table_report(
     let (reports, ann_field_description) = make_table_report(
         Path::new(vcf),
         Path::new(fasta),
-        Path::new(bam),
+        bam,
         info_strings,
         format_strings,
     )?;
 
     let detail_path = output_path.to_owned() + "/details/" + sample;
-    fs::create_dir(Path::new(&detail_path)).expect(&format!(
-        "Could not create directory for table report files at location: {:?}",
-        detail_path
-    ));
+    fs::create_dir(Path::new(&detail_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for table report files at location: {:?}",
+            detail_path
+        )
+    });
 
     let local: DateTime<Local> = Local::now();
 

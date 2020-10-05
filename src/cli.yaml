@@ -210,11 +210,11 @@ subcommands:
 
         Examples:
           With current directory as default ouput path:
-            rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a=a.bam b=b.bam
+            rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a:sample1=a.bam b:sample1=b.bam
           With custom directory as default ouput path:
-            rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a=a.bam b=b.bam -- my/output/path/
+            rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a:sample1=a.bam b:sample1=b.bam -- my/output/path/
           With custom info tags in table report:
-            rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a=a.bam b=b.bam --info PROB_SOMATIC PROB_GERMLINE
+            rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a:sample1=a.bam b:sample1=b.bam --info PROB_SOMATIC PROB_GERMLINE
       author: Johannes Köster <johannes.koester@uni-due.de>, Felix Wiegand <felix.wiegand@tu-dortmund.de>
       args:
         - fasta:
@@ -223,17 +223,17 @@ subcommands:
         - vcfs:
             multiple: true
             required: true
-            value_name: NAME=VCF_FILE
+            value_name: GROUP=VCF_FILE
             long: vcfs
             short: v
-            help: VCF files to include (single-sample). Name is the sample name that will be used in the oncoprint. There needs to be one corresponding BAM file for each VCF/BCF file. Please only use VCF/BCF files annotated by VEP.
+            help: VCF files to include (multi-sample). Group is the name that will be used in the oncoprint. There needs to be one corresponding BAM file for each sample of a VCF/BCF file. Please only use VCF/BCF files annotated by VEP.
         - bams:
             multiple: true
             required: true
             long: bams
             short: b
-            value_name: NAME=BAM_FILE
-            help: BAM files to include (single-sample). Name is the sample name that will be used in the oncoprint. There needs to be one corresponding BAM file for each VCF/BCF file.
+            value_name: GROUP:SAMPLE=BAM_FILE
+            help: BAM files to include (single-sample). Group is name that will be used in the oncoprint. Sample is the name of the corresponding sample in the VCF/BCF file of the same group. There needs to be one corresponding BAM file for each sample of a VCF/BCF file.
         - max-cells:
             required: false
             short: c

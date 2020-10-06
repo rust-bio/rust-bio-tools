@@ -77,6 +77,14 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut sample_calls = HashMap::new();
             let mut bam_paths = HashMap::new();
             let output_path = matches.value_of("output-path").unwrap();
+            if !Path::new(output_path).exists() {
+                fs::create_dir(Path::new(output_path)).unwrap_or_else(|_| {
+                    panic!(
+                        "Couldn't create output directory at {}. Please make sure the path exists.",
+                        output_path
+                    )
+                });
+            }
             let max_cells = u32::from_str(matches.value_of("max-cells").unwrap()).unwrap();
             let custom_js = matches.value_of("custom-js");
             bcf::report::embed_js(output_path, custom_js)?;

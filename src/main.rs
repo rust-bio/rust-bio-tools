@@ -13,6 +13,7 @@ use std::str::FromStr;
 pub mod bam;
 pub mod bcf;
 pub mod common;
+pub mod csv;
 pub mod fastq;
 pub mod sequences_stats;
 
@@ -119,6 +120,24 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
 
             bcf::report::oncoprint::oncoprint(&sample_calls, output_path, max_cells)
+        }
+        ("csv-report", Some(matches)) => {
+            let csv_path = matches.value_of("csv-path").unwrap();
+            let output_path = matches.value_of("output-path").unwrap();
+            if !Path::new(output_path).exists() {
+                fs::create_dir_all(Path::new(output_path))?;
+            }
+            let rows_per_page = u32::from_str(matches.value_of("rows-per-page").unwrap())?;
+            let separator = matches.value_of("separator").unwrap();
+            let sort_column = matches.value_of("sort-column");
+            let order = matches.value_of("sort-order");
+            let sort_order = match order {
+                Some("ascending") => Some(true),
+                Some("descending") => Some(false),
+                _ => None
+            };
+
+            csv::report::csv_report(csv_path, output_path, rows_per_page, separator, sort_column, sort_order)
         }
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {

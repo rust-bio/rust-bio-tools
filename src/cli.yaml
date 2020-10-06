@@ -265,6 +265,52 @@ subcommands:
             default_value: "."
             help: Relative output path for the report files. Default value is the current directory.
 
+  - csv-report:
+      about: |
+        Creates report from a given csv file containing a table with the given data
+
+        Examples:
+          With current directory as default ouput path:
+            rbt tsv-report path/to/table.csv --rows-per-page 100 --sort-column "p-value" --sort-order ascending
+      author: Felix Wiegand <felix.wiegand@tu-dortmund.de>
+      args:
+        - csv-path:
+            required: true
+            help: CSV file including the data for the report.
+        - rows-per-page:
+            required: false
+            long: rows-per-page
+            short: r
+            takes_value: true
+            default_value: "100"
+            help: Sets the numbers of rows of each table per page. Default is 100.
+        - sort-column:
+            required: false
+            long: sort-column
+            takes_value: true
+            short: c
+            help: Column that the data should be sorted by.
+        - sort-order:
+            required: false
+            long: sort-order
+            short: o
+            takes_value: true
+            possible_values: ["ascending", "descending"]
+            default_value: "descending"
+            help: Order the data ascending or descending. Default is descending.
+        - separator:
+            required: false
+            short: s
+            long: separator
+            takes_value: true
+            default_value: ","
+            help: Change the separator of the csv file to tab or anything else. Default is ",".
+        - output-path:
+            last: true
+            required: false
+            default_value: "."
+            help: Relative output path for the report files. Default value is the current directory.
+
   - collapse-reads-to-fragments:
       about: |
         Tool to predict maximum likelihood fragment sequence from FASTQ or BAM files.

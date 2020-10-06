@@ -2,10 +2,26 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.13.0] - 2020-10-06
+### Changed
+- cli syntax for `rbt vcf-report` has been changed in order to allow BCF/VCF files holding variants from multiple samples
+
+## [0.12.2] - 2020-09-30
+### Added
+- New flags `--info`, `--js` and `--format` for `rbt vcf-report`
+- `--js` allows definition of a custom javascript template for creating vcf-reports
+- `--info` and `--format` allow specifying INFO- and FORMAT-fields that can be used by the custom javascript template
+
+## [0.12.1] - 2020-09-15
+### Added
+- `rbt vcf-report` allows to create an interactive HTML report allowing advanced analysis of variants from BCF/VCF and BAM files.
+
+### Removed
+- `rbt oncoprint` is now included in `rbt vcf-report` and therefore has been removed.
+
 ## [0.11.0] - 2020-08-05
 ### Added
 - Flag --sources that allows to constrain data sources for dgidb annotation of VCF/BCFs.
-
 
 ## [0.10.1] - 2020-05-13
 ### Changed

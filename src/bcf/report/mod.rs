@@ -13,10 +13,12 @@ pub fn embed_js(
     custom_table_report_js: Option<&str>,
 ) -> Result<(), Box<dyn Error>> {
     let js_path = output_path.to_owned() + "/js/";
-    fs::create_dir(Path::new(&js_path)).expect(&format!(
-        "Could not create directory for js files at location: {:?}",
-        js_path
-    ));
+    fs::create_dir(Path::new(&js_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for js files at location: {:?}",
+            js_path
+        )
+    });
     let mut files = vec![
         ("jquery.min.js", include_str!("js/jquery.min.js")),
         (
@@ -56,10 +58,12 @@ pub fn embed_js(
 
 pub fn embed_css(output_path: &str, vcf_report: bool) -> Result<(), Box<dyn Error>> {
     let css_path = output_path.to_owned() + "/css/";
-    fs::create_dir(Path::new(&css_path)).expect(&format!(
-        "Could not create directory for js files at location: {:?}",
-        css_path
-    ));
+    fs::create_dir(Path::new(&css_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for js files at location: {:?}",
+            css_path
+        )
+    });
     let mut files = vec![
         ("bootstrap.min.css", include_str!("css/bootstrap.min.css")),
         (
@@ -83,10 +87,12 @@ pub fn embed_css(output_path: &str, vcf_report: bool) -> Result<(), Box<dyn Erro
 pub fn embed_html(output_path: &str) -> Result<(), Box<dyn Error>> {
     let files = vec![("index.html", include_str!("html/index.html"))];
     for (name, file) in files {
-        let mut out_file = File::create(output_path.to_owned() + "/" + name).expect(&format!(
-            "Could not create file for index html at location: {:?}",
-            output_path.to_owned() + "/" + name
-        ));
+        let mut out_file = File::create(output_path.to_owned() + "/" + name).unwrap_or_else(|_| {
+            panic!(
+                "Could not create file for index html at location: {:?}",
+                output_path.to_owned() + "/" + name
+            )
+        });
         out_file.write_all(file.as_bytes())?;
     }
     Ok(())

@@ -80,8 +80,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             let output_path = matches.value_of("output-path").unwrap();
             let max_cells = u32::from_str(matches.value_of("max-cells").unwrap()).unwrap();
             let custom_js = matches.value_of("custom-js");
-            bcf::report::embed_js(output_path, custom_js)?;
-            bcf::report::embed_css(output_path)?;
+            bcf::report::embed_js(output_path, true, custom_js)?;
+            bcf::report::embed_css(output_path, true)?;
             bcf::report::embed_html(output_path)?;
             let fasta_path = matches.value_of("fasta").unwrap();
             let detail_path = output_path.to_owned() + "/details/";
@@ -127,6 +127,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             if !Path::new(output_path).exists() {
                 fs::create_dir_all(Path::new(output_path))?;
             }
+            bcf::report::embed_js(output_path, false, None)?;
+            bcf::report::embed_css(output_path, false)?;
             let rows_per_page = u32::from_str(matches.value_of("rows-per-page").unwrap())?;
             let separator = matches.value_of("separator").unwrap();
             let sort_column = matches.value_of("sort-column");
@@ -134,10 +136,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             let sort_order = match order {
                 Some("ascending") => Some(true),
                 Some("descending") => Some(false),
-                _ => None
+                _ => None,
             };
 
-            csv::report::csv_report(csv_path, output_path, rows_per_page, separator, sort_column, sort_order)
+            csv::report::csv_report(
+                csv_path,
+                output_path,
+                rows_per_page,
+                separator,
+                sort_column,
+                sort_order,
+            )
         }
         ("collapse-reads-to-fragments", Some(matches)) => match matches.subcommand() {
             ("fastq", Some(matches)) => {

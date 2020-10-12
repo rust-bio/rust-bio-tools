@@ -1,13 +1,14 @@
 use chrono::{DateTime, Local};
+use simple_excel_writer::*;
 use std::collections::HashMap;
 use std::error::Error;
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::iter::FromIterator;
+use std::path::Path;
 use std::str::FromStr;
 use tera::{Context, Tera};
-use std::path::Path;
-use std::fs;
 
 pub(crate) fn csv_report(
     csv_path: &str,
@@ -54,6 +55,31 @@ pub(crate) fn csv_report(
         }),
         (_, _) => {}
     }
+
+    let mut wb = Workbook::create(&(output_path.to_owned() + "/report.xlsx"));
+    let mut sheet = wb.create_sheet("Report");
+    for _ in 1..titles.len() {
+        sheet.add_column(Column { width: 50.0 });
+    }
+
+    wb.write_sheet(&mut sheet, |sheet_writer| {
+        let sw = sheet_writer;
+        let mut title_row = Row::new();
+        for title in titles.clone() {
+            title_row.add_cell(title);
+        }
+        sw.append_row(title_row)?;
+        for row in table.clone() {
+            let mut excel_row = Row::new();
+            for title in titles.clone() {
+                excel_row.add_cell(row.get(title).unwrap().as_str());
+            }
+            sw.append_row(excel_row)?;
+        }
+        Ok(())
+    })?;
+
+    wb.close()?;
 
     let pages = if table.len() % rows_per_page == 0 {
         (table.len() / rows_per_page) - 1

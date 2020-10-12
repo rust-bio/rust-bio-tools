@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <title>rbt csv-report</title>
-    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="css/bootstrap-table.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap-table.min.css">
 </head>
 
 <body>
-<script src="js/jquery.min.js"></script>
-<script src="js/bootstrap-table.min.js"></script>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap-table.min.js"></script>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">rbt report</a>
     <div class="collapse navbar-collapse" id="navbarText">
@@ -27,13 +27,13 @@
 </nav>
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="">csv report</a></li>
+        <li class="breadcrumb-item"><a href="">csv-report</a></li>
     </ol>
 </nav>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="true" style="max-width: 90%;">
+            <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="false" style="max-width: 90%;">
                 <thead>
                 <tr>
                     {% for title in titles %}
@@ -52,6 +52,31 @@
                 </tbody>
             </table>
         </div>
+    </div>
+    <div>
+        {% if pages > 1 %}
+        <div style="padding-top: 1rem">
+            <nav aria-label="page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if current_page > 1 %}
+                    {% if current_page != 2 %}
+                    <li class="page-item"><a class="page-link" href="index1.html">First</a></li>
+                    <li class="page-item disabled"><a class="page-link" href="">...</a></li>
+                    {% endif %}
+                    <li class="page-item"><a class="page-link" href="index{{ current_page - 1 }}.html">{{  current_page - 1 }}</a></li>
+                    {% endif %}
+                    <li class="page-item active"><a class="page-link" href="index{{ current_page }}.html">{{  current_page  }}</a></li>
+                    {% if current_page < pages %}
+                    <li class="page-item"><a class="page-link" href="index{{ current_page + 1 }}.html">{{  current_page + 1 }}</a></li>
+                    {% if current_page != (pages - 1) %}
+                    <li class="page-item disabled"><a class="page-link" href="">...</a></li>
+                    <li class="page-item"><a class="page-link" href="index{{ pages }}.html">Last</a></li>
+                    {% endif %}
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
     </div>
 </div>
 </body>

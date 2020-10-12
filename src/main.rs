@@ -136,6 +136,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             bcf::report::embed_js(output_path, false, None)?;
             bcf::report::embed_css(output_path, false)?;
+            bcf::report::embed_html(output_path)?;
             let rows_per_page = u32::from_str(matches.value_of("rows-per-page").unwrap())?;
             let separator = matches.value_of("separator").unwrap();
             let sort_column = matches.value_of("sort-column");
@@ -149,7 +150,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             csv::report::csv_report(
                 csv_path,
                 output_path,
-                rows_per_page,
+                rows_per_page as usize,
                 separator,
                 sort_column,
                 sort_order,

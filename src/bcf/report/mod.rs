@@ -24,7 +24,7 @@ pub fn embed_js(
         (
             "bootstrap-table.min.js",
             include_str!("js/bootstrap-table.min.js"),
-        )
+        ),
     ];
     let vcf_report_files = vec![
         ("vega.min.js", include_str!("js/vega.min.js")),
@@ -69,11 +69,9 @@ pub fn embed_css(output_path: &str, vcf_report: bool) -> Result<(), Box<dyn Erro
         (
             "bootstrap-table.min.css",
             include_str!("css/bootstrap-table.min.css"),
-        )
+        ),
     ];
-    let vcf_report_files = vec![
-        ("oncoprint.css", include_str!("css/oncoprint.css"))
-    ];
+    let vcf_report_files = vec![("oncoprint.css", include_str!("css/oncoprint.css"))];
     if vcf_report {
         files.extend(vcf_report_files.iter());
     }

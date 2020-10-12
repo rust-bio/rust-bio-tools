@@ -1,10 +1,11 @@
 use chrono::{DateTime, Local};
 use std::collections::HashMap;
 use std::error::Error;
-use std::iter::FromIterator;
-use tera::{Context, Tera};
 use std::fs::File;
 use std::io::Write;
+use std::iter::FromIterator;
+use std::str::FromStr;
+use tera::{Context, Tera};
 
 pub(crate) fn csv_report(
     csv_path: &str,
@@ -31,13 +32,25 @@ pub(crate) fn csv_report(
     }
 
     match (sort_column, ascending) {
-        (Some(column), Some(true)) => {
-            table.sort_by(|a,b| a.get(column).cmp(&b.get(column)))
-        }
-        (Some(column), Some(false)) => {
-            table.sort_by(|a,b| b.get(column).cmp(&a.get(column)))
-        }
-        (_,_) => {}
+        (Some(column), Some(true)) => table.sort_by(|a, b| {
+            match (
+                f32::from_str(a.get(column).unwrap()),
+                f32::from_str(b.get(column).unwrap()),
+            ) {
+                (Ok(float_a), Ok(float_b)) => float_a.partial_cmp(&float_b).unwrap(),
+                _ => a.get(column).cmp(&b.get(column)),
+            }
+        }),
+        (Some(column), Some(false)) => table.sort_by(|a, b| {
+            match (
+                f32::from_str(a.get(column).unwrap()),
+                f32::from_str(b.get(column).unwrap()),
+            ) {
+                (Ok(float_a), Ok(float_b)) => float_b.partial_cmp(&float_a).unwrap(),
+                _ => a.get(column).cmp(&b.get(column)),
+            }
+        }),
+        (_, _) => {}
     }
 
     let mut templates = Tera::default();

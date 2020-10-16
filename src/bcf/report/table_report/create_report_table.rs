@@ -49,6 +49,10 @@ pub(crate) fn make_table_report(
     let header = vcf.header().clone();
     let header_records = header.header_records();
     let ann_field_description: Vec<_> = get_ann_description(header_records).unwrap();
+    let mut samples = Vec::new();
+    for s in header.samples() {
+        samples.push(String::from_utf8(s.to_vec())?);
+    }
 
     for (i, field) in ann_field_description.iter().enumerate() {
         ann_indices.insert(field, i);
@@ -116,26 +120,32 @@ pub(crate) fn make_table_report(
                 match tag_type {
                     TagType::String => {
                         let values = variant.format(tag.as_bytes()).string()?;
-                        for v in values {
+                        for (i, v) in values.into_iter().enumerate() {
                             let value = String::from_utf8(v.to_owned())?;
-                            let entry = format_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                            entry.push(json!(value));
+                            let entry = format_map
+                                .entry(tag.to_owned())
+                                .or_insert_with(HashMap::new);
+                            entry.insert(samples[i].clone(), json!(value));
                         }
                     }
                     TagType::Float => {
                         let values = variant.format(tag.as_bytes()).float()?;
-                        for v in values {
+                        for (i, v) in values.iter().enumerate() {
                             let value = v.to_vec();
-                            let entry = format_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                            entry.push(json!(value));
+                            let entry = format_map
+                                .entry(tag.to_owned())
+                                .or_insert_with(HashMap::new);
+                            entry.insert(samples[i].clone(), json!(value));
                         }
                     }
                     TagType::Integer => {
                         let values = variant.format(tag.as_bytes()).integer()?;
-                        for v in values {
+                        for (i, v) in values.iter().enumerate() {
                             let value = v.to_vec();
-                            let entry = format_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                            entry.push(json!(value));
+                            let entry = format_map
+                                .entry(tag.to_owned())
+                                .or_insert_with(HashMap::new);
+                            entry.insert(samples[i].clone(), json!(value));
                         }
                     }
                     _ => {}

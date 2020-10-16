@@ -34,7 +34,7 @@
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="../../indexes/index1.html">Oncoprint</a></li>
         <li class="breadcrumb-item"><a href="../../genes/{{ gene|safe }}1.html">gene: {{ gene|safe }}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">sample: {{ sample }}</li>
+        <li class="breadcrumb-item active" aria-current="page">group: {{ sample }}</li>
     </ol>
 </nav>
 <div class="container-fluid ">
@@ -69,7 +69,11 @@
                                     {% if variant.info %}
                                     data-info="{{ variant.info | escape  }}"
                                     {% endif %}
-                                    data-vis="{{ variant.vis | escape }}"
+                                    {% for k,v in variant.vis %}
+                                        data-vis{{ loop.index }}="{{ v | escape }}"
+                                        data-vis-sample{{ loop.index }}="{{ k }}"
+                                    {% endfor %}
+                                    data-vislen="{{ variant.vis | length }}"
                                     data-packed=true
                                     data-annlen="{{ variant.ann | length }}"
                                     data-description="{{ description }}"
@@ -93,7 +97,11 @@
                 </div>
                 <div class="row">
                     <div class="col-12">
-                        <div id="vis" class="justify-content-center" style="width: 100%"></div>
+                    {% for variant in variants %}
+                    {% for k,v in variant.vis %}
+                        <div id="vis{{ loop.index }}" class="justify-content-center" style="width: 100%"></div>
+                    {% endfor %}
+                    {% endfor %}
                     </div>
                 </div>
             </div>

@@ -158,7 +158,7 @@ fn test_vcf_report() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt vcf-report tests/ref.fa -v a=tests/report-test.vcf -v b=tests/report-test.vcf -b a=tests/test-report.bam -b b=tests/test-report.bam -- tests")
+            .arg("target/debug/rbt vcf-report tests/ref.fa -v a=tests/report-test.vcf -v b=tests/report-test.vcf -b a:tumor=tests/test-report.bam -b b:tumor=tests/test-report.bam -- tests")
             .spawn()
             .unwrap()
             .wait()
@@ -291,28 +291,12 @@ fn test_collapse_reads_to_fragments_from_bam() {
 
 #[test]
 fn test_vcf_annotate_dgidb() {
-    assert!(
-        Command::new("bash")
+    let exec_test = Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf > /tmp/annotate_dgidb_test.bcf")
-            .spawn().unwrap().wait().unwrap().success());
-    test_output(
-        "/tmp/annotate_dgidb_test.bcf",
-        "tests/expected/annotate_dgidb_test.bcf",
-    );
-}
-
-#[test]
-fn test_vcf_annotate_dgidb_drugbank() {
-    assert!(
-        Command::new("bash")
-            .arg("-c")
-            .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf -s DrugBank > /tmp/annotate_dgidb_drugbank_test.bcf")
-            .spawn().unwrap().wait().unwrap().success());
-    test_output(
-        "/tmp/annotate_dgidb_drugbank_test.bcf",
-        "tests/expected/annotate_dgidb_drugbank_test.bcf",
-    );
+            .arg("target/debug/rbt vcf-annotate-dgidb tests/annotate_dgidb_test.vcf | bcftools view - | wc -l").output()
+            .expect("failed to execute process");
+    assert!(exec_test.status.success());
+    assert_eq!(String::from_utf8(exec_test.stdout).unwrap().trim(), "65");
 }
 
 #[test]

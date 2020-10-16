@@ -40,7 +40,7 @@
           "aggregate":"count",
           "type":"quantitative",
           "axis": {
-            "title": "count per sample"
+            "title": "count per group"
           }
         },
         "color":{
@@ -111,7 +111,8 @@
                     "op":"valid",
                     "field":"count_variants",
                     "order":"descending"
-                  }
+                  },
+                  "title": "group"
                 },
                 "y":{
                   "field":"gene",

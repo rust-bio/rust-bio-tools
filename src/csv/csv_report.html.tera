@@ -8,7 +8,11 @@
 
 <body>
 <script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
 <script src="../js/bootstrap-table.min.js"></script>
+<script src="../js/vega.min.js"></script>
+<script src="../js/vega-lite.min.js"></script>
+<script src="../js/vega-embed.min.js"></script>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">rbt report</a>
     <div class="collapse navbar-collapse" id="navbarText">
@@ -41,12 +45,20 @@
 </nav>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-12">
+        <div class="col-md-12">
             <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="false" style="max-width: 90%;">
                 <thead>
                 <tr>
                     {% for title in titles %}
-                    <th>{{ title }}</th>
+                    <th style="white-space: nowrap;">{{ title }}
+                        <a class="" data-toggle="modal" data-target="#{{ title }}">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="4" height="5" x="1" y="10" rx="1"/>
+                                <rect width="4" height="9" x="6" y="6" rx="1"/>
+                                <rect width="4" height="14" x="11" y="1" rx="1"/>
+                            </svg>
+                        </a>
+                    </th>
                     {% endfor %}
                 </tr>
                 </thead>
@@ -62,11 +74,14 @@
             </table>
         </div>
     </div>
-    <div>
+    <div class="row">
+        <div class="col-md-6">
+        </div>
+        <div class="col-md-6">
         {% if pages > 1 %}
         <div style="padding-top: 1rem">
             <nav aria-label="page navigation">
-                <ul class="pagination justify-content-center">
+                <ul class="pagination justify-content-end">
                     {% if current_page > 1 %}
                     {% if current_page != 2 %}
                     <li class="page-item"><a class="page-link" href="index1.html">First</a></li>
@@ -86,7 +101,31 @@
             </nav>
         </div>
         {% endif %}
+        </div>
     </div>
+    <!-- Modal -->
+    {% for title in titles %}
+    <div class="modal fade" id="{{ title }}" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ title }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <iframe src="../plots/{{ title }}.html" width="100%" height="300" style="border:none;">
+                    </iframe>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Note: Plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 </body>
 </html>

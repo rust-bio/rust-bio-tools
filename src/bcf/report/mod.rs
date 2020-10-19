@@ -20,16 +20,20 @@ pub fn embed_js(
         )
     });
     let mut files = vec![
+        (
+            "bootstrap.bundle.min.js",
+            include_str!("js/bootstrap.bundle.min.js"),
+        ),
         ("jquery.min.js", include_str!("js/jquery.min.js")),
         (
             "bootstrap-table.min.js",
             include_str!("js/bootstrap-table.min.js"),
         ),
-    ];
-    let vcf_report_files = vec![
         ("vega.min.js", include_str!("js/vega.min.js")),
         ("vega-lite.min.js", include_str!("js/vega-lite.min.js")),
         ("vega-embed.min.js", include_str!("js/vega-embed.min.js")),
+    ];
+    let vcf_report_files = vec![
         ("jsonm.min.js", include_str!("js/jsonm.min.js")),
         ("table-report.js", include_str!("js/table-report.js")),
         ("report.js", include_str!("js/report.js")),

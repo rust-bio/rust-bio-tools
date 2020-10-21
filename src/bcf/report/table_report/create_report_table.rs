@@ -49,9 +49,11 @@ pub(crate) fn make_table_report(
     let header = vcf.header().clone();
     let header_records = header.header_records();
     let ann_field_description: Vec<_> = get_ann_description(header_records).unwrap();
-    let samples = header.samples().iter().map(|s| {
-        str::from_utf8(s).map(|s| s.to_owned())
-    }).collect::<Result<_, _>>()?;
+    let samples: Vec<_> = header
+        .samples()
+        .iter()
+        .map(|s| std::str::from_utf8(s).map(|s| s.to_owned()))
+        .collect::<Result<_, _>>()?;
 
     for (i, field) in ann_field_description.iter().enumerate() {
         ann_indices.insert(field, i);

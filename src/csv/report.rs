@@ -133,15 +133,15 @@ pub(crate) fn csv_report(
 
     for title in &titles {
         let mut templates = Tera::default();
-        templates.add_raw_template("plot.html.tera", include_str!("plot.html.tera"))?;
+        templates.add_raw_template("plot.js.tera", include_str!("plot.js.tera"))?;
         let mut context = Context::new();
         context.insert("table", &json!(plot_data.get(title)).to_string());
         context.insert("title", &title);
-        let html = templates.render("plot.html.tera", &context)?;
+        let js = templates.render("plot.js.tera", &context)?;
 
-        let file_path = plot_path.to_owned() + title + ".html";
+        let file_path = plot_path.to_owned() + title + ".js";
         let mut file = File::create(file_path)?;
-        file.write_all(html.as_bytes())?;
+        file.write_all(js.as_bytes())?;
     }
 
     let index_path = output_path.to_owned() + "/indexes/";

@@ -1,0 +1,14 @@
+let {{ title }}_plot = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+    "data": {"values": {{ table }}},
+    "width": "container",
+    "mark": "bar",
+    "encoding": {
+    "x": {
+        "field": "key",
+        "sort": {"field": "value", "order": "descending"},
+        "title": "{{ title }}"
+    },
+    "y": {"field": "value", "type": "quantitative", "title": null}
+    }
+}

@@ -5,10 +5,18 @@ let {{ title }}_plot = {
     "mark": "bar",
     "encoding": {
     "x": {
+        {% if not num %}
         "field": "key",
         "sort": {"field": "value", "order": "descending"},
+        {% else %}
+        "field": "bin_start",
+        "bin": "binned",
+        {% endif %}
         "title": "{{ title }}"
     },
+    {% if num %}
+    "x2": {"field": "bin_end"},
+    {% endif %}
     "y": {"field": "value", "type": "quantitative", "title": null}
     }
 }

@@ -61,13 +61,21 @@ pub(crate) fn csv_report(
     }
 
     let mut plot_data = HashMap::new();
+    let mut num_plot_data = HashMap::new();
+
     for title in &titles {
-        let data = match is_numeric.get(title) {
-            Some(true) => num_plot(table.clone(), title.to_string()),
-            Some(false) => nominal_plot(table.clone(), title.to_string()),
+        match is_numeric.get(title) {
+            Some(true) => {
+                let plot = num_plot(table.clone(), title.to_string());
+                num_plot_data.insert(title, plot);
+            }
+            Some(false) => {
+                let plot = nominal_plot(table.clone(), title.to_string());
+                plot_data.insert(title, plot);
+            }
             _ => unreachable!(),
         };
-        plot_data.insert(title, data);
+
     }
 
     match (sort_column, ascending) {
@@ -135,7 +143,17 @@ pub(crate) fn csv_report(
         let mut templates = Tera::default();
         templates.add_raw_template("plot.js.tera", include_str!("plot.js.tera"))?;
         let mut context = Context::new();
-        context.insert("table", &json!(plot_data.get(title)).to_string());
+        match is_numeric.get(title) {
+            Some(true) => {
+                context.insert("table", &json!(num_plot_data.get(title).unwrap()).to_string());
+                context.insert("num", &true);
+            }
+            Some(false) => {
+                context.insert("table", &json!(plot_data.get(title).unwrap()).to_string());
+                context.insert("num", &false);
+            }
+            _ => unreachable!()
+        }
         context.insert("title", &title);
         let js = templates.render("plot.js.tera", &context)?;
 
@@ -181,7 +199,7 @@ pub(crate) fn csv_report(
     Ok(())
 }
 
-fn num_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<PlotRecord> {
+fn num_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<BinnedPlotRecord> {
     let mut values = Vec::new();
     let mut nan = 0;
     for row in table {
@@ -192,15 +210,17 @@ fn num_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<PlotReco
     }
     let min = values.iter().fold(f32::INFINITY, |a, &b| a.min(b));
     let max = values.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
-    let bins = 6;
+    let bins = 20;
     let step = (max - min) / bins as f32;
     let mut binned_data = HashMap::new();
+    let mut bin_borders = HashMap::new();
     for val in values {
         for i in 0..bins {
             let lower_bound = min + i as f32 * step;
             let upper_bound = lower_bound + step;
-            let bin_name = lower_bound.to_string() + " - " + &upper_bound.to_string();
-            let entry = binned_data.entry(bin_name).or_insert_with(|| 0);
+            let bin_name = String::from("bin") + &i.to_string();
+            bin_borders.insert(bin_name.to_owned(), (lower_bound, upper_bound));
+            let entry = binned_data.entry(bin_name.to_owned()).or_insert_with(|| 0);
             if ((i < (bins - 1) && val < upper_bound) || (i < bins && val <= upper_bound))
                 && val >= lower_bound
             {
@@ -209,12 +229,13 @@ fn num_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<PlotReco
         }
     }
     if nan > 0 {
-        binned_data.insert(String::from("NaN"), nan);
+        bin_borders.insert(String::from("bin") + &bins.to_string(), (f32::NAN,f32::NAN));
+        binned_data.insert(String::from("bin") + &bins.to_string(), nan);
     }
-
     let mut plot_data = Vec::new();
-    for (k, v) in binned_data {
-        let plot_record = PlotRecord { key: k, value: v };
+    for (name, v) in binned_data {
+        let (lower_bound, upper_bound) = bin_borders.get(&name).unwrap();
+        let plot_record = BinnedPlotRecord { bin_start: *lower_bound, value: v, bin_end: *upper_bound };
         plot_data.push(plot_record);
     }
     plot_data
@@ -246,8 +267,15 @@ fn nominal_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<Plot
     plot_data
 }
 
-#[derive(new, Serialize, Debug)]
+#[derive(new, Serialize, Debug, Clone)]
 struct PlotRecord {
     key: String,
+    value: u32,
+}
+
+#[derive(new, Serialize, Debug, Clone)]
+struct BinnedPlotRecord {
+    bin_start: f32,
+    bin_end: f32,
     value: u32,
 }

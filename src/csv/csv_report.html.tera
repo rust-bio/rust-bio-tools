@@ -13,6 +13,24 @@
 <script src="../js/vega.min.js"></script>
 <script src="../js/vega-lite.min.js"></script>
 <script src="../js/vega-embed.min.js"></script>
+{% for title in titles %}
+<script src="../plots/{{ title }}.js"></script>
+{% endfor %}
+<style>
+    .table-container { display: none; }
+    .loading { height: 100%; padding-top: 25%;}
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('.table-container').show();
+        $('.loading').hide();
+        $('#table').bootstrapTable( 'resetView' , {height: window.innerHeight - 200} );
+        $('.modal').on('shown.bs.modal', function () {
+            window.dispatchEvent(new Event('resize'));
+        });
+    });
+</script>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">rbt report</a>
     <div class="collapse navbar-collapse" id="navbarText">
@@ -45,13 +63,18 @@
 </nav>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-12 loading text-center">
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div class="col-md-12 table-container">
             <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="false" style="max-width: 90%;">
                 <thead>
                 <tr>
                     {% for title in titles %}
                     <th style="white-space: nowrap;">{{ title }}
-                        <a class="" data-toggle="modal" data-target="#{{ title }}">
+                        <a class="" data-toggle="modal" data-target="#{{ title }}" onclick="vegaEmbed('#{{ title }}_plot', {{ title }}_plot)">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="4" height="5" x="1" y="10" rx="1"/>
                                 <rect width="4" height="9" x="6" y="6" rx="1"/>
@@ -75,13 +98,11 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-6">
-        </div>
-        <div class="col-md-6">
+        <div class="col-md-12">
         {% if pages > 1 %}
         <div style="padding-top: 1rem">
             <nav aria-label="page navigation">
-                <ul class="pagination justify-content-end">
+                <ul class="pagination justify-content-start">
                     {% if current_page > 1 %}
                     {% if current_page != 2 %}
                     <li class="page-item"><a class="page-link" href="index1.html">First</a></li>
@@ -115,11 +136,11 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <iframe src="../plots/{{ title }}.html" width="100%" height="300" style="border:none;">
-                    </iframe>
+                    <div id="{{ title }}_plot" style="width: 100%; height: 300px; border:none;">
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Note: Plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
+                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>

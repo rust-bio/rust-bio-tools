@@ -12,6 +12,7 @@
     "contains":"padding"
   },
   "spacing": 30,
+  "resolve": {"scale": {"color": "independent"}},
   "vconcat":[
     { "data":
       {

@@ -40,7 +40,7 @@ pub fn embed_js(
         let mut out_file = File::create(js_path.to_owned() + "table-report.js")?;
         out_file.write_all(file_string.as_bytes())?;
     } else {
-        files.push(("report.js", include_str!("js/table-report.js")))
+        files.push(("table-report.js", include_str!("js/table-report.js")))
     }
     for (name, file) in files {
         let mut out_file = File::create(js_path.to_owned() + name)?;

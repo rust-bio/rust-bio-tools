@@ -29,7 +29,6 @@ pub fn embed_js(
             include_str!("js/bootstrap-table.min.js"),
         ),
         ("table-report.js", include_str!("js/table-report.js")),
-        ("report.js", include_str!("js/report.js")),
         ("gene-report.js", include_str!("js/gene-report.js")),
     ];
     if let Some(path) = custom_table_report_js {

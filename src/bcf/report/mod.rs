@@ -28,7 +28,6 @@ pub fn embed_js(
             "bootstrap-table.min.js",
             include_str!("js/bootstrap-table.min.js"),
         ),
-        ("table-report.js", include_str!("js/table-report.js")),
         ("report.js", include_str!("js/report.js")),
         ("gene-report.js", include_str!("js/gene-report.js")),
     ];
@@ -38,10 +37,10 @@ pub fn embed_js(
         custom_file
             .read_to_string(&mut file_string)
             .expect("Unable to read string");
-        let mut out_file = File::create(js_path.to_owned() + "report.js")?;
+        let mut out_file = File::create(js_path.to_owned() + "table-report.js")?;
         out_file.write_all(file_string.as_bytes())?;
     } else {
-        files.push(("report.js", include_str!("js/report.js")))
+        files.push(("table-report.js", include_str!("js/table-report.js")))
     }
     for (name, file) in files {
         let mut out_file = File::create(js_path.to_owned() + name)?;

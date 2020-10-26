@@ -23,7 +23,6 @@ $(document).ready(function () {
 
         for (let t = 1; t <= vis_len; t++) {
             let specs = $(this).data('vis' + t.toString());
-            console.log(specs);
             specs.data[1].values.forEach(function(a) {
                 if (a.row > 0 && Array.isArray(a.flags)) {
                     let flags = {};

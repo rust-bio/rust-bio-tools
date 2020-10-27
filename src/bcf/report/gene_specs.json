@@ -829,7 +829,7 @@
             "name":"consequence"
           },
           "mark":"bar",
-          "width":100,
+          "width":160,
           "encoding":{
             "y":{
               "field":"key",
@@ -941,7 +941,7 @@
             "name":"clin_sig"
           },
           "mark":"bar",
-          "width":100,
+          "width":160,
           "encoding":{
             "y":{
               "field":"key",

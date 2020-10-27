@@ -425,6 +425,7 @@ fn manipulate_json(data: Json, from: u64, to: u64) -> Value {
     vega_specs["data"][1] = values;
 
     let mut packer = Packer::new();
+    packer.set_max_dict_size(100000);
     let options = PackOptions::new();
     packer.pack(&vega_specs, &options).unwrap()
 }

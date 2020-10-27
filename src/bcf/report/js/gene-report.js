@@ -52,7 +52,7 @@ for (let z = 0; z < pl; z++) {
 }
 vegaEmbed('#oncoprint', spec).then(function(result) {
     result.view.addEventListener('click', function(event, item) {
-        if (item.datum.sample !== undefined) {
+        if (item.datum.sample !== undefined  && item.datum.alteration !== undefined) {
             window.location.href = '../details/' + item.datum.sample + '/' + gene + '.html';
         }
     });
@@ -79,7 +79,7 @@ window.addEventListener('resize', function(event){
 
     vegaEmbed('#oncoprint', spec).then(function(result) {
         result.view.addEventListener('click', function(event, item) {
-            if (item.datum.sample !== undefined) {
+            if (item.datum.sample !== undefined  && item.datum.alteration !== undefined) {
                 window.location.href = '../details/' + item.datum.sample + '/' + gene + '.html';
             }
         });

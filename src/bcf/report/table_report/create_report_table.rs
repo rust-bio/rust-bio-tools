@@ -425,7 +425,7 @@ fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Value {
     }
 
     vega_specs["width"] = json!(700);
-    vega_specs["height"] = json!(core::cmp::max(300, max_rows * 2));
+    vega_specs["height"] = json!(core::cmp::max(500, max_rows * 6));
     let domain = json!([from, to]);
 
     vega_specs["scales"][0]["domain"] = domain;

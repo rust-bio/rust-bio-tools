@@ -10,14 +10,14 @@ use std::path::Path;
 pub struct StaticAlignmentMatch {
     #[serde(flatten)]
     alignment: AlignmentMatch,
-    row: u8,
+    row: u16,
 }
 
 #[derive(Serialize, Clone)]
 pub struct StaticAlignmentNucleobase {
     #[serde(flatten)]
     nucleobase: AlignmentNucleobase,
-    row: u8,
+    row: u16,
 }
 
 #[derive(Serialize, Clone)]
@@ -41,7 +41,7 @@ fn calc_rows(
 ) {
     let mut row_ends = vec![0; 1000];
 
-    let mut read_names: BTreeMap<String, u8> = BTreeMap::new();
+    let mut read_names: BTreeMap<String, u16> = BTreeMap::new();
 
     let mut reads_wr: Vec<StaticAlignmentNucleobase> = Vec::new();
     let mut matches_wr: Vec<StaticAlignmentMatch> = Vec::new();
@@ -49,7 +49,7 @@ fn calc_rows(
     let mut max_row = 0;
 
     for r in matches {
-        let mut row: u8 = 0;
+        let mut row: u16 = 0;
 
         if read_names.contains_key(&r.name) {
             row = *read_names.get(&r.name).unwrap();
@@ -59,9 +59,9 @@ fn calc_rows(
                     if i > max_row {
                         max_row = i;
                     }
-                    row = i as u8;
+                    row = i as u16;
                     row_ends[i] = r.read_end;
-                    read_names.insert(r.name.clone(), i as u8);
+                    read_names.insert(r.name.clone(), i as u16);
                     break;
                 }
             }
@@ -76,7 +76,7 @@ fn calc_rows(
     }
 
     for r in reads {
-        let mut row: u8 = 0;
+        let mut row: u16 = 0;
 
         if read_names.contains_key(&r.name) {
             row = *read_names.get(&r.name).unwrap();
@@ -86,9 +86,9 @@ fn calc_rows(
                     if i > max_row {
                         max_row = i;
                     }
-                    row = i as u8;
+                    row = i as u16;
                     row_ends[i] = r.read_end;
-                    read_names.insert(r.name.clone(), i as u8);
+                    read_names.insert(r.name.clone(), i as u16);
                     break;
                 }
             }

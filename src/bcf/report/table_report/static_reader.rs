@@ -108,12 +108,11 @@ fn calc_rows(
     }
 
     if max_row > max_read_depth as usize {
-        let rows: Vec<u32> = (0..max_row as u32).collect();
         let mut rng = StdRng::seed_from_u64(42);
-        let random_rows = rows
+        let random_rows: HashSet<_> = (0..max_row as u32)
+            .choose_multiple(&mut rng, max_read_depth as usize)
             .iter()
-            .choose_multiple(&mut rng, max_read_depth as usize);
-        let random_row_set: HashSet<_> = HashSet::from_iter(random_rows.iter());
+            .collect();
         reads_wr = reads_wr
             .into_iter()
             .filter(|b| random_row_set.contains(&&(b.row as u32)))

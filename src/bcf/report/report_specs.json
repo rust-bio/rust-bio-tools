@@ -861,7 +861,7 @@
             "name":"consequence"
           },
           "mark":"bar",
-          "width":100,
+          "width":160,
           "selection":{
             "highlight_consequence":{
               "type":"single",
@@ -990,7 +990,7 @@
             "name":"clin_sig"
           },
           "mark":"bar",
-          "width":100,
+          "width":160,
           "selection":{
             "highlight_clin_sig":{
               "type":"single",

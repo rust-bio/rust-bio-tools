@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.14.0] - 2020-10-26
+### Added
+- New flag `--tsv` for `rbt vcf-report`
+- `--tsv` allows adding a custom tsv file that will be visualized in the vcf-report
+
 ## [0.13.0] - 2020-10-06
 ### Changed
 - CLI syntax for `rbt vcf-report` has been changed in order to allow BCF/VCF files holding variants from multiple samples.

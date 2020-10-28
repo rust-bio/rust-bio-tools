@@ -2,7 +2,6 @@ use crate::bcf::report::table_report::alignment_reader::{
     make_nucleobases, read_indexed_bam, AlignmentMatch, AlignmentNucleobase,
 };
 use crate::bcf::report::table_report::create_report_table::VariantType;
-use std::iter::FromIterator;
 use rand::rngs::StdRng;
 use rand::seq::IteratorRandom;
 use rand_core::SeedableRng;
@@ -111,15 +110,15 @@ fn calc_rows(
         let mut rng = StdRng::seed_from_u64(42);
         let random_rows: HashSet<_> = (0..max_row as u32)
             .choose_multiple(&mut rng, max_read_depth as usize)
-            .iter()
+            .into_iter()
             .collect();
         reads_wr = reads_wr
             .into_iter()
-            .filter(|b| random_row_set.contains(&&(b.row as u32)))
+            .filter(|b| random_rows.contains(&&(b.row as u32)))
             .collect();
         matches_wr = matches_wr
             .into_iter()
-            .filter(|b| random_row_set.contains(&&(b.row as u32)))
+            .filter(|b| random_rows.contains(&&(b.row as u32)))
             .collect();
         max_row = max_read_depth as usize;
     }

@@ -10,14 +10,14 @@ use std::path::Path;
 pub struct StaticAlignmentMatch {
     #[serde(flatten)]
     alignment: AlignmentMatch,
-    row: u8,
+    row: u16,
 }
 
 #[derive(Serialize, Clone)]
 pub struct StaticAlignmentNucleobase {
     #[serde(flatten)]
     nucleobase: AlignmentNucleobase,
-    row: u8,
+    row: u16,
 }
 
 #[derive(Serialize, Clone)]
@@ -34,25 +34,34 @@ pub struct Variant {
 fn calc_rows(
     reads: Vec<AlignmentNucleobase>,
     matches: Vec<AlignmentMatch>,
-) -> (Vec<StaticAlignmentNucleobase>, Vec<StaticAlignmentMatch>) {
-    let mut row_ends = vec![0; 100];
+) -> (
+    Vec<StaticAlignmentNucleobase>,
+    Vec<StaticAlignmentMatch>,
+    usize,
+) {
+    let mut row_ends = vec![0; 1000];
 
-    let mut read_names: BTreeMap<String, u8> = BTreeMap::new();
+    let mut read_names: BTreeMap<String, u16> = BTreeMap::new();
 
     let mut reads_wr: Vec<StaticAlignmentNucleobase> = Vec::new();
     let mut matches_wr: Vec<StaticAlignmentMatch> = Vec::new();
 
+    let mut max_row = 0;
+
     for r in matches {
-        let mut row: u8 = 0;
+        let mut row: u16 = 0;
 
         if read_names.contains_key(&r.name) {
             row = *read_names.get(&r.name).unwrap();
         } else {
-            for (i, _) in row_ends.iter().enumerate().take(100).skip(1) {
+            for (i, _) in row_ends.iter().enumerate().take(1000).skip(1) {
                 if r.read_start > row_ends[i] {
-                    row = i as u8;
+                    if i > max_row {
+                        max_row = i;
+                    }
+                    row = i as u16;
                     row_ends[i] = r.read_end;
-                    read_names.insert(r.name.clone(), i as u8);
+                    read_names.insert(r.name.clone(), i as u16);
                     break;
                 }
             }
@@ -67,16 +76,19 @@ fn calc_rows(
     }
 
     for r in reads {
-        let mut row: u8 = 0;
+        let mut row: u16 = 0;
 
         if read_names.contains_key(&r.name) {
             row = *read_names.get(&r.name).unwrap();
         } else {
-            for (i, _) in row_ends.iter().enumerate().take(100).skip(1) {
+            for (i, _) in row_ends.iter().enumerate().take(1000).skip(1) {
                 if r.read_start > row_ends[i] {
-                    row = i as u8;
+                    if i > max_row {
+                        max_row = i;
+                    }
+                    row = i as u16;
                     row_ends[i] = r.read_end;
-                    read_names.insert(r.name.clone(), i as u8);
+                    read_names.insert(r.name.clone(), i as u16);
                     break;
                 }
             }
@@ -90,7 +102,7 @@ fn calc_rows(
         reads_wr.push(base);
     }
 
-    (reads_wr, matches_wr)
+    (reads_wr, matches_wr, max_row)
 }
 
 pub fn get_static_reads(
@@ -99,7 +111,11 @@ pub fn get_static_reads(
     chrom: String,
     from: u64,
     to: u64,
-) -> (Vec<StaticAlignmentNucleobase>, Vec<StaticAlignmentMatch>) {
+) -> (
+    Vec<StaticAlignmentNucleobase>,
+    Vec<StaticAlignmentMatch>,
+    usize,
+) {
     let alignments = read_indexed_bam(path, chrom.clone(), from, to);
     let (msm, m) = make_nucleobases(fasta_path, chrom, alignments, from, to);
     calc_rows(msm, m)

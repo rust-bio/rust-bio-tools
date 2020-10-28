@@ -10,6 +10,7 @@ $(document).ready(function () {
             for (let t = 1; t <= vis_len; t++) {
                 let compressed_specs = $(this).data('vis' + t.toString());
                 let unpacker = new jsonm.Unpacker();
+                unpacker.setMaxDictSize(100000);
                 $(this).data('vis' + t.toString(), unpacker.unpack(compressed_specs));
             }
             $(this).data('packed', false);

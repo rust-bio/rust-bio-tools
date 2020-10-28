@@ -1,5 +1,6 @@
 use crate::bcf::report::table_report::fasta_reader::{get_fasta_length, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
+use chrono::{DateTime, Local};
 use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::header::TagType;
 use rust_htslib::bcf::{HeaderRecord, Read};
@@ -8,7 +9,10 @@ use serde::Serialize;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::error::Error;
+use std::fs::File;
+use std::io::Write;
 use std::path::Path;
+use tera::{Context, Tera};
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub enum VariantType {
@@ -33,15 +37,15 @@ pub struct Report {
     vis: HashMap<String, String>,
 }
 
-type Reports = (HashMap<String, Vec<Report>>, Vec<String>);
-
 pub(crate) fn make_table_report(
     vcf_path: &Path,
     fasta_path: &Path,
     bam_sample_path: &[(String, String)],
     infos: Option<Vec<&str>>,
     formats: Option<Vec<&str>>,
-) -> Result<Reports, Box<dyn Error>> {
+    sample: String,
+    output_path: &str,
+) -> Result<(), Box<dyn Error>> {
     // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
     let mut reports = HashMap::new();
     let mut ann_indices = HashMap::new();
@@ -59,7 +63,14 @@ pub(crate) fn make_table_report(
         ann_indices.insert(field, i);
     }
 
-    for v in vcf.records() {
+    let last_gene_index = get_gene_ending(
+        vcf_path,
+        *ann_indices
+            .get(&String::from("SYMBOL"))
+            .expect("No field named SYMBOL found. Please only use VEP-annotated VCF-files."),
+    )?;
+
+    for (record_index, v) in vcf.records().enumerate() {
         let mut variant = v.unwrap();
 
         let n = header.rid2name(variant.rid().unwrap()).unwrap().to_owned();
@@ -334,10 +345,37 @@ pub(crate) fn make_table_report(
                 }
             }
         }
-    }
+        for gene in genes {
+            if last_gene_index.get(gene).unwrap() <= &(record_index as u32) {
+                let detail_path = output_path.to_owned() + "/details/" + &sample;
+                let local: DateTime<Local> = Local::now();
 
-    let result = (reports, ann_field_description);
-    Ok(result)
+                let report_data = reports.remove(gene).unwrap();
+                let mut templates = Tera::default();
+                templates
+                    .add_raw_template(
+                        "table_report.html.tera",
+                        include_str!("report_table.html.tera"),
+                    )
+                    .unwrap();
+                let mut context = Context::new();
+                context.insert("variants", &report_data);
+                context.insert("gene", &gene);
+                context.insert("description", &ann_field_description);
+                context.insert("sample", &sample);
+                context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+                context.insert("version", &env!("CARGO_PKG_VERSION"));
+
+                let html = templates
+                    .render("table_report.html.tera", &context)
+                    .unwrap();
+                let filepath = detail_path.clone() + "/" + gene + ".html";
+                let mut file = File::create(filepath)?;
+                file.write_all(html.as_bytes())?;
+            }
+        }
+    }
+    Ok(())
 }
 
 pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>> {
@@ -435,4 +473,23 @@ fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Value {
     packer.set_max_dict_size(100000);
     let options = PackOptions::new();
     packer.pack(&vega_specs, &options).unwrap()
+}
+
+fn get_gene_ending(
+    vcf_path: &Path,
+    symbol_index: usize,
+) -> Result<HashMap<String, u32>, Box<dyn Error>> {
+    let mut endings = HashMap::new();
+    let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
+    for (record_index, v) in vcf.records().enumerate() {
+        let mut variant = v.unwrap();
+        if let Some(ann) = variant.info(b"ANN").string()? {
+            for entry in ann {
+                let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
+                let gene = std::str::from_utf8(fields[symbol_index])?;
+                endings.insert(gene.to_owned(), record_index as u32);
+            }
+        }
+    }
+    Ok(endings)
 }

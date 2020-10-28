@@ -467,7 +467,10 @@ fn manipulate_json(data: Json, from: u64, to: u64) -> Value {
     packer.pack(&vega_specs, &options).unwrap()
 }
 
-fn get_gene_ending(vcf_path: &Path, symbol_index: usize) -> Result<HashMap<String, u32>, Box<dyn Error>> {
+fn get_gene_ending(
+    vcf_path: &Path,
+    symbol_index: usize,
+) -> Result<HashMap<String, u32>, Box<dyn Error>> {
     let mut endings = HashMap::new();
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     for (record_index, v) in vcf.records().enumerate() {

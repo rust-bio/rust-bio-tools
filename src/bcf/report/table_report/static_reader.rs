@@ -2,13 +2,13 @@ use crate::bcf::report::table_report::alignment_reader::{
     make_nucleobases, read_indexed_bam, AlignmentMatch, AlignmentNucleobase,
 };
 use crate::bcf::report::table_report::create_report_table::VariantType;
+use itertools::__std_iter::FromIterator;
 use rand::rngs::StdRng;
 use rand::seq::IteratorRandom;
 use rand_core::SeedableRng;
 use serde::Serialize;
 use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
-use itertools::__std_iter::FromIterator;
 
 #[derive(Serialize, Clone, Debug)]
 pub struct StaticAlignmentMatch {

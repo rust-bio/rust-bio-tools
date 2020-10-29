@@ -239,6 +239,11 @@ subcommands:
             short: c
             default_value: "1000"
             help: Set the maximum number of cells in the oncoprint per page. Lowering max-cells should improve the performance of the plots in the browser. Default value is 1000.
+        - max-read-depth:
+            required: false
+            short: d
+            default_value: "500"
+            help: Set the maximum read depth for plots of the third stage. If the maximum depth is exceeded, rows are randomly (with seed for reproducibility) chosen. Default value is 500.
         - info:
             multiple: true
             required: false

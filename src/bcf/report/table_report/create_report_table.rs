@@ -37,6 +37,7 @@ pub struct Report {
     vis: HashMap<String, String>,
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn make_table_report(
     vcf_path: &Path,
     fasta_path: &Path,
@@ -45,6 +46,7 @@ pub(crate) fn make_table_report(
     formats: Option<Vec<&str>>,
     sample: String,
     output_path: &str,
+    max_read_depth: u32,
 ) -> Result<(), Box<dyn Error>> {
     // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
     let mut reports = HashMap::new();
@@ -292,6 +294,7 @@ pub(crate) fn make_table_report(
                             chrom.clone(),
                             0,
                             end_position as u64 + 75,
+                            max_read_depth,
                         );
                         visualization =
                             manipulate_json(content, 0, end_position as u64 + 75, max_rows);
@@ -303,6 +306,7 @@ pub(crate) fn make_table_report(
                             chrom.clone(),
                             pos as u64 - 75,
                             fasta_length - 1,
+                            max_read_depth,
                         );
                         visualization =
                             manipulate_json(content, pos as u64 - 75, fasta_length - 1, max_rows);
@@ -314,6 +318,7 @@ pub(crate) fn make_table_report(
                             chrom.clone(),
                             pos as u64 - 75,
                             end_position as u64 + 75,
+                            max_read_depth,
                         );
                         visualization = manipulate_json(
                             content,
@@ -408,6 +413,7 @@ fn create_report_data(
     chrom: String,
     from: u64,
     to: u64,
+    max_read_depth: u32,
 ) -> (Json, usize) {
     let mut data = Vec::new();
 
@@ -416,7 +422,8 @@ fn create_report_data(
         data.push(nucleobase);
     }
 
-    let (bases, matches, max_rows) = get_static_reads(bam_path, fasta_path, chrom, from, to);
+    let (bases, matches, max_rows) =
+        get_static_reads(bam_path, fasta_path, chrom, from, to, max_read_depth);
 
     for b in bases {
         let base = json!(b);

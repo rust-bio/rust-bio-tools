@@ -10,6 +10,7 @@ use std::error::Error;
 use std::fs;
 use std::path::Path;
 
+#[allow(clippy::too_many_arguments)]
 pub fn table_report(
     vcf: &str,
     fasta: &str,
@@ -18,6 +19,7 @@ pub fn table_report(
     sample: &str,
     info: Option<Values>,
     format: Option<Values>,
+    max_read_depth: u32,
 ) -> Result<(), Box<dyn Error>> {
     let detail_path = output_path.to_owned() + "/details/" + sample;
     fs::create_dir(Path::new(&detail_path)).unwrap_or_else(|_| {
@@ -49,5 +51,6 @@ pub fn table_report(
         format_strings,
         sample.to_owned(),
         output_path,
+        max_read_depth,
     )?)
 }

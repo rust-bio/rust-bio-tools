@@ -2,8 +2,11 @@ use crate::bcf::report::table_report::alignment_reader::{
     make_nucleobases, read_indexed_bam, AlignmentMatch, AlignmentNucleobase,
 };
 use crate::bcf::report::table_report::create_report_table::VariantType;
+use rand::rngs::StdRng;
+use rand::seq::IteratorRandom;
+use rand_core::SeedableRng;
 use serde::Serialize;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::path::Path;
 
 #[derive(Serialize, Clone, Debug)]
@@ -34,12 +37,13 @@ pub struct Variant {
 fn calc_rows(
     reads: Vec<AlignmentNucleobase>,
     matches: Vec<AlignmentMatch>,
+    max_read_depth: u32,
 ) -> (
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
     usize,
 ) {
-    let mut row_ends = vec![0; 1000];
+    let mut row_ends = vec![0; 10000];
 
     let mut read_names: BTreeMap<String, u16> = BTreeMap::new();
 
@@ -54,7 +58,7 @@ fn calc_rows(
         if read_names.contains_key(&r.name) {
             row = *read_names.get(&r.name).unwrap();
         } else {
-            for (i, _) in row_ends.iter().enumerate().take(1000).skip(1) {
+            for (i, _) in row_ends.iter().enumerate().take(10000).skip(1) {
                 if r.read_start > row_ends[i] {
                     if i > max_row {
                         max_row = i;
@@ -102,6 +106,23 @@ fn calc_rows(
         reads_wr.push(base);
     }
 
+    if max_row > max_read_depth as usize {
+        let mut rng = StdRng::seed_from_u64(42);
+        let random_rows: HashSet<_> = (0..max_row as u32)
+            .choose_multiple(&mut rng, max_read_depth as usize)
+            .into_iter()
+            .collect();
+        reads_wr = reads_wr
+            .into_iter()
+            .filter(|b| random_rows.contains(&&(b.row as u32)))
+            .collect();
+        matches_wr = matches_wr
+            .into_iter()
+            .filter(|b| random_rows.contains(&&(b.row as u32)))
+            .collect();
+        max_row = max_read_depth as usize;
+    }
+
     (reads_wr, matches_wr, max_row)
 }
 
@@ -111,6 +132,7 @@ pub fn get_static_reads(
     chrom: String,
     from: u64,
     to: u64,
+    max_read_depth: u32,
 ) -> (
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
@@ -118,5 +140,5 @@ pub fn get_static_reads(
 ) {
     let alignments = read_indexed_bam(path, chrom.clone(), from, to);
     let (msm, m) = make_nucleobases(fasta_path, chrom, alignments, from, to);
-    calc_rows(msm, m)
+    calc_rows(msm, m, max_read_depth)
 }

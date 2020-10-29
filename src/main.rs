@@ -86,6 +86,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                 });
             }
             let max_cells = u32::from_str(matches.value_of("max-cells").unwrap()).unwrap();
+            let max_read_depth =
+                u32::from_str(matches.value_of("max-read-depth").unwrap()).unwrap();
             let custom_js = matches.value_of("custom-js");
             let tsv_data = matches.value_of("tsv");
             bcf::report::embed_js(output_path, custom_js)?;
@@ -123,6 +125,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     sample,
                     infos.clone(),
                     formats.clone(),
+                    max_read_depth,
                 )?;
             }
 

@@ -807,16 +807,16 @@
               "scale":{
                 "domain":[
                   "HIGH",
-                  "LOW",
                   "MODERATE",
+                  "LOW",
                   "MODIFIER",
                   "unknown"
                 ],
                 "range": [
-                  "#31a354",
-                  "#756bb1",
-                  "#7f7f7f",
-                  "#bcbd22",
+                  "#ec0000",
+                  "#ec5300",
+                  "#ec9b00",
+                  "#ecca00",
                   "#d4d4d4"
                 ],
                 "type":"ordinal"

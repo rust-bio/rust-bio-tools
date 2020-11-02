@@ -361,6 +361,9 @@ pub fn oncoprint(
                     .filter(|gene| sorted_alterations.contains(gene))
                     .collect();
 
+                let samples: Vec<_> = page_data.iter().map(|r| r.sample.clone()).collect();
+                let unique_samples: Vec<_> = samples.iter().unique().collect();
+
                 let mut values = json!({ "main": page_data, "impact": impact_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
                 if let Some(ref tsv) = tsv_data {
                     for (title, data) in tsv {
@@ -389,7 +392,7 @@ pub fn oncoprint(
                 let mut context = Context::new();
                 context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
                 context.insert("gene", &gene);
-                context.insert("samples", &sample_calls.len());
+                context.insert("samples", &unique_samples.len());
                 context.insert("current_page", &page);
                 context.insert("pages", &(pages + 1));
                 context.insert("order", &serde_json::to_string(&json!(order))?);
@@ -504,6 +507,9 @@ pub fn oncoprint(
                 .filter(|gene| sorted_genes.contains(gene))
                 .collect();
 
+            let samples: Vec<_> = page_data.iter().map(|r| r.sample.clone()).collect();
+            let unique_samples: Vec<_> = samples.iter().unique().collect();
+
             let mut vl_specs: Value =
                 serde_json::from_str(include_str!("report_specs.json")).unwrap();
             let mut values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
@@ -541,7 +547,7 @@ pub fn oncoprint(
             context.insert("current_page", &page);
             context.insert("pages", &(pages + 1));
             context.insert("order", &serde_json::to_string(&json!(order))?);
-            context.insert("samples", &sample_calls.len());
+            context.insert("samples", &unique_samples.len());
             let local: DateTime<Local> = Local::now();
             context.insert("time", &local.format("%a %b %e %T %Y").to_string());
             context.insert("version", &env!("CARGO_PKG_VERSION"));

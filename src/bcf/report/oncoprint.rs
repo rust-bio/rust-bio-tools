@@ -74,7 +74,12 @@ pub fn oncoprint(
             let alt_alleles = &alleles[1..];
             let ref_allele = alleles[0].to_owned();
 
-            let allel_frequencies = record.format(b"AF").float()?[0].to_vec();
+            let allel_frequencies = record
+                .format(b"AF")
+                .float()?
+                .iter()
+                .map(|s| s.to_vec())
+                .collect_vec();
 
             let ann = record.info(b"ANN").string()?;
             if let Some(ann) = ann {
@@ -175,22 +180,25 @@ pub fn oncoprint(
                         }
 
                         for (i, name) in sample_names.iter().enumerate() {
-                            let af = AlleleFrequency {
-                                sample: sample.to_owned() + ":" + name,
-                                key: gene.to_owned(),
-                                allel_frequency: allel_frequencies[i],
-                            };
+                            for frequency in &allel_frequencies[i] {
+                                let af = AlleleFrequency {
+                                    sample: sample.to_owned() + ":" + name,
+                                    key: gene.to_owned(),
+                                    allel_frequency: *frequency,
+                                };
 
-                            af_data.push(af);
+                                af_data.push(af);
 
-                            let gene_af = AlleleFrequency {
-                                sample: sample.to_owned() + ":" + name,
-                                key: alt.to_owned(),
-                                allel_frequency: allel_frequencies[i],
-                            };
+                                let gene_af = AlleleFrequency {
+                                    sample: sample.to_owned() + ":" + name,
+                                    key: alt.to_owned(),
+                                    allel_frequency: *frequency,
+                                };
 
-                            let f = gene_af_data.entry(gene.to_owned()).or_insert_with(Vec::new);
-                            f.push(gene_af);
+                                let f =
+                                    gene_af_data.entry(gene.to_owned()).or_insert_with(Vec::new);
+                                f.push(gene_af);
+                            }
                         }
                     }
                 }

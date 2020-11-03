@@ -4,7 +4,7 @@ let column_values = ['id', 'position', 'reference', 'alternatives', 'type'];
 let ann_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 
 $(document).ready(function () {
-    $("html").on('click', '.variant-row', function () {
+    $('html').on('click', '.variant-row', function () {
         let vis_len = $(this).data('vislen');
         if ($(this).data('packed')) {
             for (let t = 1; t <= vis_len; t++) {
@@ -74,7 +74,7 @@ $(document).ready(function () {
         ann_values.forEach(function (x) {
             let name = description[x];
             $('#ann-sidebar').append('<tr>');
-            $('#ann-sidebar').append('<th class="thead-dark" style="position: sticky; left:-1px; z-index: 1; background: white">' + name + '</th>');
+            $('#ann-sidebar').append('<th class="thead-dark" style="position: sticky; left:-1px;">' + name + '</th>');
             for (let j = 1; j <= ann_length; j++) {
                 let ix = x + 1;
                 let field = 'ann[' + j + '][' + ix + ']';
@@ -84,4 +84,5 @@ $(document).ready(function () {
             $('#ann-sidebar').append('</tr>');
         });
     })
+    $('#variant1').trigger('click');
 })

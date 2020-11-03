@@ -6,6 +6,7 @@ body {
     text-align: center;
 }
 th, td {
+    text-align: left;
     border-left: none !important;
     border-right: none !important;
     background-color: white;

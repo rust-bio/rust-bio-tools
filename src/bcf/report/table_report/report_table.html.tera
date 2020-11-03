@@ -4,6 +4,7 @@
     <title>{{ gene }}</title>
     <link rel="stylesheet" type="text/css" href="../../css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../../css/bootstrap-table.min.css">
+    <link rel="stylesheet" type="text/css" href="../../css/oncoprint.css">
 </head>
 
 <body>
@@ -42,7 +43,7 @@
             <div class="col-8">
                 <div class="row">
                     <div class="col-12">
-                        <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="true">
+                        <table id="table" class="table-bordered" data-toggle="table" data-height="510" data-search="true" data-pagination="true">
                             <thead>
                             <tr>
                                 <th scope="col">name</th>
@@ -56,7 +57,7 @@
                             {% for variant in variants %}
                             <tr
                                     class="variant-row"
-                                    id="{{ variant.id }}"
+                                    id="variant{{ loop.index }}"
                                     data-name="{{ variant.name }}"
                                     data-id="{{ variant.id }}"
                                     data-position="{{ variant.position }}"
@@ -108,7 +109,7 @@
             <div class="col-4">
                 <table id="sidebar" class="table table-hover table-sm" style="margin-top: 58px;">
                 </table>
-                <table id="ann-sidebar" class="table table-hover table-sm" data-widht="100" data-toggle="table">
+                <table id="ann-sidebar" class="table-sm" data-widht="100" data-toggle="table">
                 </table>
                 <div id="custom-sidebar">
                 </div>

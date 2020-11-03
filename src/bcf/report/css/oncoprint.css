@@ -5,3 +5,14 @@ body {
     margin-top: 15px;
     text-align: center;
 }
+th, td {
+    border-left: none !important;
+    border-right: none !important;
+    background-color: white;
+    background-clip: padding-box;
+}
+.table-bordered, fixed-table-border { border: none !important; }
+.bootstrap-table .fixed-table-container.fixed-height .fixed-table-border {
+    border-left: none;
+    border-right: none;
+}

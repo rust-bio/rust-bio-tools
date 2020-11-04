@@ -31,6 +31,10 @@ pub fn embed_js(
             "bootstrap-table.min.js",
             include_str!("js/bootstrap-table.min.js"),
         ),
+        (
+            "bootstrap.bundle.min.js",
+            include_str!("js/bootstrap.bundle.min.js"),
+        ),
         ("report.js", include_str!("js/report.js")),
         ("gene-report.js", include_str!("js/gene-report.js")),
     ];

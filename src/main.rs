@@ -89,7 +89,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let max_read_depth =
                 u32::from_str(matches.value_of("max-read-depth").unwrap()).unwrap();
             let custom_js = matches.value_of("custom-js-template");
-            let js_files = matches.values_of("custom-js-file");
+            let js_files = matches.values_of("custom-js-files");
             let js_file_names = if let Some(files) = js_files.clone() {
                 Some(
                     files

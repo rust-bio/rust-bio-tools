@@ -264,7 +264,7 @@ subcommands:
             long: js
             value_name: JS_FILE_PATH
             help: Change the default javascript file for the table-report to a custom one to add own plots or tables to the sidebar by appending these to an empty div in the HTML template.
-        - custom-js-file:
+        - custom-js-files:
             required: false
             short: l
             long: js-file

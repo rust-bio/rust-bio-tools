@@ -91,14 +91,19 @@ fn main() -> Result<(), Box<dyn Error>> {
             let custom_js = matches.value_of("custom-js-template");
             let js_files = matches.values_of("custom-js-file");
             let js_file_names = if let Some(files) = js_files.clone() {
-                Some(files.map(|f| {
-                    f.split('/').collect_vec().pop().unwrap_or_else(|| {
-                        panic!(
-                            "Unable to extract file name from path: {:?}",
-                            f
-                        )
-                    }).to_owned()
-                }).collect())
+                Some(
+                    files
+                        .map(|f| {
+                            f.split('/')
+                                .collect_vec()
+                                .pop()
+                                .unwrap_or_else(|| {
+                                    panic!("Unable to extract file name from path: {:?}", f)
+                                })
+                                .to_owned()
+                        })
+                        .collect(),
+                )
             } else {
                 None
             };
@@ -139,7 +144,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     infos.clone(),
                     formats.clone(),
                     max_read_depth,
-                    js_file_names.clone()
+                    js_file_names.clone(),
                 )?;
             }
 

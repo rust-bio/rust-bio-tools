@@ -1,10 +1,10 @@
+use clap::Values;
+use itertools::Itertools;
 use std::error::Error;
 use std::fs;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
-use clap::Values;
-use itertools::Itertools;
 
 pub mod oncoprint;
 pub mod table_report;
@@ -55,12 +55,11 @@ pub fn embed_js(
     }
     if custom_js_files.is_some() {
         for file in custom_js_files.unwrap() {
-            let file_name = file.split('/').collect_vec().pop().unwrap_or_else(|| {
-                panic!(
-                    "Unable to extract file name from path: {:?}",
-                    file
-                )
-            });
+            let file_name = file
+                .split('/')
+                .collect_vec()
+                .pop()
+                .unwrap_or_else(|| panic!("Unable to extract file name from path: {:?}", file));
             let mut file_string = String::new();
             let mut custom_file = File::open(file).expect("Unable to open JS file");
             custom_file

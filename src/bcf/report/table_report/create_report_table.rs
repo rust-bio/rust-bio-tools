@@ -47,6 +47,7 @@ pub(crate) fn make_table_report(
     sample: String,
     output_path: &str,
     max_read_depth: u32,
+    js_files: Option<Vec<String>>,
 ) -> Result<(), Box<dyn Error>> {
     // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
     let mut reports = HashMap::new();
@@ -368,6 +369,8 @@ pub(crate) fn make_table_report(
                 context.insert("gene", &gene);
                 context.insert("description", &ann_field_description);
                 context.insert("sample", &sample);
+                context.insert("additional_js", &js_files.is_some());
+                context.insert("js_imports", &js_files);
                 context.insert("time", &local.format("%a %b %e %T %Y").to_string());
                 context.insert("version", &env!("CARGO_PKG_VERSION"));
 

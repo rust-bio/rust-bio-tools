@@ -88,9 +88,22 @@ fn main() -> Result<(), Box<dyn Error>> {
             let max_cells = u32::from_str(matches.value_of("max-cells").unwrap()).unwrap();
             let max_read_depth =
                 u32::from_str(matches.value_of("max-read-depth").unwrap()).unwrap();
-            let custom_js = matches.value_of("custom-js");
+            let custom_js = matches.value_of("custom-js-template");
+            let js_files = matches.values_of("custom-js-file");
+            let js_file_names = if let Some(files) = js_files.clone() {
+                Some(files.map(|f| {
+                    f.split('/').collect_vec().pop().unwrap_or_else(|| {
+                        panic!(
+                            "Unable to extract file name from path: {:?}",
+                            f
+                        )
+                    }).to_owned()
+                }).collect())
+            } else {
+                None
+            };
             let tsv_data = matches.value_of("tsv");
-            bcf::report::embed_js(output_path, custom_js)?;
+            bcf::report::embed_js(output_path, custom_js, js_files.clone())?;
             bcf::report::embed_css(output_path)?;
             bcf::report::embed_html(output_path)?;
             let fasta_path = matches.value_of("fasta").unwrap();
@@ -126,6 +139,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     infos.clone(),
                     formats.clone(),
                     max_read_depth,
+                    js_file_names.clone()
                 )?;
             }
 

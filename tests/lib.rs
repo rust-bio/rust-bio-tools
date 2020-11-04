@@ -205,7 +205,7 @@ fn test_vcf_report() {
         // this may fail on OS X due to the wrong sed being installed
         assert!(Command::new("bash")
             .arg("-c")
-            .arg("sed -i '30d;23d' ".to_owned() + result)
+            .arg("sed -i '31d;24d' ".to_owned() + result)
             .spawn()
             .unwrap()
             .wait()

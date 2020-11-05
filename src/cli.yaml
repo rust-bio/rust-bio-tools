@@ -258,12 +258,19 @@ subcommands:
             short: f
             value_name: FORMAT_TAG
             help: Add custom values from the format field to each variant into the table report.
-        - custom-js:
+        - custom-js-template:
             required: false
             short: j
             long: js
             value_name: JS_FILE_PATH
             help: Change the default javascript file for the table-report to a custom one to add own plots or tables to the sidebar by appending these to an empty div in the HTML template.
+        - custom-js-files:
+            required: false
+            short: l
+            long: js-file
+            value_name: JS_FILE_PATH
+            multiple: true
+            help: Add one or multiple js file (e.g. libraries) for usage in the custom-js-file. The ordering of the arguments will be the same as they will be imported.
         - tsv:
             required: false
             short: t

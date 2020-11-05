@@ -20,6 +20,7 @@ pub fn table_report(
     info: Option<Values>,
     format: Option<Values>,
     max_read_depth: u32,
+    js_files: Vec<String>,
 ) -> Result<(), Box<dyn Error>> {
     let detail_path = output_path.to_owned() + "/details/" + sample;
     fs::create_dir(Path::new(&detail_path)).unwrap_or_else(|_| {
@@ -52,5 +53,6 @@ pub fn table_report(
         sample.to_owned(),
         output_path,
         max_read_depth,
+        js_files,
     )?)
 }

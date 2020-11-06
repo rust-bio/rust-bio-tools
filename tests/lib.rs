@@ -158,7 +158,7 @@ fn test_vcf_report() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt vcf-report tests/ref.fa -v a=tests/report-test.vcf -v b=tests/report-test.vcf -b a:tumor=tests/test-report.bam -b b:tumor=tests/test-report.bam -- tests")
+            .arg("target/debug/rbt vcf-report tests/ref.fa -v a=tests/report-test.vcf -v b=tests/report-test.vcf -b a:tumor=tests/test-report.bam -b b:tumor=tests/test-report.bam -- tests/test-vcf-report")
             .spawn()
             .unwrap()
             .wait()
@@ -167,22 +167,22 @@ fn test_vcf_report() {
     );
     let files1 = vec![
         (
-            "tests/indexes/index1.html",
+            "tests/test-vcf-report/indexes/index1.html",
             "tests/expected/report/indexes/index1.html",
         ),
         (
-            "tests/genes/KRAS1.html",
+            "tests/test-vcf-report/genes/KRAS1.html",
             "tests/expected/report/genes/KRAS1.html",
         ),
     ];
 
     let files2 = vec![
         (
-            "tests/details/a/KRAS.html",
+            "tests/test-vcf-report/details/a/KRAS.html",
             "tests/expected/report/details/a/KRAS.html",
         ),
         (
-            "tests/details/b/KRAS.html",
+            "tests/test-vcf-report/details/b/KRAS.html",
             "tests/expected/report/details/b/KRAS.html",
         ),
     ];
@@ -213,12 +213,7 @@ fn test_vcf_report() {
             .success());
         test_output(result, expected)
     }
-    fs::remove_dir_all("tests/genes").unwrap();
-    fs::remove_dir_all("tests/details").unwrap();
-    fs::remove_dir_all("tests/js").unwrap();
-    fs::remove_dir_all("tests/css").unwrap();
-    fs::remove_dir_all("tests/indexes").unwrap();
-    fs::remove_file("tests/index.html").unwrap();
+    fs::remove_dir_all("tests/test-vcf-report").unwrap();
 }
 
 #[test]

@@ -3,20 +3,9 @@ spec = unpacker.unpack(spec);
 let changed_records = []
 let delete_records = []
 spec.datasets.main.forEach(function(record, j) {
-    let variants = record.variants.split("/");
-    if (variants.length > 1) {
-        for (var i = 0; i < variants.length; i++) {
-            let field = "variants" + (i+1);
-            let layer_record = JSON.parse(JSON.stringify(record));
-            layer_record[field] = variants[i];
-            layer_record.count_variants = variants[i];
-            changed_records.push(layer_record);
-        }
-        delete_records.push(j);
-    } else {
-        record.variants1 = record.variants;
-        record.count_variants = record.variants;
-    }
+    let variant = record.variant;
+    record.variants1 = [record.variant];
+    record.count_variants = [record.variant];
 });
 for (let i = 0; i < delete_records.length; i++) {
     spec.datasets.main.splice(delete_records[i]-i, 1);

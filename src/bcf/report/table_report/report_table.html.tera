@@ -100,9 +100,20 @@
                 <div class="row">
                     <div class="col-12" style="overflow: auto; height: calc(100vh - 450px);">
                     {% for variant in variants %}
-                    {% for k,v in variant.vis %}
-                        <div id="vis{{ loop.index }}" class="justify-content-center" style="width: 100%;"></div>
-                    {% endfor %}
+                        <nav>
+                            <ul class="nav nav-tabs" id="sampleTabs" role="tablist">
+                                {% for k,v in variant.vis %}
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#" role="tab" aria-controls="vis{{ loop.index }}" aria-selected="true">{{ sample }}:{{ k }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </nav>
+                        <div class="tab-content" id="sampleTabContent">
+                        {% for k,v in variant.vis %}
+                        <div id="vis{{ loop.index }}" class="justify-content-center tab-pane fade show active" style="width: 100%; margin: 10px;"></div>
+                        {% endfor %}
+                        </div>
                     {% endfor %}
                     </div>
                 </div>

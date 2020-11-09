@@ -5,6 +5,8 @@ use std::{fs, str};
 
 use derive_new::new;
 use itertools::Itertools;
+use lazy_static::lazy_static;
+use regex::Regex;
 use serde_derive::Serialize;
 use tera::{self, Context, Tera};
 
@@ -17,6 +19,10 @@ use std::fs::File;
 use std::iter::FromIterator;
 use std::path::Path;
 use std::str::FromStr;
+
+lazy_static! {
+    static ref HGVSP_PROTEIN_RE: Regex = Regex::new(r"ENSP[0-9]+(\.[0-9]+)?:").unwrap();
+}
 
 pub fn oncoprint(
     sample_calls: &HashMap<String, String>,
@@ -116,7 +122,8 @@ pub fn oncoprint(
                         let mut impact = get_field("IMPACT")?;
                         let clin_sig = get_field("CLIN_SIG")?;
                         let gene = get_field("SYMBOL")?;
-                        let dna_alteration = get_field("HGVSc")?;
+                        let dna_alteration = get_field("HGVSg")?;
+                        let canonical = get_field("CANONICAL")? == "YES";
                         let protein_alteration = get_field("HGVSp")?;
                         let consequence = get_field("Consequence")?;
 
@@ -126,10 +133,19 @@ pub fn oncoprint(
                         let rec = genes
                             .entry(gene.to_owned())
                             .or_insert_with(|| Record::new(sample.to_owned(), gene.to_owned()));
-                        rec.dna_alterations.push(dna_alteration.to_owned());
-                        if !protein_alteration.is_empty() {
-                            rec.protein_alterations.push(protein_alteration.to_owned());
-                        }
+
+                        // data for second stage
+                        let gene_entry = gene_data.entry(gene.to_owned()).or_insert_with(&Vec::new);
+                        gene_entry.push(SecondStageRecord {
+                            sample: rec.sample.clone(),
+                            alteration: if protein_alteration.is_empty() {
+                                dna_alteration.to_owned()
+                            } else {
+                                protein_alteration.to_owned()
+                            },
+                            variant: variant.to_owned(),
+                        });
+
                         rec.variants.push(variant.to_owned());
 
                         let imp_rec = impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
@@ -224,13 +240,6 @@ pub fn oncoprint(
             let cls = clin_sigs.get(gene).unwrap();
             let final_clin_sig = make_final_bar_plot_records(cls);
             clin_sig_data.push(final_clin_sig);
-
-            // data for second stage
-            let gene_entry = gene_data.entry(gene.to_owned()).or_insert_with(&Vec::new);
-            let gene_records: Vec<SecondStageRecord> = Vec::<SecondStageRecord>::from(record);
-            for rec in gene_records {
-                gene_entry.push(rec);
-            }
 
             // data for second stage impact
             let gene_impact = gene_impacts.get(gene).unwrap();
@@ -438,6 +447,7 @@ pub fn oncoprint(
     let sorted_impacts = order_by_impact(impact_data.clone());
     let sorted_clin_sigs = order_by_clin_sig(clin_sig_data.clone());
     let mut v = Vec::new();
+
     for (gene, sample_count) in sort_genes {
         let impact_order = sorted_impacts.get(&gene).unwrap();
         let clin_sig_order = sorted_clin_sigs.get(&gene).unwrap();
@@ -458,7 +468,7 @@ pub fn oncoprint(
         v.len() / page_size
     };
 
-    let index_path = output_path.to_owned() + "/indexes/";
+    let index_path = output_path.to_owned() + "/indexes";
     fs::create_dir(Path::new(&index_path)).unwrap_or_else(|_| {
         panic!(
             "Could not create directory for oncoprint files at location: {:?}",
@@ -562,7 +572,7 @@ pub fn oncoprint(
 
             let html = templates.render("report.html.tera", &context)?;
 
-            let index = index_path.to_owned() + "/index" + &page.to_string() + ".html";
+            let index = format!("{}/index{}.html", index_path, page.to_string());
             let mut file = File::create(index)?;
             file.write_all(html.as_bytes())?;
         }
@@ -576,9 +586,7 @@ struct Record {
     sample: String,
     gene: String,
     #[new(default)]
-    dna_alterations: Vec<String>,
-    #[new(default)]
-    protein_alterations: Vec<String>,
+    dna_alteration: Vec<String>,
     #[new(default)]
     variants: Vec<String>,
 }
@@ -622,7 +630,7 @@ struct FinalRecord {
 struct SecondStageRecord {
     sample: String,
     alteration: String,
-    variants: String,
+    variant: String,
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
@@ -696,32 +704,6 @@ impl FromStr for ClinSig {
             _ => clin_sig = ClinSig::Unknown,
         }
         Ok(clin_sig)
-    }
-}
-
-impl From<&Record> for Vec<SecondStageRecord> {
-    fn from(record: &Record) -> Self {
-        let mut gene_vec = Vec::new();
-        let dna_alterations: Vec<_> = record.dna_alterations.iter().unique().collect();
-        let protein_alterations: Vec<_> = record.protein_alterations.iter().unique().collect();
-        for (i, protein_alt) in protein_alterations.into_iter().enumerate() {
-            let alt = if protein_alt.is_empty() {
-                SecondStageRecord {
-                    sample: record.sample.to_owned(),
-                    alteration: dna_alterations[i].to_owned(),
-                    variants: record.variants.iter().sorted().unique().join("/"),
-                }
-            } else {
-                SecondStageRecord {
-                    sample: record.sample.to_owned(),
-                    alteration: protein_alt.to_owned(),
-                    variants: record.variants.iter().sorted().unique().join("/"),
-                }
-            };
-
-            gene_vec.push(alt);
-        }
-        gene_vec
     }
 }
 

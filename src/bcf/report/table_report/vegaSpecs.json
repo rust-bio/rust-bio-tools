@@ -151,23 +151,7 @@
       "value": {},
       "on": [
         {
-          "events": [
-            {
-              "source": "window",
-              "type": "mousemove",
-              "consume": true,
-              "between": [
-                {
-                  "source": "scope",
-                  "type": "mousedown"
-                },
-                {
-                  "source": "window",
-                  "type": "mouseup"
-                }
-              ]
-            }
-          ],
+          "events": [],
           "update": "{x: grid_translate_anchor.x - x(unit), y: grid_translate_anchor.y - y(unit)}"
         }
       ]
@@ -176,13 +160,7 @@
       "name": "grid_zoom_anchor",
       "on": [
         {
-          "events": [
-            {
-              "source": "scope",
-              "type": "wheel",
-              "consume": true
-            }
-          ],
+          "events": [],
           "update": "{x: invert(\"x\", x(unit)), y: invert(\"y\", y(unit))}"
         }
       ]
@@ -191,13 +169,7 @@
       "name": "grid_zoom_delta",
       "on": [
         {
-          "events": [
-            {
-              "source": "scope",
-              "type": "wheel",
-              "consume": true
-            }
-          ],
+          "events": [],
           "force": true,
           "update": "pow(1.001, event.deltaY * pow(16, event.deltaMode))"
         }
@@ -325,7 +297,7 @@
       "domainRaw": {
         "signal": "grid[\"start_position\"]"
       },
-      "nice": true,
+      "nice": false,
       "zero": false
     },
     {
@@ -455,11 +427,13 @@
     },
     {
       "scale": "x",
-      "orient": "bottom",
+      "orient": "top",
       "grid": false,
       "title": "Position",
+      "titlePadding": 20,
       "labelFlush": true,
       "labelOverlap": true,
+      "labelAngle": 10,
       "tickCount": {
         "signal": "ceil(width/40)"
       },

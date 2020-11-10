@@ -97,10 +97,20 @@ pub(crate) fn make_table_report(
             let mut info_map = HashMap::new();
             for tag in infos.clone().unwrap() {
                 if tag.chars().last().unwrap().eq(&'*') {
-                    let tags = header.header_records().iter().filter(|header_record| match header_record {
-                        HeaderRecord::Info{key, values: _} => {key.starts_with(&tag[..(tag.len()-1)])},
-                        _ => false
-                    }).map(|header_rec| matheader_rec.key).collect::<Vec<String>>();
+                    let tags = header
+                        .header_records()
+                        .iter()
+                        .filter(|header_record| match header_record {
+                            HeaderRecord::Info { key, values: _ } => {
+                                key.starts_with(&tag[..(tag.len() - 1)])
+                            }
+                            _ => false,
+                        })
+                        .map(|header_rec| match header_rec {
+                            HeaderRecord::Info { key, values: _ } => key.to_owned(),
+                            _ => unreachable!()
+                        })
+                        .collect::<Vec<String>>();
                 }
                 let (tag_type, _) = header.info_type(tag.as_bytes())?;
                 match tag_type {

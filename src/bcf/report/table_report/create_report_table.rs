@@ -404,7 +404,7 @@ pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<V
 }
 
 fn read_bcf_record(
-    info_map: &mut HashMap<String, Vec<tera::Value>>,
+    info_map: &mut HashMap<String, Vec<Value>>,
     variant: &mut Record,
     header: &HeaderView,
     tag: &str,

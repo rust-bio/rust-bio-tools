@@ -284,6 +284,24 @@ subcommands:
             default_value: "."
             help: Relative output path for the report files. Default value is the current directory.
 
+  - vcf-split:
+      about: |
+        Split a given VCF/BCF file into N chunks of approximately the same size. Breakends are kept together.
+        Output type is always BCF.
+
+        Example:
+
+        rbt vcf-split input.bcf output1.bcf output2.bcf output3.bcf ... outputN.bcf
+      author: Johannes Köster <johannes.koester@uni-due.de>
+      args:
+        - input:
+            required: true
+            help: Input VCF/BCF that shall be splitted.
+        - output:
+            required: true
+            multiple: true
+            help: BCF files to split into. Breakends are kept together. Each file will contain approximately the same number of records.
+
   - collapse-reads-to-fragments:
       about: |
         Tool to predict maximum likelihood fragment sequence from FASTQ or BAM files.

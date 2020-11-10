@@ -96,6 +96,12 @@ pub(crate) fn make_table_report(
         let info_tags = if infos.is_some() {
             let mut info_map = HashMap::new();
             for tag in infos.clone().unwrap() {
+                if tag.chars().last().unwrap().eq(&'*') {
+                    let tags = header.header_records().iter().filter(|header_record| match header_record {
+                        HeaderRecord::Info{key, values: _} => {key.starts_with(&tag[..(tag.len()-1)])},
+                        _ => false
+                    }).map(|header_rec| matheader_rec.key).collect::<Vec<String>>();
+                }
                 let (tag_type, _) = header.info_type(tag.as_bytes())?;
                 match tag_type {
                     TagType::String => {

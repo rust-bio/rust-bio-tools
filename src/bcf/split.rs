@@ -2,14 +2,15 @@ use std::collections::HashMap;
 use std::iter;
 use std::path::Path;
 
+use anyhow::Context;
 use anyhow::Result;
 use itertools::Itertools;
 use rust_htslib::bcf;
 use rust_htslib::bcf::Read;
 
 pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
-    let info = BCFInfo::new(&input_bcf)?;
-    let mut reader = bcf::Reader::from_path(input_bcf)?;
+    let info = BCFInfo::new(&input_bcf).context("error reading input VCF/BCF")?;
+    let mut reader = bcf::Reader::from_path(input_bcf).context("error reading input VCF/BCF")?;
     let header = bcf::Header::from_template(reader.header());
     let mut bnd_cache = HashMap::new();
 
@@ -20,15 +21,23 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
         let chunk = chunk as u64;
         let mut writer = bcf::Writer::from_path(out_path, &header, false, bcf::Format::BCF)?;
         let mut written = 0;
+        let write_err = || {
+            format!(
+                "error writing record to {}",
+                out_path.as_ref().as_os_str().to_str().unwrap()
+            )
+        };
 
         loop {
             let mut rec = reader.empty_record();
-            if !reader.read(&mut rec)? {
+            let read_err = || format!("error reading {}-th record of input VCF/BCF", i + 1);
+
+            if !reader.read(&mut rec).with_context(read_err)? {
                 // EOF
                 break;
             }
 
-            let towrite = if is_bnd(&mut rec)? {
+            let towrite = if is_bnd(&mut rec).with_context(read_err)? {
                 if let Some(group) = BreakendGroup::from(&mut rec) {
                     if let Some(end) = info.end(&group) {
                         // BND is part of a group.
@@ -39,7 +48,7 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
                                 bnd_cache.get(info.supergroups.get(&group).unwrap_or(&group))
                             {
                                 for rec in bnds {
-                                    writer.write(rec)?;
+                                    writer.write(rec).with_context(write_err)?;
                                     written += 1;
                                 }
                             }
@@ -61,7 +70,7 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
             };
 
             if let Some(towrite) = towrite {
-                writer.write(&towrite)?;
+                writer.write(&towrite).with_context(write_err)?;
                 written += 1;
             }
 

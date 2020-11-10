@@ -4,4 +4,5 @@ pub mod baf;
 pub mod fix_iupac_alleles;
 pub mod match_variants;
 pub mod report;
+pub mod split;
 pub mod to_txt;

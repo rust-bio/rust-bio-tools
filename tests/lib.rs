@@ -327,3 +327,15 @@ fn test_stats_fastq_file() {
         "tests/expected/result.fastq.stats",
     );
 }
+
+#[test]
+fn test_vcf_split() {
+    assert!(Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt vcf-split tests/test-vcf-split.vcf /tmp/vcf-split1.bcf /tmp/vcf-split2.bcf")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
+}

@@ -101,9 +101,9 @@ pub(crate) fn make_table_report(
                         .header_records()
                         .iter()
                         .filter_map(|header_record| match header_record {
-                            HeaderRecord::Info { key, values: _ } => {
-                                if key.starts_with(&tag[..(tag.len() - 1)]) {
-                                    Some(key.clone())
+                            HeaderRecord::Info { key: _, values } => {
+                                if values["ID"].starts_with(&tag[..(tag.len() - 1)]) {
+                                    Some(values["ID"].clone())
                                 } else {
                                     None
                                 }
@@ -111,6 +111,7 @@ pub(crate) fn make_table_report(
                             _ => None,
                         })
                         .collect::<Vec<String>>();
+                    dbg!(&prefix_tags);
                     for prefix_tag in prefix_tags {
                         read_bcf_record(&mut info_map, &mut variant, &header, &prefix_tag)?;
                     }

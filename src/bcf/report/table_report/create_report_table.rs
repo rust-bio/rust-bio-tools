@@ -112,10 +112,10 @@ pub(crate) fn make_table_report(
                         })
                         .collect::<Vec<String>>();
                     for prefix_tag in prefix_tags {
-                        read_bcf_record(&mut info_map, &mut variant, &header, &prefix_tag)?;
+                        read_tag_entries(&mut info_map, &mut variant, &header, &prefix_tag)?;
                     }
                 } else {
-                    read_bcf_record(&mut info_map, &mut variant, &header, &tag)?;
+                    read_tag_entries(&mut info_map, &mut variant, &header, &tag)?;
                 }
             }
             Some(serde_json::to_string(&json!(info_map))?)
@@ -403,7 +403,7 @@ pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<V
     None
 }
 
-fn read_bcf_record(
+fn read_tag_entries(
     info_map: &mut HashMap<String, Vec<Value>>,
     variant: &mut Record,
     header: &HeaderView,

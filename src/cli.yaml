@@ -251,7 +251,7 @@ subcommands:
             long: info
             short: i
             value_name: INFO_TAG
-            help: Add custom values from the info field to each variant into the table report.
+            help: Add custom values from the info field to each variant into the table report. Multiple fields starting with the same prefix can be added by placing '*' at the and of a prefix.
         - format:
             multiple: true
             required: false

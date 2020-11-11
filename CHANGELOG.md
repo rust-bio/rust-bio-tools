@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.15.0] - 2020-11-11
+### Changed
+- Allow INFO field prefixes in vcf-report.
+- Require annotation with --hgvsg in vcf-report.
+- Fixes for vcf-report layout.
+### Added
+- New subcommand vcf-split for splitting VCF/BCF files into N equal chunks, including BND support.
+
 ## [0.14.0] - 2020-10-26
 ### Added
 - New flag `--tsv` for `rbt vcf-report`

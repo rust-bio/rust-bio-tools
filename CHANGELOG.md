@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.15.1] - 2020-11-12
+### Changed
+- fixed bug in vcf-split that led to unequally filled splitted VCF/BCFs.
+
 ## [0.15.0] - 2020-11-11
 ### Changed
 - Allow INFO field prefixes in vcf-report.

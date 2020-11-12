@@ -19,10 +19,21 @@ pub struct CallConsensusRead {
 }
 
 type Position = i64;
-type GroupID = i64;
 type GroupIDs = HashSet<GroupID>;
 type RecordIDs = Vec<RecordID>;
-type RecordID = Vec<u8>;
+//type RecordID = Vec<u8>;
+
+#[derive(Hash, PartialEq, Eq)]
+pub enum RecordID {
+    Regular(Vec<u8>),
+    Splitted(Vec<u8>),
+}
+
+#[derive(Hash, PartialEq, Eq, Clone)]
+pub enum GroupID {
+    Regular(i64),
+    Splitted(i64),
+}
 
 impl CallConsensusRead {
     pub fn call_consensus_reads(&mut self) -> Result<(), Box<dyn Error>> {
@@ -59,51 +70,51 @@ impl CallConsensusRead {
             match duplicate_id_option {
                 //Case: duplicate ID exists
                 Some(duplicate_id) => {
-                    match record_storage.get_mut(record_id) {
+                    match record_storage.get_mut(&RecordID::Regular(record_id.to_vec())) {
                         //Case: Right record
                         Some(record_pair) => {
                             //For right record save end position and duplicate group ID
-                            let mut mod_duplicate_id = duplicate_id.integer();
                             let record_end_pos = record.cigar_cached().unwrap().end_pos() - 1;
-                            match record_pair {
+                            let typed_duplicate_id = match record_pair {
                                 RecordStorage::PairedRecords { ref mut r_rec, .. } => {
                                     r_rec.get_or_insert(IndexedRecord {
-                                        rec: record,
+                                        rec: record.clone(),
                                         rec_id: i,
                                     });
+                                    GroupID::Regular(duplicate_id.integer())
                                 }
                                 // This arm is reached if a mate is mapped to another chromosome.
                                 // In that case a new duplicate and record ID is required
                                 RecordStorage::SingleRecord { .. } => {
-                                    mod_duplicate_id *= -1;
                                     let mut new_record_id = record_id.to_vec();
                                     new_record_id.push(1);
                                     duplicate_groups
-                                        .entry(mod_duplicate_id)
+                                        .entry(GroupID::Splitted(duplicate_id.integer()))
                                         .or_insert_with(Vec::new)
-                                        .push(new_record_id.clone());
+                                        .push(RecordID::Splitted(record_id.to_owned()));
                                     record_storage.insert(
-                                        new_record_id,
+                                        RecordID::Splitted(record_id.to_owned()),
                                         RecordStorage::SingleRecord {
                                             rec: IndexedRecord {
-                                                rec: record,
+                                                rec: record.clone(),
                                                 rec_id: i,
                                             },
                                         },
                                     );
+                                    GroupID::Splitted(duplicate_id.integer())
                                 }
                             };
                             group_end_idx
                                 .entry(record_end_pos)
                                 .or_insert_with(HashSet::new)
-                                .insert(mod_duplicate_id);
+                                .insert(typed_duplicate_id);
                         }
                         //Case: Left record or record w/o mate
                         None => {
                             duplicate_groups
-                                .entry(duplicate_id.integer())
+                                .entry(GroupID::Regular(duplicate_id.integer()))
                                 .or_insert_with(Vec::new)
-                                .push(record_id.to_vec());
+                                .push(RecordID::Regular(record_id.to_owned()));
                             if !record.is_paired()
                                 || record.is_mate_unmapped()
                                 || (record.tid() != record.mtid())
@@ -112,9 +123,9 @@ impl CallConsensusRead {
                                 group_end_idx
                                     .entry(record.cigar_cached().unwrap().end_pos() - 1)
                                     .or_insert_with(HashSet::new)
-                                    .insert(duplicate_id.integer());
+                                    .insert(GroupID::Regular(duplicate_id.integer()));
                                 record_storage.insert(
-                                    record_id.to_vec(),
+                                    RecordID::Regular(record_id.to_owned()),
                                     RecordStorage::SingleRecord {
                                         rec: IndexedRecord {
                                             rec: record,
@@ -124,7 +135,7 @@ impl CallConsensusRead {
                                 );
                             } else {
                                 record_storage.insert(
-                                    record_id.to_vec(),
+                                    RecordID::Regular(record_id.to_owned()),
                                     RecordStorage::PairedRecords {
                                         l_rec: IndexedRecord {
                                             rec: record,
@@ -146,11 +157,11 @@ impl CallConsensusRead {
                         //TODO Handle intersecting reads mapped on different chromosomes
                         self.bam_writer.write(&record)?;
                     } else {
-                        match record_storage.get_mut(record_id) {
+                        match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
                             //Case: Left record
                             None => {
                                 record_storage.insert(
-                                    record_id.to_vec(),
+                                    RecordID::Regular(record_id.to_owned()),
                                     RecordStorage::PairedRecords {
                                         l_rec: IndexedRecord {
                                             rec: record,
@@ -162,13 +173,15 @@ impl CallConsensusRead {
                             }
                             //Case: Left record already stored
                             Some(_record_pair) => {
-                                let (rec_id, l_rec) =
-                                    match record_storage.remove(record_id).unwrap() {
-                                        RecordStorage::PairedRecords { l_rec, .. } => {
-                                            (l_rec.rec_id, l_rec.into_rec())
-                                        }
-                                        RecordStorage::SingleRecord { .. } => unreachable!(),
-                                    };
+                                let (rec_id, l_rec) = match record_storage
+                                    .remove(&RecordID::Regular(record_id.to_owned()))
+                                    .unwrap()
+                                {
+                                    RecordStorage::PairedRecords { l_rec, .. } => {
+                                        (l_rec.rec_id, l_rec.into_rec())
+                                    }
+                                    RecordStorage::SingleRecord { .. } => unreachable!(),
+                                };
                                 let overlap = calc_overlap(&l_rec, &record)?;
                                 if overlap > 0 {
                                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
@@ -213,7 +226,7 @@ pub fn calc_consensus_complete_groups(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
     duplicate_groups: &mut HashMap<GroupID, RecordIDs>,
     end_pos: Option<&i64>,
-    record_storage: &mut HashMap<Vec<u8>, RecordStorage>,
+    record_storage: &mut HashMap<RecordID, RecordStorage>,
     bam_writer: &mut bam::Writer,
     seq_dist: usize,
     verbose_read_names: bool,
@@ -222,7 +235,7 @@ pub fn calc_consensus_complete_groups(
         .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
         .template("{prefix:.bold.dim} {spinner} {wide_msg}");
 
-    let group_ids: HashSet<i64> = group_end_idx
+    let group_ids: HashSet<GroupID> = group_end_idx
         .range(..end_pos.unwrap_or(&(group_end_idx.len() as i64)))
         .flat_map(|(_, group_ids)| group_ids.clone())
         .collect();

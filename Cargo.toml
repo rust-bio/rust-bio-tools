@@ -1,6 +1,6 @@
 [package]
 name = "rust-bio-tools"
-version = "0.14.4-alpha.0"
+version = "0.15.2-alpha.0"
 authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>", "Erik Clarke <ecl@pennmedicine.upenn.edu>"]
 description = "A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio."
 license-file = "LICENSE.md"
@@ -44,6 +44,8 @@ tera = "1"
 jsonm = "0.1.4"
 chrono = "0.4"
 lazy_static = "1.4"
+anyhow = "1"
+thiserror = "1"
 
 [[bin]]
 name = "rbt"

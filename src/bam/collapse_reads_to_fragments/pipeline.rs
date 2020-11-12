@@ -21,7 +21,6 @@ pub struct CallConsensusRead {
 type Position = i64;
 type GroupIDs = HashSet<GroupID>;
 type RecordIDs = Vec<RecordID>;
-//type RecordID = Vec<u8>;
 
 #[derive(Hash, PartialEq, Eq)]
 pub enum RecordID {
@@ -34,6 +33,7 @@ pub enum GroupID {
     Regular(i64),
     Splitted(i64),
 }
+
 
 impl CallConsensusRead {
     pub fn call_consensus_reads(&mut self) -> Result<(), Box<dyn Error>> {
@@ -74,6 +74,7 @@ impl CallConsensusRead {
                         //Case: Right record
                         Some(record_pair) => {
                             //For right record save end position and duplicate group ID
+
                             let record_end_pos = record.cigar_cached().unwrap().end_pos() - 1;
                             let typed_duplicate_id = match record_pair {
                                 RecordStorage::PairedRecords { ref mut r_rec, .. } => {
@@ -82,6 +83,7 @@ impl CallConsensusRead {
                                         rec_id: i,
                                     });
                                     GroupID::Regular(duplicate_id.integer())
+
                                 }
                                 // This arm is reached if a mate is mapped to another chromosome.
                                 // In that case a new duplicate and record ID is required

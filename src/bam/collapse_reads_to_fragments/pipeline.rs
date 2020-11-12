@@ -21,13 +21,13 @@ pub struct CallConsensusRead {
 type Position = i64;
 type GroupID = i64;
 type GroupIDs = HashSet<GroupID>;
-type RecordIDS = Vec<RecordID>;
+type RecordIDs = Vec<RecordID>;
 type RecordID = Vec<u8>;
 
 impl CallConsensusRead {
     pub fn call_consensus_reads(&mut self) -> Result<(), Box<dyn Error>> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
-        let mut duplicate_groups: HashMap<GroupID, RecordIDS> = HashMap::new();
+        let mut duplicate_groups: HashMap<GroupID, RecordIDs> = HashMap::new();
         let mut record_storage: HashMap<RecordID, RecordStorage> = HashMap::new();
 
         for (i, result) in self.bam_reader.records().enumerate() {
@@ -117,7 +117,8 @@ impl CallConsensusRead {
                 //If record is right mate consensus is calculated
                 //Else record is added to hashMap
                 None => {
-                    if record.is_mate_unmapped() {
+                    if record.is_mate_unmapped() || (record.tid() != record.mtid()){
+                        //TODO Handle intersecting reads mapped on different chromosomes
                         self.bam_writer.write(&record)?;
                     } else {
                         match record_storage.get_mut(record_id) {
@@ -185,7 +186,7 @@ impl CallConsensusRead {
 
 pub fn calc_consensus_complete_groups(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
-    duplicate_groups: &mut HashMap<GroupID, RecordIDS>,
+    duplicate_groups: &mut HashMap<GroupID, RecordIDs>,
     end_pos: Option<&i64>,
     record_storage: &mut HashMap<Vec<u8>, RecordStorage>,
     bam_writer: &mut bam::Writer,

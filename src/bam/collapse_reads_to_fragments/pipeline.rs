@@ -117,7 +117,7 @@ impl CallConsensusRead {
                 //If record is right mate consensus is calculated
                 //Else record is added to hashMap
                 None => {
-                    if record.is_mate_unmapped() || (record.tid() != record.mtid()){
+                    if record.is_mate_unmapped() || (record.tid() != record.mtid()) {
                         //TODO Handle intersecting reads mapped on different chromosomes
                         self.bam_writer.write(&record)?;
                     } else {

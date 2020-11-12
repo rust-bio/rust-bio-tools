@@ -34,7 +34,6 @@ pub enum GroupID {
     Splitted(i64),
 }
 
-
 impl CallConsensusRead {
     pub fn call_consensus_reads(&mut self) -> Result<(), Box<dyn Error>> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
@@ -83,7 +82,6 @@ impl CallConsensusRead {
                                         rec_id: i,
                                     });
                                     GroupID::Regular(duplicate_id.integer())
-
                                 }
                                 // This arm is reached if a mate is mapped to another chromosome.
                                 // In that case a new duplicate and record ID is required

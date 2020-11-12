@@ -76,7 +76,7 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
 
             i += 1;
 
-            if chunk < output_bcfs.len() as u64 - 1 && written >= (chunk + 1) * chunk_size {
+            if chunk < output_bcfs.len() as u64 - 1 && written >= chunk_size {
                 // go on with next chunk
                 break;
             }

@@ -73,7 +73,6 @@ impl CallConsensusRead {
                         //Case: Right record
                         Some(record_pair) => {
                             //For right record save end position and duplicate group ID
-
                             let record_end_pos = record.cigar_cached().unwrap().end_pos() - 1;
                             let group_id = match record_pair {
                                 RecordStorage::PairedRecords { ref mut r_rec, .. } => {
@@ -234,6 +233,7 @@ pub fn calc_consensus_complete_groups(
     let spinner_style = indicatif::ProgressStyle::default_spinner()
         .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
         .template("{prefix:.bold.dim} {spinner} {wide_msg}");
+    //TODO Fix this! Somehow collecting group_ids fails
     let group_ids: HashSet<GroupID> = group_end_idx
         .range(..end_pos.unwrap_or(&(group_end_idx.len() as i64)))
         .flat_map(|(_, group_ids)| group_ids.clone())

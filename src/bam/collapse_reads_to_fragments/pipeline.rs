@@ -28,7 +28,7 @@ pub enum RecordID {
     Splitted(Vec<u8>),
 }
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum GroupID {
     Regular(i64),
     Splitted(i64),
@@ -75,39 +75,39 @@ impl CallConsensusRead {
                             //For right record save end position and duplicate group ID
 
                             let record_end_pos = record.cigar_cached().unwrap().end_pos() - 1;
-                            let typed_duplicate_id = match record_pair {
+                            let group_id = match record_pair {
                                 RecordStorage::PairedRecords { ref mut r_rec, .. } => {
+                                    let group_id = duplicate_id.integer();
                                     r_rec.get_or_insert(IndexedRecord {
-                                        rec: record.clone(),
+                                        rec: record,
                                         rec_id: i,
                                     });
-                                    GroupID::Regular(duplicate_id.integer())
+                                    GroupID::Regular(group_id)
                                 }
                                 // This arm is reached if a mate is mapped to another chromosome.
                                 // In that case a new duplicate and record ID is required
                                 RecordStorage::SingleRecord { .. } => {
-                                    let mut new_record_id = record_id.to_vec();
-                                    new_record_id.push(1);
+                                    let group_id = duplicate_id.integer();
                                     duplicate_groups
-                                        .entry(GroupID::Splitted(duplicate_id.integer()))
+                                        .entry(GroupID::Splitted(group_id))
                                         .or_insert_with(Vec::new)
                                         .push(RecordID::Splitted(record_id.to_owned()));
                                     record_storage.insert(
                                         RecordID::Splitted(record_id.to_owned()),
                                         RecordStorage::SingleRecord {
                                             rec: IndexedRecord {
-                                                rec: record.clone(),
+                                                rec: record,
                                                 rec_id: i,
                                             },
                                         },
                                     );
-                                    GroupID::Splitted(duplicate_id.integer())
+                                    GroupID::Splitted(group_id)
                                 }
                             };
                             group_end_idx
                                 .entry(record_end_pos)
                                 .or_insert_with(HashSet::new)
-                                .insert(typed_duplicate_id);
+                                .insert(group_id);
                         }
                         //Case: Left record or record w/o mate
                         None => {
@@ -234,7 +234,6 @@ pub fn calc_consensus_complete_groups(
     let spinner_style = indicatif::ProgressStyle::default_spinner()
         .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
         .template("{prefix:.bold.dim} {spinner} {wide_msg}");
-
     let group_ids: HashSet<GroupID> = group_end_idx
         .range(..end_pos.unwrap_or(&(group_end_idx.len() as i64)))
         .flat_map(|(_, group_ids)| group_ids.clone())

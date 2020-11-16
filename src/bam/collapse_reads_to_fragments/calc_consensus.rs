@@ -69,12 +69,15 @@ impl<'a> CalcOverlappingConsensus<'a> {
         consensus_rec.set_flags(4);
         (consensus_rec, consensus_lh)
     }
+
     fn recs1(&self) -> &[bam::Record] {
         self.recs1
     }
+
     fn recs2(&self) -> &[bam::Record] {
         self.recs2
     }
+
     fn overlap(&self) -> usize {
         self.overlap
     }

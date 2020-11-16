@@ -276,7 +276,7 @@ fn test_collapse_reads_to_fragments_from_bam() {
     assert!(
     Command::new("bash")
         .arg("-c")
-        .arg("target/debug/rbt collapse-reads-to-fragments bam --max-seq-dist 8 tests/overlapping_consensus_marked.bam /tmp/overlapping_consensus_marked.bam")
+        .arg("target/debug/rbt collapse-reads-to-fragments bam tests/overlapping_consensus_marked.bam /tmp/overlapping_consensus_marked.bam")
         .spawn().unwrap().wait().unwrap().success());
     compare_bam(
         "/tmp/overlapping_consensus_marked.bam",

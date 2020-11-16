@@ -10,7 +10,6 @@ use std::error::Error;
 pub fn call_consensus_reads_from_paths(
     bam_in: &str,
     bam_out: &str,
-    seq_dist: usize,
     verbose_read_names: bool,
 ) -> Result<(), Box<dyn Error>> {
     info!("Reading input files:\n    {}", bam_in);
@@ -21,6 +20,5 @@ pub fn call_consensus_reads_from_paths(
         &Header::from_template(bam_reader.header()),
         Format::BAM,
     )?;
-    CallConsensusRead::new(bam_reader, bam_writer, seq_dist, verbose_read_names)
-        .call_consensus_reads()
+    CallConsensusRead::new(bam_reader, bam_writer, verbose_read_names).call_consensus_reads()
 }

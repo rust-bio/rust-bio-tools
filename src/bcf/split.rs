@@ -106,11 +106,7 @@ impl BreakendGroup {
                             }
                         })
                         .flatten()
-                        .map(|mates| {
-                            BreakendGroup::Mates(
-                                mates.into_iter().map(|mateid| mateid.to_owned()).collect(),
-                            )
-                        }),
+                        .map(|mates| BreakendGroup::Mates(mates.into_iter().collect())),
                 );
             }
         }

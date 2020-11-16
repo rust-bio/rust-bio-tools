@@ -101,9 +101,9 @@ fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
     Ok(total_genes)
 }
 
-fn extract_genes<'a>(
-    rec: &'a mut bcf::Record,
-) -> Result<Option<impl Iterator<Item = String> + 'a>, Box<dyn Error>> {
+fn extract_genes(
+    rec: &mut bcf::Record,
+) -> Result<Option<impl Iterator<Item = String> + '_>, Box<dyn Error>> {
     let annotation = rec.info(b"ANN").string()?;
     match annotation {
         Some(transcripts) => Ok(Some(transcripts.into_iter().map(|transcript| {

@@ -71,6 +71,7 @@ pub fn oncoprint(
         }
 
         for res in bcf_reader.records() {
+            let mut gene_data_per_record = HashMap::new();
             let mut record = res?;
             let alleles = record
                 .alleles()
@@ -135,16 +136,21 @@ pub fn oncoprint(
                             .or_insert_with(|| Record::new(sample.to_owned(), gene.to_owned()));
 
                         // data for second stage
-                        let gene_entry = gene_data.entry(gene.to_owned()).or_insert_with(&Vec::new);
-                        gene_entry.push(SecondStageRecord {
-                            sample: rec.sample.clone(),
-                            alteration: if protein_alteration.is_empty() {
-                                dna_alteration.to_owned()
-                            } else {
-                                protein_alteration.to_owned()
+                        let gene_entry = gene_data_per_record
+                            .entry(gene.to_owned())
+                            .or_insert_with(&Vec::new);
+                        gene_entry.push((
+                            SecondStageRecord {
+                                sample: rec.sample.clone(),
+                                alteration: if protein_alteration.is_empty() {
+                                    dna_alteration.to_owned()
+                                } else {
+                                    protein_alteration.to_owned()
+                                },
+                                variant: variant.to_owned(),
                             },
-                            variant: variant.to_owned(),
-                        });
+                            canonical,
+                        ));
 
                         rec.variants.push(variant.to_owned());
 
@@ -217,6 +223,20 @@ pub fn oncoprint(
                             }
                         }
                     }
+                }
+            }
+            for (k, record_tuples) in &gene_data_per_record {
+                let rec = gene_data.entry(k.to_owned()).or_insert_with(&Vec::new);
+                let filter_cannonical = record_tuples
+                    .iter()
+                    .filter(|(_, cannonical)| *cannonical)
+                    .collect_vec();
+                match filter_cannonical.len() {
+                    0 => {
+                        rec.extend(record_tuples.iter().map(|(r, _)| r.clone()));
+                    }
+                    1 => rec.extend(filter_cannonical.iter().map(|(r, _)| r.clone())),
+                    _ => panic!("Found more than one variant annotated as cannonical!"),
                 }
             }
         }

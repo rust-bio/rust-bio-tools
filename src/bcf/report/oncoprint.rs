@@ -135,7 +135,7 @@ pub fn oncoprint(
                             .entry(gene.to_owned())
                             .or_insert_with(|| Record::new(sample.to_owned(), gene.to_owned()));
 
-                        // data for second stage
+                        // Data for second stage including whether the record is marked as canonical or not.
                         let gene_entry = gene_data_per_record
                             .entry(gene.to_owned())
                             .or_insert_with(&Vec::new);
@@ -225,18 +225,19 @@ pub fn oncoprint(
                     }
                 }
             }
+            // Filter records marked with canonical. Keep all if no one is marked.
             for (k, record_tuples) in &gene_data_per_record {
                 let rec = gene_data.entry(k.to_owned()).or_insert_with(&Vec::new);
-                let filter_cannonical = record_tuples
+                let filter_canonical = record_tuples
                     .iter()
-                    .filter(|(_, cannonical)| *cannonical)
+                    .filter(|(_, canonical)| *canonical)
                     .collect_vec();
-                match filter_cannonical.len() {
+                match filter_canonical.len() {
                     0 => {
                         rec.extend(record_tuples.iter().map(|(r, _)| r.clone()));
                     }
-                    1 => rec.extend(filter_cannonical.iter().map(|(r, _)| r.clone())),
-                    _ => panic!("Found more than one variant annotated as cannonical!"),
+                    1 => rec.extend(filter_canonical.iter().map(|(r, _)| r.clone())),
+                    _ => panic!("Found more than one variant annotated as canonical!"),
                 }
             }
         }

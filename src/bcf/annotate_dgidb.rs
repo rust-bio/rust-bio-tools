@@ -102,7 +102,7 @@ fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
 }
 
 fn extract_genes(
-    rec: & mut bcf::Record,
+    rec: &mut bcf::Record,
 ) -> Result<Option<impl Iterator<Item = String> + '_>, Box<dyn Error>> {
     let annotation = rec.info(b"ANN").string()?;
     match annotation {

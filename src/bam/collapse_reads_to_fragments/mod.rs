@@ -9,16 +9,29 @@ use std::error::Error;
 
 pub fn call_consensus_reads_from_paths(
     bam_in: &str,
-    bam_out: &str,
+    bam_unmapped_out: &str,
+    bam_mapped_out: &str,
     verbose_read_names: bool,
 ) -> Result<(), Box<dyn Error>> {
     info!("Reading input files:\n    {}", bam_in);
-    info!("Writing output to:\n    {}", bam_out);
+    info!("Writing consensus reads to:\n    {}", bam_unmapped_out);
+    info!("Writing mapped reads to:\n    {}", bam_mapped_out);
     let bam_reader = bam::Reader::from_path(bam_in)?;
-    let bam_writer = bam::Writer::from_path(
-        bam_out,
+    let bam_unmapped_writer = bam::Writer::from_path(
+        bam_unmapped_out,
         &Header::from_template(bam_reader.header()),
         Format::BAM,
     )?;
-    CallConsensusRead::new(bam_reader, bam_writer, verbose_read_names).call_consensus_reads()
+    let bam_mapped_writer = bam::Writer::from_path(
+        bam_mapped_out,
+        &Header::from_template(bam_reader.header()),
+        Format::BAM,
+    )?;
+    CallConsensusRead::new(
+        bam_reader,
+        bam_unmapped_writer,
+        bam_mapped_writer,
+        verbose_read_names,
+    )
+    .call_consensus_reads()
 }

@@ -11,7 +11,8 @@ use uuid::Uuid;
 #[derive(new)]
 pub struct CallConsensusRead {
     bam_reader: bam::Reader,
-    bam_writer: bam::Writer,
+    bam_unmapped_writer: bam::Writer,
+    bam_mapped_writer: bam::Writer,
     verbose_read_names: bool,
 }
 
@@ -46,12 +47,12 @@ impl CallConsensusRead {
                     &mut duplicate_groups,
                     Some(&record.pos()),
                     &mut record_storage,
-                    &mut self.bam_writer,
+                    &mut self.bam_unmapped_writer,
                     self.verbose_read_names,
                 )?;
                 group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
             } else {
-                self.bam_writer.write(&record)?;
+                self.bam_mapped_writer.write(&record)?;
                 continue;
             }
             if record.is_supplementary() {
@@ -150,7 +151,7 @@ impl CallConsensusRead {
                 None => {
                     if record.is_mate_unmapped() || (record.tid() != record.mtid()) {
                         //TODO Handle intersecting reads mapped on different chromosomes
-                        self.bam_writer.write(&record)?;
+                        self.bam_mapped_writer.write(&record)?;
                     } else {
                         match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
                             //Case: Left record
@@ -181,7 +182,7 @@ impl CallConsensusRead {
                                 if overlap > 0 {
                                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
-                                    self.bam_writer.write(
+                                    self.bam_unmapped_writer.write(
                                         &CalcOverlappingConsensus::new(
                                             &[l_rec],
                                             &[record],
@@ -194,8 +195,8 @@ impl CallConsensusRead {
                                         .0,
                                     )?;
                                 } else {
-                                    self.bam_writer.write(&l_rec)?;
-                                    self.bam_writer.write(&record)?;
+                                    self.bam_mapped_writer.write(&l_rec)?;
+                                    self.bam_mapped_writer.write(&record)?;
                                 }
                             }
                         }
@@ -209,7 +210,7 @@ impl CallConsensusRead {
             &mut duplicate_groups,
             None,
             &mut record_storage,
-            &mut self.bam_writer,
+            &mut self.bam_unmapped_writer,
             self.verbose_read_names,
         )?;
         Ok(())

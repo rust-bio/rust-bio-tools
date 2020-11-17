@@ -109,9 +109,11 @@ impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
         }
         lh
     }
+
     fn seqids(&self) -> &'a [usize] {
         self.seqids
     }
+
     fn uuid(&self) -> &'a str {
         self.uuid
     }

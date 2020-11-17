@@ -106,7 +106,7 @@ impl BreakendGroup {
                             }
                         })
                         .flatten()
-                        .map(|mates| BreakendGroup::Mates(mates)),
+                        .map(BreakendGroup::Mates),
                 );
             }
         }

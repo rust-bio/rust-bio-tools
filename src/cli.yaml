@@ -402,9 +402,9 @@ subcommands:
               - consensus-bam:
                   required: true
                   help: Output BAM file with unaligned consensus reads
-              - mapped-bam:
+              - skipped-bam:
                   required: true
-                  help: Output BAM file containg mapped records that do not need to be merged.
+                  help: Output BAM file containing mapped records that do not need to be merged.
               - verbose-read-names:
                   long: verbose-read-names
                   help: Add list of reads that were merged for each consensus read. Note that this can yield very long FASTQ name lines which cannot be handled by some tools.

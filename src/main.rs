@@ -187,7 +187,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                 bam::collapse_reads_to_fragments::call_consensus_reads_from_paths(
                     matches.value_of("bam").unwrap(),
                     matches.value_of("consensus-bam").unwrap(),
-                    matches.value_of("mapped-bam").unwrap(),
+                    matches.value_of("skipped-bam").unwrap(),
                     matches.is_present("verbose-read-names"),
                 )
             }

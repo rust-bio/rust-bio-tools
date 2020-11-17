@@ -12,7 +12,7 @@ use uuid::Uuid;
 pub struct CallConsensusRead {
     bam_reader: bam::Reader,
     bam_unmapped_writer: bam::Writer,
-    bam_mapped_writer: bam::Writer,
+    bam_skipped_writer: bam::Writer,
     verbose_read_names: bool,
 }
 
@@ -26,7 +26,7 @@ pub enum RecordID {
     Splitted(Vec<u8>),
 }
 
-#[derive(Hash, PartialEq, Eq, Clone, Debug)]
+#[derive(Hash, PartialEq, Eq, Clone)]
 pub enum GroupID {
     Regular(i64),
     Splitted(i64),
@@ -52,7 +52,7 @@ impl CallConsensusRead {
                 )?;
                 group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
             } else {
-                self.bam_mapped_writer.write(&record)?;
+                self.bam_skipped_writer.write(&record)?;
                 continue;
             }
             if record.is_supplementary() {
@@ -66,7 +66,7 @@ impl CallConsensusRead {
             match duplicate_id_option {
                 //Case: duplicate ID exists
                 Some(duplicate_id) => {
-                    match record_storage.get_mut(&RecordID::Regular(record_id.to_vec())) {
+                    match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
                         //Case: Right record
                         Some(record_pair) => {
                             //For right record save end position and duplicate group ID
@@ -151,7 +151,7 @@ impl CallConsensusRead {
                 None => {
                     if record.is_mate_unmapped() || (record.tid() != record.mtid()) {
                         //TODO Handle intersecting reads mapped on different chromosomes
-                        self.bam_mapped_writer.write(&record)?;
+                        self.bam_skipped_writer.write(&record)?;
                     } else {
                         match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
                             //Case: Left record
@@ -195,8 +195,8 @@ impl CallConsensusRead {
                                         .0,
                                     )?;
                                 } else {
-                                    self.bam_mapped_writer.write(&l_rec)?;
-                                    self.bam_mapped_writer.write(&record)?;
+                                    self.bam_skipped_writer.write(&l_rec)?;
+                                    self.bam_skipped_writer.write(&record)?;
                                 }
                             }
                         }

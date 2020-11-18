@@ -1,4 +1,5 @@
 use crate::common::CalcConsensus;
+use bio::io::fastq;
 use bio::stats::probs::LogProb;
 use derive_new::new;
 use itertools::Itertools;
@@ -17,7 +18,7 @@ pub struct CalcOverlappingConsensus<'a> {
 }
 
 impl<'a> CalcOverlappingConsensus<'a> {
-    pub fn calc_consensus(&self) -> (bam::Record, LogProb) {
+    pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
         let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
@@ -48,7 +49,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 &mut consensus_lh,
                 &mut consensus_seq,
                 &mut consensus_qual,
-                0.0,
+                33.0,
             );
         }
         let name = match self.verbose_read_names {
@@ -63,10 +64,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 self.seqids().len(),
             ),
         };
-        let mut consensus_rec = bam::Record::new();
-        consensus_rec.set(name.as_bytes(), None, &consensus_seq, &consensus_qual);
-        //Set flag to unmapped
-        consensus_rec.set_flags(4);
+        let consensus_rec = fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)
     }
 
@@ -124,11 +122,10 @@ pub struct CalcNonOverlappingConsensus<'a> {
     recs: &'a [bam::Record],
     seqids: &'a [usize],
     uuid: &'a str,
-    verbose_read_names: bool,
 }
 
 impl<'a> CalcNonOverlappingConsensus<'a> {
-    pub fn calc_consensus(&self) -> (bam::Record, LogProb) {
+    pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
         let seq_len = self.recs()[0].seq().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
@@ -163,25 +160,11 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 &mut consensus_lh,
                 &mut consensus_seq,
                 &mut consensus_qual,
-                0.0,
+                33.0,
             );
         }
-        let name = match self.verbose_read_names {
-            true => format!(
-                "{}_consensus-read-from:{}",
-                self.uuid(),
-                self.seqids().iter().map(|i| format!("{}", i)).join(",")
-            ),
-            false => format!(
-                "{}_consensus-read-from:{}_reads",
-                self.uuid(),
-                self.seqids().len(),
-            ),
-        };
-        let mut consensus_rec = bam::Record::new();
-        consensus_rec.set(name.as_bytes(), None, &consensus_seq, &consensus_qual);
-        //Set flag to unmapped
-        consensus_rec.set_flags(4);
+        let consensus_rec =
+            fastq::Record::with_attrs(&self.uuid(), None, &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)
     }
     pub fn recs(&self) -> &[bam::Record] {

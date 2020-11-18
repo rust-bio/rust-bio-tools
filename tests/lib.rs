@@ -276,11 +276,19 @@ fn test_collapse_reads_to_fragments_from_bam() {
     assert!(
     Command::new("bash")
         .arg("-c")
-        .arg("target/debug/rbt collapse-reads-to-fragments bam tests/overlapping_consensus_marked.bam /tmp/overlapping_consensus_marked.bam /tmp/overlapping_consensus_mapped.bam")
+        .arg("target/debug/rbt collapse-reads-to-fragments bam tests/overlapping_consensus_marked.bam /tmp/bam_consensus_r1.fq /tmp/bam_consensus_r2.fq /tmp/bam_consensus_se.fq /tmp/overlapping_consensus_mapped.bam")
         .spawn().unwrap().wait().unwrap().success());
-    compare_bam(
-        "/tmp/overlapping_consensus_marked.bam",
-        "tests/expected/overlapping_consensus_marked.bam",
+    compare_fastq(
+        "/tmp/bam_consensus_r1.fq",
+        "tests/expected/bam_consensus_r1.fq",
+    );
+    compare_fastq(
+        "/tmp/bam_consensus_r2.fq",
+        "tests/expected/bam_consensus_r2.fq",
+    );
+    compare_fastq(
+        "/tmp/bam_consensus_se.fq",
+        "tests/expected/bam_consensus_se.fq",
     );
     compare_bam(
         "/tmp/overlapping_consensus_mapped.bam",

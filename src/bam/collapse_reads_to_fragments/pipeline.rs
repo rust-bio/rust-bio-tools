@@ -244,8 +244,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                 &(group_end_idx
                     .iter()
                     .next_back()
-                    .unwrap_or((&0, &HashSet::new()))
-                    .0
+                    .map_or(0, |(entry, _)| *entry)
                     + 1),
             ),
         )

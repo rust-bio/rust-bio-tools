@@ -1,17 +1,21 @@
 use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
+use bio::io::fastq;
 use derive_new::new;
 use rust_htslib::bam;
 use rust_htslib::bam::record::Cigar;
 use rust_htslib::bam::Read;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::error::Error;
+use std::io;
 use std::ops::Deref;
 use uuid::Uuid;
 
 #[derive(new)]
-pub struct CallConsensusRead {
+pub struct CallConsensusRead<W: io::Write> {
     bam_reader: bam::Reader,
-    bam_unmapped_writer: bam::Writer,
+    fq1_writer: fastq::Writer<W>,
+    fq2_writer: fastq::Writer<W>,
+    fq_se_writer: fastq::Writer<W>,
     bam_skipped_writer: bam::Writer,
     verbose_read_names: bool,
 }
@@ -32,7 +36,7 @@ pub enum GroupID {
     Splitted(i64),
 }
 
-impl CallConsensusRead {
+impl<W: io::Write> CallConsensusRead<W> {
     pub fn call_consensus_reads(&mut self) -> Result<(), Box<dyn Error>> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
         let mut duplicate_groups: HashMap<GroupID, RecordIDs> = HashMap::new();
@@ -47,7 +51,9 @@ impl CallConsensusRead {
                     &mut duplicate_groups,
                     Some(&record.pos()),
                     &mut record_storage,
-                    &mut self.bam_unmapped_writer,
+                    &mut self.fq1_writer,
+                    &mut self.fq2_writer,
+                    &mut self.fq_se_writer,
                     self.verbose_read_names,
                 )?;
                 group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
@@ -149,7 +155,10 @@ impl CallConsensusRead {
                 //If record is right mate consensus is calculated
                 //Else record is added to hashMap
                 None => {
-                    if record.is_mate_unmapped() || (record.tid() != record.mtid()) {
+                    if record.is_unmapped()
+                        || record.is_mate_unmapped()
+                        || (record.tid() != record.mtid())
+                    {
                         //TODO Handle intersecting reads mapped on different chromosomes
                         self.bam_skipped_writer.write(&record)?;
                     } else {
@@ -182,7 +191,7 @@ impl CallConsensusRead {
                                 if overlap > 0 {
                                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
-                                    self.bam_unmapped_writer.write(
+                                    self.fq_se_writer.write_record(
                                         &CalcOverlappingConsensus::new(
                                             &[l_rec],
                                             &[record],
@@ -210,23 +219,35 @@ impl CallConsensusRead {
             &mut duplicate_groups,
             None,
             &mut record_storage,
-            &mut self.bam_unmapped_writer,
+            &mut self.fq1_writer,
+            &mut self.fq2_writer,
+            &mut self.fq_se_writer,
             self.verbose_read_names,
         )?;
         Ok(())
     }
 }
 
-pub fn calc_consensus_complete_groups(
+pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
     duplicate_groups: &mut HashMap<GroupID, RecordIDs>,
     end_pos: Option<&i64>,
     record_storage: &mut HashMap<RecordID, RecordStorage>,
-    bam_writer: &mut bam::Writer,
+    fq1_writer: &'a mut fastq::Writer<W>,
+    fq2_writer: &'a mut fastq::Writer<W>,
+    fq_se_writer: &'a mut fastq::Writer<W>,
     verbose_read_names: bool,
 ) -> Result<(), Box<dyn Error>> {
     let group_ids: HashSet<GroupID> = group_end_idx
-        .range(..end_pos.unwrap_or(&(group_end_idx.len() as i64)))
+        .range(
+            ..end_pos.unwrap_or(
+                &(group_end_idx
+                    .iter()
+                    .next_back()
+                    .map_or(0, |(entry, _)| *entry)
+                    + 1),
+            ),
+        )
         .flat_map(|(_, group_ids)| group_ids.clone())
         .collect();
     for group_id in group_ids {
@@ -252,7 +273,7 @@ pub fn calc_consensus_complete_groups(
             if overlap > 0 {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                 l_seqids.append(&mut r_seqids);
-                bam_writer.write(
+                fq_se_writer.write_record(
                     &CalcOverlappingConsensus::new(
                         &l_recs,
                         &r_recs,
@@ -266,27 +287,21 @@ pub fn calc_consensus_complete_groups(
                 )?;
             } else {
                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                bam_writer.write(
-                    &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid, verbose_read_names)
+                fq1_writer.write_record(
+                    &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
                         .calc_consensus()
                         .0,
                 )?;
-                let r_uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                bam_writer.write(
-                    &CalcNonOverlappingConsensus::new(
-                        &r_recs,
-                        &r_seqids,
-                        r_uuid,
-                        verbose_read_names,
-                    )
-                    .calc_consensus()
-                    .0,
+                fq2_writer.write_record(
+                    &CalcNonOverlappingConsensus::new(&r_recs, &r_seqids, uuid)
+                        .calc_consensus()
+                        .0,
                 )?;
             }
         } else {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-            bam_writer.write(
-                &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid, verbose_read_names)
+            fq_se_writer.write_record(
+                &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
                     .calc_consensus()
                     .0,
             )?;

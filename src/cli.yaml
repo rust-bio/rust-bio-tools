@@ -399,9 +399,15 @@ subcommands:
               - bam:
                   required: true
                   help: Input BAM file with marked duplicates
-              - consensus-bam:
+              - consensus-fq1:
                   required: true
-                  help: Output BAM file with unaligned consensus reads
+                  help: Output FASTQ file with forward reads.
+              - consensus-fq2:
+                  required: true
+                  help: Output FASTQ file with reverse reads.
+              - consensus-fq-se:
+                  required: true
+                  help: Output FASTQ file for overlapping consensus reads.
               - skipped-bam:
                   required: true
                   help: Output BAM file containing mapped records that do not need to be merged.

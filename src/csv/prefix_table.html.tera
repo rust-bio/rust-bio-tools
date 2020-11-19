@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>rbt csv-report</title>
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap-table.min.css">
+</head>
+
+<body>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/bootstrap-table.min.js"></script>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-9">
+            <table class="table table-hover" data-toggle="table" data-height="510" data-search="true" style="width: 100%; position: center">
+                <thead>
+                <tr>
+                    <th>prefix</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for prefix, v in table %}
+                <tr>
+                    <td><a href="{{ title }}/{{ prefix }}.html" style="display: table-cell">{{ prefix }}</a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

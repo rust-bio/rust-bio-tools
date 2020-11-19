@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use derive_new::new;
+use itertools::Itertools;
 use serde_derive::Serialize;
 use serde_json::json;
 use simple_excel_writer::*;
@@ -75,7 +76,6 @@ pub(crate) fn csv_report(
             }
             _ => unreachable!(),
         };
-
     }
 
     match (sort_column, ascending) {
@@ -145,14 +145,17 @@ pub(crate) fn csv_report(
         let mut context = Context::new();
         match is_numeric.get(title) {
             Some(true) => {
-                context.insert("table", &json!(num_plot_data.get(title).unwrap()).to_string());
+                context.insert(
+                    "table",
+                    &json!(num_plot_data.get(title).unwrap()).to_string(),
+                );
                 context.insert("num", &true);
             }
             Some(false) => {
                 context.insert("table", &json!(plot_data.get(title).unwrap()).to_string());
                 context.insert("num", &false);
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
         context.insert("title", &title);
         let js = templates.render("plot.js.tera", &context)?;
@@ -170,13 +173,59 @@ pub(crate) fn csv_report(
         )
     });
 
-    for i in 0..pages + 1 {
-        let current_table = if i != pages {
-            &table[(i * rows_per_page)..((i + 1) * rows_per_page)] // get genes for current page
-        } else {
-            &table[(i * rows_per_page)..] // get genes for last page
-        };
+    let prefixes = make_prefixes(table.clone(), titles.clone(), rows_per_page);
 
+    let prefix_path = output_path.to_owned() + "/prefixes/";
+    fs::create_dir(Path::new(&prefix_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for report files at location: {:?}",
+            prefix_path
+        )
+    });
+
+    for title in &titles {
+        if let Some(prefix_table) = prefixes.get(title.to_owned()) {
+            let mut templates = Tera::default();
+            templates.add_raw_template(
+                "prefix_table.html.tera",
+                include_str!("prefix_table.html.tera"),
+            )?;
+            let mut context = Context::new();
+            context.insert("title", title);
+            context.insert("table", prefix_table);
+            let html = templates.render("prefix_table.html.tera", &context)?;
+
+            let file_path = output_path.to_owned() + "/prefixes/" + title + ".html";
+            let mut file = File::create(file_path)?;
+            file.write_all(html.as_bytes())?;
+
+            let title_path = prefix_path.to_owned() + "/" + title + "/";
+            fs::create_dir(Path::new(&title_path)).unwrap_or_else(|_| {
+                panic!(
+                    "Could not create directory for report files at location: {:?}",
+                    title_path
+                )
+            });
+
+            for (prefix, values) in prefix_table {
+                let mut templates = Tera::default();
+                templates.add_raw_template(
+                    "lookup_table.html.tera",
+                    include_str!("lookup_table.html.tera"),
+                )?;
+                let mut context = Context::new();
+                context.insert("title", title);
+                context.insert("values", values);
+                let html = templates.render("lookup_table.html.tera", &context)?;
+
+                let file_path = title_path.to_owned() + prefix + ".html";
+                let mut file = File::create(file_path)?;
+                file.write_all(html.as_bytes())?;
+            }
+        }
+    }
+
+    for (i, current_table) in table.chunks(rows_per_page).enumerate() {
         let page = i + 1;
 
         let mut templates = Tera::default();
@@ -229,13 +278,20 @@ fn num_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<BinnedPl
         }
     }
     if nan > 0 {
-        bin_borders.insert(String::from("bin") + &bins.to_string(), (f32::NAN,f32::NAN));
+        bin_borders.insert(
+            String::from("bin") + &bins.to_string(),
+            (f32::NAN, f32::NAN),
+        );
         binned_data.insert(String::from("bin") + &bins.to_string(), nan);
     }
     let mut plot_data = Vec::new();
     for (name, v) in binned_data {
         let (lower_bound, upper_bound) = bin_borders.get(&name).unwrap();
-        let plot_record = BinnedPlotRecord { bin_start: *lower_bound, value: v, bin_end: *upper_bound };
+        let plot_record = BinnedPlotRecord {
+            bin_start: *lower_bound,
+            value: v,
+            bin_end: *upper_bound,
+        };
         plot_data.push(plot_record);
     }
     plot_data
@@ -265,6 +321,34 @@ fn nominal_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<Plot
     }
 
     plot_data
+}
+
+fn make_prefixes(
+    table: Vec<HashMap<String, String>>,
+    titles: Vec<&str>,
+    rows_per_page: usize,
+) -> HashMap<String, HashMap<String, Vec<(String, usize)>>> {
+    let mut title_map = HashMap::new();
+    for (i, partial_table) in table.chunks(rows_per_page).enumerate() {
+        let page = i + 1;
+        let prefix_len = 3;
+        for row in partial_table {
+            for key in &titles {
+                let value = &row[key.to_owned()];
+                let entry = value.split_whitespace().take(1).collect_vec()[0];
+                if entry.len() >= prefix_len {
+                    let prefix = entry.chars().take(prefix_len).collect::<String>();
+                    let prefix_map = title_map
+                        .entry(key.to_string())
+                        .or_insert_with(HashMap::new);
+                    let values = prefix_map.entry(prefix).or_insert_with(Vec::new);
+                    values.push((value.to_owned(), page));
+                }
+            }
+        }
+        // write stuff to output map with page like so: HashMap<column_title, HashMap<prefix, Vec<(value, page)>>>
+    }
+    title_map
 }
 
 #[derive(new, Serialize, Debug, Clone)]

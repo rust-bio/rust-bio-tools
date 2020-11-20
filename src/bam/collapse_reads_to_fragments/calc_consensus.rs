@@ -1,9 +1,11 @@
 use crate::common::CalcConsensus;
 use bio::io::fastq;
 use bio::stats::probs::LogProb;
+use bio_types::sequence::SequenceRead;
 use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
+use std::collections::HashSet;
 
 const ALLELES: &[u8] = b"ACGT";
 
@@ -22,7 +24,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
-
+        let mut consensus_strand = b"S:Z:".to_vec();
         // assert that all reads have the same length here
         assert_eq!(
             Self::validate_read_lengths(self.recs1()),
@@ -51,6 +53,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 &mut consensus_qual,
                 33.0,
             );
+            self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
         let name = match self.verbose_read_names {
             true => format!(
@@ -64,7 +67,12 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 self.seqids().len(),
             ),
         };
-        let consensus_rec = fastq::Record::with_attrs(&name, None, &consensus_seq, &consensus_qual);
+        let consensus_rec = fastq::Record::with_attrs(
+            &name,
+            Some(&String::from_utf8(consensus_strand).unwrap()),
+            &consensus_seq,
+            &consensus_qual,
+        );
         (consensus_rec, consensus_lh)
     }
 
@@ -78,6 +86,41 @@ impl<'a> CalcOverlappingConsensus<'a> {
 
     fn overlap(&self) -> usize {
         self.overlap
+    }
+    fn build_consensus_strand(
+        &self,
+        consensus_strand: &mut Vec<u8>,
+        ref_base: u8,
+        base_pos: usize,
+    ) {
+        let mut strands = HashSet::new();
+        let fwd_end_pos = self.recs1()[0].len();
+        let rev_start_pos = fwd_end_pos - self.overlap();
+        if base_pos < fwd_end_pos {
+            self.recs1().iter().for_each(|rec| {
+                if rec.base(base_pos) == ref_base {
+                    match rec.is_reverse() {
+                        true => strands.insert('-' as u8),
+                        false => strands.insert('+' as u8),
+                    };
+                }
+            });
+        }
+        if base_pos >= rev_start_pos {
+            let rev_base_pos = base_pos - rev_start_pos;
+            self.recs2().iter().for_each(|rec| {
+                if rec.base(rev_base_pos) == ref_base {
+                    match rec.is_reverse() {
+                        true => strands.insert('-' as u8),
+                        false => strands.insert('+' as u8),
+                    };
+                }
+            });
+        }
+        match strands.len() == 1 {
+            true => consensus_strand.push(strands.take(&('-' as u8)).unwrap_or('+' as u8)),
+            false => consensus_strand.push('*' as u8),
+        }
     }
 }
 
@@ -129,7 +172,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         let seq_len = self.recs()[0].seq().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
-
+        let mut consensus_strand = b"S:Z:".to_vec();
         // assert that all reads have the same length here
         assert_eq!(
             Self::validate_read_lengths(self.recs()),
@@ -162,13 +205,38 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 &mut consensus_qual,
                 33.0,
             );
+            self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
-        let consensus_rec =
-            fastq::Record::with_attrs(&self.uuid(), None, &consensus_seq, &consensus_qual);
+        let consensus_rec = fastq::Record::with_attrs(
+            &self.uuid(),
+            Some(&String::from_utf8(consensus_strand).unwrap()),
+            &consensus_seq,
+            &consensus_qual,
+        );
         (consensus_rec, consensus_lh)
     }
     pub fn recs(&self) -> &[bam::Record] {
         self.recs
+    }
+    fn build_consensus_strand(
+        &self,
+        consensus_strand: &mut Vec<u8>,
+        ref_base: u8,
+        current_pos: usize,
+    ) {
+        let mut strands = HashSet::new();
+        self.recs().iter().for_each(|rec| {
+            if rec.base(current_pos) == ref_base {
+                match rec.is_reverse() {
+                    true => strands.insert('-' as u8),
+                    false => strands.insert('+' as u8),
+                };
+            }
+        });
+        match strands.len() == 1 {
+            true => consensus_strand.push(strands.take(&('-' as u8)).unwrap_or('+' as u8)),
+            false => consensus_strand.push('*' as u8),
+        }
     }
 }
 

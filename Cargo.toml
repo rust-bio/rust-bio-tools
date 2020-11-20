@@ -47,6 +47,10 @@ lazy_static = "1.4"
 anyhow = "1"
 thiserror = "1"
 
+[build-dependencies.cc]
+version = "=1.0.61"
+features = ["parallel"]
+
 [[bin]]
 name = "rbt"
 path = "src/main.rs"

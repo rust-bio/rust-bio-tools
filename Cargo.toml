@@ -47,6 +47,7 @@ lazy_static = "1.4"
 anyhow = "1"
 thiserror = "1"
 
+# TODO: Fix https://github.com/rust-rocksdb/rust-rocksdb/issues/479
 [build-dependencies.cc]
 version = "=1.0.61"
 features = ["parallel"]

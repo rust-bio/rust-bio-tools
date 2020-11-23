@@ -229,12 +229,12 @@ fn test_collapse_reads_to_fragments_two_cluster() {
     compare_fastq(
         "/tmp/test-consensus.1.fastq",
         "tests/expected/test-consensus.1.fastq",
-        false
+        false,
     );
     compare_fastq(
         "/tmp/test-consensus.2.fastq",
         "tests/expected/test-consensus.2.fastq",
-        false
+        false,
     );
 }
 
@@ -248,12 +248,12 @@ fn test_collapse_reads_to_fragments_single_cluster() {
     compare_fastq(
         "/tmp/test-consensus_single.1.fastq",
         "tests/expected/test-consensus_single.1.fastq",
-        false
+        false,
     );
     compare_fastq(
         "/tmp/test-consensus_single.2.fastq",
         "tests/expected/test-consensus_single.2.fastq",
-        false
+        false,
     );
 }
 
@@ -267,17 +267,17 @@ fn test_collapse_reads_to_fragments_reads() {
     compare_fastq(
         "/tmp/test_overlapping-consensus.1.fastq",
         "tests/expected/test_overlapping-consensus.1.fastq",
-        false
+        false,
     );
     compare_fastq(
         "/tmp/test_overlapping-consensus.2.fastq",
         "tests/expected/test_overlapping-consensus.2.fastq",
-        false
+        false,
     );
     compare_fastq(
         "/tmp/test_overlapping-consensus.3.fastq",
         "tests/expected/test_overlapping-consensus.3.fastq",
-        false
+        false,
     );
 }
 
@@ -291,17 +291,17 @@ fn test_collapse_reads_to_fragments_from_bam() {
     compare_fastq(
         "/tmp/bam_consensus_r1.fq",
         "tests/expected/bam_consensus_r1.fq",
-        true
+        true,
     );
     compare_fastq(
         "/tmp/bam_consensus_r2.fq",
         "tests/expected/bam_consensus_r2.fq",
-        true
+        true,
     );
     compare_fastq(
         "/tmp/bam_consensus_se.fq",
         "tests/expected/bam_consensus_se.fq",
-        true
+        true,
     );
     compare_bam(
         "/tmp/overlapping_consensus_mapped.bam",

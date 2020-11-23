@@ -53,7 +53,6 @@ pub fn calculate_baf() -> Result<(), Box<dyn Error>> {
                 };
             }
         }
-        // TODO: Fix baf test
         writer.translate(&mut record);
         record.push_format_float(b"BAF", &bafs)?;
         writer.write(&record)?;

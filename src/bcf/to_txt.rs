@@ -109,9 +109,9 @@ pub fn to_txt(
     let mut rec = reader.empty_record();
     loop {
         match reader.read(&mut rec) {
-            Ok(true) => (),
-            Ok(false) => break,
-            Err(e) => return Err(Box::new(e)),
+            Some(Ok(())) => (),
+            None => break,
+            Some(Err(e)) => return Err(Box::new(e)),
         };
         let alleles = rec
             .alleles()

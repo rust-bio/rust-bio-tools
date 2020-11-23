@@ -72,7 +72,7 @@ pub fn oncoprint(
 
         for res in bcf_reader.records() {
             let mut gene_data_per_record = HashMap::new();
-            let mut record = res?;
+            let record = res?;
             let alleles = record
                 .alleles()
                 .into_iter()
@@ -107,7 +107,7 @@ pub fn oncoprint(
                         "Complex"
                     };
 
-                    for entry in &ann {
+                    for entry in ann.iter() {
                         let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
                         let alt = &fields[0];
                         if alt != &alt_allele.as_slice() {

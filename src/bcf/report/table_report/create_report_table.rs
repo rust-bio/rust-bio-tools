@@ -1,6 +1,7 @@
 use crate::bcf::report::table_report::fasta_reader::{get_fasta_length, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
 use chrono::{DateTime, Local};
+use itertools::Itertools;
 use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::header::{HeaderView, TagType};
 use rust_htslib::bcf::{HeaderRecord, Read, Record};
@@ -130,7 +131,7 @@ pub(crate) fn make_table_report(
                 match tag_type {
                     TagType::String => {
                         let values = variant.format(tag.as_bytes()).string()?;
-                        for (i, v) in values.into_iter().enumerate() {
+                        for (i, v) in values.clone().into_iter().enumerate() {
                             let value = String::from_utf8(v.to_owned())?;
                             let entry = format_map
                                 .entry(tag.to_owned())
@@ -177,15 +178,15 @@ pub(crate) fn make_table_report(
         let mut genes = Vec::new();
 
         if let Some(ann) = variant.info(b"ANN").string()? {
-            for entry in ann {
-                let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
+            for entry in ann.iter() {
+                let fields = entry.split(|c| *c == b'|').collect_vec();
 
                 let gene = std::str::from_utf8(
                     fields[*ann_indices.get(&String::from("SYMBOL")).expect(
                         "No field named SYMBOL found. Please only use VEP-annotated VCF-files.",
                     )],
                 )?;
-                genes.push(gene);
+                genes.push(gene.to_owned());
 
                 let mut ann_strings = Vec::new();
                 for f in fields {
@@ -347,11 +348,11 @@ pub(crate) fn make_table_report(
             }
         }
         for gene in genes {
-            if last_gene_index.get(gene).unwrap() <= &(record_index as u32) {
+            if last_gene_index.get(&gene).unwrap() <= &(record_index as u32) {
                 let detail_path = output_path.to_owned() + "/details/" + &sample;
                 let local: DateTime<Local> = Local::now();
 
-                let report_data = reports.remove(gene).unwrap();
+                let report_data = reports.remove(&gene).unwrap();
                 let mut templates = Tera::default();
                 templates
                     .add_raw_template(
@@ -371,7 +372,7 @@ pub(crate) fn make_table_report(
                 let html = templates
                     .render("table_report.html.tera", &context)
                     .unwrap();
-                let filepath = detail_path.clone() + "/" + gene + ".html";
+                let filepath = detail_path.clone() + "/" + &gene + ".html";
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
             }
@@ -413,22 +414,22 @@ fn read_tag_entries(
     match tag_type {
         TagType::String => {
             let values = variant.info(tag.as_bytes()).string()?.unwrap();
-            for v in values {
-                let value = String::from_utf8(v.to_owned())?;
+            for v in values.iter() {
+                let value = String::from_utf8(Vec::from(v.to_owned()))?;
                 let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
                 entry.push(json!(value));
             }
         }
         TagType::Float => {
-            let values = variant.info(tag.as_bytes()).float()?;
-            for v in values.unwrap() {
+            let values = variant.info(tag.as_bytes()).float()?.unwrap();
+            for v in values.iter() {
                 let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
                 entry.push(json!(v));
             }
         }
         TagType::Integer => {
-            let values = variant.info(tag.as_bytes()).integer()?;
-            for v in values.unwrap() {
+            let values = variant.info(tag.as_bytes()).integer()?.unwrap();
+            for v in values.iter() {
                 let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
                 entry.push(json!(v));
             }
@@ -521,9 +522,9 @@ fn get_gene_ending(
     let mut endings = HashMap::new();
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     for (record_index, v) in vcf.records().enumerate() {
-        let mut variant = v.unwrap();
+        let variant = v.unwrap();
         if let Some(ann) = variant.info(b"ANN").string()? {
-            for entry in ann {
+            for entry in ann.iter() {
                 let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
                 let gene = std::str::from_utf8(fields[symbol_index])?;
                 endings.insert(gene.to_owned(), record_index as u32);

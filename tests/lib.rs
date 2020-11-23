@@ -20,7 +20,7 @@ fn test_output(result: &str, expected: &str) {
 /// Compare two fastq files, ignoring the name lines
 /// Reads are sorted by their sequence, which is not 100% robust
 /// if mutations/ sequencing errors are considered.
-fn compare_fastq(result: &str, expected: &str) {
+fn compare_fastq(result: &str, expected: &str, strand: bool) {
     let result_reader = fastq::Reader::from_file(result).unwrap();
     let mut result_recs: Vec<fastq::Record> =
         result_reader.records().filter_map(Result::ok).collect();
@@ -33,6 +33,9 @@ fn compare_fastq(result: &str, expected: &str) {
     for (result, expected) in result_recs.iter().zip(expected_recs.iter()) {
         assert_eq!(result.seq(), expected.seq());
         assert_eq!(result.qual(), expected.qual());
+        if strand {
+            assert_eq!(result.desc(), expected.desc())
+        }
     }
 }
 
@@ -226,10 +229,12 @@ fn test_collapse_reads_to_fragments_two_cluster() {
     compare_fastq(
         "/tmp/test-consensus.1.fastq",
         "tests/expected/test-consensus.1.fastq",
+        false
     );
     compare_fastq(
         "/tmp/test-consensus.2.fastq",
         "tests/expected/test-consensus.2.fastq",
+        false
     );
 }
 
@@ -243,10 +248,12 @@ fn test_collapse_reads_to_fragments_single_cluster() {
     compare_fastq(
         "/tmp/test-consensus_single.1.fastq",
         "tests/expected/test-consensus_single.1.fastq",
+        false
     );
     compare_fastq(
         "/tmp/test-consensus_single.2.fastq",
         "tests/expected/test-consensus_single.2.fastq",
+        false
     );
 }
 
@@ -260,14 +267,17 @@ fn test_collapse_reads_to_fragments_reads() {
     compare_fastq(
         "/tmp/test_overlapping-consensus.1.fastq",
         "tests/expected/test_overlapping-consensus.1.fastq",
+        false
     );
     compare_fastq(
         "/tmp/test_overlapping-consensus.2.fastq",
         "tests/expected/test_overlapping-consensus.2.fastq",
+        false
     );
     compare_fastq(
         "/tmp/test_overlapping-consensus.3.fastq",
         "tests/expected/test_overlapping-consensus.3.fastq",
+        false
     );
 }
 
@@ -281,14 +291,17 @@ fn test_collapse_reads_to_fragments_from_bam() {
     compare_fastq(
         "/tmp/bam_consensus_r1.fq",
         "tests/expected/bam_consensus_r1.fq",
+        true
     );
     compare_fastq(
         "/tmp/bam_consensus_r2.fq",
         "tests/expected/bam_consensus_r2.fq",
+        true
     );
     compare_fastq(
         "/tmp/bam_consensus_se.fq",
         "tests/expected/bam_consensus_se.fq",
+        true
     );
     compare_bam(
         "/tmp/overlapping_consensus_mapped.bam",

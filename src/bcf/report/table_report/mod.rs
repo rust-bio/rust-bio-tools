@@ -5,7 +5,6 @@ mod static_reader;
 
 use crate::bcf::report::table_report::create_report_table::make_table_report;
 use clap::Values;
-use itertools::__std_iter::FromIterator;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
@@ -31,14 +30,14 @@ pub fn table_report(
     });
 
     let info_strings = if let Some(value) = info {
-        let strings = Vec::from_iter(value);
+        let strings: Vec<_> = value.collect();
         Some(strings)
     } else {
         None
     };
 
     let format_strings = if let Some(value) = format {
-        let strings = Vec::from_iter(value);
+        let strings: Vec<_> = value.collect();
         Some(strings)
     } else {
         None

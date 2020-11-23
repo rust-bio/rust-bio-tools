@@ -100,8 +100,8 @@ impl<'a> CalcOverlappingConsensus<'a> {
             self.recs1().iter().for_each(|rec| {
                 if rec.base(base_pos) == ref_base {
                     match rec.is_reverse() {
-                        true => strands.insert('-' as u8),
-                        false => strands.insert('+' as u8),
+                        true => strands.insert(b'-'),
+                        false => strands.insert(b'+'),
                     };
                 }
             });
@@ -111,15 +111,15 @@ impl<'a> CalcOverlappingConsensus<'a> {
             self.recs2().iter().for_each(|rec| {
                 if rec.base(rev_base_pos) == ref_base {
                     match rec.is_reverse() {
-                        true => strands.insert('-' as u8),
-                        false => strands.insert('+' as u8),
+                        true => strands.insert(b'-'),
+                        false => strands.insert(b'+'),
                     };
                 }
             });
         }
         match strands.len() == 1 {
-            true => consensus_strand.push(strands.take(&('-' as u8)).unwrap_or('+' as u8)),
-            false => consensus_strand.push('*' as u8),
+            true => consensus_strand.push(strands.take(&(b'-')).unwrap_or(b'+')),
+            false => consensus_strand.push(b'*'),
         }
     }
 }
@@ -228,14 +228,14 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         self.recs().iter().for_each(|rec| {
             if rec.base(current_pos) == ref_base {
                 match rec.is_reverse() {
-                    true => strands.insert('-' as u8),
-                    false => strands.insert('+' as u8),
+                    true => strands.insert(b'-'),
+                    false => strands.insert(b'+'),
                 };
             }
         });
         match strands.len() == 1 {
-            true => consensus_strand.push(strands.take(&('-' as u8)).unwrap_or('+' as u8)),
-            false => consensus_strand.push('*' as u8),
+            true => consensus_strand.push(strands.take(&(b'-')).unwrap_or(b'+')),
+            false => consensus_strand.push(b'*'),
         }
     }
 }

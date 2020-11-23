@@ -106,7 +106,7 @@ fn extract_genes(
 ) -> Result<Option<impl Iterator<Item = String> + '_>, Box<dyn Error>> {
     let annotation = rec.info(b"ANN").string()?;
     match annotation {
-        Some(transcripts) => Ok(Some(transcripts.into_iter().map(|transcript| {
+        Some(transcripts) => Ok(Some(transcripts.clone().into_iter().map(|transcript| {
             str::from_utf8(transcript.split(|c| *c == b'|').nth(3).unwrap())
                 .unwrap()
                 .to_owned()

@@ -228,6 +228,7 @@ impl<W: io::Write> CallConsensusRead<W> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
     duplicate_groups: &mut HashMap<GroupID, RecordIDs>,

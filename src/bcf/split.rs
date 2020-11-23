@@ -32,7 +32,7 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
             let mut rec = reader.empty_record();
             let read_err = || format!("error reading {}-th record of input VCF/BCF", i + 1);
 
-            if !reader.read(&mut rec).with_context(read_err)? {
+            if reader.read(&mut rec).is_none() {
                 // EOF
                 break;
             }
@@ -209,5 +209,8 @@ fn event(record: &mut bcf::Record) -> Option<Vec<u8>> {
 }
 
 fn mateids(record: &mut bcf::Record) -> Option<Vec<&[u8]>> {
-    record.info(b"MATEID").string().unwrap_or(None)
+    match record.info(b"MATEID").string() {
+        Ok(Some(s)) => Some(s.clone().into_iter().collect_vec()),
+        _ => None,
+    }
 }

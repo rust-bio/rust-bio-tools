@@ -16,7 +16,6 @@ use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::{self, Read};
 use serde_json::{json, Value};
 use std::fs::File;
-use std::iter::FromIterator;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -155,7 +154,7 @@ pub fn oncoprint(
                         rec.variants.push(variant.to_owned());
 
                         let imp_rec = impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
-                        if impact == "" {
+                        if impact.is_empty() {
                             impact = "unknown";
                         }
                         imp_rec.push(BarPlotRecord::new(gene.to_owned(), impact.to_owned()));
@@ -178,7 +177,7 @@ pub fn oncoprint(
                             .or_insert_with(Vec::new);
 
                         for mut c in split_consequences {
-                            if c == "" {
+                            if c.is_empty() {
                                 c = "unknown";
                             }
                             cons_rec.push(BarPlotRecord::new(gene.to_owned(), c.to_owned()));
@@ -192,7 +191,7 @@ pub fn oncoprint(
                         let clin_rec = clin_sigs.entry(gene.to_owned()).or_insert_with(Vec::new);
                         let sigs: Vec<_> = clin_sig.split('&').collect();
                         for mut s in sigs {
-                            if s == "" {
+                            if s.is_empty() {
                                 s = "unknown";
                             }
                             s = s.trim_matches('_');
@@ -745,7 +744,7 @@ fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TSVRecord>>,
         .from_path(tsv_path)?;
 
     let header = rdr.headers()?.clone();
-    let titles = Vec::from_iter(header.iter().skip(1));
+    let titles: Vec<_> = header.iter().skip(1).collect();
     for res in rdr.records() {
         let row = res?;
         let sample = row[0].to_owned();

@@ -5,9 +5,27 @@ use bio_types::sequence::SequenceRead;
 use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
-use std::collections::HashSet;
+use std::ops::BitOrAssign;
 
 const ALLELES: &[u8] = b"ACGT";
+
+#[derive(Eq, PartialEq)]
+enum StrandObservation {
+    None,
+    Forward,
+    Reverse,
+    Both,
+}
+
+impl BitOrAssign for StrandObservation {
+    fn bitor_assign(&mut self, rhs: Self) {
+        if let StrandObservation::None = self {
+            *self = rhs;
+        } else if *self != rhs {
+            *self = StrandObservation::Both;
+        }
+    }
+}
 
 #[derive(new)]
 pub struct CalcOverlappingConsensus<'a> {
@@ -93,33 +111,35 @@ impl<'a> CalcOverlappingConsensus<'a> {
         ref_base: u8,
         base_pos: usize,
     ) {
-        let mut strands = HashSet::new();
-        let fwd_end_pos = self.recs1()[0].len();
-        let rev_start_pos = fwd_end_pos - self.overlap();
-        if base_pos < fwd_end_pos {
+        let mut strand = StrandObservation::None;
+        let first_end_pos = self.recs1()[0].len();
+        let second_start_pos = first_end_pos - self.overlap();
+        if base_pos < first_end_pos {
             self.recs1().iter().for_each(|rec| {
                 if rec.base(base_pos) == ref_base {
                     match rec.is_reverse() {
-                        true => strands.insert(b'-'),
-                        false => strands.insert(b'+'),
+                        true => strand |= StrandObservation::Reverse,
+                        false => strand |= StrandObservation::Forward,
                     };
                 }
             });
         }
-        if base_pos >= rev_start_pos {
-            let rev_base_pos = base_pos - rev_start_pos;
+        if base_pos >= second_start_pos {
+            let second_base_pos = base_pos - second_start_pos;
             self.recs2().iter().for_each(|rec| {
-                if rec.base(rev_base_pos) == ref_base {
+                if rec.base(second_base_pos) == ref_base {
                     match rec.is_reverse() {
-                        true => strands.insert(b'-'),
-                        false => strands.insert(b'+'),
+                        true => strand |= StrandObservation::Reverse,
+                        false => strand |= StrandObservation::Forward,
                     };
                 }
             });
         }
-        match strands.len() == 1 {
-            true => consensus_strand.push(strands.take(&(b'-')).unwrap_or(b'+')),
-            false => consensus_strand.push(b'*'),
+        match strand {
+            StrandObservation::Forward => consensus_strand.push(b'+'),
+            StrandObservation::Reverse => consensus_strand.push(b'-'),
+            StrandObservation::Both => consensus_strand.push(b'*'),
+            StrandObservation::None => unreachable!(),
         }
     }
 }
@@ -224,18 +244,20 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         ref_base: u8,
         current_pos: usize,
     ) {
-        let mut strands = HashSet::new();
+        let mut strand = StrandObservation::None;
         self.recs().iter().for_each(|rec| {
             if rec.base(current_pos) == ref_base {
                 match rec.is_reverse() {
-                    true => strands.insert(b'-'),
-                    false => strands.insert(b'+'),
+                    true => strand |= StrandObservation::Reverse,
+                    false => strand |= StrandObservation::Forward,
                 };
             }
         });
-        match strands.len() == 1 {
-            true => consensus_strand.push(strands.take(&(b'-')).unwrap_or(b'+')),
-            false => consensus_strand.push(b'*'),
+        match strand {
+            StrandObservation::Forward => consensus_strand.push(b'+'),
+            StrandObservation::Reverse => consensus_strand.push(b'-'),
+            StrandObservation::Both => consensus_strand.push(b'*'),
+            StrandObservation::None => unreachable!(),
         }
     }
 }

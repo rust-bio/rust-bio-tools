@@ -140,6 +140,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
             StrandObservation::Reverse => consensus_strand.push(b'-'),
             StrandObservation::Both => consensus_strand.push(b'*'),
             StrandObservation::None => unreachable!(),
+        }
     }
 }
 

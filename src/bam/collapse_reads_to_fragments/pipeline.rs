@@ -189,20 +189,37 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 };
                                 let overlap = calc_overlap(&l_rec, &record)?;
                                 if overlap > 0 {
-                                    let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                                    match (
+                                        is_valid_overlap(
+                                            overlap as u32,
+                                            l_rec.cigar_cached().unwrap().into_iter().rev(),
+                                        ),
+                                        is_valid_overlap(
+                                            overlap as u32,
+                                            record.cigar_cached().unwrap().into_iter(),
+                                        ),
+                                    ) {
+                                        (true, true) => {
+                                            let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
-                                    self.fq_se_writer.write_record(
-                                        &CalcOverlappingConsensus::new(
-                                            &[l_rec],
-                                            &[record],
-                                            overlap as usize,
-                                            &[rec_id, i],
-                                            uuid,
-                                            self.verbose_read_names,
-                                        )
-                                        .calc_consensus()
-                                        .0,
-                                    )?;
+                                            self.fq_se_writer.write_record(
+                                                &CalcOverlappingConsensus::new(
+                                                    &[l_rec],
+                                                    &[record],
+                                                    overlap as usize,
+                                                    &[rec_id, i],
+                                                    uuid,
+                                                    self.verbose_read_names,
+                                                )
+                                                .calc_consensus()
+                                                .0,
+                                            )?;
+                                        }
+                                        _ => {
+                                            self.bam_skipped_writer.write(&l_rec)?;
+                                            self.bam_skipped_writer.write(&record)?;
+                                        }
+                                    }
                                 } else {
                                     self.bam_skipped_writer.write(&l_rec)?;
                                     self.bam_skipped_writer.write(&record)?;
@@ -309,6 +326,29 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
         }
     }
     Ok(())
+}
+
+fn is_valid_overlap<'a, I>(overlap: u32, cigar: I) -> bool
+where
+    I: Iterator<Item = &'a Cigar>,
+{
+    let mut i = 0;
+    for c in cigar {
+        match i < overlap {
+            true => match c {
+                Cigar::Ins(_) | Cigar::Del(_) => return false,
+                Cigar::Match(l)
+                | Cigar::RefSkip(l)
+                | Cigar::SoftClip(l)
+                | Cigar::HardClip(l)
+                | Cigar::Pad(l)
+                | Cigar::Equal(l)
+                | Cigar::Diff(l) => i += l,
+            },
+            false => return true,
+        }
+    }
+    true
 }
 
 fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i64, Box<dyn Error>> {

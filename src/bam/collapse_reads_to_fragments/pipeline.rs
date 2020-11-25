@@ -349,10 +349,10 @@ where
                 Cigar::Match(l)
                 | Cigar::RefSkip(l)
                 | Cigar::SoftClip(l)
-                | Cigar::HardClip(l)
                 | Cigar::Pad(l)
                 | Cigar::Equal(l)
                 | Cigar::Diff(l) => i += l,
+                Cigar::HardClip(_) => {}
             },
             false => return true,
         }
@@ -361,11 +361,27 @@ where
 }
 
 fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i64, Box<dyn Error>> {
-    let l_end_pos = l_rec.cigar_cached().unwrap().end_pos();
-    let r_start_pos = r_rec.pos();
-    let l_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;
-    let r_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter())?;
-    Ok((l_end_pos - l_softclips as i64) - (r_start_pos + r_softclips as i64))
+    let l_start_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter())?;
+    let l_start_pos = l_rec.pos() - l_start_softclips as i64;
+
+    let l_end_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;
+    let l_end_pos = l_rec.cigar_cached().unwrap().end_pos() + l_end_softclips as i64;
+
+    let r_start_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter())?;
+    let r_start_pos = r_rec.pos() - r_start_softclips as i64;
+
+    let r_end_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter().rev())?;
+    let r_end_pos = l_rec.cigar_cached().unwrap().end_pos() + r_end_softclips as i64;
+
+    let left_overlap_pos = match l_start_pos >= r_start_pos {
+        true => l_start_pos,
+        false => r_start_pos,
+    };
+    let right_overlap_pos = match l_end_pos <= r_end_pos {
+        true => l_end_pos,
+        false => r_end_pos,
+    };
+    Ok(right_overlap_pos - left_overlap_pos)
 }
 
 //Gets an Iterator over Cigar-items and returns number of soft-clips at the beginning

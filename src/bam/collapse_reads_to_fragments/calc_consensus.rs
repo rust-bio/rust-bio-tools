@@ -139,28 +139,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
             StrandObservation::Forward => consensus_strand.push(b'+'),
             StrandObservation::Reverse => consensus_strand.push(b'-'),
             StrandObservation::Both => consensus_strand.push(b'*'),
-            StrandObservation::None => {
-                dbg!(second_start_pos);
-                dbg!(base_pos);
-                dbg!(&self.overlap());
-                dbg!(&self.recs1[0].len());
-                dbg!(&self.recs1[0].pos());
-                dbg!(&self.recs1[0].cigar_cached().unwrap().end_pos());
-                dbg!(&self.recs1[0].cigar_cached().unwrap());
-                dbg!(&self.recs2[0].len());
-                dbg!(&self.recs2[0].pos());
-                dbg!(&self.recs2[0].cigar_cached().unwrap().end_pos());
-                dbg!(&self.recs2[0].cigar_cached().unwrap());
-                dbg!(&self.overlap());
-                for rec in self.recs1() {
-                    dbg!(&rec.seq());
-                }
-                for rec in self.recs2() {
-                    dbg!(&rec.seq());
-                }
-                dbg!(&ref_base);
-                unreachable!()
-            },
+            StrandObservation::None => unreachable!(),
         }
     }
 }

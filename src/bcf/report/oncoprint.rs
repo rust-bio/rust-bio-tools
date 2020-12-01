@@ -496,6 +496,51 @@ pub fn oncoprint(
         )
     });
 
+    let prefixes = make_prefixes(ordered_genes.clone(), page_size);
+    let prefix_path = output_path.to_owned() + "/prefixes/";
+    fs::create_dir(Path::new(&prefix_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for report files at location: {:?}",
+            prefix_path
+        )
+    });
+
+    let mut templates = Tera::default();
+    templates.add_raw_template(
+        "prefix_table.html.tera",
+        include_str!("prefix_table.html.tera"),
+    )?;
+    let mut context = Context::new();
+    context.insert("table", &prefixes);
+    let html = templates.render("prefix_table.html.tera", &context)?;
+
+    let file_path = output_path.to_owned() + "/prefixes/prefixes.html";
+    let mut file = File::create(file_path)?;
+    file.write_all(html.as_bytes())?;
+
+    let gene_path = prefix_path.to_owned() + "/genes/";
+    fs::create_dir(Path::new(&gene_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for report files at location: {:?}",
+            gene_path
+        )
+    });
+
+    for (prefix, values) in prefixes {
+        let mut templates = Tera::default();
+        templates.add_raw_template(
+            "lookup_table.html.tera",
+            include_str!("lookup_table.html.tera"),
+        )?;
+        let mut context = Context::new();
+        context.insert("values", &values);
+        let html = templates.render("lookup_table.html.tera", &context)?;
+
+        let file_path = gene_path.to_owned() + &prefix + ".html";
+        let mut file = File::create(file_path)?;
+        file.write_all(html.as_bytes())?;
+    }
+
     for i in 0..pages + 1 {
         let current_genes = if i != pages {
             &v[(i * page_size)..((i + 1) * page_size)] // get genes for current page
@@ -829,4 +874,23 @@ fn order_by_clin_sig(clin_sigs: Vec<&Counter>) -> HashMap<String, Vec<ClinSig>> 
         order.insert(k, removed_count);
     }
     order
+}
+
+fn make_prefixes(
+    genes: Vec<&String>,
+    rows_per_page: usize,
+) -> HashMap<String, Vec<(&String, usize)>> {
+    let mut prefix_map = HashMap::new();
+    let prefix_len = 3;
+    for (i, partial_table) in genes.chunks(rows_per_page).enumerate() {
+        let page = i + 1;
+        for gene in partial_table {
+            if gene.len() >= prefix_len {
+                let prefix = gene.chars().take(prefix_len).collect::<String>();
+                let entry = prefix_map.entry(prefix).or_insert_with(Vec::new);
+                entry.push((gene.to_owned(), page));
+            }
+        }
+    }
+    prefix_map
 }

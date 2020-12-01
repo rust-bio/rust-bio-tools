@@ -387,7 +387,7 @@ fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<Option<i64>,
     //TODO if-closure is just a hotfix to ensure reads only overlap by end of r1 and start of r2
     // or are at exact same position
     // Fix this later by handling any other alignments
-    if l_end_pos <= r_end_pos && l_start_pos <= l_start_pos {
+    if l_end_pos <= r_end_pos && l_start_pos <= r_start_pos {
         let left_overlap_pos = match l_start_pos >= r_start_pos {
             true => l_start_pos,
             false => r_start_pos,

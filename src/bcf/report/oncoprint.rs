@@ -518,7 +518,7 @@ pub fn oncoprint(
     let mut file = File::create(file_path)?;
     file.write_all(html.as_bytes())?;
 
-    let gene_path = prefix_path.to_owned() + "/genes/";
+    let gene_path = prefix_path + "/genes/";
     fs::create_dir(Path::new(&gene_path)).unwrap_or_else(|_| {
         panic!(
             "Could not create directory for report files at location: {:?}",

@@ -33,8 +33,10 @@ pub struct Report {
     var_type: VariantType,
     alternatives: Option<String>,
     ann: Option<Vec<Vec<String>>>,
-    format: Option<String>,
-    info: Option<String>,
+    format: Option<HashMap<String, HashMap<String, Value>>>,
+    info: Option<HashMap<String, Vec<Value>>>,
+    json_format: Option<String>,
+    json_info: Option<String>,
     vis: HashMap<String, String>,
 }
 
@@ -94,7 +96,7 @@ pub(crate) fn make_table_report(
             _ => None,
         };
 
-        let info_tags = if infos.is_some() {
+        let (info_tags, json_info_tags) = if infos.is_some() {
             let mut info_map = HashMap::new();
             for tag in infos.clone().unwrap() {
                 if tag.chars().last().unwrap().eq(&'*') {
@@ -119,12 +121,15 @@ pub(crate) fn make_table_report(
                     read_tag_entries(&mut info_map, &mut variant, &header, &tag)?;
                 }
             }
-            Some(serde_json::to_string(&json!(info_map))?)
+            (
+                Some(info_map.clone()),
+                Some(serde_json::to_string(&json!(info_map))?),
+            )
         } else {
-            None
+            (None, None)
         };
 
-        let format_tags = if formats.is_some() {
+        let (format_tags, json_format_tags) = if formats.is_some() {
             let mut format_map = HashMap::new();
             for tag in formats.clone().unwrap() {
                 let (tag_type, _) = header.format_type(tag.as_bytes())?;
@@ -162,9 +167,12 @@ pub(crate) fn make_table_report(
                     _ => {}
                 }
             }
-            Some(serde_json::to_string(&json!(format_map))?)
+            (
+                Some(format_map.clone()),
+                Some(serde_json::to_string(&json!(format_map))?),
+            )
         } else {
-            None
+            (None, None)
         };
 
         let alleles: Vec<_> = variant
@@ -338,6 +346,8 @@ pub(crate) fn make_table_report(
                     ann: Some(annotations.clone()),
                     format: format_tags.clone(),
                     info: info_tags.clone(),
+                    json_format: json_format_tags.clone(),
+                    json_info: json_info_tags.clone(),
                     vis: visualizations,
                 };
 

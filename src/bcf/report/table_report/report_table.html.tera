@@ -108,7 +108,7 @@
                                 {% if variant.format %}
                                     {% for k, v in variant.format %}
                                         {% for smpl, val in v %}
-                                            <th scope="col">{{ smpl }}:{{ val.0 }}</th>
+                                            <td scope="col">{{ val.0 }}</td>
                                         {% endfor %}
                                     {% endfor %}
                                 {% endif %}

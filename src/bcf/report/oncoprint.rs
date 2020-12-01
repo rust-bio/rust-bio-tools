@@ -79,6 +79,8 @@ pub fn oncoprint(
                 .collect_vec();
             let alt_alleles = &alleles[1..];
             let ref_allele = alleles[0].to_owned();
+            let dup = [ref_allele.clone(), ref_allele.clone()].concat();
+            let rev = ref_allele.clone().into_iter().rev().collect_vec();
 
             let allel_frequencies = record
                 .format(b"AF")
@@ -90,28 +92,30 @@ pub fn oncoprint(
             let ann = record.info(b"ANN").string()?;
             if let Some(ann) = ann {
                 for alt_allele in alt_alleles {
-                    let variant = if alt_allele == b"<DEL>" {
-                        "DEL"
-                    } else if alt_allele == b"<BND>" {
+                    let variant = if alt_allele == b"<BND>" {
                         "BND"
-                    } else if alt_allele == b"<INV>" {
-                        "INV"
-                    } else if alt_allele == b"<DUP>" {
+                    } else if alt_allele == b"<DUP>" || alt_allele == &dup {
                         "DUP"
+                    } else if alt_allele == b"<DEL>"
+                        || alt_allele.len() == 1 && ref_allele.len() > 1
+                    {
+                        "DEL"
+                    } else if alt_allele == b"<INS>"
+                        || alt_allele.len() > 1 && ref_allele.len() == 1
+                    {
+                        "INS"
                     } else if alt_allele.len() == 1 && ref_allele.len() == 1 {
                         "SNV"
+                    } else if alt_allele == b"<INV>" || alt_allele == &rev {
+                        "INV"
                     } else if alt_allele.len() == ref_allele.len() {
                         "MNV"
                     } else {
-                        "Complex"
+                        "Replacement"
                     };
 
                     for entry in ann.iter() {
                         let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
-                        let alt = &fields[0];
-                        if alt != &alt_allele.as_slice() {
-                            continue;
-                        }
 
                         let get_field = |field: &str| {
                             str::from_utf8(
@@ -646,7 +650,7 @@ pub fn oncoprint(
     Ok(())
 }
 
-#[derive(new, Debug)]
+#[derive(new, Debug, Clone)]
 struct Record {
     sample: String,
     gene: String,

@@ -63,10 +63,10 @@
             "range":[
               "#a6cee3",
               "#1f78b4",
-              "#b2df8a",
+              "#e31a1c",
               "#33a02c",
               "#fb9a99",
-              "#e31a1c",
+              "#b2df8a",
               "#fdbf6f",
               "#ff7f00"
             ],
@@ -143,15 +143,15 @@
                       "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -223,15 +223,15 @@
                       "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -303,15 +303,15 @@
                       "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -383,15 +383,15 @@
                       "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -463,15 +463,15 @@
                       "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -543,15 +543,15 @@
                       "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -623,15 +623,15 @@
                       "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -703,15 +703,15 @@
                       "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -764,15 +764,15 @@
                   "Replacement"
                 ],
                 "range":[
-                  "#a6cee3",
-                  "#1f78b4",
-                  "#b2df8a",
-                  "#33a02c",
-                  "#fb9a99",
-                  "#e31a1c",
-                  "#fdbf6f",
-                  "#ff7f00"
-                ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                 "type":"ordinal"
               }
             }

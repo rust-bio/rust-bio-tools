@@ -37,7 +37,7 @@ pub struct Report {
     info: Option<HashMap<String, Vec<Value>>>,
     json_format: Option<String>,
     json_info: Option<String>,
-    vis: HashMap<String, String>,
+    vis: BTreeMap<String, String>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -285,7 +285,7 @@ pub(crate) fn make_table_report(
                     var_type,
                 };
 
-                let mut visualizations = HashMap::new();
+                let mut visualizations = BTreeMap::new();
 
                 for (sample, bam) in bam_sample_path {
                     let bam_path = Path::new(bam);

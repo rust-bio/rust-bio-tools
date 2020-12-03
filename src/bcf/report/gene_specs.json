@@ -5,7 +5,8 @@
     "impact": {},
     "consequence": {},
     "clin_sig": {},
-    "allel_frequency": {}
+    "allel_frequency": {},
+    "ev": {}
   },
   "autosize":{
     "type":"fit",
@@ -1031,6 +1032,48 @@
               "field": "allel_frequency",
               "type": "quantitative"
             }]
+          }
+        },
+        {
+          "data":{
+            "name":"ev"
+          },
+          "mark":"bar",
+          "width":100,
+          "encoding":{
+            "y":{
+              "field":"key",
+              "type":"ordinal",
+              "sort":{},
+              "axis": null
+            },
+            "x":{
+              "field":"count",
+              "aggregate":"sum",
+              "stack":  "normalize",
+              "type":"quantitative",
+              "axis":{
+                "title":"existing variations"
+              }
+            },
+            "color":{
+              "field":"value",
+              "type":"nominal",
+              "title":"existing variations",
+              "scale":{
+                "domain":[
+                  "COSM",
+                  "rs",
+                  "unknown"
+                ],
+                "range": [
+                  "#e41234",
+                  "#9e225f",
+                  "#d4d4d4"
+                ],
+                "type":"ordinal"
+              }
+            }
           }
         }
       ]

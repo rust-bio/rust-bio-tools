@@ -5,6 +5,8 @@ let ann_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 
 $(document).ready(function () {
     $('html').on('click', '.variant-row', function () {
+        $(this).siblings().children().removeClass("active-row");
+        $(this).children().addClass("active-row");
         let vis_len = $(this).data('vislen');
         if ($(this).data('packed')) {
             for (let t = 1; t <= vis_len; t++) {

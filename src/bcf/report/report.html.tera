@@ -75,7 +75,7 @@
                         <iframe src="../prefixes/prefixes.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
                     </div>
                     <div class="modal-footer">
-                        <small class="mr-auto"><i>Lorem Ipsum.</i></small>
+                        <!-- <small class="mr-auto"><i>Lorem Ipsum.</i></small> -->
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     </div>
                 </div>

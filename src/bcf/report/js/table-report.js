@@ -1,7 +1,7 @@
 // customize column_values to display the attributes of your choice to the sidebar
 let column_values = ['id', 'position', 'reference', 'alternatives', 'type'];
 // customize which parts of the annotation field to display at the sidebar
-let ann_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+let ann_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]
 
 $(document).ready(function () {
     $('html').on('click', '.variant-row', function () {
@@ -81,6 +81,14 @@ $(document).ready(function () {
                 let ix = x + 1;
                 let field = 'ann[' + j + '][' + ix + ']';
                 let val = $(that).data(field);
+                if (name === "Existing_variation" && val !== "") {
+                    if (val.startsWith("rs")) {
+                        val = "<a href='https://www.ncbi.nlm.nih.gov/snp/" + val + "'>" + val + "</a>"
+                    } else if (val.startsWith("COSM")) {
+                        let num = val.replace( /^\D+/g, '');
+                        val = "<a href='https://cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + num + "'>" + val + "</a>"
+                    }
+                }
                 $('#ann-sidebar').append('<td>' + val + '</td>');
             }
             $('#ann-sidebar').append('</tr>');

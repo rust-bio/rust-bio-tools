@@ -4,6 +4,7 @@ use log::LevelFilter;
 
 use clap::App;
 use itertools::Itertools;
+use rayon::prelude::*;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
@@ -133,9 +134,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 rec.push((c[1].to_owned(), b[1].to_owned()))
             }
 
-            for sample in sample_calls.keys().sorted() {
+            sample_calls.par_iter().for_each(|(sample, sample_call)| {
                 bcf::report::table_report::table_report(
-                    sample_calls.get(sample).unwrap(),
+                    sample_call,
                     fasta_path,
                     bam_paths
                         .get(sample)
@@ -146,8 +147,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                     formats.clone(),
                     max_read_depth,
                     js_file_names.clone(),
-                )?;
-            }
+                )
+                .unwrap_or_else(|_| panic!("Failed building table report for sample {}", sample));
+            });
 
             bcf::report::oncoprint::oncoprint(&sample_calls, output_path, max_cells, tsv_data)
         }

@@ -33,6 +33,8 @@ pub fn oncoprint(
     let mut gene_data = HashMap::new();
     let mut impact_data = Vec::new();
     let mut gene_impact_data = HashMap::new();
+    let mut existing_var_data = Vec::new();
+    let mut gene_existing_var_data = HashMap::new();
     let mut consequence_data = Vec::new();
     let mut gene_consequence_data = HashMap::new();
     let mut clin_sig_data = Vec::new();
@@ -51,6 +53,8 @@ pub fn oncoprint(
         let mut genes = HashMap::new();
         let mut impacts = HashMap::new();
         let mut gene_impacts = HashMap::new();
+        let mut existing_variations = HashMap::new();
+        let mut gene_existing_variations = HashMap::new();
         let mut consequences = HashMap::new();
         let mut gene_consequences = HashMap::new();
         let mut clin_sigs = HashMap::new();
@@ -79,6 +83,8 @@ pub fn oncoprint(
                 .collect_vec();
             let alt_alleles = &alleles[1..];
             let ref_allele = alleles[0].to_owned();
+            let dup = [ref_allele.clone(), ref_allele.clone()].concat();
+            let rev = ref_allele.clone().into_iter().rev().collect_vec();
 
             let allel_frequencies = record
                 .format(b"AF")
@@ -90,28 +96,30 @@ pub fn oncoprint(
             let ann = record.info(b"ANN").string()?;
             if let Some(ann) = ann {
                 for alt_allele in alt_alleles {
-                    let variant = if alt_allele == b"<DEL>" {
-                        "DEL"
-                    } else if alt_allele == b"<BND>" {
+                    let variant = if alt_allele == b"<BND>" {
                         "BND"
-                    } else if alt_allele == b"<INV>" {
-                        "INV"
-                    } else if alt_allele == b"<DUP>" {
+                    } else if alt_allele == b"<DUP>" || alt_allele == &dup {
                         "DUP"
+                    } else if alt_allele == b"<DEL>"
+                        || alt_allele.len() == 1 && ref_allele.len() > 1
+                    {
+                        "DEL"
+                    } else if alt_allele == b"<INS>"
+                        || alt_allele.len() > 1 && ref_allele.len() == 1
+                    {
+                        "INS"
                     } else if alt_allele.len() == 1 && ref_allele.len() == 1 {
                         "SNV"
+                    } else if alt_allele == b"<INV>" || alt_allele == &rev {
+                        "INV"
                     } else if alt_allele.len() == ref_allele.len() {
                         "MNV"
                     } else {
-                        "Complex"
+                        "Replacement"
                     };
 
                     for entry in ann.iter() {
                         let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
-                        let alt = &fields[0];
-                        if alt != &alt_allele.as_slice() {
-                            continue;
-                        }
 
                         let get_field = |field: &str| {
                             str::from_utf8(
@@ -126,6 +134,7 @@ pub fn oncoprint(
                         let canonical = get_field("CANONICAL")? == "YES";
                         let protein_alteration = get_field("HGVSp")?;
                         let consequence = get_field("Consequence")?;
+                        let existing_var = get_field("Existing_variation")?;
 
                         let gene_rec = unique_genes.entry(gene.to_owned()).or_insert_with(Vec::new);
                         gene_rec.push(sample.to_owned());
@@ -159,6 +168,18 @@ pub fn oncoprint(
                         }
                         imp_rec.push(BarPlotRecord::new(gene.to_owned(), impact.to_owned()));
 
+                        let ev_rec = existing_variations
+                            .entry(gene.to_owned())
+                            .or_insert_with(Vec::new);
+                        let ev = if existing_var.starts_with("COSM") {
+                            "COSM"
+                        } else if existing_var.starts_with("rs") {
+                            "rs"
+                        } else {
+                            "unknown"
+                        };
+                        ev_rec.push(BarPlotRecord::new(gene.to_owned(), ev.to_owned()));
+
                         let alt = if protein_alteration.is_empty() {
                             dna_alteration
                         } else {
@@ -167,6 +188,11 @@ pub fn oncoprint(
                         let gene_imp_rec =
                             gene_impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
                         gene_imp_rec.push(BarPlotRecord::new(alt.to_owned(), impact.to_owned()));
+
+                        let gene_ev_rec = gene_existing_variations
+                            .entry(gene.to_owned())
+                            .or_insert_with(Vec::new);
+                        gene_ev_rec.push(BarPlotRecord::new(alt.to_owned(), ev.to_owned()));
 
                         let split_consequences: Vec<_> = consequence.split('&').collect();
 
@@ -252,6 +278,10 @@ pub fn oncoprint(
             let final_impacts = make_final_bar_plot_records(impact);
             impact_data.push(final_impacts);
 
+            let ex_var = existing_variations.get(gene).unwrap();
+            let final_evs = make_final_bar_plot_records(ex_var);
+            existing_var_data.push(final_evs);
+
             let consequence = consequences.get(gene).unwrap();
             let final_consequences = make_final_bar_plot_records(consequence);
             consequence_data.push(final_consequences);
@@ -268,6 +298,13 @@ pub fn oncoprint(
                 .entry(gene.to_owned())
                 .or_insert_with(Vec::new);
             e.push(final_gene_impacts);
+
+            let gene_evs = gene_existing_variations.get(gene).unwrap();
+            let final_gene_evs = make_final_bar_plot_records(gene_evs);
+            let v = gene_existing_var_data
+                .entry(gene.to_owned())
+                .or_insert_with(Vec::new);
+            v.push(final_gene_evs);
 
             // data for second stage consequence
             let gene_consequence = gene_consequences.get(gene).unwrap();
@@ -319,6 +356,8 @@ pub fn oncoprint(
         let mut specs = gene_specs.clone();
         let impact_data = gene_impact_data.get(&gene).unwrap();
         let final_impact: Vec<_> = impact_data.iter().flatten().sorted().collect();
+        let existing_var_data = gene_existing_var_data.get(&gene).unwrap();
+        let final_ev: Vec<_> = existing_var_data.iter().flatten().sorted().collect();
         let consequence_data = gene_consequence_data.get(&gene).unwrap();
         let final_consequence: Vec<_> = consequence_data.iter().flatten().sorted().collect();
         let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
@@ -376,6 +415,12 @@ pub fn oncoprint(
                     .sorted()
                     .collect();
 
+                let ev_page_data: Vec<_> = final_ev
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .sorted()
+                    .collect();
+
                 let consequence_page_data: Vec<_> = final_consequence
                     .iter()
                     .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
@@ -401,7 +446,7 @@ pub fn oncoprint(
                 let samples: Vec<_> = page_data.iter().map(|r| r.sample.clone()).collect();
                 let unique_samples: Vec<_> = samples.iter().unique().collect();
 
-                let mut values = json!({ "main": page_data, "impact": impact_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+                let mut values = json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
                 if let Some(ref tsv) = tsv_data {
                     for (title, data) in tsv {
                         values[title] = json!(data);
@@ -461,6 +506,7 @@ pub fn oncoprint(
     }
 
     let impact_data: Vec<_> = impact_data.iter().flatten().collect();
+    let ev_data: Vec<_> = existing_var_data.iter().flatten().collect();
     let consequence_data: Vec<_> = consequence_data.iter().flatten().collect();
     let clin_sig_data: Vec<_> = clin_sig_data.iter().flatten().collect();
 
@@ -496,6 +542,51 @@ pub fn oncoprint(
         )
     });
 
+    let prefixes = make_prefixes(ordered_genes.clone(), page_size);
+    let prefix_path = output_path.to_owned() + "/prefixes/";
+    fs::create_dir(Path::new(&prefix_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for report files at location: {:?}",
+            prefix_path
+        )
+    });
+
+    let mut templates = Tera::default();
+    templates.add_raw_template(
+        "prefix_table.html.tera",
+        include_str!("prefix_table.html.tera"),
+    )?;
+    let mut context = Context::new();
+    context.insert("table", &prefixes);
+    let html = templates.render("prefix_table.html.tera", &context)?;
+
+    let file_path = output_path.to_owned() + "/prefixes/prefixes.html";
+    let mut file = File::create(file_path)?;
+    file.write_all(html.as_bytes())?;
+
+    let gene_path = prefix_path + "/genes/";
+    fs::create_dir(Path::new(&gene_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for report files at location: {:?}",
+            gene_path
+        )
+    });
+
+    for (prefix, values) in prefixes {
+        let mut templates = Tera::default();
+        templates.add_raw_template(
+            "lookup_table.html.tera",
+            include_str!("lookup_table.html.tera"),
+        )?;
+        let mut context = Context::new();
+        context.insert("values", &values);
+        let html = templates.render("lookup_table.html.tera", &context)?;
+
+        let file_path = gene_path.to_owned() + &prefix + ".html";
+        let mut file = File::create(file_path)?;
+        file.write_all(html.as_bytes())?;
+    }
+
     for i in 0..pages + 1 {
         let current_genes = if i != pages {
             &v[(i * page_size)..((i + 1) * page_size)] // get genes for current page
@@ -518,6 +609,12 @@ pub fn oncoprint(
                 .collect();
 
             let impact_page_data: Vec<_> = impact_data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.record.key))
+                .sorted()
+                .collect();
+
+            let ev_page_data: Vec<_> = ev_data
                 .iter()
                 .filter(|entry| sorted_genes.contains(&&entry.record.key))
                 .sorted()
@@ -550,7 +647,7 @@ pub fn oncoprint(
 
             let mut vl_specs: Value =
                 serde_json::from_str(include_str!("report_specs.json")).unwrap();
-            let mut values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+            let mut values = json!({"main": page_data , "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
 
             if let Some(ref tsv) = tsv_data {
                 for (title, data) in tsv {
@@ -601,7 +698,7 @@ pub fn oncoprint(
     Ok(())
 }
 
-#[derive(new, Debug)]
+#[derive(new, Debug, Clone)]
 struct Record {
     sample: String,
     gene: String,
@@ -829,4 +926,23 @@ fn order_by_clin_sig(clin_sigs: Vec<&Counter>) -> HashMap<String, Vec<ClinSig>> 
         order.insert(k, removed_count);
     }
     order
+}
+
+fn make_prefixes(
+    genes: Vec<&String>,
+    rows_per_page: usize,
+) -> HashMap<String, Vec<(&String, usize)>> {
+    let mut prefix_map = HashMap::new();
+    let prefix_len = 3;
+    for (i, partial_table) in genes.chunks(rows_per_page).enumerate() {
+        let page = i + 1;
+        for gene in partial_table {
+            if gene.len() >= prefix_len {
+                let prefix = gene.chars().take(prefix_len).collect::<String>();
+                let entry = prefix_map.entry(prefix).or_insert_with(Vec::new);
+                entry.push((gene.to_owned(), page));
+            }
+        }
+    }
+    prefix_map
 }

@@ -200,7 +200,7 @@ subcommands:
               short: g
               default_value: "500"
               help: |
-                Number of genes to submit per api request. A lower value increases the number of api requests in return. 
+                Number of genes to submit per api request. A lower value increases the number of api requests in return.
                 Too many requests could be rejected by the DGIdb server.
         author: Felix Mölder <felix.moelder@uni-due.de>
   - vcf-report:
@@ -251,14 +251,14 @@ subcommands:
             long: info
             short: i
             value_name: INFO_TAG
-            help: Add custom values from the info field to each variant into the table report. Multiple fields starting with the same prefix can be added by placing '*' at the and of a prefix.
+            help: Add custom values from the info field to each variant as a data attribute to access them via the custom javascript. Multiple fields starting with the same prefix can be added by placing '*' at the end of a prefix.
         - format:
             multiple: true
             required: false
             long: format
             short: f
             value_name: FORMAT_TAG
-            help: Add custom values from the format field to each variant into the table report.
+            help: Add custom values from the format field to each variant as a data attribute to access them via the custom javascript. All given format values will also be inserted into the main table.
         - custom-js-template:
             required: false
             short: j

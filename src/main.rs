@@ -134,28 +134,26 @@ fn main() -> Result<(), Box<dyn Error>> {
                 let rec = bam_paths.entry(c[0].to_owned()).or_insert_with(Vec::new);
                 rec.push((c[1].to_owned(), b[1].to_owned()))
             }
-            let pool = rayon::ThreadPoolBuilder::new()
+
+            rayon::ThreadPoolBuilder::new()
                 .num_threads(threads)
-                .build()?;
-            pool.install(|| {
-                sample_calls.par_iter().for_each(|(sample, sample_call)| {
-                    bcf::report::table_report::table_report(
-                        sample_call,
-                        fasta_path,
-                        bam_paths
-                            .get(sample)
-                            .unwrap_or_else(|| panic!("No bam provided for sample {}", sample)),
-                        output_path,
-                        sample,
-                        infos.clone(),
-                        formats.clone(),
-                        max_read_depth,
-                        js_file_names.clone(),
-                    )
-                    .unwrap_or_else(|_| {
-                        panic!("Failed building table report for sample {}", sample)
-                    });
-                })
+                .build_global()?;
+
+            sample_calls.par_iter().for_each(|(sample, sample_call)| {
+                bcf::report::table_report::table_report(
+                    sample_call,
+                    fasta_path,
+                    bam_paths
+                        .get(sample)
+                        .unwrap_or_else(|| panic!("No bam provided for sample {}", sample)),
+                    output_path,
+                    sample,
+                    infos.clone(),
+                    formats.clone(),
+                    max_read_depth,
+                    js_file_names.clone(),
+                )
+                .unwrap_or_else(|_| panic!("Failed building table report for sample {}", sample));
             });
 
             bcf::report::oncoprint::oncoprint(&sample_calls, output_path, max_cells, tsv_data)

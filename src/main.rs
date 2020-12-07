@@ -136,8 +136,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             let pool = rayon::ThreadPoolBuilder::new()
                 .num_threads(threads)
-                .build()
-                .unwrap();
+                .build()?;
             pool.install(|| {
                 sample_calls.par_iter().for_each(|(sample, sample_call)| {
                     bcf::report::table_report::table_report(

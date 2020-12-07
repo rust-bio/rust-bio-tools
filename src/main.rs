@@ -78,6 +78,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut sample_calls = HashMap::new();
             let mut bam_paths = HashMap::new();
             let output_path = matches.value_of("output-path").unwrap();
+            let threads = usize::from_str(matches.value_of("threads").unwrap()).unwrap();
             if !Path::new(output_path).exists() {
                 fs::create_dir(Path::new(output_path)).unwrap_or_else(|_| {
                     panic!(
@@ -133,22 +134,29 @@ fn main() -> Result<(), Box<dyn Error>> {
                 let rec = bam_paths.entry(c[0].to_owned()).or_insert_with(Vec::new);
                 rec.push((c[1].to_owned(), b[1].to_owned()))
             }
-
-            sample_calls.par_iter().for_each(|(sample, sample_call)| {
-                bcf::report::table_report::table_report(
-                    sample_call,
-                    fasta_path,
-                    bam_paths
-                        .get(sample)
-                        .unwrap_or_else(|| panic!("No bam provided for sample {}", sample)),
-                    output_path,
-                    sample,
-                    infos.clone(),
-                    formats.clone(),
-                    max_read_depth,
-                    js_file_names.clone(),
-                )
-                .unwrap_or_else(|_| panic!("Failed building table report for sample {}", sample));
+            let pool = rayon::ThreadPoolBuilder::new()
+                .num_threads(threads)
+                .build()
+                .unwrap();
+            pool.install(|| {
+                sample_calls.par_iter().for_each(|(sample, sample_call)| {
+                    bcf::report::table_report::table_report(
+                        sample_call,
+                        fasta_path,
+                        bam_paths
+                            .get(sample)
+                            .unwrap_or_else(|| panic!("No bam provided for sample {}", sample)),
+                        output_path,
+                        sample,
+                        infos.clone(),
+                        formats.clone(),
+                        max_read_depth,
+                        js_file_names.clone(),
+                    )
+                    .unwrap_or_else(|_| {
+                        panic!("Failed building table report for sample {}", sample)
+                    });
+                })
             });
 
             bcf::report::oncoprint::oncoprint(&sample_calls, output_path, max_cells, tsv_data)

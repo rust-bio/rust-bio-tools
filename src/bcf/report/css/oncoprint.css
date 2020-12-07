@@ -17,3 +17,7 @@ th, td {
     border-left: none;
     border-right: none;
 }
+
+.active-row {
+    background: whitesmoke !important;
+}

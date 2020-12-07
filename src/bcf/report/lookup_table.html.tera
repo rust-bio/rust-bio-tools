@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>rbt vcf-report</title>
+    <link rel="stylesheet" type="text/css" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../../css/bootstrap-table.min.css">
+</head>
+
+<body>
+<script src="../../js/jquery.min.js"></script>
+<script src="../../js/bootstrap.bundle.min.js"></script>
+<script src="../../js/bootstrap-table.min.js"></script>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-9 mr-auto">
+            <table class="table table-hover" data-toggle="table" data-search="true" style="width: 100%; position: center">
+                <thead>
+                <tr>
+                    <th>gene</th>
+                    <th>page</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for val in values %}
+                    <tr>
+                        <td><a target="_parent" href="../../indexes/index{{ val.1 }}.html" style="display: table-cell">{{ val.0 }}</a></td>
+                        <td><a target="_parent" href="../../indexes/index{{ val.1 }}.html" style="display: table-cell">{{ val.1 }}</a></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-3 ml-auto" style="padding-top: 10px"><a role="button" href="../prefixes.html" class="btn btn-primary">Back</a></div>
+    </div>
+</div>
+</body>
+</html>

@@ -281,7 +281,7 @@ subcommands:
         - threads:
             long: threads
             required: false
-            default_value: "8"
+            default_value: "0"
             help: Sets the number of threads used to build the table reports.
         - output-path:
             last: true

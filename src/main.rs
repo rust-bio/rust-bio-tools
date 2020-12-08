@@ -35,7 +35,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match args.cmd {
         FastqSplit { chunks } => {
-            // TODO change fastq::split::split to accept `&[PathBuf]` instead of `&[&str]`
             fastq::split::split(&chunks.iter().map(|p| p.to_str().unwrap()).collect_vec())?;
         }
         _ => unimplemented!(),

@@ -7,16 +7,16 @@ use structopt::StructOpt;
     author = "Johannes Köster <johannes.koester@tu-dortmund.de>",
     name = "Rust-Bio-Tools"
 )]
-struct Rbt {
+pub(crate) struct Rbt {
     #[structopt(long, short, help = "Verbose output.")]
-    verbose: bool,
+    pub(crate) verbose: bool,
 
     #[structopt(subcommand)]
-    cmd: Command,
+    pub(crate) cmd: Command,
 }
 
 #[derive(StructOpt)]
-enum Command {
+pub(crate) enum Command {
     /// Split FASTQ file from STDIN into N chunks.
     ///
     /// Example:
@@ -81,9 +81,7 @@ enum Command {
     ///
     /// Example:
     /// rbt vcf-fix-iupac-alleles < test.vcf > fixed.bcf
-    VcfFixIupacAlleles {
-
-    },
+    VcfFixIupacAlleles {},
 
     /// Convert VCF/BCF file from STDIN to tab-separated TXT file at STDOUT.
     /// INFO and FORMAT tags have to be selected explicitly.
@@ -105,7 +103,7 @@ enum Command {
 
         /// Display genotypes.
         #[structopt(long, short)]
-        genotypes: bool
+        genotypes: bool,
     },
 
     /// Annotate for each variant in a VCF/BCF at STDIN whether it is contained in a
@@ -126,7 +124,6 @@ enum Command {
 
         /// Maximum difference between lengths of two indels.
         #[structopt(long, short = "l", value_name = "INT", default_value = "10")]
-        max_len_diff: usize
-
-    }
+        max_len_diff: usize,
+    },
 }

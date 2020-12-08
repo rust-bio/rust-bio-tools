@@ -42,7 +42,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
-        let mut consensus_strand = b"S:Z:".to_vec();
+        let mut consensus_strand = b"SI:Z:".to_vec();
         // assert that all reads have the same length here
         assert_eq!(
             Self::validate_read_lengths(self.recs1()),
@@ -207,7 +207,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         let seq_len = self.recs()[0].seq().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
-        let mut consensus_strand = b"S:Z:".to_vec();
+        let mut consensus_strand = b"SI:Z:".to_vec();
         // assert that all reads have the same length here
         assert_eq!(
             Self::validate_read_lengths(self.recs()),

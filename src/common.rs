@@ -46,7 +46,6 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
             && relative_eq!(*likelihoods[1], *likelihoods[2])
             && relative_eq!(*likelihoods[2], *likelihoods[3])
         {
-            dbg!("Equal");
             consensus_seq.push(b'N');
             consensus_qual.push(offset as u8);
         } else {

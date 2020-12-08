@@ -398,7 +398,7 @@ fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<Option<i64>,
         };
         Ok(Some(right_overlap_pos - left_overlap_pos))
     } else {
-        return Ok(None);
+        Ok(None)
     }
 }
 

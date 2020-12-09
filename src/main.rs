@@ -77,9 +77,94 @@ fn main() -> Result<(), Box<dyn Error>> {
             vcf,
             api_path,
             &*field,
-            datasources.as_ref().map(|v| v.as_slice()),
+            datasources.as_deref(),
             genes_per_request,
         )?,
+        VcfReport {
+            fasta,
+            vcfs,
+            bams,
+            cells,
+            max_read_depth,
+            infos,
+            formats,
+            custom_js_template,
+            custom_js_files,
+            tsv,
+            threads,
+            output_path,
+        } => {
+            let mut sample_calls = HashMap::new();
+            let mut bam_paths = HashMap::new();
+            if !Path::new(&output_path).exists() {
+                fs::create_dir(Path::new(&output_path)).unwrap_or_else(|_| {
+                    panic!(
+                        "Couldn't create output directory at {}. Please make sure the path exists.",
+                        output_path
+                    )
+                });
+            }
+            let js_files_vec = custom_js_files
+                .clone()
+                .map_or_else(Vec::new, |values| values.into_iter().collect());
+            let js_file_names = if let Some(files) = custom_js_files.clone() {
+                files
+                    .iter()
+                    .map(|f| {
+                        f.split('/')
+                            .collect_vec()
+                            .pop()
+                            .unwrap_or_else(|| {
+                                panic!("Unable to extract file name from path: {:?}", f)
+                            })
+                            .to_owned()
+                    })
+                    .collect()
+            } else {
+                vec![]
+            };
+            bcf::report::embed_js(&output_path, custom_js_template.as_deref(), js_files_vec)?;
+            bcf::report::embed_css(&output_path)?;
+            bcf::report::embed_html(&output_path)?;
+            let detail_path = output_path.to_owned() + "/details/";
+            fs::create_dir(Path::new(&detail_path))?;
+            for vcf in vcfs {
+                let v: Vec<_> = vcf.split('=').collect();
+                match sample_calls.insert(v[0].to_owned(), v[1].to_owned()) {
+                    None => {}
+                    _ => panic!("Found duplicate sample name {}. Please make sure the provided sample names are unique.", v[0].to_owned())
+                }
+            }
+            for bam in bams {
+                let b: Vec<_> = bam.split('=').collect();
+                let c: Vec<_> = b[0].split(':').collect();
+                let rec = bam_paths.entry(c[0].to_owned()).or_insert_with(Vec::new);
+                rec.push((c[1].to_owned(), b[1].to_owned()))
+            }
+
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(threads)
+                .build_global()?;
+
+            sample_calls.par_iter().for_each(|(sample, sample_call)| {
+                bcf::report::table_report::table_report(
+                    sample_call,
+                    &fasta,
+                    bam_paths
+                        .get(sample)
+                        .unwrap_or_else(|| panic!("No bam provided for sample {}", sample)),
+                    &output_path,
+                    sample,
+                    infos.clone(),
+                    formats.clone(),
+                    max_read_depth,
+                    js_file_names.clone(),
+                )
+                .unwrap_or_else(|_| panic!("Failed building table report for sample {}", sample));
+            });
+
+            bcf::report::oncoprint::oncoprint(&sample_calls, &output_path, cells, tsv.as_deref())?
+        }
         _ => unimplemented!(),
     }
     Ok(())

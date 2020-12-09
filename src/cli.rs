@@ -45,16 +45,16 @@ pub(crate) enum Command {
     /// The positions file contains the name of one reference sequence and one position per line (tab separated).
     /// Example:
     ///
-    /// 16	1
-    /// 17	38
-    /// 17	39
+    /// 16    1
+    /// 17    38
+    /// 17    39
     ///
     /// Depths are written to stdout as tab-separated lines, similar to the positions input.
     /// Example:
     ///
-    /// 16	1	0
-    /// 17	38	14
-    /// 17	39	13
+    /// 16    1    0
+    /// 17    38    14
+    /// 17    39    13
     #[structopt(author = "Johannes Köster <johannes.koester@tu-dortmund.de>")]
     BamDepth {
         /// Path to indexed BAM file.
@@ -173,5 +173,69 @@ pub(crate) enum Command {
         /// Too many requests could be rejected by the DGIdb server.
         #[structopt(long, short = "g", default_value = "500")]
         genes_per_request: usize,
+    },
+
+    /// Creates report from a given VCF file including a visual plot
+    /// for every variant with the given BAM and FASTA file.
+    /// The VCF file has to be annotated with VEP, using the options --hgvs and --hgvsg.
+    ///
+    /// Examples:
+    /// With current directory as default ouput path:
+    /// rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a:sample1=a.bam b:sample1=b.bam
+    /// With custom directory as default ouput path:
+    /// rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a:sample1=a.bam b:sample1=b.bam -- my/output/path/
+    /// With custom info tags in table report:
+    /// rbt vcf-report fasta.fa --vcfs a=a.vcf b=b.vcf --bams a:sample1=a.bam b:sample1=b.bam --info PROB_SOMATIC PROB_GERMLINE
+    #[structopt(
+        author = "Johannes Köster <johannes.koester@uni-due.de>, Felix Wiegand <felix.wiegand@tu-dortmund.de>"
+    )]
+    VcfReport {
+        /// FASTA file containing the reference genome for the visual plot
+        #[structopt()]
+        fasta: String,
+
+        /// VCF files to include (multi-sample). Group is the name that will be used in the oncoprint. There needs to be one corresponding BAM file for each sample of a VCF/BCF file. Please only use VCF/BCF files annotated by VEP.
+        #[structopt(long, short = "v", value_name = "GROUP=VCF_FILE")]
+        vcfs: Vec<String>,
+
+        /// VCF files to include (multi-sample). Group is the name that will be used in the oncoprint. There needs to be one corresponding BAM file for each sample of a VCF/BCF file. Please only use VCF/BCF files annotated by VEP.
+        #[structopt(long, short = "b", value_name = "GROUP:SAMPLE=BAM_FILE")]
+        bams: Vec<String>,
+
+        /// Set the maximum number of cells in the oncoprint per page. Lowering max-cells should improve the performance of the plots in the browser. Default value is 1000.
+        #[structopt(long, short = "c", default_value = "1000")]
+        cells: u32,
+
+        /// Set the maximum number of cells in the oncoprint per page. Lowering max-cells should improve the performance of the plots in the browser. Default value is 1000.
+        #[structopt(long, short = "d", default_value = "500")]
+        max_read_depth: u32,
+
+        /// Add custom values from the info field to each variant as a data attribute to access them via the custom javascript. Multiple fields starting with the same prefix can be added by placing '*' at the end of a prefix.
+        #[structopt(long, short = "i", value_name = "INFO_TAG")]
+        infos: Option<Vec<String>>,
+
+        /// Add custom values from the format field to each variant as a data attribute to access them via the custom javascript. All given format values will also be inserted into the main table.
+        #[structopt(long, short = "f", value_name = "FORMAT_TAG")]
+        formats: Option<Vec<String>>,
+
+        /// Change the default javascript file for the table-report to a custom one to add own plots or tables to the sidebar by appending these to an empty div in the HTML template.
+        #[structopt(long, short = "j", value_name = "JS_FILE_PATH")]
+        custom_js_template: Option<String>,
+
+        /// Add one or multiple js file (e.g. libraries) for usage in the custom-js-file. The ordering of the arguments will be the same as they will be imported.
+        #[structopt(long, short = "l", value_name = "JS_FILE_PATH")]
+        custom_js_files: Option<Vec<String>>,
+
+        /// Add a TSV file that contains one or multiple custom values for each sample for the oncoprint. First column has to be the sample name, followed by one or more columns with custom values. Make sure you include one row for each given sample.
+        #[structopt(long, short = "t", value_name = "TSV_FILE_PATH")]
+        tsv: Option<String>,
+
+        /// Sets the number of threads used to build the table reports.
+        #[structopt(long, default_value = "0")]
+        threads: usize,
+
+        /// Relative output path for the report files. Default value is the current directory.
+        #[structopt(default_value = ".")]
+        output_path: String,
     },
 }

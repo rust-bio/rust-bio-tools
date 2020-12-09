@@ -35,8 +35,51 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match args.cmd {
         FastqSplit { chunks } => {
-            fastq::split::split(&chunks.iter().map(|p| p.to_str().unwrap()).collect_vec())?;
+            fastq::split::split(&chunks.iter().map(|p| p.to_str().unwrap()).collect_vec())?
         }
+        FastqFilter { ids } => fastq::filter::filter(&ids).unwrap(),
+        BamDepth {
+            bam_path,
+            max_read_length,
+            include_flags,
+            exclude_flags,
+            min_mapq,
+        } => bam::depth::depth(
+            &bam_path,
+            max_read_length,
+            include_flags,
+            exclude_flags,
+            min_mapq,
+        )?,
+        VcfToTxt {
+            info,
+            format,
+            genotypes,
+        } => bcf::to_txt::to_txt(
+            &info.iter().map(|s| s as &str).collect_vec().as_slice(),
+            &format.iter().map(|s| s as &str).collect_vec().as_slice(),
+            genotypes,
+        )?,
+        VcfMatch {
+            vcf,
+            max_dist,
+            max_len_diff,
+        } => bcf::match_variants::match_variants(vcf, max_dist, max_len_diff)?,
+        VcfBaf {} => bcf::baf::calculate_baf()?,
+        VcfFixIupacAlleles {} => bcf::fix_iupac_alleles::fix_iupac_alleles()?,
+        VcfAnnotateDgidb {
+            vcf,
+            api_path,
+            field,
+            datasources,
+            genes_per_request,
+        } => bcf::annotate_dgidb::annotate_dgidb(
+            vcf,
+            api_path,
+            &*field,
+            datasources.map(|a| a.as_slice()), // TODO: Please fix me @tedil
+            genes_per_request,
+        )?,
         _ => unimplemented!(),
     }
 

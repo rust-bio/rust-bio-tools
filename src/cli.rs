@@ -61,19 +61,19 @@ pub(crate) enum Command {
         /// Maximum read length to consider. This affects the speed of the involved pileup.
         /// Reads longer than this length can be missed when calculating the depth.
         #[structopt(long, short, default_value = "1000")]
-        max_read_length: usize,
+        max_read_length: u32,
 
         /// Skip reads with mask bits unset [].
         #[structopt(long = "incl-flags", short, default_value = "0")]
-        include_flags: usize,
+        include_flags: u16,
 
         /// Skip reads with mask bits set [UNMAP, SECONDARY, QCFAIL, DUP].
         #[structopt(long = "excl-flags", short, default_value = "1796")]
-        exclude_flags: usize,
+        exclude_flags: u16,
 
         /// Minimum mapping quality.
         #[structopt(long, short = "q", default_value = "0")]
-        min_mapq: usize,
+        min_mapq: u8,
     },
 
     /// Convert any IUPAC codes in alleles into Ns (in order to comply with VCF 4 specs).
@@ -120,10 +120,48 @@ pub(crate) enum Command {
 
         /// Maximum distance between centres of two indels considered to match.
         #[structopt(long, short = "d", value_name = "INT", default_value = "20")]
-        max_dist: usize,
+        max_dist: u32,
 
         /// Maximum difference between lengths of two indels.
         #[structopt(long, short = "l", value_name = "INT", default_value = "10")]
-        max_len_diff: usize,
+        max_len_diff: u32,
+    },
+
+    /// Annotate b-allele frequency for each single nucleotide variant and sample.
+    ///
+    /// Example:
+    /// rbt vcf-baf < calls.bcf > annotated.bcf
+    VcfBaf {},
+
+    /// Looks for interacting drugs in DGIdb and annotates them for every gene in every record.
+    ///
+    /// Example:
+    /// rbt vcf-annotate-dgidb input.vcf > output.vcf
+    VcfAnnotateDgidb {
+        /// VCF/BCF file to be extended by dgidb drug entries
+        #[structopt()]
+        vcf: String,
+
+        /// Url prefix for requesting interaction drugs by gene names.
+        #[structopt(
+            long,
+            short = "p",
+            default_value = "http://dgidb.org/api/v2/interactions.json?genes="
+        )]
+        api_path: String,
+
+        /// Info field name to be used for annotation.
+        #[structopt(long, short = "f", default_value = "dgiDB_drugs")]
+        field: String,
+
+        /// A list of data sources included in query. If omitted all sources are considered.
+        /// A list of all sources can be found at http://dgidb.org/api/v2/interaction_sources.json
+        #[structopt(long, short = "s", value_name = "STR")]
+        datasources: Option<Vec<String>>,
+
+        /// Number of genes to submit per api request. A lower value increases the number of api requests in return.
+        /// Too many requests could be rejected by the DGIdb server.
+        #[structopt(long, short = "g", default_value = "500")]
+        genes_per_request: usize,
     },
 }

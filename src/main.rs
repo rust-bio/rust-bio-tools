@@ -78,6 +78,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut sample_calls = HashMap::new();
             let mut bam_paths = HashMap::new();
             let output_path = matches.value_of("output-path").unwrap();
+            let threads = usize::from_str(matches.value_of("threads").unwrap()).unwrap();
             if !Path::new(output_path).exists() {
                 fs::create_dir(Path::new(output_path)).unwrap_or_else(|_| {
                     panic!(
@@ -133,6 +134,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                 let rec = bam_paths.entry(c[0].to_owned()).or_insert_with(Vec::new);
                 rec.push((c[1].to_owned(), b[1].to_owned()))
             }
+
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(threads)
+                .build_global()?;
 
             sample_calls.par_iter().for_each(|(sample, sample_call)| {
                 bcf::report::table_report::table_report(

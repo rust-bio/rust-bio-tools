@@ -137,7 +137,9 @@ pub(crate) enum Command {
     ///
     /// Example:
     /// rbt vcf-baf < calls.bcf > annotated.bcf
-    #[structopt(author = "Johannes Köster <johannes.koester@uni-due.de>, Jan Forster <j.forster@dkfz.de>")]
+    #[structopt(
+        author = "Johannes Köster <johannes.koester@uni-due.de>, Jan Forster <j.forster@dkfz.de>"
+    )]
     VcfBaf {},
 
     /// Looks for interacting drugs in DGIdb and annotates them for every gene in every record.

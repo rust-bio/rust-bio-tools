@@ -77,12 +77,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             vcf,
             api_path,
             &*field,
-            datasources.map(|a| a.as_slice()), // TODO: Please fix me @tedil
+            datasources.as_ref().map(|v| v.as_slice()),
             genes_per_request,
         )?,
         _ => unimplemented!(),
     }
-
     Ok(())
 
     // match matches.subcommand() {

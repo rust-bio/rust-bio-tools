@@ -21,6 +21,7 @@ pub(crate) enum Command {
     ///
     /// Example:
     /// rbt fastq-split A.fastq B.fastq < test.fastq
+    #[structopt(author = "Johannes Köster <johannes.koester@tu-dortmund.de>")]
     FastqSplit {
         #[structopt(parse(from_os_str), help = "File name(s) for the chunks to create.")]
         chunks: Vec<PathBuf>,
@@ -29,6 +30,7 @@ pub(crate) enum Command {
     ///
     /// Example:
     /// rbt fastq-filter ids.txt < test.fastq > filtered.fastq
+    #[structopt(author = "Erik Clarke <ecl@pennmedicine.upenn.edu>")]
     FastqFilter {
         #[structopt(parse(from_os_str))]
         /// File with list of record IDs to remove, one per line.
@@ -53,6 +55,7 @@ pub(crate) enum Command {
     /// 16	1	0
     /// 17	38	14
     /// 17	39	13
+    #[structopt(author = "Johannes Köster <johannes.koester@tu-dortmund.de>")]
     BamDepth {
         /// Path to indexed BAM file.
         #[structopt(parse(from_os_str))]
@@ -81,6 +84,7 @@ pub(crate) enum Command {
     ///
     /// Example:
     /// rbt vcf-fix-iupac-alleles < test.vcf > fixed.bcf
+    #[structopt(author = "Johannes Köster <johannes.koester@tu-dortmund.de>")]
     VcfFixIupacAlleles {},
 
     /// Convert VCF/BCF file from STDIN to tab-separated TXT file at STDOUT.
@@ -92,6 +96,7 @@ pub(crate) enum Command {
     /// The resulting table can be e.g. parsed with PANDAS in Python:
     ///
     /// pd.read_table("variants.txt", header=[0, 1])
+    #[structopt(author = "Johannes Köster <johannes.koester@tu-dortmund.de>")]
     VcfToTxt {
         /// Select INFO tags
         #[structopt(long, short, value_name = "NAME")]
@@ -113,6 +118,7 @@ pub(crate) enum Command {
     ///
     /// Example:
     /// rbt vcf-match dbsnp.vcf < calls.vcf | bcftools view
+    #[structopt(author = "Johannes Köster <johannes.koester@tu-dortmund.de>")]
     VcfMatch {
         /// VCF/BCF file to match against.
         #[structopt(parse(from_os_str))]
@@ -131,12 +137,14 @@ pub(crate) enum Command {
     ///
     /// Example:
     /// rbt vcf-baf < calls.bcf > annotated.bcf
+    #[structopt(author = "Johannes Köster <johannes.koester@uni-due.de>, Jan Forster <j.forster@dkfz.de>")]
     VcfBaf {},
 
     /// Looks for interacting drugs in DGIdb and annotates them for every gene in every record.
     ///
     /// Example:
     /// rbt vcf-annotate-dgidb input.vcf > output.vcf
+    #[structopt(author = "Felix Mölder <felix.moelder@uni-due.de>")]
     VcfAnnotateDgidb {
         /// VCF/BCF file to be extended by dgidb drug entries
         #[structopt()]

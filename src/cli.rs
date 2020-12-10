@@ -238,4 +238,178 @@ pub(crate) enum Command {
         #[structopt(default_value = ".")]
         output_path: String,
     },
+
+    /// Split a given VCF/BCF file into N chunks of approximately the same size. Breakends are kept together.
+    /// Output type is always BCF.
+    ///
+    /// Example:
+    /// rbt vcf-split input.bcf output1.bcf output2.bcf output3.bcf ... outputN.bcf
+    #[structopt(author = "Johannes Köster <johannes.koester@uni-due.de>")]
+    VcfSplit {
+        #[structopt(parse(from_os_str), help = "Input VCF/BCF that shall be splitted.")]
+        input: PathBuf,
+
+        #[structopt(
+            parse(from_os_str),
+            help = "BCF files to split into. Breakends are kept together. Each file will contain approximately the same number of records."
+        )]
+        output: Vec<PathBuf>,
+    },
+
+    /// Tool to predict maximum likelihood fragment sequence from FASTQ or BAM files.
+    ///
+    /// Requirements:
+    /// - starcode
+    #[structopt(
+        author = "Johannes Köster <johannes.koester@uni-due.de>, Henning Timm <henning.timm@tu-dortmund.de>, Felix Mölder <felix.moelder@uni-due.de>"
+    )]
+    CollapseReadsToFragments {
+        #[structopt(subcommand)]
+        cmd: CollapseReadsToFragmentsSubcommand,
+    },
+
+    /// Tool to compute stats on sequence file (from STDIN), output is in YAML with fields:
+    /// - min: length of shortest sequence
+    /// - max: length of longest sequence
+    /// - average: average length of sequence
+    /// - median: median length of sequence
+    /// - nb_reads: number of reads
+    /// - nb_bases: number of bases
+    /// - n50: N50 of sequences
+    ///
+    /// Example:
+    /// rbt sequence-stats < test.fasta
+    /// rbt sequence-stats -q < test.fastq
+    #[structopt(author = "Pierre Marijon <pmarijon@mpi-inf.mpg.de>")]
+    SequenceStats {
+        #[structopt(
+            long,
+            short = "q",
+            help = "Flag to indicate the sequence in stdin is in fastq format."
+        )]
+        fastq: bool,
+    },
+}
+
+#[derive(StructOpt)]
+pub enum CollapseReadsToFragmentsSubcommand {
+    /// Tool to merge sets of reads from paired FASTQ files that share the UMI and have similar read sequence. The result is a maximum likelihood fragment sequence per set with base quality scores improved accordingly.
+    ///
+    /// Takes two FASTQ files (forward and reverse) and returns two FASTQ files in which all PCR duplicates have been merged into a consensus read.
+    /// Duplicates are identified by a Unique Molecular Identifier (UMI).
+    ///
+    /// Assumptions:
+    /// - Reads are of equal length
+    /// - UMI is the prefix of the reads
+    ///
+    /// Example:
+    /// rbt collapse-reads-to-fragments fastq \
+    /// reads_1.fq reads_2.fq \    # input files
+    /// merged_1.fq merged_2.fq \  # output files
+    /// -l 13 \                    # length of UMI
+    /// -d 1 \                     # max hamming distance of UMIs within a cluster
+    /// -D 2 \                     # max hamming distance of sequences within a cluster
+    /// --umi-on-reverse           # UMI is the prefix of the reverse read
+    #[structopt(
+        author = "Johannes Köster <johannes.koester@uni-due.de>, Henning Timm <henning.timm@tu-dortmund.de>, Felix Mölder <felix.moelder@uni-due.de>"
+    )]
+    Fastq {
+        #[structopt(parse(from_os_str), help = "Input FASTQ file with forward reads.")]
+        fq1: PathBuf,
+
+        #[structopt(parse(from_os_str), help = "Input FASTQ file with reverse reads.")]
+        fq2: PathBuf,
+
+        #[structopt(parse(from_os_str), help = "Output FASTQ file with forward reads")]
+        consensus_fq1: PathBuf,
+
+        #[structopt(parse(from_os_str), help = "Output FASTQ file with reverse reads")]
+        consensus_fq2: PathBuf,
+
+        #[structopt(
+            parse(from_os_str),
+            requires("insert_size"),
+            help = "Output FASTQ file for overlapping consensus reads  (Required for calculating overlapping consensus only)"
+        )]
+        consensus_fq3: Option<PathBuf>,
+
+        #[structopt(
+            long,
+            short = "d",
+            default_value = "1",
+            help = "Maximum hamming distance between the UMIs of any pair of reads in the same cluster."
+        )]
+        max_umi_dist: usize,
+
+        #[structopt(
+            long,
+            short = "l",
+            default_value = "8",
+            help = "Length of UMI in read."
+        )]
+        umi_len: usize,
+
+        #[structopt(long, short = "D", possible_values = &["1","2","3","4","5","6","7","8"], default_value = "2", help = "Maximum hamming distance between the sequences of any pair of reads in the same cluster.")]
+        max_seq_dist: usize,
+
+        #[structopt(long, short = "u", help = "Set if UMI is on reverse read")]
+        umi_on_reverse: bool,
+
+        #[structopt(
+            long,
+            help = "Add list of reads that were merged for each consensus read. Note that this can yield very long FASTQ name lines which cannot be handled by some tools."
+        )]
+        verbose_read_names: bool,
+
+        #[structopt(
+            long,
+            short = "i",
+            requires("std_dev"),
+            help = "Expected insert size of sequenced fragment (Required for calculating overlapping consensus only)"
+        )]
+        insert_size: Option<usize>,
+
+        #[structopt(
+            long,
+            short = "s",
+            requires("consensus_fq3"),
+            help = "Standard deviation of expected insert size. Defines search space of the most likely overlap. (Required for calculating overlapping consensus only)"
+        )]
+        std_dev: Option<usize>,
+    },
+
+    /// Tool to merge sets of PCR duplicate reads from a BAM file into one maximum likelihood fragment sequence each with accordingly improved base quality scores.
+    ///
+    /// Takes a BAM file and returns a BAM file in which all PCR duplicates have been merged into a consensus read.
+    /// Duplicates must be marked by Picard Tools using the TAG_DUPLICATE_SET_MEMBERS option.
+    ///
+    /// Assumptions:
+    /// - Reads are of equal length
+    /// - Reads are marked by Picard Tools
+    #[structopt(author = "Felix Mölder <felix.moelder@uni-due.de>")]
+    Bam {
+        #[structopt(parse(from_os_str), help = "Input BAM file with marked duplicates")]
+        bam: PathBuf,
+
+        #[structopt(parse(from_os_str), help = "Output FASTQ file with forward reads")]
+        consensus_fq1: PathBuf,
+
+        #[structopt(parse(from_os_str), help = "Output FASTQ file with reverse reads")]
+        consensus_fq2: PathBuf,
+
+        #[structopt(
+            parse(from_os_str),
+            help = "Output FASTQ file for overlapping consensus reads."
+        )]
+        consensus_fq_se: PathBuf,
+
+        #[structopt(long, help = "Output FASTQ file for overlapping consensus reads.")]
+        skipped_bam: PathBuf,
+
+        #[structopt(
+            long,
+            help = "Add list of reads that were merged for each consensus read. Note that this can yield very long FASTQ name lines which cannot be handled by some tools."
+        )]
+        verbose_read_names: bool,
+    },
 }

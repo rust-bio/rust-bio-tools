@@ -328,7 +328,7 @@ pub enum CollapseReadsToFragmentsSubcommand {
 
         #[structopt(
             parse(from_os_str),
-            requires_all(&["insert_size", "std_dev"]),
+            requires_all(&["insert-size", "std-dev"]),
             help = "Output FASTQ file for overlapping consensus reads  (Required for calculating overlapping consensus only)"
         )]
         consensus_fq3: Option<PathBuf>,
@@ -364,7 +364,7 @@ pub enum CollapseReadsToFragmentsSubcommand {
         #[structopt(
             long,
             short = "i",
-            requires_all(&["consensus_fq3", "std_dev"]),
+            requires = "consensus-fq3",
             help = "Expected insert size of sequenced fragment (Required for calculating overlapping consensus only)"
         )]
         insert_size: Option<usize>,
@@ -372,7 +372,7 @@ pub enum CollapseReadsToFragmentsSubcommand {
         #[structopt(
             long,
             short = "s",
-            requires_all(&["consensus_fq3", "insert_size"]),
+            requires = "consensus-fq3",
             help = "Standard deviation of expected insert size. Defines search space of the most likely overlap. (Required for calculating overlapping consensus only)"
         )]
         std_dev: Option<usize>,

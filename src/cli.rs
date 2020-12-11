@@ -403,7 +403,10 @@ pub enum CollapseReadsToFragmentsSubcommand {
         )]
         consensus_fq_se: PathBuf,
 
-        #[structopt(long, help = "Output FASTQ file for overlapping consensus reads.")]
+        #[structopt(
+            parse(from_os_str),
+            help = "Output FASTQ file for overlapping consensus reads."
+        )]
         skipped_bam: PathBuf,
 
         #[structopt(

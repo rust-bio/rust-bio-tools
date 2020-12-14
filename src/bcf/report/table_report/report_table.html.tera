@@ -108,7 +108,15 @@
                                 {% if variant.format %}
                                     {% for k, v in variant.format %}
                                         {% for smpl, val in v %}
-                                            <td scope="col">{{ val.0 }}</td>
+                                            {% if val is iterable %}
+                                                <td scope="col">
+                                                {% for value in val %}
+                                                    {{ value }}{% if not loop.last %}, {% endif %}
+                                                {% endfor %}
+                                                </td>
+                                            {% else %}
+                                                <td scope="col">{{ val }}</td>
+                                            {% endif %}
                                         {% endfor %}
                                     {% endfor %}
                                 {% endif %}

@@ -42,6 +42,7 @@ use serde::Deserialize;
 
 use rust_htslib::bam;
 use rust_htslib::bam::{FetchDefinition, Read};
+use std::path::Path;
 
 #[derive(Deserialize, Debug)]
 struct PosRecord {
@@ -49,8 +50,8 @@ struct PosRecord {
     pos: u32,
 }
 
-pub fn depth(
-    bam_path: &str,
+pub fn depth<P: AsRef<Path>>(
+    bam_path: P,
     max_read_length: u32,
     include_flags: u16,
     exclude_flags: u16,

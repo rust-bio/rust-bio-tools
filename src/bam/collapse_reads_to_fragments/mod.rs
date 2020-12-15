@@ -7,20 +7,33 @@ use pipeline::CallConsensusRead;
 use rust_htslib::bam;
 use rust_htslib::bam::{Format, Header, Read};
 use std::error::Error;
+use std::path::Path;
 
-pub fn call_consensus_reads_from_paths(
-    bam_in: &str,
-    fq1: &str,
-    fq2: &str,
-    fq_se: &str,
-    bam_skipped_out: &str,
+pub fn call_consensus_reads_from_paths<P: AsRef<Path>>(
+    bam_in: P,
+    fq1: P,
+    fq2: P,
+    fq_se: P,
+    bam_skipped_out: P,
     verbose_read_names: bool,
 ) -> Result<(), Box<dyn Error>> {
-    info!("Reading input files:\n    {}", bam_in);
-    info!("Writing forward consensus reads to:\n    {}", fq1);
-    info!("Writing reverse consensus reads to:\n    {}", fq2);
-    info!("Writing single end consensus reads to:\n    {}", fq_se);
-    info!("Writing skipped reads to:\n    {}", bam_skipped_out);
+    info!("Reading input files:\n    {}", bam_in.as_ref().display());
+    info!(
+        "Writing forward consensus reads to:\n    {}",
+        fq1.as_ref().display()
+    );
+    info!(
+        "Writing reverse consensus reads to:\n    {}",
+        fq2.as_ref().display()
+    );
+    info!(
+        "Writing single end consensus reads to:\n    {}",
+        fq_se.as_ref().display()
+    );
+    info!(
+        "Writing skipped reads to:\n    {}",
+        bam_skipped_out.as_ref().display()
+    );
     let bam_reader = bam::Reader::from_path(bam_in)?;
     let fq1_writer = fastq::Writer::to_file(fq1)?;
     let fq2_writer = fastq::Writer::to_file(fq2)?;

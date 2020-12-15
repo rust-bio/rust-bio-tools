@@ -278,6 +278,11 @@ subcommands:
             long: tsv
             value_name: TSV_FILE_PATH
             help: Add a TSV file that contains one or multiple custom values for each sample for the oncoprint. First column has to be the sample name, followed by one or more columns with custom values. Make sure you include one row for each given sample.
+        - threads:
+            long: threads
+            required: false
+            default_value: "0"
+            help: Sets the number of threads used to build the table reports.
         - output-path:
             last: true
             required: false

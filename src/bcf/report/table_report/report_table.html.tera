@@ -96,7 +96,9 @@
                                     {% for attr in variant.ann %}
                                         {% set rowloop = loop.index %}
                                         {% for a in attr %}
+                                        {% if a %}
                                             data-{{ "ann" ~ "[" ~ rowloop ~ "][" ~ loop.index ~ "]" }}="{{ a }}"
+                                        {% endif %}
                                         {% endfor %}
                                     {% endfor %}
                             >

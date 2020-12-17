@@ -80,16 +80,32 @@ $(document).ready(function () {
             for (let j = 1; j <= ann_length; j++) {
                 let ix = x + 1;
                 let field = 'ann[' + j + '][' + ix + ']';
-                let val = $(that).data(field);
-                if (name === "Existing_variation" && val !== "") {
-                    if (val.startsWith("rs")) {
-                        val = "<a href='https://www.ncbi.nlm.nih.gov/snp/" + val + "'>" + val + "</a>"
-                    } else if (val.startsWith("COSM")) {
-                        let num = val.replace( /^\D+/g, '');
-                        val = "<a href='https://cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + num + "'>" + val + "</a>"
+                let vl = $(that).data(field);
+                if (name === "Existing_variation" && vl !== "") {
+                    let fields = vl.split('&');
+                    console.log(fields);
+                    let result = "";
+                    for (var o = 0; o < fields.length; o++) {
+                        let val = fields[o];
+                        console.log(val);
+                        if (val.startsWith("rs")) {
+                            result = result + "<a href='https://www.ncbi.nlm.nih.gov/snp/" + val + "'>" + val + "</a>";
+                        } else if (val.startsWith("COSM")) {
+                            let num = val.replace( /^\D+/g, '');
+                            result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + num + "'>" + val + "</a>";
+                        } else if (val.startsWith("COSN")) {
+                            let num = val.replace( /^\D+/g, '');
+                            result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + num + "'>" + val + "</a>";
+                        } else {
+                            result = result + val;
+                        }
+                        if (!(o === fields.length - 1)) {
+                            result = result + ", ";
+                        }
                     }
+                    vl = result;
                 }
-                $('#ann-sidebar').append('<td>' + val + '</td>');
+                $('#ann-sidebar').append('<td>' + vl + '</td>');
             }
             $('#ann-sidebar').append('</tr>');
         });

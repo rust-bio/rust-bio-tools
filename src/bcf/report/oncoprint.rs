@@ -179,28 +179,36 @@ pub fn oncoprint(
                         let ev_rec = existing_variations
                             .entry(gene.to_owned())
                             .or_insert_with(Vec::new);
-                        let ev = if existing_var.starts_with("COSM") {
-                            "COSM"
-                        } else if existing_var.starts_with("rs") {
-                            "rs"
-                        } else {
-                            "unknown"
-                        };
-                        ev_rec.push(BarPlotRecord::new(gene.to_owned(), ev.to_owned()));
+                        let gene_ev_rec = gene_existing_variations
+                            .entry(gene.to_owned())
+                            .or_insert_with(Vec::new);
 
                         let alt = if protein_alteration.is_empty() {
                             dna_alteration
                         } else {
                             protein_alteration
                         };
+
+                        let split_ev = existing_var.split('&').collect_vec();
+                        for ex_var in split_ev {
+                            let ev = if ex_var.starts_with("COSM") {
+                                "COSM"
+                            } else if ex_var.starts_with("COSN") {
+                                "COSN"
+                            } else if ex_var.starts_with("COSV") {
+                                "COSV"
+                            } else if ex_var.starts_with("rs") {
+                                "rs"
+                            } else {
+                                "unknown"
+                            };
+                            ev_rec.push(BarPlotRecord::new(gene.to_owned(), ev.to_owned()));
+                            gene_ev_rec.push(BarPlotRecord::new(alt.to_owned(), ev.to_owned()));
+                        }
+
                         let gene_imp_rec =
                             gene_impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
                         gene_imp_rec.push(BarPlotRecord::new(alt.to_owned(), impact.to_owned()));
-
-                        let gene_ev_rec = gene_existing_variations
-                            .entry(gene.to_owned())
-                            .or_insert_with(Vec::new);
-                        gene_ev_rec.push(BarPlotRecord::new(alt.to_owned(), ev.to_owned()));
 
                         let split_consequences: Vec<_> = consequence.split('&').collect();
 

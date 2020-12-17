@@ -1063,11 +1063,15 @@
               "scale":{
                 "domain":[
                   "COSM",
+                  "COSN",
+                  "COSV",
                   "rs",
                   "unknown"
                 ],
                 "range": [
                   "#e41234",
+                  "#eab99c",
+                  "#eff611",
                   "#9e225f",
                   "#d4d4d4"
                 ],

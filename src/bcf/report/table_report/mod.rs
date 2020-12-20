@@ -28,7 +28,7 @@ pub fn table_report(
         )
     });
 
-    let plot_path = detail_path.to_owned() + "/plots/";
+    let plot_path = detail_path + "/plots/";
     fs::create_dir(Path::new(&plot_path)).unwrap_or_else(|_| {
         panic!(
             "Could not create directory for table report plots at location: {:?}",

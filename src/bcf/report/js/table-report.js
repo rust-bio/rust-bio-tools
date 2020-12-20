@@ -8,14 +8,13 @@ $(document).ready(function () {
         $(this).siblings().children().removeClass("active-row");
         $(this).children().addClass("active-row");
         let vis_len = $(this).data('vislen');
-        if ($(this).data('packed')) {
-            for (let t = 1; t <= vis_len; t++) {
-                let compressed_specs = $(this).data('vis' + t.toString());
-                let unpacker = new jsonm.Unpacker();
-                unpacker.setMaxDictSize(100000);
-                $(this).data('vis' + t.toString(), unpacker.unpack(compressed_specs));
-            }
-            $(this).data('packed', false);
+
+        for (let t = 1; t <= vis_len; t++) {
+            $(this).data('index');
+            let compressed_specs = plots[0][$(this).data('idx') + "_" + t.toString()];
+            let unpacker = new jsonm.Unpacker();
+            unpacker.setMaxDictSize(100000);
+            $(this).data('vis' + t.toString(), unpacker.unpack(compressed_specs));
         }
 
         let d = $(this).data('description')

@@ -18,6 +18,7 @@
 {% for file in js_imports %}
 <script src="../../js/{{ file }}"></script>
 {% endfor %}
+<script src="plots/{{ gene }}.js"></script>
 <script src="../../js/table-report.js"></script>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">rbt report</a>
@@ -73,6 +74,7 @@
                             <tr
                                     class="variant-row"
                                     id="variant{{ loop.index }}"
+                                    data-idx="{{ loop.index }}"
                                     data-name="{{ variant.name }}"
                                     data-id="{{ variant.id }}"
                                     data-position="{{ variant.position }}"
@@ -86,7 +88,6 @@
                                     data-info="{{ variant.json_info | escape  }}"
                                     {% endif %}
                                     {% for k,v in variant.vis %}
-                                        data-vis{{ loop.index }}="{{ v | escape }}"
                                         data-vis-sample{{ loop.index }}="{{ k }}"
                                     {% endfor %}
                                     data-vislen="{{ variant.vis | length }}"

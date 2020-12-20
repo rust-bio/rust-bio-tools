@@ -375,6 +375,7 @@ pub(crate) fn make_table_report(
                 }
             }
         }
+
         for gene in genes {
             if last_gene_index.get(&gene).unwrap() <= &(record_index as u32) {
                 let detail_path = output_path.to_owned() + "/details/" + &sample;
@@ -403,6 +404,18 @@ pub(crate) fn make_table_report(
                 let filepath = detail_path.clone() + "/" + &gene + ".html";
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
+
+                let mut templates = Tera::default();
+                templates
+                    .add_raw_template("plot.js.tera", include_str!("plot.js.tera"))
+                    .unwrap();
+
+                let plot_path = detail_path.clone() + "/plots/" + &gene + ".js";
+                let mut plot_context = Context::new();
+                plot_context.insert("variants", &report_data);
+                let plot_html = templates.render("plot.js.tera", &plot_context).unwrap();
+                let mut plot_file = File::create(plot_path)?;
+                plot_file.write_all(plot_html.as_bytes())?;
             }
         }
     }

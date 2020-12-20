@@ -1,0 +1,8 @@
+var plots = [{
+    {% for variant in variants %}
+    {% set rowloop = loop.index %}
+    {% for k,v in variant.vis %}
+    "{{ rowloop }}_{{ loop.index }}": {{ v | json_encode() }},
+    {% endfor %}
+    {% endfor %}
+}];

@@ -56,17 +56,9 @@
                                 <th scope="col" data-sortable="true">pos</th>
                                 <th scope="col">ref</th>
                                 <th scope="col">alt</th>
-                                {% for variant in variants %}
-                                    {% if loop.first %}
-                                    {% if variant.format %}
-                                        {% for k, v in variant.format %}
-                                            {% for smpl, val in v %}
-                                                <th scope="col">{{ smpl }}:{{ k }}</th>
-                                            {% endfor %}
-                                        {% endfor %}
-                                    {% endif %}
-                                    {% endif %}
-                                {% endfor %}
+                                {% for variant in variants %}{% if loop.first %}{% if variant.format %}{% for k, v in variant.format %}{% for smpl, val in v %}
+                                <th scope="col">{{ smpl }}:{{ k }}</th>
+                                {% endfor %}{% endfor %}{% endif %}{% endif %}{% endfor %}
                             </tr>
                             </thead>
                             <tbody>
@@ -81,48 +73,28 @@
                                     data-type="{{ variant.var_type }}"
                                     data-reference="{{ variant.reference }}"
                                     data-alternatives="{{ variant.alternatives | safe }}"
-                                    {% if variant.json_format %}
-                                    data-format="{{ variant.json_format | escape  }}"
-                                    {% endif %}
-                                    {% if variant.json_info %}
-                                    data-info="{{ variant.json_info | escape  }}"
-                                    {% endif %}
-                                    {% for k,v in variant.vis %}
-                                        data-vis-sample{{ loop.index }}="{{ k }}"
-                                    {% endfor %}
+                                    {% if variant.json_format %}data-format="{{ variant.json_format | escape  }}"{% endif %}
+                                    {% if variant.json_info %}data-info="{{ variant.json_info | escape  }}"{% endif %}
+                                    {% for k,v in variant.vis %}data-vis-sample{{ loop.index }}="{{ k }}"{% endfor %}
                                     data-vislen="{{ variant.vis | length }}"
                                     data-packed=true
                                     data-annlen="{{ variant.ann | length }}"
                                     data-description="{{ description }}"
-                                    {% for attr in variant.ann %}
-                                        {% set rowloop = loop.index %}
-                                        {% for a in attr %}
-                                        {% if a %}
-                                            data-{{ "ann" ~ "[" ~ rowloop ~ "][" ~ loop.index ~ "]" }}="{{ a }}"
-                                        {% endif %}
-                                        {% endfor %}
-                                    {% endfor %}
+                                    {% for attr in variant.ann %}{% set rowloop = loop.index %}{% for a in attr %}{% if a %}
+                                    data-{{ "ann" ~ "[" ~ rowloop ~ "][" ~ loop.index ~ "]" }}="{{ a }}"
+                                    {% endif %}{% endfor %}{% endfor %}
                             >
                                 <th scope="row">{{ variant.name }}</th>
                                 <td>{{ variant.id }}</td>
                                 <td>{{ variant.position }}</td>
                                 <td>{{ variant.reference }}</td>
                                 <td>{{ variant.alternatives}}</td>
-                                {% if variant.format %}
-                                    {% for k, v in variant.format %}
-                                        {% for smpl, val in v %}
-                                            {% if val is iterable %}
-                                                <td scope="col">
-                                                {% for value in val %}
-                                                    {{ value }}{% if not loop.last %}, {% endif %}
-                                                {% endfor %}
-                                                </td>
-                                            {% else %}
-                                                <td scope="col">{{ val }}</td>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endfor %}
-                                {% endif %}
+                                {% if variant.format %}{% for k, v in variant.format %}{% for smpl, val in v %}{% if val is iterable %}
+                                <td scope="col">
+                                {% for value in val %}{{ value }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                </td>
+                                {% else %}
+                                <td scope="col">{{ val }}</td>{% endif %}{% endfor %}{% endfor %}{% endif %}
                             </tr>
                             {% endfor %}
                             </tbody>

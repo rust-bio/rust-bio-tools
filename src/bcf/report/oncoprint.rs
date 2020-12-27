@@ -191,19 +191,13 @@ pub fn oncoprint(
 
                         let split_ev = existing_var.split('&').collect_vec();
                         for ex_var in split_ev {
-                            let ev = if ex_var.starts_with("COSM") {
-                                "COSM"
-                            } else if ex_var.starts_with("COSN") {
-                                "COSN"
-                            } else if ex_var.starts_with("COSV") {
-                                "COSV"
-                            } else if ex_var.starts_with("rs") {
-                                "rs"
-                            } else {
-                                "unknown"
-                            };
-                            ev_rec.push(BarPlotRecord::new(gene.to_owned(), ev.to_owned()));
-                            gene_ev_rec.push(BarPlotRecord::new(alt.to_owned(), ev.to_owned()));
+                            let mut ev: String =
+                                ex_var.chars().filter(|c| !c.is_digit(10)).collect();
+                            if ev.is_empty() {
+                                ev = String::from("unknown");
+                            }
+                            ev_rec.push(BarPlotRecord::new(gene.to_owned(), ev.clone()));
+                            gene_ev_rec.push(BarPlotRecord::new(alt.to_owned(), ev));
                         }
 
                         let gene_imp_rec =

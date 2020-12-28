@@ -173,7 +173,23 @@ pub(crate) fn csv_report(
         )
     });
 
-    let prefixes = make_prefixes(table.clone(), titles.clone(), rows_per_page);
+    let prefixes = make_prefixes(
+        table
+            .clone()
+            .into_iter()
+            .map(|hm| {
+                hm.into_iter()
+                    .filter(|(k, _)| !is_numeric.get(k.as_str()).unwrap())
+                    .collect()
+            })
+            .collect(),
+        titles
+            .clone()
+            .into_iter()
+            .filter(|e| !is_numeric.get(e).unwrap())
+            .collect(),
+        rows_per_page,
+    );
 
     let prefix_path = output_path.to_owned() + "/prefixes/";
     fs::create_dir(Path::new(&prefix_path)).unwrap_or_else(|_| {

@@ -16,6 +16,7 @@ use rust_htslib::bcf;
 use rust_htslib::bcf::{Format, Read};
 use std::collections::{btree_map, BTreeMap, HashMap};
 use std::error::Error;
+use std::path::Path;
 use std::str;
 
 pub struct VarIndex {
@@ -30,9 +31,9 @@ impl VarIndex {
         let mut rec = reader.empty_record();
         loop {
             match reader.read(&mut rec) {
-                Ok(true) => (),
-                Ok(false) => break,
-                Err(e) => return Err(Box::new(e)),
+                Some(Ok(())) => (),
+                None => break,
+                Some(Err(e)) => return Err(Box::new(e)),
             };
             if let Some(rid) = rec.rid() {
                 let chrom = reader.header().rid2name(rid)?;
@@ -58,8 +59,8 @@ impl VarIndex {
     }
 }
 
-pub fn match_variants(
-    matchbcf: &str,
+pub fn match_variants<P: AsRef<Path>>(
+    matchbcf: P,
     max_dist: u32,
     max_len_diff: u32,
 ) -> Result<(), Box<dyn Error>> {
@@ -80,9 +81,9 @@ pub fn match_variants(
     let mut i = 0;
     loop {
         match inbcf.read(&mut rec) {
-            Ok(true) => (),
-            Ok(false) => break,
-            Err(e) => return Err(Box::new(e)),
+            Some(Ok(())) => (),
+            None => break,
+            Some(Err(e)) => return Err(Box::new(e)),
         };
         outbcf.translate(&mut rec);
 

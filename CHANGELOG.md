@@ -2,9 +2,32 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.16.0] - 2020-11-17
+### Changed
+- `rbt collapse-reads-to-fragments bam` writes skipped reads to separate bam file now
+- `rbt collapse-reads-to-fragments bam` does not perform starcode clustering anymore
+- Fixed bug in `rbt collapse-reads-to-fragments bam` failing when read mates map to different chromosomes 
+
+## [0.15.1] - 2020-11-12
+### Changed
+- fixed bug in vcf-split that led to unequally filled splitted VCF/BCFs.
+
+## [0.15.0] - 2020-11-11
+### Changed
+- Allow INFO field prefixes in vcf-report.
+- Require annotation with --hgvsg in vcf-report.
+- Fixes for vcf-report layout.
+### Added
+- New subcommand vcf-split for splitting VCF/BCF files into N equal chunks, including BND support.
+
+## [0.14.0] - 2020-10-26
+### Added
+- New flag `--tsv` for `rbt vcf-report`
+- `--tsv` allows adding a custom tsv file that will be visualized in the vcf-report
+
 ## [0.13.0] - 2020-10-06
 ### Changed
-- cli syntax for `rbt vcf-report` has been changed in order to allow BCF/VCF files holding variants from multiple samples
+- CLI syntax for `rbt vcf-report` has been changed in order to allow BCF/VCF files holding variants from multiple samples.
 
 ## [0.12.2] - 2020-09-30
 ### Added
@@ -21,7 +44,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.11.0] - 2020-08-05
 ### Added
-- Flag --sources that allows to constrain data sources for dgidb annotation of VCF/BCFs.
+- Flag --sources that allows to constrain data sources for DGIdb annotation of VCF/BCFs.
 
 ## [0.10.1] - 2020-05-13
 ### Changed
@@ -36,15 +59,15 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.9.2] - 2020-03-20
 ### Changed
-- BCF output for vcf-annotate-dgidb
+- BCF output for `vcf-annotate-dgidb`
 
 ## [0.9.0] - 2020-01-12
 ### Added
-- Subcommand vcf-fix-iupac-alleles for converting IUPAC codes in VCF/BCF files into Ns.
+- Subcommand `rbt vcf-fix-iupac-alleles` for converting IUPAC codes in VCF/BCF files into Ns.
 
 ## [0.8.3] - 2019-11-08
 ### Changed
-- Fixed a bug in `annotate-dgidb` where empty vcf input-files resulted in an error.
+- Fixed a bug in `annotate-dgidb` where empty VCF input-files resulted in an error.
 
 ## [0.8.0] - 2019-10-15
 ### Added
@@ -61,7 +84,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `call-consensus-reads` now writes shorter name lines for consensus reads.
   Name lines of consensus reads now only contain a random uuid and the number of
   reads they were created from. To get the old behavior, i.e. a list of reads
-  that were merged into this consensus read,http://semver.org/ the `--verbose-read-names` can be used.
+  that were merged into this consensus read, the `--verbose-read-names` flag can be used.
 
 
 ## [0.4.1] - 2019-05-02
@@ -81,7 +104,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.2.7] - 2018-12-28
 ### Changed
-- Handle missing values in vcf-to-txt.
+- Handle missing values in `vcf-to-txt`.
 - Bug fixes.
 
 ## [0.2.6] - 2018-07-04
@@ -94,8 +117,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.2.0] - 2018-02-23
 ### Added
-- A tool to selectively remove records from a fastq file. 
-- A tool to calculate b-allele frequencies (BAF) from a vcf file.
+- A tool to selectively remove records from a FASTQ file. 
+- A tool to calculate b-allele frequencies (BAF) from a VCF file.
 
 ## [0.1.3] - 2017-12-05
 ### Changed
@@ -103,11 +126,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.1.2] - 2016-11-02
 ### Changed
-- Improved robustness for exotic variant calls in vcf-match and vcf-to-txt.
+- Improved robustness for exotic variant calls in `vcf-match` and `vcf-to-txt`.
 
 ## [0.1.1] - 2016-08-31
 ### Changed
-- Hotfix of a bug in vcf-match.
+- Hotfix of a bug in `vcf-match`.
 
 
 ## [0.1.0] - 2016-08-31

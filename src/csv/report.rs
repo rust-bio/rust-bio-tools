@@ -18,12 +18,12 @@ pub(crate) fn csv_report(
     csv_path: &str,
     output_path: &str,
     rows_per_page: usize,
-    separator: &str,
+    separator: char,
     sort_column: Option<&str>,
     ascending: Option<bool>,
 ) -> Result<(), Box<dyn Error>> {
     let mut rdr = csv::ReaderBuilder::new()
-        .delimiter(separator.as_bytes()[0])
+        .delimiter(separator as u8)
         .from_path(csv_path)?;
 
     let header = rdr.headers()?.clone();

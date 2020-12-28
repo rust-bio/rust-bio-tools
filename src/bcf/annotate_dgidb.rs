@@ -5,6 +5,7 @@ use rust_htslib::bcf::{Format, Read};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::error::Error;
+use std::path::Path;
 use std::str;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -28,22 +29,23 @@ struct Interaction {
     interaction_types: Vec<String>,
 }
 
-pub fn annotate_dgidb(
-    vcf_path: &str,
+pub fn annotate_dgidb<P: AsRef<Path>, T: AsRef<str>>(
+    vcf_path: P,
     api_path: String,
     field_name: &str,
-    datasources: Option<Vec<&str>>,
+    datasources: Option<&[T]>,
     genes_per_request: usize,
 ) -> Result<(), Box<dyn Error>> {
+    let datasources = datasources.map(|d| d.iter().map(|s| s.as_ref()).collect());
     let gene_drug_interactions =
-        request_interaction_drugs(vcf_path, api_path, datasources, genes_per_request)?;
-    modify_vcf_entries(vcf_path, gene_drug_interactions, field_name)
+        request_interaction_drugs(vcf_path.as_ref(), api_path, datasources, genes_per_request)?;
+    modify_vcf_entries(vcf_path.as_ref(), gene_drug_interactions, field_name)
 }
 
 type Interactions = HashMap<String, Vec<(String, Vec<String>)>>;
 
-fn request_interaction_drugs(
-    vcf_path: &str,
+fn request_interaction_drugs<P: AsRef<Path>>(
+    vcf_path: P,
     api_path: String,
     datasources_opt: Option<Vec<&str>>,
     genes_per_request: usize,
@@ -86,7 +88,7 @@ fn request_interaction_drugs(
     Ok(Some(gene_drug_interactions))
 }
 
-fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
+fn collect_genes<P: AsRef<Path>>(vcf_path: P) -> Result<HashSet<String>, Box<dyn Error>> {
     let mut total_genes = HashSet::new();
     let mut reader = bcf::Reader::from_path(vcf_path)?;
     for result in reader.records() {
@@ -101,12 +103,12 @@ fn collect_genes(vcf_path: &str) -> Result<HashSet<String>, Box<dyn Error>> {
     Ok(total_genes)
 }
 
-fn extract_genes<'a>(
-    rec: &'a mut bcf::Record,
-) -> Result<Option<impl Iterator<Item = String> + 'a>, Box<dyn Error>> {
+fn extract_genes(
+    rec: &mut bcf::Record,
+) -> Result<Option<impl Iterator<Item = String> + '_>, Box<dyn Error>> {
     let annotation = rec.info(b"ANN").string()?;
     match annotation {
-        Some(transcripts) => Ok(Some(transcripts.into_iter().map(|transcript| {
+        Some(transcripts) => Ok(Some(transcripts.clone().into_iter().map(|transcript| {
             str::from_utf8(transcript.split(|c| *c == b'|').nth(3).unwrap())
                 .unwrap()
                 .to_owned()
@@ -115,8 +117,8 @@ fn extract_genes<'a>(
     }
 }
 
-fn modify_vcf_entries(
-    vcf_path: &str,
+fn modify_vcf_entries<P: AsRef<Path>>(
+    vcf_path: P,
     gene_drug_interactions_opt: Option<Interactions>,
     field_name: &str,
 ) -> Result<(), Box<dyn Error>> {

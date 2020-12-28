@@ -41,7 +41,8 @@ use std::io;
 use serde::Deserialize;
 
 use rust_htslib::bam;
-use rust_htslib::bam::Read;
+use rust_htslib::bam::{FetchDefinition, Read};
+use std::path::Path;
 
 #[derive(Deserialize, Debug)]
 struct PosRecord {
@@ -49,8 +50,8 @@ struct PosRecord {
     pos: u32,
 }
 
-pub fn depth(
-    bam_path: &str,
+pub fn depth<P: AsRef<Path>>(
+    bam_path: P,
     max_read_length: u32,
     include_flags: u16,
     exclude_flags: u16,
@@ -70,13 +71,13 @@ pub fn depth(
         let record: PosRecord = record?;
 
         // jump to correct position
-        let tid = bam_header.tid(record.chrom.as_bytes()).unwrap();
+        let tid = bam_header.tid(record.chrom.as_bytes()).unwrap() as i32;
         let start = cmp::max(record.pos as i64 - max_read_length as i64 - 1, 0);
-        bam_reader.fetch(
+        bam_reader.fetch(FetchDefinition::Region(
             tid,
-            start as u64,
-            start as u64 + (max_read_length * 2) as u64,
-        )?;
+            start as i64,
+            start as i64 + (max_read_length * 2) as i64,
+        ))?;
 
         // iterate over pileups
         let mut covered = false;

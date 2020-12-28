@@ -4,15 +4,20 @@
     <title>{{ gene }}</title>
     <link rel="stylesheet" type="text/css" href="../../css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../../css/bootstrap-table.min.css">
+    <link rel="stylesheet" type="text/css" href="../../css/oncoprint.css">
 </head>
 
 <body>
 <script src="../../js/jquery.min.js"></script>
 <script src="../../js/bootstrap-table.min.js"></script>
+<script src="../../js/bootstrap.bundle.min.js"></script>
 <script src="../../js/jsonm.min.js"></script>
 <script src="../../js/vega.min.js"></script>
 <script src="../../js/vega-lite.min.js"></script>
 <script src="../../js/vega-embed.min.js"></script>
+{% for file in js_imports %}
+<script src="../../js/{{ file }}"></script>
+{% endfor %}
 <script src="../../js/table-report.js"></script>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">rbt report</a>
@@ -42,32 +47,43 @@
             <div class="col-8">
                 <div class="row">
                     <div class="col-12">
-                        <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="true">
+                        <table id="table" class="table-bordered" data-toggle="table" data-height="305" data-search="true" data-pagination="true">
                             <thead>
                             <tr>
-                                <th scope="col">name</th>
+                                <th scope="col">contig</th>
                                 <th scope="col" data-sortable="true">id</th>
-                                <th scope="col" data-sortable="true">position</th>
-                                <th scope="col">reference</th>
-                                <th scope="col">alternative</th>
+                                <th scope="col" data-sortable="true">pos</th>
+                                <th scope="col">ref</th>
+                                <th scope="col">alt</th>
+                                {% for variant in variants %}
+                                    {% if loop.first %}
+                                    {% if variant.format %}
+                                        {% for k, v in variant.format %}
+                                            {% for smpl, val in v %}
+                                                <th scope="col">{{ smpl }}:{{ k }}</th>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    {% endif %}
+                                {% endfor %}
                             </tr>
                             </thead>
                             <tbody>
                             {% for variant in variants %}
                             <tr
                                     class="variant-row"
-                                    id="{{ variant.id }}"
+                                    id="variant{{ loop.index }}"
                                     data-name="{{ variant.name }}"
                                     data-id="{{ variant.id }}"
                                     data-position="{{ variant.position }}"
                                     data-type="{{ variant.var_type }}"
                                     data-reference="{{ variant.reference }}"
                                     data-alternatives="{{ variant.alternatives | safe }}"
-                                    {% if variant.format %}
-                                    data-format="{{ variant.format | escape  }}"
+                                    {% if variant.json_format %}
+                                    data-format="{{ variant.json_format | escape  }}"
                                     {% endif %}
-                                    {% if variant.info %}
-                                    data-info="{{ variant.info | escape  }}"
+                                    {% if variant.json_info %}
+                                    data-info="{{ variant.json_info | escape  }}"
                                     {% endif %}
                                     {% for k,v in variant.vis %}
                                         data-vis{{ loop.index }}="{{ v | escape }}"
@@ -89,26 +105,47 @@
                                 <td>{{ variant.position }}</td>
                                 <td>{{ variant.reference }}</td>
                                 <td>{{ variant.alternatives}}</td>
+                                {% if variant.format %}
+                                    {% for k, v in variant.format %}
+                                        {% for smpl, val in v %}
+                                            <td scope="col">{{ val.0 }}</td>
+                                        {% endfor %}
+                                    {% endfor %}
+                                {% endif %}
                             </tr>
                             {% endfor %}
                             </tbody>
                         </table>
+
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-12">
+                    <div class="col-12" style="overflow: auto; height: calc(100vh - 450px);">
                     {% for variant in variants %}
-                    {% for k,v in variant.vis %}
-                        <div id="vis{{ loop.index }}" class="justify-content-center" style="width: 100%"></div>
-                    {% endfor %}
+                        <nav>
+                            <ul class="nav nav-tabs" id="sampleTabs" role="tablist">
+                                {% for k,v in variant.vis %}
+                                <li class="nav-item">
+                                    <a class="nav-link {% if loop.first %}active{% endif %}" id="{{ k }}-tab" data-toggle="tab" href="#vis{{ k }}" role="tab" aria-controls="vis{{ k }}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}">{{ sample }}:{{ k }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </nav>
+                        <div class="tab-content" id="sampleTabContent">
+                        {% for k,v in variant.vis %}
+                        <div id="vis{{ k }}" class="tab-pane fade {% if loop.first %}show active{% endif %}" role="tabpanel" aria-labelledby="{{ k }}-tab">
+                            <div id="vis{{ loop.index }}" class="justify-content-center" style="width: 100%; margin: 10px;"></div>
+                        </div>
+                        {% endfor %}
+                        </div>
                     {% endfor %}
                     </div>
                 </div>
             </div>
-            <div class="col-4">
-                <table id="sidebar" class="table table-hover table-sm" style="margin-top: 58px;">
+            <div class="col-4"  style="overflow: auto; height: calc(100vh - 204px); margin-top: 59px;">
+                <table id="sidebar" class="table table-hover table-sm">
                 </table>
-                <table id="ann-sidebar" class="table table-hover table-sm" data-widht="100" data-toggle="table">
+                <table id="ann-sidebar" class="table-sm" data-widht="100" data-toggle="table">
                 </table>
                 <div id="custom-sidebar">
                 </div>

@@ -20,7 +20,7 @@ fn test_output(result: &str, expected: &str) {
 /// Compare two fastq files, ignoring the name lines
 /// Reads are sorted by their sequence, which is not 100% robust
 /// if mutations/ sequencing errors are considered.
-fn compare_fastq(result: &str, expected: &str) {
+fn compare_fastq(result: &str, expected: &str, strand: bool) {
     let result_reader = fastq::Reader::from_file(result).unwrap();
     let mut result_recs: Vec<fastq::Record> =
         result_reader.records().filter_map(Result::ok).collect();
@@ -33,6 +33,9 @@ fn compare_fastq(result: &str, expected: &str) {
     for (result, expected) in result_recs.iter().zip(expected_recs.iter()) {
         assert_eq!(result.seq(), expected.seq());
         assert_eq!(result.qual(), expected.qual());
+        if strand {
+            assert_eq!(result.desc(), expected.desc())
+        }
     }
 }
 
@@ -158,7 +161,7 @@ fn test_vcf_report() {
     assert!(
         Command::new("bash")
             .arg("-c")
-            .arg("target/debug/rbt vcf-report tests/ref.fa -v a=tests/report-test.vcf -v b=tests/report-test.vcf -b a:tumor=tests/test-report.bam -b b:tumor=tests/test-report.bam -- tests")
+            .arg("target/debug/rbt vcf-report tests/ref.fa -v a=tests/report-test.vcf -v b=tests/report-test.vcf -b a:tumor=tests/test-report.bam -b b:tumor=tests/test-report.bam -- tests/test-vcf-report")
             .spawn()
             .unwrap()
             .wait()
@@ -167,22 +170,22 @@ fn test_vcf_report() {
     );
     let files1 = vec![
         (
-            "tests/indexes/index1.html",
+            "tests/test-vcf-report/indexes/index1.html",
             "tests/expected/report/indexes/index1.html",
         ),
         (
-            "tests/genes/KRAS1.html",
+            "tests/test-vcf-report/genes/KRAS1.html",
             "tests/expected/report/genes/KRAS1.html",
         ),
     ];
 
     let files2 = vec![
         (
-            "tests/details/a/KRAS.html",
+            "tests/test-vcf-report/details/a/KRAS.html",
             "tests/expected/report/details/a/KRAS.html",
         ),
         (
-            "tests/details/b/KRAS.html",
+            "tests/test-vcf-report/details/b/KRAS.html",
             "tests/expected/report/details/b/KRAS.html",
         ),
     ];
@@ -201,11 +204,11 @@ fn test_vcf_report() {
         test_output(result, expected)
     }
     for (result, expected) in files2 {
-        // delete line 29 with timestamp and 22 with version
-        // this may fail on OS X due to the wrong sed being installed
+        // Delete line 32 with timestamp and 25 with version
+        // This may fail on OS X due to the wrong sed being installed
         assert!(Command::new("bash")
             .arg("-c")
-            .arg("sed -i '29d;22d' ".to_owned() + result)
+            .arg("sed -i '32d;25d' ".to_owned() + result)
             .spawn()
             .unwrap()
             .wait()
@@ -213,12 +216,7 @@ fn test_vcf_report() {
             .success());
         test_output(result, expected)
     }
-    fs::remove_dir_all("tests/genes").unwrap();
-    fs::remove_dir_all("tests/details").unwrap();
-    fs::remove_dir_all("tests/js").unwrap();
-    fs::remove_dir_all("tests/css").unwrap();
-    fs::remove_dir_all("tests/indexes").unwrap();
-    fs::remove_file("tests/index.html").unwrap();
+    fs::remove_dir_all("tests/test-vcf-report").unwrap();
 }
 
 #[test]
@@ -231,10 +229,12 @@ fn test_collapse_reads_to_fragments_two_cluster() {
     compare_fastq(
         "/tmp/test-consensus.1.fastq",
         "tests/expected/test-consensus.1.fastq",
+        false,
     );
     compare_fastq(
         "/tmp/test-consensus.2.fastq",
         "tests/expected/test-consensus.2.fastq",
+        false,
     );
 }
 
@@ -248,10 +248,12 @@ fn test_collapse_reads_to_fragments_single_cluster() {
     compare_fastq(
         "/tmp/test-consensus_single.1.fastq",
         "tests/expected/test-consensus_single.1.fastq",
+        false,
     );
     compare_fastq(
         "/tmp/test-consensus_single.2.fastq",
         "tests/expected/test-consensus_single.2.fastq",
+        false,
     );
 }
 
@@ -265,14 +267,17 @@ fn test_collapse_reads_to_fragments_reads() {
     compare_fastq(
         "/tmp/test_overlapping-consensus.1.fastq",
         "tests/expected/test_overlapping-consensus.1.fastq",
+        false,
     );
     compare_fastq(
         "/tmp/test_overlapping-consensus.2.fastq",
         "tests/expected/test_overlapping-consensus.2.fastq",
+        false,
     );
     compare_fastq(
         "/tmp/test_overlapping-consensus.3.fastq",
         "tests/expected/test_overlapping-consensus.3.fastq",
+        false,
     );
 }
 
@@ -281,11 +286,26 @@ fn test_collapse_reads_to_fragments_from_bam() {
     assert!(
     Command::new("bash")
         .arg("-c")
-        .arg("target/debug/rbt collapse-reads-to-fragments bam --max-seq-dist 8 tests/overlapping_consensus_marked.bam /tmp/overlapping_consensus_marked.bam")
+        .arg("target/debug/rbt collapse-reads-to-fragments bam tests/overlapping_consensus_marked.bam /tmp/bam_consensus_r1.fq /tmp/bam_consensus_r2.fq /tmp/bam_consensus_se.fq /tmp/overlapping_consensus_mapped.bam")
         .spawn().unwrap().wait().unwrap().success());
+    compare_fastq(
+        "/tmp/bam_consensus_r1.fq",
+        "tests/expected/bam_consensus_r1.fq",
+        true,
+    );
+    compare_fastq(
+        "/tmp/bam_consensus_r2.fq",
+        "tests/expected/bam_consensus_r2.fq",
+        true,
+    );
+    compare_fastq(
+        "/tmp/bam_consensus_se.fq",
+        "tests/expected/bam_consensus_se.fq",
+        true,
+    );
     compare_bam(
-        "/tmp/overlapping_consensus_marked.bam",
-        "tests/expected/overlapping_consensus_marked.bam",
+        "/tmp/overlapping_consensus_mapped.bam",
+        "tests/expected/overlapping_consensus_mapped.bam",
     );
 }
 
@@ -331,4 +351,16 @@ fn test_stats_fastq_file() {
         "/tmp/result.fastq.stats",
         "tests/expected/result.fastq.stats",
     );
+}
+
+#[test]
+fn test_vcf_split() {
+    assert!(Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt vcf-split tests/test-vcf-split.vcf /tmp/vcf-split1.bcf /tmp/vcf-split2.bcf")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
 }

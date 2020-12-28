@@ -5,13 +5,15 @@
     "impact": {},
     "consequence": {},
     "clin_sig": {},
-    "allel_frequency": {}
+    "allel_frequency": {},
+    "ev": {}
   },
   "autosize":{
     "type":"fit",
     "contains":"padding"
   },
   "spacing":30,
+  "resolve": {"scale": {"color": "independent"}},
   "vconcat":[
     {
       "data":
@@ -57,15 +59,15 @@
               "DUP",
               "INV",
               "BND",
-              "Complex"
+              "Replacement"
             ],
             "range":[
               "#a6cee3",
               "#1f78b4",
-              "#b2df8a",
+              "#e31a1c",
               "#33a02c",
               "#fb9a99",
-              "#e31a1c",
+              "#b2df8a",
               "#fdbf6f",
               "#ff7f00"
             ],
@@ -139,18 +141,18 @@
                       "DUP",
                       "INV",
                       "BND",
-                      "Complex"
+                      "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -219,18 +221,18 @@
                       "DUP",
                       "INV",
                       "BND",
-                      "Complex"
+                      "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -299,18 +301,18 @@
                       "DUP",
                       "INV",
                       "BND",
-                      "Complex"
+                      "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -379,18 +381,18 @@
                       "DUP",
                       "INV",
                       "BND",
-                      "Complex"
+                      "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -459,18 +461,18 @@
                       "DUP",
                       "INV",
                       "BND",
-                      "Complex"
+                      "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -539,18 +541,18 @@
                       "DUP",
                       "INV",
                       "BND",
-                      "Complex"
+                      "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -619,18 +621,18 @@
                       "DUP",
                       "INV",
                       "BND",
-                      "Complex"
+                      "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -699,18 +701,18 @@
                       "DUP",
                       "INV",
                       "BND",
-                      "Complex"
+                      "Replacement"
                     ],
                     "range":[
-                      "#a6cee3",
-                      "#1f78b4",
-                      "#b2df8a",
-                      "#33a02c",
-                      "#fb9a99",
-                      "#e31a1c",
-                      "#fdbf6f",
-                      "#ff7f00"
-                    ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                     "type":"ordinal"
                   }
                 },
@@ -760,18 +762,18 @@
                   "DUP",
                   "INV",
                   "BND",
-                  "Complex"
+                  "Replacement"
                 ],
                 "range":[
-                  "#a6cee3",
-                  "#1f78b4",
-                  "#b2df8a",
-                  "#33a02c",
-                  "#fb9a99",
-                  "#e31a1c",
-                  "#fdbf6f",
-                  "#ff7f00"
-                ],
+              "#a6cee3",
+              "#1f78b4",
+              "#e31a1c",
+              "#33a02c",
+              "#fb9a99",
+              "#b2df8a",
+              "#fdbf6f",
+              "#ff7f00"
+            ],
                 "type":"ordinal"
               }
             }
@@ -806,16 +808,16 @@
               "scale":{
                 "domain":[
                   "HIGH",
-                  "LOW",
                   "MODERATE",
+                  "LOW",
                   "MODIFIER",
                   "unknown"
                 ],
                 "range": [
-                  "#31a354",
-                  "#756bb1",
-                  "#7f7f7f",
-                  "#bcbd22",
+                  "#ec0000",
+                  "#ec5300",
+                  "#ec9b00",
+                  "#ecca00",
                   "#d4d4d4"
                 ],
                 "type":"ordinal"
@@ -828,7 +830,7 @@
             "name":"consequence"
           },
           "mark":"bar",
-          "width":100,
+          "width":160,
           "encoding":{
             "y":{
               "field":"key",
@@ -940,7 +942,7 @@
             "name":"clin_sig"
           },
           "mark":"bar",
-          "width":100,
+          "width":160,
           "encoding":{
             "y":{
               "field":"key",
@@ -1030,6 +1032,48 @@
               "field": "allel_frequency",
               "type": "quantitative"
             }]
+          }
+        },
+        {
+          "data":{
+            "name":"ev"
+          },
+          "mark":"bar",
+          "width":100,
+          "encoding":{
+            "y":{
+              "field":"key",
+              "type":"ordinal",
+              "sort":{},
+              "axis": null
+            },
+            "x":{
+              "field":"count",
+              "aggregate":"sum",
+              "stack":  "normalize",
+              "type":"quantitative",
+              "axis":{
+                "title":"existing variations"
+              }
+            },
+            "color":{
+              "field":"value",
+              "type":"nominal",
+              "title":"existing variations",
+              "scale":{
+                "domain":[
+                  "COSM",
+                  "rs",
+                  "unknown"
+                ],
+                "range": [
+                  "#e41234",
+                  "#9e225f",
+                  "#d4d4d4"
+                ],
+                "type":"ordinal"
+              }
+            }
           }
         }
       ]

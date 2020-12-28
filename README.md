@@ -13,7 +13,7 @@ Rust-Bio-Tools provides a command `rbt`, which currently supports the following 
 * a tool to merge BAM or FASTQ reads using marked duplicates respectively unique molecular identifiers (UMIs) (`rbt collapse-reads-to-fragments bam|fastq`)
 * a tool to generate interactive HTML based reports that offer multiple plots visualizing the provided genomics data in VCF and BAM format (`rbt vcf-report`)
 
-Further functionality is added as it is needed by the authors. Any contributions are highly welcome.
+Further functionality is added as it is needed by the authors. Check out the [Contributing](#Contributing) section if you want contribute anything yourself.
 For a list of changes, take a look at the [CHANGELOG](CHANGELOG.md).
 
 
@@ -46,10 +46,16 @@ Rust-Bio-Tools installs a command line utility `rbt`. Issue
 
 for a summary of all options and tools.
 
+## Contributing
+
+Any contributions are highly welcome. If you plan to contribute we suggest installing pre-commit hooks. To do so:
+1. Install `pre-commit` as explained [here](https://pre-commit.com/#installation)
+2. Run `pre-commit install` in the rust-bio-tools base directory
+
+This should format, check and lint your code when committing.
 
 ## Authors
 
 * Johannes Köster (https://koesterlab.github.io)
 * Felix Mölder
 * Henning Timm
-

@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::error::Error;
 use std::fs;
 use std::fs::File;
@@ -11,6 +12,7 @@ pub fn embed_js(
     output_path: &str,
     vcf_report: bool,
     custom_table_report_js: Option<&str>,
+    custom_js_files: Vec<String>,
 ) -> Result<(), Box<dyn Error>> {
     let js_path = output_path.to_owned() + "/js/";
     fs::create_dir(Path::new(&js_path)).unwrap_or_else(|_| {
@@ -48,15 +50,31 @@ pub fn embed_js(
         custom_file
             .read_to_string(&mut file_string)
             .expect("Unable to read string");
-        let mut out_file = File::create(js_path.to_owned() + "report.js")?;
+        let mut out_file = File::create(js_path.to_owned() + "table-report.js")?;
         out_file.write_all(file_string.as_bytes())?;
     } else {
-        files.push(("report.js", include_str!("js/report.js")))
+        files.push(("table-report.js", include_str!("js/table-report.js")))
     }
     for (name, file) in files {
         let mut out_file = File::create(js_path.to_owned() + name)?;
         out_file.write_all(file.as_bytes())?;
     }
+
+    for file in custom_js_files {
+        let file_name = file
+            .split('/')
+            .collect_vec()
+            .pop()
+            .unwrap_or_else(|| panic!("Unable to extract file name from path: {:?}", file));
+        let mut file_string = String::new();
+        let mut custom_file = File::open(&file).expect("Unable to open JS file");
+        custom_file
+            .read_to_string(&mut file_string)
+            .expect("Unable to read string");
+        let mut out_file = File::create(js_path.to_owned() + file_name)?;
+        out_file.write_all(file_string.as_bytes())?;
+    }
+
     Ok(())
 }
 

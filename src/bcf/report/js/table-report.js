@@ -1,15 +1,18 @@
 // customize column_values to display the attributes of your choice to the sidebar
 let column_values = ['id', 'position', 'reference', 'alternatives', 'type'];
 // customize which parts of the annotation field to display at the sidebar
-let ann_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+let ann_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]
 
 $(document).ready(function () {
-    $("html").on('click', '.variant-row', function () {
+    $('html').on('click', '.variant-row', function () {
+        $(this).siblings().children().removeClass("active-row");
+        $(this).children().addClass("active-row");
         let vis_len = $(this).data('vislen');
         if ($(this).data('packed')) {
             for (let t = 1; t <= vis_len; t++) {
                 let compressed_specs = $(this).data('vis' + t.toString());
                 let unpacker = new jsonm.Unpacker();
+                unpacker.setMaxDictSize(100000);
                 $(this).data('vis' + t.toString(), unpacker.unpack(compressed_specs));
             }
             $(this).data('packed', false);
@@ -23,7 +26,6 @@ $(document).ready(function () {
 
         for (let t = 1; t <= vis_len; t++) {
             let specs = $(this).data('vis' + t.toString());
-            console.log(specs);
             specs.data[1].values.forEach(function(a) {
                 if (a.row > 0 && Array.isArray(a.flags)) {
                     let flags = {};
@@ -58,8 +60,8 @@ $(document).ready(function () {
                 }
             });
             specs.title = 'Sample: ' + $(this).data('vis-sample' + t.toString());
-            specs.width = $('#vis' + t.toString()).width() - 40;
-            let v = vegaEmbed('#vis' + t.toString(), specs);
+            specs.width = $('#vis1').width() - 40;
+            vegaEmbed('#vis' + t.toString(), specs);
         }
 
         $("#sidebar").empty();
@@ -74,14 +76,23 @@ $(document).ready(function () {
         ann_values.forEach(function (x) {
             let name = description[x];
             $('#ann-sidebar').append('<tr>');
-            $('#ann-sidebar').append('<th class="thead-dark" style="position: sticky; left:-1px; z-index: 1; background: white">' + name + '</th>');
+            $('#ann-sidebar').append('<th class="thead-dark" style="position: sticky; left:-1px;">' + name + '</th>');
             for (let j = 1; j <= ann_length; j++) {
                 let ix = x + 1;
                 let field = 'ann[' + j + '][' + ix + ']';
                 let val = $(that).data(field);
+                if (name === "Existing_variation" && val !== "") {
+                    if (val.startsWith("rs")) {
+                        val = "<a href='https://www.ncbi.nlm.nih.gov/snp/" + val + "'>" + val + "</a>"
+                    } else if (val.startsWith("COSM")) {
+                        let num = val.replace( /^\D+/g, '');
+                        val = "<a href='https://cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + num + "'>" + val + "</a>"
+                    }
+                }
                 $('#ann-sidebar').append('<td>' + val + '</td>');
             }
             $('#ann-sidebar').append('</tr>');
         });
     })
+    $('#variant1').trigger('click');
 })

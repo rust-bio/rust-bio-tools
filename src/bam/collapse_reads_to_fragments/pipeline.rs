@@ -187,22 +187,38 @@ impl<W: io::Write> CallConsensusRead<W> {
                                     }
                                     RecordStorage::SingleRecord { .. } => unreachable!(),
                                 };
-                                let overlap = calc_overlap(&l_rec, &record)?;
-                                if overlap > 0 {
-                                    let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-
-                                    self.fq_se_writer.write_record(
-                                        &CalcOverlappingConsensus::new(
-                                            &[l_rec],
-                                            &[record],
-                                            overlap as usize,
-                                            &[rec_id, i],
-                                            uuid,
-                                            self.verbose_read_names,
+                                let overlap_opt = calc_overlap(&l_rec, &record)?;
+                                //TODO overlap_opt ist part of skipping softclips
+                                // Handle soft clips later
+                                if let Some(overlap) = overlap_opt {
+                                    if overlap > 0
+                                        && is_valid_overlap(
+                                            overlap as u32,
+                                            l_rec.cigar_cached().unwrap().into_iter().rev(),
                                         )
-                                        .calc_consensus()
-                                        .0,
-                                    )?;
+                                        && is_valid_overlap(
+                                            overlap as u32,
+                                            record.cigar_cached().unwrap().into_iter(),
+                                        )
+                                    {
+                                        let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+
+                                        self.fq_se_writer.write_record(
+                                            &CalcOverlappingConsensus::new(
+                                                &[l_rec],
+                                                &[record],
+                                                overlap as usize,
+                                                &[rec_id, i],
+                                                uuid,
+                                                self.verbose_read_names,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                    } else {
+                                        self.bam_skipped_writer.write(&l_rec)?;
+                                        self.bam_skipped_writer.write(&record)?;
+                                    }
                                 } else {
                                     self.bam_skipped_writer.write(&l_rec)?;
                                     self.bam_skipped_writer.write(&record)?;
@@ -270,34 +286,47 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
         }
 
         if !r_recs.is_empty() {
-            let overlap = calc_overlap(&l_recs[0], &r_recs[0])?;
-            if overlap > 0 {
-                let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                l_seqids.append(&mut r_seqids);
-                fq_se_writer.write_record(
-                    &CalcOverlappingConsensus::new(
-                        &l_recs,
-                        &r_recs,
-                        overlap as usize,
-                        &l_seqids,
-                        uuid,
-                        verbose_read_names,
+            let overlap_opt = calc_overlap(&l_recs[0], &r_recs[0])?;
+            if let Some(overlap) = overlap_opt {
+                if overlap > 0
+                    && is_valid_overlap(
+                        overlap as u32,
+                        l_recs[0].cigar_cached().unwrap().into_iter().rev(),
                     )
-                    .calc_consensus()
-                    .0,
-                )?;
+                    && is_valid_overlap(
+                        overlap as u32,
+                        r_recs[0].cigar_cached().unwrap().into_iter(),
+                    )
+                {
+                    let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                    l_seqids.append(&mut r_seqids);
+                    fq_se_writer.write_record(
+                        &CalcOverlappingConsensus::new(
+                            &l_recs,
+                            &r_recs,
+                            overlap as usize,
+                            &l_seqids,
+                            uuid,
+                            verbose_read_names,
+                        )
+                        .calc_consensus()
+                        .0,
+                    )?;
+                } else {
+                    let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                    fq1_writer.write_record(
+                        &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
+                            .calc_consensus()
+                            .0,
+                    )?;
+                    fq2_writer.write_record(
+                        &CalcNonOverlappingConsensus::new(&r_recs, &r_seqids, uuid)
+                            .calc_consensus()
+                            .0,
+                    )?;
+                }
             } else {
-                let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                fq1_writer.write_record(
-                    &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
-                        .calc_consensus()
-                        .0,
-                )?;
-                fq2_writer.write_record(
-                    &CalcNonOverlappingConsensus::new(&r_recs, &r_seqids, uuid)
-                        .calc_consensus()
-                        .0,
-                )?;
+                unreachable!()
             }
         } else {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
@@ -311,12 +340,66 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     Ok(())
 }
 
-fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<i64, Box<dyn Error>> {
-    let l_end_pos = l_rec.cigar_cached().unwrap().end_pos();
-    let r_start_pos = r_rec.pos();
-    let l_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;
-    let r_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter())?;
-    Ok((l_end_pos + l_softclips as i64) - (r_start_pos - r_softclips as i64))
+fn is_valid_overlap<'a, I>(overlap: u32, cigar: I) -> bool
+where
+    I: Iterator<Item = &'a Cigar>,
+{
+    let mut i = 0;
+    for c in cigar {
+        match i < overlap {
+            true => match c {
+                Cigar::Ins(_) | Cigar::Del(_) => return false,
+                Cigar::Match(l)
+                | Cigar::RefSkip(l)
+                | Cigar::SoftClip(l)
+                | Cigar::Pad(l)
+                | Cigar::Equal(l)
+                | Cigar::Diff(l) => i += l,
+                Cigar::HardClip(_) => {}
+            },
+            false => return true,
+        }
+    }
+    true
+}
+
+fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<Option<i64>, Box<dyn Error>> {
+    let l_start_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter())?;
+    let l_start_pos = l_rec.pos() - l_start_softclips as i64;
+
+    let l_end_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;
+    let l_end_pos = l_rec.cigar_cached().unwrap().end_pos() + l_end_softclips as i64;
+
+    let r_start_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter())?;
+    let r_start_pos = r_rec.pos() - r_start_softclips as i64;
+
+    let r_end_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter().rev())?;
+    let r_end_pos = l_rec.cigar_cached().unwrap().end_pos() + r_end_softclips as i64;
+
+    //TODO Skipping soft clips here. Handle this correctly
+    if (l_start_softclips > 0)
+        | (l_end_softclips > 0)
+        | (r_start_softclips > 0)
+        | (r_end_softclips > 0)
+    {
+        return Ok(None);
+    }
+    //TODO if-closure is just a hotfix to ensure reads only overlap by end of r1 and start of r2
+    // or are at exact same position
+    // Fix this later by handling any other alignments
+    if l_end_pos <= r_end_pos && l_start_pos <= r_start_pos {
+        let left_overlap_pos = match l_start_pos >= r_start_pos {
+            true => l_start_pos,
+            false => r_start_pos,
+        };
+        let right_overlap_pos = match l_end_pos <= r_end_pos {
+            true => l_end_pos,
+            false => r_end_pos,
+        };
+        Ok(Some(right_overlap_pos - left_overlap_pos))
+    } else {
+        Ok(None)
+    }
 }
 
 //Gets an Iterator over Cigar-items and returns number of soft-clips at the beginning

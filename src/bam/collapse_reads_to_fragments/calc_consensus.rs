@@ -42,7 +42,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
-        let mut consensus_strand = b"S:Z:".to_vec();
+        let mut consensus_strand = b"SI:Z:".to_vec();
         // assert that all reads have the same length here
         assert_eq!(
             Self::validate_read_lengths(self.recs1()),
@@ -139,7 +139,22 @@ impl<'a> CalcOverlappingConsensus<'a> {
             StrandObservation::Forward => consensus_strand.push(b'+'),
             StrandObservation::Reverse => consensus_strand.push(b'-'),
             StrandObservation::Both => consensus_strand.push(b'*'),
-            StrandObservation::None => unreachable!(),
+            StrandObservation::None => {
+                dbg!(&base_pos);
+                dbg!(String::from_utf8([ref_base].to_vec()));
+                dbg!(&self.overlap());
+                dbg!(&self.recs1()[0].pos());
+                dbg!(&self.recs1()[0].len());
+                dbg!(&self.recs1()[0].cigar_cached().unwrap().end_pos());
+                dbg!(&self.recs1()[0].cigar_cached().unwrap().into_iter());
+                dbg!(String::from_utf8([self.recs1()[0].base(base_pos)].to_vec()));
+                dbg!(&self.recs2()[0].pos());
+                dbg!(&self.recs2()[0].len());
+                dbg!(&self.recs2()[0].cigar_cached().unwrap().end_pos());
+                dbg!(&self.recs2()[0].cigar_cached().unwrap().into_iter());
+                dbg!(&self.recs2()[0].seq());
+                unreachable!()
+            }
         }
     }
 }
@@ -192,7 +207,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         let seq_len = self.recs()[0].seq().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
-        let mut consensus_strand = b"S:Z:".to_vec();
+        let mut consensus_strand = b"SI:Z:".to_vec();
         // assert that all reads have the same length here
         assert_eq!(
             Self::validate_read_lengths(self.recs()),

@@ -4,12 +4,11 @@ use itertools::Itertools;
 use serde_derive::Serialize;
 use serde_json::json;
 use simple_excel_writer::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use std::iter::FromIterator;
 use std::path::Path;
 use std::str::FromStr;
 use tera::{Context, Tera};
@@ -27,7 +26,7 @@ pub(crate) fn csv_report(
         .from_path(csv_path)?;
 
     let header = rdr.headers()?.clone();
-    let titles = Vec::from_iter(header.iter());
+    let titles = header.iter().collect_vec();
     let mut table = Vec::new();
     let mut numeric = HashMap::new();
     let mut non_numeric = HashMap::new();
@@ -173,7 +172,7 @@ pub(crate) fn csv_report(
         )
     });
 
-    let prefixes = make_prefixes(
+    let mut prefixes = make_prefixes(
         table
             .clone()
             .into_iter()
@@ -190,6 +189,28 @@ pub(crate) fn csv_report(
             .collect(),
         rows_per_page,
     );
+
+    let bin = make_bins(
+        table
+            .clone()
+            .into_iter()
+            .map(|hm| {
+                hm.into_iter()
+                    .filter(|(k, _)| *is_numeric.get(k.as_str()).unwrap())
+                    .collect()
+            })
+            .collect(),
+        titles
+            .clone()
+            .into_iter()
+            .filter(|e| *is_numeric.get(e).unwrap())
+            .collect(),
+        rows_per_page,
+    );
+
+    for (k, v) in bin {
+        prefixes.insert(k, v);
+    }
 
     let prefix_path = output_path.to_owned() + "/prefixes/";
     fs::create_dir(Path::new(&prefix_path)).unwrap_or_else(|_| {
@@ -364,6 +385,68 @@ fn make_prefixes(
         }
         // write stuff to output map with page like so: HashMap<column_title, HashMap<prefix, Vec<(value, page)>>>
     }
+    title_map
+}
+
+fn make_bins(
+    table: Vec<HashMap<String, String>>,
+    titles: Vec<&str>,
+    rows_per_page: usize,
+) -> HashMap<String, HashMap<String, Vec<(String, usize)>>> {
+    let mut title_map = HashMap::new();
+    for title in titles {
+        let mut values = Vec::new();
+        for row in &table {
+            if let Ok(val) = f32::from_str(row.get(title).unwrap()) {
+                values.push(val.to_owned())
+            }
+        }
+        let min = values.iter().fold(f32::INFINITY, |a, &b| a.min(b));
+        let max = values.iter().fold(f32::NEG_INFINITY, |a, &b| a.max(b));
+        let bins = 20;
+        let step = (max - min) / bins as f32;
+        let mut bin_data = HashMap::new();
+        for val in values {
+            for i in 0..bins {
+                let lower_bound = min + i as f32 * step;
+                let upper_bound = lower_bound + step;
+                let bin_name = lower_bound.to_string() + "-" + &upper_bound.to_string();
+                let entry = bin_data
+                    .entry(bin_name.to_owned())
+                    .or_insert_with(HashSet::new);
+                if ((i < (bins - 1) && val < upper_bound) || (i < bins && val <= upper_bound))
+                    && val >= lower_bound
+                {
+                    entry.insert(val.to_string());
+                }
+            }
+        }
+
+        let mut value_on_page = HashMap::new();
+        for (i, partial_table) in table.chunks(rows_per_page).enumerate() {
+            let page = i + 1;
+            for row in partial_table {
+                if let Ok(val) = f32::from_str(row.get(title).unwrap()) {
+                    let entry = value_on_page
+                        .entry(val.to_string())
+                        .or_insert_with(HashSet::new);
+                    entry.insert(page);
+                }
+            }
+            // write stuff to output map with page like so: HashMap<column_title, HashMap<bin, Vec<(value, page)>>>
+        }
+        let mut bin_map = HashMap::new();
+        for (bin, values) in bin_data {
+            for v in values {
+                let entry = bin_map.entry(bin.to_string()).or_insert_with(Vec::new);
+                for page in value_on_page.get(&v).unwrap() {
+                    entry.push((v.to_string(), *page));
+                }
+            }
+        }
+        title_map.insert(title.to_string(), bin_map);
+    }
+
     title_map
 }
 

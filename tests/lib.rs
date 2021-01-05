@@ -220,6 +220,43 @@ fn test_vcf_report() {
 }
 
 #[test]
+fn test_csv_report() {
+    assert!(
+        Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt csv-report tests/oscar_age_female.csv -r 20 -c Age -- tests/test-csv-report")
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success()
+    );
+
+    for i in 1..=5 {
+        let result = "tests/test-csv-report/indexes/index".to_owned() + &i.to_string() + ".html";
+        let expected =
+            "tests/expected/csv-report/indexes/index".to_owned() + &i.to_string() + ".html";
+
+        assert!(Command::new("bash")
+            .arg("-c")
+            .arg(
+                "sed -i '47d;54d' ".to_owned()
+                    + "tests/test-csv-report/indexes/index"
+                    + &i.to_string()
+                    + ".html"
+            )
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success());
+        test_output(&result, &expected);
+    }
+
+    fs::remove_dir_all("tests/test-csv-report").unwrap();
+}
+
+#[test]
 fn test_collapse_reads_to_fragments_two_cluster() {
     assert!(
         Command::new("bash")

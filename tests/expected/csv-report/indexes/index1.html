@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>rbt csv-report</title>
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap-table.min.css">
+</head>
+
+<body>
+<script src="../js/jquery.min.js"></script>
+<script src="../js/bootstrap.bundle.min.js"></script>
+<script src="../js/bootstrap-table.min.js"></script>
+<script src="../js/vega.min.js"></script>
+<script src="../js/vega-lite.min.js"></script>
+<script src="../js/vega-embed.min.js"></script>
+
+<script src="../plots/Index.js"></script>
+
+<script src="../plots/Year.js"></script>
+
+<script src="../plots/Age.js"></script>
+
+<script src="../plots/Name.js"></script>
+
+<script src="../plots/Movie.js"></script>
+
+<style>
+    .table-container { display: none; }
+    .loading { height: 100%; padding-top: 25%;}
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('.table-container').show();
+        $('.loading').hide();
+        $('#table').bootstrapTable( 'resetView' , {height: window.innerHeight - 200} );
+        $('.modal').on('shown.bs.modal', function () {
+            window.dispatchEvent(new Event('resize'));
+        });
+    });
+</script>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">rbt report</a>
+    <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+            </li>
+        </ul>
+        <span class="navbar-text">
+        </span>
+    </div>
+</nav>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="collapse navbar-collapse" id="navbarText2">
+        <ul class="navbar-nav mr-auto">
+            <li><a href="">csv-report</a></li>
+        </ul>
+        <span class="pull-right">
+            <a class="pull-right nav-link" href="../report.xlsx" download>
+                <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-file-earmark-arrow-down-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M2 2a2 2 0 0 1 2-2h5.293A1 1 0 0 1 10 .293L13.707 4a1 1 0 0 1 .293.707V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm7 2l.5-2.5 3 3L10 5a1 1 0 0 1-1-1zm-.5 3.5a.5.5 0 0 0-1 0v3.793l-1.146-1.147a.5.5 0 0 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 11.293V7.5z"/>
+                </svg>
+            </a>
+        </span>
+    </div>
+</nav>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12 loading text-center">
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div class="col-md-12 table-container">
+            <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="false" style="max-width: 90%;">
+                <thead>
+                <tr>
+                    
+                    <th style="white-space: nowrap;">Index
+                        <a class="" data-toggle="modal" data-target="#Index" onclick="vegaEmbed('#Index_plot', Index_plot)">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="4" height="5" x="1" y="10" rx="1"/>
+                                <rect width="4" height="9" x="6" y="6" rx="1"/>
+                                <rect width="4" height="14" x="11" y="1" rx="1"/>
+                            </svg>
+                        </a>
+                        <a class="" data-toggle="modal" data-target="#Index-search">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
+                                <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
+                            </svg>
+                        </a>
+                    </th>
+                    
+                    <th style="white-space: nowrap;">Year
+                        <a class="" data-toggle="modal" data-target="#Year" onclick="vegaEmbed('#Year_plot', Year_plot)">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="4" height="5" x="1" y="10" rx="1"/>
+                                <rect width="4" height="9" x="6" y="6" rx="1"/>
+                                <rect width="4" height="14" x="11" y="1" rx="1"/>
+                            </svg>
+                        </a>
+                        <a class="" data-toggle="modal" data-target="#Year-search">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
+                                <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
+                            </svg>
+                        </a>
+                    </th>
+                    
+                    <th style="white-space: nowrap;">Age
+                        <a class="" data-toggle="modal" data-target="#Age" onclick="vegaEmbed('#Age_plot', Age_plot)">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="4" height="5" x="1" y="10" rx="1"/>
+                                <rect width="4" height="9" x="6" y="6" rx="1"/>
+                                <rect width="4" height="14" x="11" y="1" rx="1"/>
+                            </svg>
+                        </a>
+                        <a class="" data-toggle="modal" data-target="#Age-search">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
+                                <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
+                            </svg>
+                        </a>
+                    </th>
+                    
+                    <th style="white-space: nowrap;">Name
+                        <a class="" data-toggle="modal" data-target="#Name" onclick="vegaEmbed('#Name_plot', Name_plot)">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="4" height="5" x="1" y="10" rx="1"/>
+                                <rect width="4" height="9" x="6" y="6" rx="1"/>
+                                <rect width="4" height="14" x="11" y="1" rx="1"/>
+                            </svg>
+                        </a>
+                        <a class="" data-toggle="modal" data-target="#Name-search">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
+                                <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
+                            </svg>
+                        </a>
+                    </th>
+                    
+                    <th style="white-space: nowrap;">Movie
+                        <a class="" data-toggle="modal" data-target="#Movie" onclick="vegaEmbed('#Movie_plot', Movie_plot)">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="4" height="5" x="1" y="10" rx="1"/>
+                                <rect width="4" height="9" x="6" y="6" rx="1"/>
+                                <rect width="4" height="14" x="11" y="1" rx="1"/>
+                            </svg>
+                        </a>
+                        <a class="" data-toggle="modal" data-target="#Movie-search">
+                            <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
+                                <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
+                            </svg>
+                        </a>
+                    </th>
+                    
+                </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        
+                        <td>63</td>
+                        
+                        <td>1990</td>
+                        
+                        <td>80</td>
+                        
+                        <td>Jessica Tandy</td>
+                        
+                        <td>Driving Miss Daisy</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>55</td>
+                        
+                        <td>1982</td>
+                        
+                        <td>74</td>
+                        
+                        <td>Katharine Hepburn</td>
+                        
+                        <td>On Golden Pond</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>4</td>
+                        
+                        <td>1931</td>
+                        
+                        <td>63</td>
+                        
+                        <td>Marie Dressler</td>
+                        
+                        <td>Min and Bill</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>85</td>
+                        
+                        <td>2012</td>
+                        
+                        <td>62</td>
+                        
+                        <td>Meryl Streep</td>
+                        
+                        <td>The Iron Lady</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>41</td>
+                        
+                        <td>1968</td>
+                        
+                        <td>61</td>
+                        
+                        <td>Katharine Hepburn</td>
+                        
+                        <td>The Lion in Winter</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>59</td>
+                        
+                        <td>1986</td>
+                        
+                        <td>61</td>
+                        
+                        <td>Geraldine Page</td>
+                        
+                        <td>The Trip to Bountiful</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>80</td>
+                        
+                        <td>2007</td>
+                        
+                        <td>61</td>
+                        
+                        <td>Helen Mirren</td>
+                        
+                        <td>The Queen</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>40</td>
+                        
+                        <td>1967</td>
+                        
+                        <td>60</td>
+                        
+                        <td>Katharine Hepburn</td>
+                        
+                        <td>Guess Who's Coming to Dinner</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>25</td>
+                        
+                        <td>1952</td>
+                        
+                        <td>54</td>
+                        
+                        <td>Shirley Booth</td>
+                        
+                        <td>Come Back Little Sheba</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>88</td>
+                        
+                        <td>2015</td>
+                        
+                        <td>54</td>
+                        
+                        <td>Julianne Moore</td>
+                        
+                        <td>Still Alice</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>57</td>
+                        
+                        <td>1984</td>
+                        
+                        <td>49</td>
+                        
+                        <td>Shirley MacLaine</td>
+                        
+                        <td>Terms of Endearment</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>69</td>
+                        
+                        <td>1996</td>
+                        
+                        <td>49</td>
+                        
+                        <td>Susan Sarandon</td>
+                        
+                        <td>Dead Man Walking</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>28</td>
+                        
+                        <td>1955</td>
+                        
+                        <td>48</td>
+                        
+                        <td>Anna Magnani</td>
+                        
+                        <td>The Rose Tattoo</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>68</td>
+                        
+                        <td>1995</td>
+                        
+                        <td>45</td>
+                        
+                        <td>Jessica Lange</td>
+                        
+                        <td>Blue Sky</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>83</td>
+                        
+                        <td>2010</td>
+                        
+                        <td>45</td>
+                        
+                        <td>Sandra Bullock</td>
+                        
+                        <td>The Blind Side</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>87</td>
+                        
+                        <td>2014</td>
+                        
+                        <td>44</td>
+                        
+                        <td>Cate Blanchett</td>
+                        
+                        <td>Blue Jasmine</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>48</td>
+                        
+                        <td>1975</td>
+                        
+                        <td>42</td>
+                        
+                        <td>Ellen Burstyn</td>
+                        
+                        <td>Alice Doesn't Live Here Anymore</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>64</td>
+                        
+                        <td>1991</td>
+                        
+                        <td>42</td>
+                        
+                        <td>Kathy Bates</td>
+                        
+                        <td>Misery</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>29</td>
+                        
+                        <td>1956</td>
+                        
+                        <td>41</td>
+                        
+                        <td>Ingrid Bergman</td>
+                        
+                        <td>Anastasia</td>
+                        
+                    </tr>
+                    
+                    <tr>
+                        
+                        <td>31</td>
+                        
+                        <td>1958</td>
+                        
+                        <td>41</td>
+                        
+                        <td>Susan Hayward</td>
+                        
+                        <td>I Want to Live!</td>
+                        
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+        
+        <div style="padding-top: 1rem">
+            <nav aria-label="page navigation">
+                <ul class="pagination justify-content-start">
+                    
+                    <li class="page-item active"><a class="page-link" href="index1.html">1</a></li>
+                    
+                    <li class="page-item"><a class="page-link" href="index2.html">2</a></li>
+                    
+                    <li class="page-item disabled"><a class="page-link" href="">...</a></li>
+                    <li class="page-item"><a class="page-link" href="index5.html">Last</a></li>
+                    
+                    
+                </ul>
+            </nav>
+        </div>
+        
+        </div>
+    </div>
+    <!-- Modal -->
+    
+    <div class="modal fade" id="Index" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Index</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="Index_plot" style="width: 100%; height: 300px; border:none;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="Index-search" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Prefix search for Index</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <iframe src="../prefixes/Index.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Lorem Ipsum.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="Year" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Year</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="Year_plot" style="width: 100%; height: 300px; border:none;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="Year-search" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Prefix search for Year</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <iframe src="../prefixes/Year.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Lorem Ipsum.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="Age" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Age</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="Age_plot" style="width: 100%; height: 300px; border:none;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="Age-search" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Prefix search for Age</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <iframe src="../prefixes/Age.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Lorem Ipsum.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="Name" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Name</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="Name_plot" style="width: 100%; height: 300px; border:none;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="Name-search" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Prefix search for Name</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <iframe src="../prefixes/Name.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Lorem Ipsum.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="Movie" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Movie</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="Movie_plot" style="width: 100%; height: 300px; border:none;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="Movie-search" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Prefix search for Movie</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <iframe src="../prefixes/Movie.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
+                </div>
+                <div class="modal-footer">
+                    <small class="mr-auto"><i>Lorem Ipsum.</i></small>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+</body>
+</html>

@@ -24,7 +24,7 @@
                 <tbody>
                 {% for val in values %}
                     <tr>
-                        <td><a target="_parent" href="../../indexes/index{{ val.1 }}.html" style="display: table-cell">{{ val.0 }}</a></td>
+                        <td>{{ val.0 }}</td>
                         <td><a target="_parent" href="../../indexes/index{{ val.1 }}.html" style="display: table-cell">{{ val.1 }}</a></td>
                     </tr>
                 {% endfor %}

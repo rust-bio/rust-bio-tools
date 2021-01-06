@@ -69,8 +69,8 @@
                 <span class="sr-only">Loading...</span>
             </div>
         </div>
-        <div class="col-md-12 table-container">
-            <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="false" style="max-width: 90%;">
+        <div class="col-md-12 table-container" style="margin-top: 15px;">
+            <table id="table" class="table table-hover" data-toggle="table" data-height="510" style="max-width: 90%;">
                 <thead>
                 <tr>
                     {% for title in titles %}

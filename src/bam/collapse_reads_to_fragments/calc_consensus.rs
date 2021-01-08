@@ -6,6 +6,7 @@ use bio_types::sequence::SequenceReadPairOrientation;
 use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
+use std::collections::HashSet;
 use std::ops::BitOrAssign;
 
 const ALLELES: &[u8] = b"ACGT";
@@ -163,22 +164,27 @@ impl<'a> CalcOverlappingConsensus<'a> {
         }
     }
     fn build_read_orientation_string(&self) -> Option<Vec<u8>> {
-        let mut read_orientations = b" RO:Z:".to_vec();
-        self.recs1()
+        let mut read_orientations_set: HashSet<_> = self
+            .recs1()
             .iter()
-            .for_each(|rec| match rec.read_pair_orientation() {
-                SequenceReadPairOrientation::F2F1 => read_orientations.extend_from_slice(b"F2F1,"),
-                SequenceReadPairOrientation::F2R1 => read_orientations.extend_from_slice(b"F2R1,"),
-                SequenceReadPairOrientation::F1F2 => read_orientations.extend_from_slice(b"F1F2,"),
-                SequenceReadPairOrientation::R2F1 => read_orientations.extend_from_slice(b"R2F1,"),
-                SequenceReadPairOrientation::F1R2 => read_orientations.extend_from_slice(b"F1R2,"),
-                SequenceReadPairOrientation::R2R1 => read_orientations.extend_from_slice(b"R2R1,"),
-                SequenceReadPairOrientation::R1F2 => read_orientations.extend_from_slice(b"R1F2,"),
-                SequenceReadPairOrientation::R1R2 => read_orientations.extend_from_slice(b"R1R2,"),
-                SequenceReadPairOrientation::None => unreachable!(),
-            });
-        match read_orientations.pop() {
-            Some(b',') => Some(read_orientations),
+            .filter_map(|rec| match rec.read_pair_orientation() {
+                SequenceReadPairOrientation::F2F1 => Some(b"F2F1,"),
+                SequenceReadPairOrientation::F2R1 => Some(b"F2R1,"),
+                SequenceReadPairOrientation::F1F2 => Some(b"F1F2,"),
+                SequenceReadPairOrientation::R2F1 => Some(b"R2F1,"),
+                SequenceReadPairOrientation::F1R2 => Some(b"F1R2,"),
+                SequenceReadPairOrientation::R2R1 => Some(b"R2R1,"),
+                SequenceReadPairOrientation::R1F2 => Some(b"R1F2,"),
+                SequenceReadPairOrientation::R1R2 => Some(b"R1R2,"),
+                SequenceReadPairOrientation::None => None,
+            })
+            .collect();
+        let mut read_orientations_string = b" RO:Z:".to_vec();
+        read_orientations_set
+            .drain()
+            .for_each(|entry| read_orientations_string.extend_from_slice(entry));
+        match read_orientations_string.pop() {
+            Some(b',') => Some(read_orientations_string),
             Some(b':') => None,
             Some(_) => unreachable!(),
             None => unreachable!(),

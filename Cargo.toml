@@ -10,13 +10,13 @@ readme = "README.md"
 
 [dependencies]
 approx = "0.4"
-bio = "0.30"
+bio = "0.32"
 clap = { version = "2.31", features = ["yaml", "color", "suggestions"]}
 indicatif = "0.11"
 itertools = "0.9"
 log = "0.4.6"
 fern = "0.5.7"
-rust-htslib = "0.35.2"
+rust-htslib = "0.36"
 csv = "1.0.2"
 rustc-serialize = "0.3"
 quick-error = "1.2"

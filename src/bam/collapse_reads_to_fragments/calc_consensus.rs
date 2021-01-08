@@ -2,6 +2,7 @@ use crate::common::CalcConsensus;
 use bio::io::fastq;
 use bio::stats::probs::LogProb;
 use bio_types::sequence::SequenceRead;
+use bio_types::sequence::SequenceReadPairOrientation;
 use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
@@ -43,6 +44,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_strand = b"SI:Z:".to_vec();
+        let read_orientations_opt = self.build_read_orientation_string();
         // assert that all reads have the same length here
         assert_eq!(
             Self::validate_read_lengths(self.recs1()),
@@ -85,6 +87,9 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 self.seqids().len(),
             ),
         };
+        if let Some(mut read_orientations) = read_orientations_opt {
+            consensus_strand.append(&mut read_orientations)
+        }
         let consensus_rec = fastq::Record::with_attrs(
             &name,
             Some(&String::from_utf8(consensus_strand).unwrap()),
@@ -141,13 +146,13 @@ impl<'a> CalcOverlappingConsensus<'a> {
             StrandObservation::Both => consensus_strand.push(b'*'),
             StrandObservation::None => {
                 dbg!(&base_pos);
-                dbg!(String::from_utf8([ref_base].to_vec()));
+                dbg!(String::from_utf8([ref_base].to_vec()).unwrap());
                 dbg!(&self.overlap());
                 dbg!(&self.recs1()[0].pos());
                 dbg!(&self.recs1()[0].len());
                 dbg!(&self.recs1()[0].cigar_cached().unwrap().end_pos());
                 dbg!(&self.recs1()[0].cigar_cached().unwrap().into_iter());
-                dbg!(String::from_utf8([self.recs1()[0].base(base_pos)].to_vec()));
+                dbg!(String::from_utf8([self.recs1()[0].base(base_pos)].to_vec()).unwrap());
                 dbg!(&self.recs2()[0].pos());
                 dbg!(&self.recs2()[0].len());
                 dbg!(&self.recs2()[0].cigar_cached().unwrap().end_pos());
@@ -155,6 +160,28 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 dbg!(&self.recs2()[0].seq());
                 unreachable!()
             }
+        }
+    }
+    fn build_read_orientation_string(&self) -> Option<Vec<u8>> {
+        let mut read_orientations = b" RO:Z:".to_vec();
+        self.recs1()
+            .iter()
+            .for_each(|rec| match rec.read_pair_orientation() {
+                SequenceReadPairOrientation::F2F1 => read_orientations.extend_from_slice(b"F2F1,"),
+                SequenceReadPairOrientation::F2R1 => read_orientations.extend_from_slice(b"F2R1,"),
+                SequenceReadPairOrientation::F1F2 => read_orientations.extend_from_slice(b"F1F2,"),
+                SequenceReadPairOrientation::R2F1 => read_orientations.extend_from_slice(b"R2F1,"),
+                SequenceReadPairOrientation::F1R2 => read_orientations.extend_from_slice(b"F1R2,"),
+                SequenceReadPairOrientation::R2R1 => read_orientations.extend_from_slice(b"R2R1,"),
+                SequenceReadPairOrientation::R1F2 => read_orientations.extend_from_slice(b"R1F2,"),
+                SequenceReadPairOrientation::R1R2 => read_orientations.extend_from_slice(b"R1R2,"),
+                SequenceReadPairOrientation::None => unreachable!(),
+            });
+        match read_orientations.pop() {
+            Some(b',') => Some(read_orientations),
+            Some(b':') => None,
+            Some(_) => unreachable!(),
+            None => unreachable!(),
         }
     }
 }

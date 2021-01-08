@@ -20,6 +20,7 @@
     .sym { cursor: pointer; }
     .table-container { display: none; }
     .loading { height: 100%; padding-top: 25%;}
+    .active-row { background: lightgray !important; }
 </style>
 
 <script>
@@ -29,6 +30,13 @@
         $('#table').bootstrapTable( 'resetView' , {height: window.innerHeight - 200} );
         $('.modal').on('shown.bs.modal', function () {
             window.dispatchEvent(new Event('resize'));
+        });
+        let to_be_highlighted = window.location.href.toString().split("highlight=").pop();
+        let rows = $('.wor');
+        rows.each(function() {
+            if (this.dataset.index === to_be_highlighted) {
+                $(this).children().addClass('active-row');
+            }
         });
     });
 </script>
@@ -51,7 +59,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="collapse navbar-collapse" id="navbarText2">
         <ul class="navbar-nav mr-auto">
-            <li><a href="">csv-report</a></li>
+            <li><a href="index{{ current_page}}.html">csv-report</a></li>
         </ul>
         <span class="pull-right">
             <a class="pull-right nav-link" href="../report.xlsx" download>
@@ -94,7 +102,7 @@
                 </thead>
                 <tbody>
                     {% for element in table %}
-                    <tr>
+                    <tr class="wor" data-idx="{{ loop.index0 }}">
                         {% for title in titles %}
                         <td>{{ element[title] }}</td>
                         {% endfor %}

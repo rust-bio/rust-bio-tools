@@ -13,6 +13,8 @@ use std::path::Path;
 use std::str::FromStr;
 use tera::{Context, Tera};
 
+type LookupTable = HashMap<String, HashMap<String, Vec<(String, usize, usize)>>>;
+
 pub(crate) fn csv_report(
     csv_path: &str,
     output_path: &str,
@@ -364,12 +366,12 @@ fn make_prefixes(
     table: Vec<HashMap<String, String>>,
     titles: Vec<&str>,
     rows_per_page: usize,
-) -> HashMap<String, HashMap<String, Vec<(String, usize)>>> {
+) -> LookupTable {
     let mut title_map = HashMap::new();
     for (i, partial_table) in table.chunks(rows_per_page).enumerate() {
         let page = i + 1;
         let prefix_len = 3;
-        for row in partial_table {
+        for (index, row) in partial_table.iter().enumerate() {
             for key in &titles {
                 let value = &row[key.to_owned()];
                 let entry = value.split_whitespace().take(1).collect_vec()[0];
@@ -379,11 +381,11 @@ fn make_prefixes(
                         .entry(key.to_string())
                         .or_insert_with(HashMap::new);
                     let values = prefix_map.entry(prefix).or_insert_with(Vec::new);
-                    values.push((value.to_owned(), page));
+                    values.push((value.to_owned(), page, index));
                 }
             }
         }
-        // write stuff to output map with page like so: HashMap<column_title, HashMap<prefix, Vec<(value, page)>>>
+        // write stuff to output map with page like so: HashMap<column_title, HashMap<prefix, Vec<(value, page, index)>>>
     }
     title_map
 }
@@ -392,7 +394,7 @@ fn make_bins(
     table: Vec<HashMap<String, String>>,
     titles: Vec<&str>,
     rows_per_page: usize,
-) -> HashMap<String, HashMap<String, Vec<(String, usize)>>> {
+) -> LookupTable {
     let mut title_map = HashMap::new();
     for title in titles {
         let mut values = Vec::new();
@@ -425,22 +427,22 @@ fn make_bins(
         let mut value_on_page = HashMap::new();
         for (i, partial_table) in table.chunks(rows_per_page).enumerate() {
             let page = i + 1;
-            for row in partial_table {
+            for (index, row) in partial_table.iter().enumerate() {
                 if let Ok(val) = f32::from_str(row.get(title).unwrap()) {
                     let entry = value_on_page
                         .entry(val.to_string())
                         .or_insert_with(HashSet::new);
-                    entry.insert(page);
+                    entry.insert((page, index));
                 }
             }
-            // write stuff to output map with page like so: HashMap<column_title, HashMap<bin, Vec<(value, page)>>>
+            // write stuff to output map with page like so: HashMap<column_title, HashMap<bin, Vec<(value, page, index)>>>
         }
         let mut bin_map = HashMap::new();
         for (bin, values) in bin_data {
             for v in values {
                 let entry = bin_map.entry(bin.to_string()).or_insert_with(Vec::new);
-                for page in value_on_page.get(&v).unwrap() {
-                    entry.push((v.to_string(), *page));
+                for (page, index) in value_on_page.get(&v).unwrap() {
+                    entry.push((v.to_string(), *page, *index));
                 }
             }
         }

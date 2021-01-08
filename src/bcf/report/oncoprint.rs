@@ -6,6 +6,7 @@ use std::{fs, str};
 use derive_new::new;
 use itertools::Itertools;
 use lazy_static::lazy_static;
+use log::warn;
 use regex::Regex;
 use serde_derive::Serialize;
 use tera::{self, Context, Tera};
@@ -129,7 +130,14 @@ pub fn oncoprint(
 
                         let mut impact = get_field("IMPACT")?;
                         let clin_sig = get_field("CLIN_SIG")?;
-                        let gene = get_field("SYMBOL")?;
+                        let gene = if !get_field("SYMBOL")?.is_empty() {
+                            get_field("SYMBOL")?
+                        } else if !get_field("Gene")?.is_empty() {
+                            get_field("Gene")?
+                        } else {
+                            warn!("Warning! Found allele in {:?} without SYMBOL or Gene field. This record will be skipped!", record);
+                            continue;
+                        };
                         let dna_alteration = get_field("HGVSg")?;
                         let canonical = get_field("CANONICAL")? == "YES";
                         let protein_alteration = get_field("HGVSp")?;
@@ -171,28 +179,30 @@ pub fn oncoprint(
                         let ev_rec = existing_variations
                             .entry(gene.to_owned())
                             .or_insert_with(Vec::new);
-                        let ev = if existing_var.starts_with("COSM") {
-                            "COSM"
-                        } else if existing_var.starts_with("rs") {
-                            "rs"
-                        } else {
-                            "unknown"
-                        };
-                        ev_rec.push(BarPlotRecord::new(gene.to_owned(), ev.to_owned()));
+                        let gene_ev_rec = gene_existing_variations
+                            .entry(gene.to_owned())
+                            .or_insert_with(Vec::new);
 
                         let alt = if protein_alteration.is_empty() {
                             dna_alteration
                         } else {
                             protein_alteration
                         };
+
+                        let split_ev = existing_var.split('&').collect_vec();
+                        for ex_var in split_ev {
+                            let mut ev: String =
+                                ex_var.chars().filter(|c| !c.is_digit(10)).collect();
+                            if ev.is_empty() {
+                                ev = String::from("unknown");
+                            }
+                            ev_rec.push(BarPlotRecord::new(gene.to_owned(), ev.clone()));
+                            gene_ev_rec.push(BarPlotRecord::new(alt.to_owned(), ev));
+                        }
+
                         let gene_imp_rec =
                             gene_impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
                         gene_imp_rec.push(BarPlotRecord::new(alt.to_owned(), impact.to_owned()));
-
-                        let gene_ev_rec = gene_existing_variations
-                            .entry(gene.to_owned())
-                            .or_insert_with(Vec::new);
-                        gene_ev_rec.push(BarPlotRecord::new(alt.to_owned(), ev.to_owned()));
 
                         let split_consequences: Vec<_> = consequence.split('&').collect();
 

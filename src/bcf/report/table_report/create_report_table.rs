@@ -3,6 +3,7 @@ use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant}
 use chrono::{DateTime, Local};
 use itertools::Itertools;
 use jsonm::packer::{PackOptions, Packer};
+use log::warn;
 use rust_htslib::bcf::header::{HeaderView, TagType};
 use rust_htslib::bcf::{HeaderRecord, Read, Record};
 use rustc_serialize::json::Json;
@@ -74,6 +75,9 @@ pub(crate) fn make_table_report(
         *ann_indices
             .get(&String::from("SYMBOL"))
             .expect("No field named SYMBOL found. Please only use VEP-annotated VCF-files."),
+        *ann_indices
+            .get(&String::from("Gene"))
+            .expect("No field named Gene found. Please only use VEP-annotated VCF-files."),
     )?;
 
     for (record_index, v) in vcf.records().enumerate() {
@@ -189,11 +193,25 @@ pub(crate) fn make_table_report(
             for entry in ann.iter() {
                 let fields = entry.split(|c| *c == b'|').collect_vec();
 
-                let gene = std::str::from_utf8(
-                    fields[*ann_indices.get(&String::from("SYMBOL")).expect(
-                        "No field named SYMBOL found. Please only use VEP-annotated VCF-files.",
-                    )],
-                )?;
+                let get_field = |field: &str| {
+                    std::str::from_utf8(
+                        fields[*ann_indices.get(&field.to_owned()).unwrap_or_else(|| {
+                            panic!(
+                                "No field named {} found. Please only use VEP-annotated VCF-files.",
+                                field
+                            )
+                        })],
+                    )
+                };
+
+                let gene = if !get_field("SYMBOL")?.is_empty() {
+                    get_field("SYMBOL")?
+                } else if !get_field("Gene")?.is_empty() {
+                    get_field("Gene")?
+                } else {
+                    warn!("Warning! Found allele in {:?} without SYMBOL or Gene field. This record will be skipped!", variant);
+                    continue;
+                };
                 genes.push(gene.to_owned());
 
                 let mut ann_strings = Vec::new();
@@ -357,6 +375,7 @@ pub(crate) fn make_table_report(
                 }
             }
         }
+
         for gene in genes {
             if last_gene_index.get(&gene).unwrap() <= &(record_index as u32) {
                 let detail_path = output_path.to_owned() + "/details/" + &sample;
@@ -385,6 +404,18 @@ pub(crate) fn make_table_report(
                 let filepath = detail_path.clone() + "/" + &gene + ".html";
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
+
+                let mut templates = Tera::default();
+                templates
+                    .add_raw_template("plot.js.tera", include_str!("plot.js.tera"))
+                    .unwrap();
+
+                let plot_path = detail_path.clone() + "/plots/" + &gene + ".js";
+                let mut plot_context = Context::new();
+                plot_context.insert("variants", &report_data);
+                let plot_html = templates.render("plot.js.tera", &plot_context).unwrap();
+                let mut plot_file = File::create(plot_path)?;
+                plot_file.write_all(plot_html.as_bytes())?;
             }
         }
     }
@@ -528,6 +559,7 @@ fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Value {
 fn get_gene_ending(
     vcf_path: &Path,
     symbol_index: usize,
+    gene_index: usize,
 ) -> Result<HashMap<String, u32>, Box<dyn Error>> {
     let mut endings = HashMap::new();
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
@@ -536,7 +568,10 @@ fn get_gene_ending(
         if let Some(ann) = variant.info(b"ANN").string()? {
             for entry in ann.iter() {
                 let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
-                let gene = std::str::from_utf8(fields[symbol_index])?;
+                let mut gene = std::str::from_utf8(fields[symbol_index])?;
+                if gene.is_empty() {
+                    gene = std::str::from_utf8(fields[gene_index])?;
+                }
                 endings.insert(gene.to_owned(), record_index as u32);
             }
         }

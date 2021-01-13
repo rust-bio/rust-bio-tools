@@ -26,6 +26,7 @@ pub fn embed_js(
         ("vega-embed.min.js", include_str!("js/vega-embed.min.js")),
         ("jsonm.min.js", include_str!("js/jsonm.min.js")),
         ("jquery.min.js", include_str!("js/jquery.min.js")),
+        ("lz-string.min.js", include_str!("js/lz-string.min.js")),
         (
             "bootstrap-table.min.js",
             include_str!("js/bootstrap-table.min.js"),

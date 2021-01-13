@@ -12,9 +12,10 @@ $(document).ready(function () {
         for (let t = 1; t <= vis_len; t++) {
             $(this).data('index');
             let compressed_specs = plots[0][$(this).data('idx') + "_" + t.toString()];
+            let decompressed = LZString.decompressFromUTF16(compressed_specs);
             let unpacker = new jsonm.Unpacker();
             unpacker.setMaxDictSize(100000);
-            $(this).data('vis' + t.toString(), unpacker.unpack(compressed_specs));
+            $(this).data('vis' + t.toString(), unpacker.unpack(decompressed));
         }
 
         let d = $(this).data('description')

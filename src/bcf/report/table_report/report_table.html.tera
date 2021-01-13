@@ -15,6 +15,7 @@
 <script src="../../js/vega.min.js"></script>
 <script src="../../js/vega-lite.min.js"></script>
 <script src="../../js/vega-embed.min.js"></script>
+<script src="../../js/lz-string.min.js"></script>
 {% for file in js_imports %}
 <script src="../../js/{{ file }}"></script>
 {% endfor %}

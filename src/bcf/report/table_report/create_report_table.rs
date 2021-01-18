@@ -4,6 +4,7 @@ use chrono::{DateTime, Local};
 use itertools::Itertools;
 use jsonm::packer::{PackOptions, Packer};
 use log::warn;
+use lz_string::compress_to_utf16;
 use rust_htslib::bcf::header::{HeaderView, TagType};
 use rust_htslib::bcf::{HeaderRecord, Read, Record};
 use rustc_serialize::json::Json;
@@ -15,7 +16,6 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use tera::{Context, Tera};
-use lz_string::compress_to_utf16;
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub enum VariantType {
@@ -555,7 +555,8 @@ fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> String {
     packer.set_max_dict_size(100000);
     let options = PackOptions::new();
     let packed_specs = packer.pack(&vega_specs, &options).unwrap();
-    compress_to_utf16(&packed_specs.to_string())
+
+    json!(compress_to_utf16(&packed_specs.to_string())).to_string()
 }
 
 fn get_gene_ending(

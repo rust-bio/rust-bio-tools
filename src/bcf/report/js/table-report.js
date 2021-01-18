@@ -15,7 +15,7 @@ $(document).ready(function () {
             let decompressed = LZString.decompressFromUTF16(compressed_specs);
             let unpacker = new jsonm.Unpacker();
             unpacker.setMaxDictSize(100000);
-            $(this).data('vis' + t.toString(), unpacker.unpack(decompressed));
+            $(this).data('vis' + t.toString(), unpacker.unpack(JSON.parse(decompressed)));
         }
 
         let d = $(this).data('description')

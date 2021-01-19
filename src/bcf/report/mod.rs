@@ -43,17 +43,17 @@ pub fn embed_js(
     ];
     if vcf_report {
         files.extend(vcf_report_files.iter());
-    }
-    if let Some(path) = custom_table_report_js {
-        let mut file_string = String::new();
-        let mut custom_file = File::open(path).expect("Unable to open custom JS file");
-        custom_file
-            .read_to_string(&mut file_string)
-            .expect("Unable to read string");
-        let mut out_file = File::create(js_path.to_owned() + "table-report.js")?;
-        out_file.write_all(file_string.as_bytes())?;
-    } else {
-        files.push(("table-report.js", include_str!("js/table-report.js")))
+        if let Some(path) = custom_table_report_js {
+            let mut file_string = String::new();
+            let mut custom_file = File::open(path).expect("Unable to open custom JS file");
+            custom_file
+                .read_to_string(&mut file_string)
+                .expect("Unable to read string");
+            let mut out_file = File::create(js_path.to_owned() + "table-report.js")?;
+            out_file.write_all(file_string.as_bytes())?;
+        } else {
+            files.push(("table-report.js", include_str!("js/table-report.js")))
+        }
     }
     for (name, file) in files {
         let mut out_file = File::create(js_path.to_owned() + name)?;

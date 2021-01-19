@@ -41,6 +41,7 @@ pub fn embed_js(
         ("report.js", include_str!("js/report.js")),
         ("gene-report.js", include_str!("js/gene-report.js")),
     ];
+    let csv_report_files = vec![("csv_report.js", include_str!("../../csv/csv_report.js"))];
     if vcf_report {
         files.extend(vcf_report_files.iter());
         if let Some(path) = custom_table_report_js {
@@ -54,6 +55,8 @@ pub fn embed_js(
         } else {
             files.push(("table-report.js", include_str!("js/table-report.js")))
         }
+    } else {
+        files.extend(csv_report_files.iter());
     }
     for (name, file) in files {
         let mut out_file = File::create(js_path.to_owned() + name)?;
@@ -94,8 +97,11 @@ pub fn embed_css(output_path: &str, vcf_report: bool) -> Result<(), Box<dyn Erro
         ),
     ];
     let vcf_report_files = vec![("oncoprint.css", include_str!("css/oncoprint.css"))];
+    let csv_report_files = vec![("csv_report.css", include_str!("../../csv/csv_report.css"))];
     if vcf_report {
         files.extend(vcf_report_files.iter());
+    } else {
+        files.extend(csv_report_files.iter());
     }
     for (name, file) in files {
         let mut out_file = File::create(css_path.to_owned() + name)?;

@@ -4,6 +4,7 @@
     <title>rbt csv-report</title>
     <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../css/bootstrap-table.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/csv_report.css">
 </head>
 
 <body>
@@ -13,33 +14,10 @@
 <script src="../js/vega.min.js"></script>
 <script src="../js/vega-lite.min.js"></script>
 <script src="../js/vega-embed.min.js"></script>
+<script src="../js/csv_report.js"></script>
 {% for title in titles %}
 <script src="../plots/{{ title }}.js"></script>
 {% endfor %}
-<style>
-    .sym { cursor: pointer; }
-    .table-container { display: none; }
-    .loading { height: 100%; padding-top: 25%;}
-    .active-row { background: lightgray !important; }
-</style>
-
-<script>
-    $(document).ready(function() {
-        $('.table-container').show();
-        $('.loading').hide();
-        $('#table').bootstrapTable( 'resetView' , {height: window.innerHeight - 200} );
-        $('.modal').on('shown.bs.modal', function () {
-            window.dispatchEvent(new Event('resize'));
-        });
-        let to_be_highlighted = window.location.href.toString().split("highlight=").pop();
-        let rows = $('.wor');
-        rows.each(function() {
-            if (this.dataset.index === to_be_highlighted) {
-                $(this).children().addClass('active-row');
-            }
-        });
-    });
-</script>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">rbt report</a>
     <div class="collapse navbar-collapse" id="navbarText">

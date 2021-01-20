@@ -142,7 +142,7 @@ fn modify_vcf_entries<P: AsRef<Path>>(
                 if let Some(mut genes) = genes {
                     genes.sort();
                     genes.dedup();
-                    let field_entries = build_dgidb_field(&gene_drug_interactions, genes)?;
+                    let field_entries = build_dgidb_field(&gene_drug_interactions, genes);
                     let field_entries: Vec<&[u8]> =
                         field_entries.iter().map(|v| v.as_slice()).collect();
                     rec.push_info_string(field_name.as_bytes(), &field_entries[..])?;
@@ -157,7 +157,7 @@ fn modify_vcf_entries<P: AsRef<Path>>(
 fn build_dgidb_field(
     gene_drug_interactions: &HashMap<String, Vec<(String, Vec<String>)>>,
     genes: Vec<String>,
-) -> Result<Vec<Vec<u8>>, Box<dyn Error>> {
+) -> Vec<Vec<u8>> {
     let mut field_entries: Vec<Vec<u8>> = Vec::new();
     let re = Regex::new(r"\s\(\w+\)").unwrap();
     for gene in genes.iter() {
@@ -191,5 +191,5 @@ fn build_dgidb_field(
             None => field_entries.push(format!("{g}|.|.", g = gene).as_bytes().to_vec()),
         }
     }
-    Ok(field_entries)
+    field_entries
 }

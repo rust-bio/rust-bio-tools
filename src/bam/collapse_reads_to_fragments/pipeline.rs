@@ -187,7 +187,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                     }
                                     RecordStorage::SingleRecord { .. } => unreachable!(),
                                 };
-                                let overlap_opt = calc_overlap(&l_rec, &record)?;
+                                let overlap_opt = calc_overlap(&l_rec, &record);
                                 //TODO overlap_opt ist part of skipping softclips
                                 // Handle soft clips later
                                 if let Some(overlap) = overlap_opt {
@@ -286,7 +286,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
         }
 
         if !r_recs.is_empty() {
-            let overlap_opt = calc_overlap(&l_recs[0], &r_recs[0])?;
+            let overlap_opt = calc_overlap(&l_recs[0], &r_recs[0]);
             if let Some(overlap) = overlap_opt {
                 if overlap > 0
                     && is_valid_overlap(
@@ -363,17 +363,17 @@ where
     true
 }
 
-fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<Option<i64>, Box<dyn Error>> {
-    let l_start_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter())?;
+fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Option<i64> {
+    let l_start_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter());
     let l_start_pos = l_rec.pos() - l_start_softclips as i64;
 
-    let l_end_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev())?;
+    let l_end_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev());
     let l_end_pos = l_rec.cigar_cached().unwrap().end_pos() + l_end_softclips as i64;
 
-    let r_start_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter())?;
+    let r_start_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter());
     let r_start_pos = r_rec.pos() - r_start_softclips as i64;
 
-    let r_end_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter().rev())?;
+    let r_end_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter().rev());
     let r_end_pos = l_rec.cigar_cached().unwrap().end_pos() + r_end_softclips as i64;
 
     //TODO Skipping soft clips here. Handle this correctly
@@ -382,7 +382,7 @@ fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<Option<i64>,
         | (r_start_softclips > 0)
         | (r_end_softclips > 0)
     {
-        return Ok(None);
+        return None;
     }
     //TODO if-closure is just a hotfix to ensure reads only overlap by end of r1 and start of r2
     // or are at exact same position
@@ -396,22 +396,22 @@ fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Result<Option<i64>,
             true => l_end_pos,
             false => r_end_pos,
         };
-        Ok(Some(right_overlap_pos - left_overlap_pos))
+        Some(right_overlap_pos - left_overlap_pos)
     } else {
-        Ok(None)
+        None
     }
 }
 
 //Gets an Iterator over Cigar-items and returns number of soft-clips at the beginning
-fn count_softclips<'a, I>(cigar: I) -> Result<i32, Box<dyn Error>>
+fn count_softclips<'a, I>(cigar: I) -> i32
 where
     I: Iterator<Item = &'a Cigar>,
 {
     for c in cigar {
         match c {
             Cigar::HardClip(_) => {}
-            Cigar::SoftClip(l) => return Ok(*l as i32),
-            _ => return Ok(0),
+            Cigar::SoftClip(l) => return *l as i32,
+            _ => return 0,
         }
     }
     unreachable!();

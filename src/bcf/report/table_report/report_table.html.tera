@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <title>{{ gene }}</title>
+    <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="../../css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../../css/bootstrap-table.min.css">
     <link rel="stylesheet" type="text/css" href="../../css/oncoprint.css">
@@ -15,6 +16,7 @@
 <script src="../../js/vega.min.js"></script>
 <script src="../../js/vega-lite.min.js"></script>
 <script src="../../js/vega-embed.min.js"></script>
+<script src="../../js/lz-string.min.js"></script>
 {% for file in js_imports %}
 <script src="../../js/{{ file }}"></script>
 {% endfor %}
@@ -124,6 +126,11 @@
                         </div>
                         {% endif %}
                     {% endfor %}
+                        <div id="loader-wrapper" class="d-flex justify-content-center text-primary" style="padding-top: 40px;">
+                            <div class="spinner-border" role="status">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

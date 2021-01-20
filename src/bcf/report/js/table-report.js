@@ -12,9 +12,10 @@ $(document).ready(function () {
         for (let t = 1; t <= vis_len; t++) {
             $(this).data('index');
             let compressed_specs = plots[0][$(this).data('idx') + "_" + t.toString()];
+            let decompressed = LZString.decompressFromUTF16(compressed_specs);
             let unpacker = new jsonm.Unpacker();
             unpacker.setMaxDictSize(100000);
-            $(this).data('vis' + t.toString(), unpacker.unpack(compressed_specs));
+            $(this).data('vis' + t.toString(), unpacker.unpack(JSON.parse(decompressed)));
         }
 
         let d = $(this).data('description')
@@ -63,6 +64,8 @@ $(document).ready(function () {
             vegaEmbed('#vis' + t.toString(), specs);
         }
 
+        $('.spinner-border').hide();
+
         $("#sidebar").empty();
         $.each($(this).data(), function(i, v) {
             if (i !== 'index' && !i.includes("ann") && column_values.includes(i)) {
@@ -82,11 +85,9 @@ $(document).ready(function () {
                 let vl = $(that).data(field);
                 if (name === "Existing_variation" && vl !== "") {
                     let fields = vl.split('&');
-                    console.log(fields);
                     let result = "";
                     for (var o = 0; o < fields.length; o++) {
                         let val = fields[o];
-                        console.log(val);
                         if (val.startsWith("rs")) {
                             result = result + "<a href='https://www.ncbi.nlm.nih.gov/snp/" + val + "'>" + val + "</a>";
                         } else if (val.startsWith("COSM")) {

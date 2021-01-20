@@ -4,6 +4,7 @@ use chrono::{DateTime, Local};
 use itertools::Itertools;
 use jsonm::packer::{PackOptions, Packer};
 use log::warn;
+use lz_string::compress_to_utf16;
 use rust_htslib::bcf::header::{HeaderView, TagType};
 use rust_htslib::bcf::{HeaderRecord, Read, Record};
 use rustc_serialize::json::Json;
@@ -308,7 +309,7 @@ pub(crate) fn make_table_report(
                 for (sample, bam) in bam_sample_path {
                     let bam_path = Path::new(bam);
                     let fasta_length = get_fasta_length(fasta_path);
-                    let visualization: Value;
+                    let visualization: String;
                     if pos < 75 {
                         let (content, max_rows) = create_report_data(
                             fasta_path,
@@ -516,7 +517,7 @@ fn create_report_data(
 
 /// Inserts the json containing the genome data into the vega specs.
 /// It also changes keys and values of the json data for the vega plot to look better and compresses the json with jsonm.
-fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Value {
+fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> String {
     let json_string = include_str!("vegaSpecs.json");
 
     let mut vega_specs: Value = serde_json::from_str(&json_string).unwrap();
@@ -553,7 +554,9 @@ fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Value {
     let mut packer = Packer::new();
     packer.set_max_dict_size(100000);
     let options = PackOptions::new();
-    packer.pack(&vega_specs, &options).unwrap()
+    let packed_specs = packer.pack(&vega_specs, &options).unwrap();
+
+    json!(compress_to_utf16(&packed_specs.to_string())).to_string()
 }
 
 fn get_gene_ending(

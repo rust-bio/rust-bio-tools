@@ -85,11 +85,9 @@ $(document).ready(function () {
                 let vl = $(that).data(field);
                 if (name === "Existing_variation" && vl !== "") {
                     let fields = vl.split('&');
-                    console.log(fields);
                     let result = "";
                     for (var o = 0; o < fields.length; o++) {
                         let val = fields[o];
-                        console.log(val);
                         if (val.startsWith("rs")) {
                             result = result + "<a href='https://www.ncbi.nlm.nih.gov/snp/" + val + "'>" + val + "</a>";
                         } else if (val.startsWith("COSM")) {

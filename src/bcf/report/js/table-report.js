@@ -64,7 +64,7 @@ $(document).ready(function () {
             vegaEmbed('#vis' + t.toString(), specs);
         }
 
-        $('#loader-wrapper').hide();
+        $('.spinner-border').hide();
 
         $("#sidebar").empty();
         $.each($(this).data(), function(i, v) {

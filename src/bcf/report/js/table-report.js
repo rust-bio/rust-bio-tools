@@ -64,6 +64,8 @@ $(document).ready(function () {
             vegaEmbed('#vis' + t.toString(), specs);
         }
 
+        $('#loader-wrapper').hide();
+
         $("#sidebar").empty();
         $.each($(this).data(), function(i, v) {
             if (i !== 'index' && !i.includes("ann") && column_values.includes(i)) {

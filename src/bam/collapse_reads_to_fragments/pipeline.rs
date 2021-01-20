@@ -348,13 +348,14 @@ where
     for c in cigar {
         match i < overlap {
             true => match c {
-                Cigar::Ins(_) | Cigar::Del(_) => return false,
+                Cigar::Ins(_) => return false,
                 Cigar::Match(l)
                 | Cigar::RefSkip(l)
                 | Cigar::SoftClip(l)
                 | Cigar::Pad(l)
                 | Cigar::Equal(l)
-                | Cigar::Diff(l) => i += l,
+                | Cigar::Diff(l)
+                | Cigar::Del(l) => i += l,
                 Cigar::HardClip(_) => {}
             },
             false => return true,

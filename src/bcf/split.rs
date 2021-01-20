@@ -30,14 +30,13 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
 
         loop {
             let mut rec = reader.empty_record();
-            let read_err = || format!("error reading {}-th record of input VCF/BCF", i + 1);
 
             if reader.read(&mut rec).is_none() {
                 // EOF
                 break;
             }
 
-            let towrite = if is_bnd(&mut rec).with_context(read_err)? {
+            let towrite = if is_bnd(&mut rec) {
                 if let Some(group) = BreakendGroup::from(&mut rec) {
                     if let Some(end) = info.end(&group) {
                         // BND is part of a group.
@@ -159,7 +158,7 @@ impl BCFInfo {
         for res in reader.records() {
             let mut rec = res?;
 
-            if is_bnd(&mut rec)? {
+            if is_bnd(&mut rec) {
                 if let Some(group) = BreakendGroup::from(&mut rec) {
                     if let Some(repr) = supergroups.get(&group) {
                         // this group is part of a supergroup
@@ -194,10 +193,10 @@ impl BCFInfo {
     }
 }
 
-fn is_bnd(record: &mut bcf::Record) -> Result<bool> {
-    Ok(record.info(b"SVTYPE").string().map_or(false, |entries| {
+fn is_bnd(record: &mut bcf::Record) -> bool {
+    record.info(b"SVTYPE").string().map_or(false, |entries| {
         entries.map_or(false, |entries| entries[0] == b"BND")
-    }))
+    })
 }
 
 fn event(record: &mut bcf::Record) -> Option<Vec<u8>> {

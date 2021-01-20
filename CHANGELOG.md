@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.16.0] - 2020-11-17
+### Changed
+- `rbt collapse-reads-to-fragments bam` writes skipped reads to separate bam file now
+- `rbt collapse-reads-to-fragments bam` does not perform starcode clustering anymore
+- Fixed bug in `rbt collapse-reads-to-fragments bam` failing when read mates map to different chromosomes 
+
+## [0.15.1] - 2020-11-12
+### Changed
+- fixed bug in vcf-split that led to unequally filled splitted VCF/BCFs.
+
 ## [0.15.0] - 2020-11-11
 ### Changed
 - Allow INFO field prefixes in vcf-report.

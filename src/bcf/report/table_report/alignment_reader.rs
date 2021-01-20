@@ -1,5 +1,6 @@
 extern crate rust_htslib;
 
+use self::rust_htslib::bam::FetchDefinition;
 use crate::bcf::report::table_report::fasta_reader::read_fasta;
 use rust_htslib::bam::record::CigarStringView;
 use rust_htslib::{bam, bam::Read};
@@ -84,11 +85,12 @@ pub fn decode_flags(code: u16) -> Vec<u16> {
 
 pub fn read_indexed_bam(path: &Path, chrom: String, from: u64, to: u64) -> Vec<Alignment> {
     let mut bam = bam::IndexedReader::from_path(&path).unwrap();
-    let tid = bam.header().tid(chrom.as_bytes()).unwrap();
+    let tid = bam.header().tid(chrom.as_bytes()).unwrap() as i32;
 
     let mut alignments: Vec<Alignment> = Vec::new();
 
-    bam.fetch(tid, from, to).unwrap();
+    bam.fetch(FetchDefinition::Region(tid, from as i64, to as i64))
+        .unwrap();
 
     for r in bam.records() {
         let rec = r.unwrap();

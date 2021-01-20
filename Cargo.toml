@@ -1,6 +1,6 @@
 [package]
 name = "rust-bio-tools"
-version = "0.14.4-alpha.0"
+version = "0.16.1-alpha.0"
 authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>", "Erik Clarke <ecl@pennmedicine.upenn.edu>"]
 description = "A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio."
 license-file = "LICENSE.md"
@@ -9,13 +9,14 @@ edition = "2018"
 readme = "README.md"
 
 [dependencies]
-bio = "0.30"
+approx = "0.4"
+bio = "0.32"
 clap = { version = "2.31", features = ["yaml", "color", "suggestions"]}
 indicatif = "0.11"
 itertools = "0.9"
 log = "0.4.6"
 fern = "0.5.7"
-rust-htslib = "0.30.0"
+rust-htslib = "0.36"
 csv = "1.0.2"
 rustc-serialize = "0.3"
 quick-error = "1.2"
@@ -46,6 +47,8 @@ chrono = "0.4"
 lazy_static = "1.4"
 anyhow = "1"
 thiserror = "1"
+rayon = "1.5"
+structopt = "0.3"
 
 [[bin]]
 name = "rbt"

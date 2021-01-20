@@ -30,6 +30,7 @@ pub fn calculate_baf() -> Result<(), Box<dyn Error>> {
             let ref_depths = record
                 .format(b"RO")
                 .integer()?
+                .clone()
                 .into_iter()
                 .map(|d| d.to_owned())
                 .collect_vec();
@@ -52,7 +53,6 @@ pub fn calculate_baf() -> Result<(), Box<dyn Error>> {
                 };
             }
         }
-
         writer.translate(&mut record);
         record.push_format_float(b"BAF", &bafs)?;
         writer.write(&record)?;

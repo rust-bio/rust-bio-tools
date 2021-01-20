@@ -84,8 +84,8 @@ use log::info;
 use pipeline::{CallConsensusReads, CallNonOverlappingConsensusRead, CallOverlappingConsensusRead};
 use std::error::Error;
 use std::fs;
-use std::io::BufReader;
-use std::str;
+use std::io::{BufReader, BufWriter, Read, Write};
+use std::path::Path;
 
 // TODO: reduce arguments for clippy to <= 7
 /// Build readers for the given input and output FASTQ files and pass them to
@@ -94,12 +94,12 @@ use std::str;
 /// The type of the readers (writers) depends on the file ending.
 /// If the input file names end with '.gz' a gzipped reader (writer) is used.
 #[allow(clippy::too_many_arguments)]
-pub fn call_consensus_reads_from_paths(
-    fq1: &str,
-    fq2: &str,
-    fq1_out: &str,
-    fq2_out: &str,
-    fq3_out: Option<&str>,
+pub fn call_consensus_reads_from_paths<P: AsRef<Path>>(
+    fq1: P,
+    fq2: P,
+    fq1_out: P,
+    fq2_out: P,
+    fq3_out: Option<P>,
     umi_len: usize,
     seq_dist: usize,
     umi_dist: usize,
@@ -110,64 +110,73 @@ pub fn call_consensus_reads_from_paths(
 ) -> Result<(), Box<dyn Error>> {
     match fq3_out {
         None => {
-            info!("Reading input files:\n    {}\n    {}", fq1, fq2);
-            info!("Writing output to:\n    {}\n    {}", fq1_out, fq2_out);
-            match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz")) {
-                (false, false, false, false) => CallNonOverlappingConsensusRead::new(
-                    &mut fastq::Reader::from_file(fq1)?,
-                    &mut fastq::Reader::from_file(fq2)?,
-                    &mut fastq::Writer::to_file(fq1_out)?,
-                    &mut fastq::Writer::to_file(fq2_out)?,
+            info!(
+                "Reading input files:\n    {}\n    {}",
+                fq1.as_ref().display(),
+                fq2.as_ref().display()
+            );
+            info!(
+                "Writing output to:\n    {}\n    {}",
+                fq1_out.as_ref().display(),
+                fq2_out.as_ref().display()
+            );
+
+            fn reader<P: AsRef<Path>>(
+                path: P,
+            ) -> Result<fastq::Reader<Box<dyn std::io::Read>>, Box<dyn Error>> {
+                let r: Box<dyn Read> = if path.as_ref().ends_with(".gz") {
+                    Box::new(
+                        fs::File::open(&path)
+                            .map(BufReader::new)
+                            .map(MultiGzDecoder::new)?,
+                    )
+                } else {
+                    Box::new(fs::File::open(&path).map(BufReader::new)?)
+                };
+                Ok(fastq::Reader::new(r))
+            }
+
+            fn writer<P: AsRef<Path>>(
+                path: P,
+            ) -> Result<fastq::Writer<Box<dyn std::io::Write>>, Box<dyn Error>> {
+                let w: Box<dyn Write> = if path.as_ref().ends_with(".gz") {
+                    Box::new(
+                        fs::File::create(&path)
+                            .map(BufWriter::new)
+                            .map(|w| GzEncoder::new(w, Compression::default()))?,
+                    )
+                } else {
+                    Box::new(fs::File::create(&path).map(BufWriter::new)?)
+                };
+                Ok(fastq::Writer::new(w))
+            }
+
+            CallNonOverlappingConsensusRead::new(
+                &mut reader(fq1)?,
+                &mut reader(fq2)?,
+                &mut writer(fq1_out)?,
+                &mut writer(fq2_out)?,
                 umi_len,
                 seq_dist,
-                    umi_dist,
-                    reverse_umi,
-                    verbose_read_names,
-                )
-                .call_consensus_reads(),
-                (true, true, false, false) => CallNonOverlappingConsensusRead::new(
-                    &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new)?),
-                    &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(MultiGzDecoder::new)?),
-                    &mut fastq::Writer::to_file(fq1_out)?,
-                    &mut fastq::Writer::to_file(fq2_out)?,
-                    umi_len,
-                    seq_dist,
-                    umi_dist,
-                    reverse_umi,
-                    verbose_read_names,
-                ).call_consensus_reads(),
-                (false, false, true, true) => CallNonOverlappingConsensusRead::new(
-                    &mut fastq::Reader::from_file(fq1)?,
-                    &mut fastq::Reader::from_file(fq2)?,
-                    &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out)?, Compression::default())),
-                    &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out)?, Compression::default())),
-                    umi_len,
-                    seq_dist,
-                    umi_dist,
-                    reverse_umi,
-                    verbose_read_names,
-                ).call_consensus_reads(),
-                (true, true, true, true) => CallNonOverlappingConsensusRead::new(
-                    &mut fastq::Reader::new(fs::File::open(fq1).map(BufReader::new).map(MultiGzDecoder::new)?),
-                    &mut fastq::Reader::new(fs::File::open(fq2).map(BufReader::new).map(MultiGzDecoder::new)?),
-                    &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq1_out)?, Compression::default())),
-                    &mut fastq::Writer::new(GzEncoder::new(fs::File::create(fq2_out)?, Compression::default())),
-                    umi_len,
-                    seq_dist,
-                    umi_dist,
-                    reverse_umi,
-                    verbose_read_names,
-                ).call_consensus_reads(),
-                _ => panic!("Invalid combination of files. Each pair of files (input and output) need to be both gzipped or both not zipped.")
-            }
+                umi_dist,
+                reverse_umi,
+                verbose_read_names,
+            )
+            .call_consensus_reads()
         }
         Some(fq3_path) => {
-            eprintln!("Reading input files:\n    {}\n    {}", fq1, fq2);
+            eprintln!(
+                "Reading input files:\n    {}\n    {}",
+                fq1.as_ref().display(),
+                fq2.as_ref().display()
+            );
             eprintln!(
                 "Writing output to:\n    {}\n    {}\n    {}",
-                fq1_out, fq2_out, fq3_path
+                fq1_out.as_ref().display(),
+                fq2_out.as_ref().display(),
+                fq3_path.as_ref().display()
             );
-            match (fq1.ends_with(".gz"), fq2.ends_with(".gz"), fq1_out.ends_with(".gz"), fq2_out.ends_with(".gz"), fq3_path.ends_with(".gz")) {
+            match (fq1.as_ref().ends_with(".gz"), fq2.as_ref().ends_with(".gz"), fq1_out.as_ref().ends_with(".gz"), fq2_out.as_ref().ends_with(".gz"), fq3_path.as_ref().ends_with(".gz")) {
                 (false, false, false, false, false) => CallOverlappingConsensusRead::new(
                     &mut fastq::Reader::from_file(fq1)?,
                     &mut fastq::Reader::from_file(fq2)?,

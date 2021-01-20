@@ -20,7 +20,7 @@ fn test_output(result: &str, expected: &str) {
 /// Compare two fastq files, ignoring the name lines
 /// Reads are sorted by their sequence, which is not 100% robust
 /// if mutations/ sequencing errors are considered.
-fn compare_fastq(result: &str, expected: &str) {
+fn compare_fastq(result: &str, expected: &str, strand: bool) {
     let result_reader = fastq::Reader::from_file(result).unwrap();
     let mut result_recs: Vec<fastq::Record> =
         result_reader.records().filter_map(Result::ok).collect();
@@ -33,6 +33,9 @@ fn compare_fastq(result: &str, expected: &str) {
     for (result, expected) in result_recs.iter().zip(expected_recs.iter()) {
         assert_eq!(result.seq(), expected.seq());
         assert_eq!(result.qual(), expected.qual());
+        if strand {
+            assert_eq!(result.desc(), expected.desc())
+        }
     }
 }
 
@@ -201,11 +204,11 @@ fn test_vcf_report() {
         test_output(result, expected)
     }
     for (result, expected) in files2 {
-        // Delete line 32 with timestamp and 25 with version
+        // Delete line 33 with timestamp and 26 with version
         // This may fail on OS X due to the wrong sed being installed
         assert!(Command::new("bash")
             .arg("-c")
-            .arg("sed -i '32d;25d' ".to_owned() + result)
+            .arg("sed -i '33d;26d' ".to_owned() + result)
             .spawn()
             .unwrap()
             .wait()
@@ -226,10 +229,12 @@ fn test_collapse_reads_to_fragments_two_cluster() {
     compare_fastq(
         "/tmp/test-consensus.1.fastq",
         "tests/expected/test-consensus.1.fastq",
+        false,
     );
     compare_fastq(
         "/tmp/test-consensus.2.fastq",
         "tests/expected/test-consensus.2.fastq",
+        false,
     );
 }
 
@@ -243,10 +248,12 @@ fn test_collapse_reads_to_fragments_single_cluster() {
     compare_fastq(
         "/tmp/test-consensus_single.1.fastq",
         "tests/expected/test-consensus_single.1.fastq",
+        false,
     );
     compare_fastq(
         "/tmp/test-consensus_single.2.fastq",
         "tests/expected/test-consensus_single.2.fastq",
+        false,
     );
 }
 
@@ -260,14 +267,17 @@ fn test_collapse_reads_to_fragments_reads() {
     compare_fastq(
         "/tmp/test_overlapping-consensus.1.fastq",
         "tests/expected/test_overlapping-consensus.1.fastq",
+        false,
     );
     compare_fastq(
         "/tmp/test_overlapping-consensus.2.fastq",
         "tests/expected/test_overlapping-consensus.2.fastq",
+        false,
     );
     compare_fastq(
         "/tmp/test_overlapping-consensus.3.fastq",
         "tests/expected/test_overlapping-consensus.3.fastq",
+        false,
     );
 }
 
@@ -276,11 +286,26 @@ fn test_collapse_reads_to_fragments_from_bam() {
     assert!(
     Command::new("bash")
         .arg("-c")
-        .arg("target/debug/rbt collapse-reads-to-fragments bam --max-seq-dist 8 tests/overlapping_consensus_marked.bam /tmp/overlapping_consensus_marked.bam")
+        .arg("target/debug/rbt collapse-reads-to-fragments bam tests/overlapping_consensus_marked.bam /tmp/bam_consensus_r1.fq /tmp/bam_consensus_r2.fq /tmp/bam_consensus_se.fq /tmp/overlapping_consensus_mapped.bam")
         .spawn().unwrap().wait().unwrap().success());
+    compare_fastq(
+        "/tmp/bam_consensus_r1.fq",
+        "tests/expected/bam_consensus_r1.fq",
+        true,
+    );
+    compare_fastq(
+        "/tmp/bam_consensus_r2.fq",
+        "tests/expected/bam_consensus_r2.fq",
+        true,
+    );
+    compare_fastq(
+        "/tmp/bam_consensus_se.fq",
+        "tests/expected/bam_consensus_se.fq",
+        true,
+    );
     compare_bam(
-        "/tmp/overlapping_consensus_marked.bam",
-        "tests/expected/overlapping_consensus_marked.bam",
+        "/tmp/overlapping_consensus_mapped.bam",
+        "tests/expected/overlapping_consensus_mapped.bam",
     );
 }
 

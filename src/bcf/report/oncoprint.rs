@@ -6,6 +6,7 @@ use std::{fs, str};
 use derive_new::new;
 use itertools::Itertools;
 use lazy_static::lazy_static;
+use log::warn;
 use regex::Regex;
 use serde_derive::Serialize;
 use tera::{self, Context, Tera};
@@ -16,7 +17,6 @@ use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::{self, Read};
 use serde_json::{json, Value};
 use std::fs::File;
-use std::iter::FromIterator;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -34,6 +34,8 @@ pub fn oncoprint(
     let mut gene_data = HashMap::new();
     let mut impact_data = Vec::new();
     let mut gene_impact_data = HashMap::new();
+    let mut existing_var_data = Vec::new();
+    let mut gene_existing_var_data = HashMap::new();
     let mut consequence_data = Vec::new();
     let mut gene_consequence_data = HashMap::new();
     let mut clin_sig_data = Vec::new();
@@ -52,6 +54,8 @@ pub fn oncoprint(
         let mut genes = HashMap::new();
         let mut impacts = HashMap::new();
         let mut gene_impacts = HashMap::new();
+        let mut existing_variations = HashMap::new();
+        let mut gene_existing_variations = HashMap::new();
         let mut consequences = HashMap::new();
         let mut gene_consequences = HashMap::new();
         let mut clin_sigs = HashMap::new();
@@ -71,7 +75,8 @@ pub fn oncoprint(
         }
 
         for res in bcf_reader.records() {
-            let mut record = res?;
+            let mut gene_data_per_record = HashMap::new();
+            let record = res?;
             let alleles = record
                 .alleles()
                 .into_iter()
@@ -79,6 +84,8 @@ pub fn oncoprint(
                 .collect_vec();
             let alt_alleles = &alleles[1..];
             let ref_allele = alleles[0].to_owned();
+            let dup = [ref_allele.clone(), ref_allele.clone()].concat();
+            let rev = ref_allele.clone().into_iter().rev().collect_vec();
 
             let allel_frequencies = record
                 .format(b"AF")
@@ -90,28 +97,30 @@ pub fn oncoprint(
             let ann = record.info(b"ANN").string()?;
             if let Some(ann) = ann {
                 for alt_allele in alt_alleles {
-                    let variant = if alt_allele == b"<DEL>" {
-                        "DEL"
-                    } else if alt_allele == b"<BND>" {
+                    let variant = if alt_allele == b"<BND>" {
                         "BND"
-                    } else if alt_allele == b"<INV>" {
-                        "INV"
-                    } else if alt_allele == b"<DUP>" {
+                    } else if alt_allele == b"<DUP>" || alt_allele == &dup {
                         "DUP"
+                    } else if alt_allele == b"<DEL>"
+                        || alt_allele.len() == 1 && ref_allele.len() > 1
+                    {
+                        "DEL"
+                    } else if alt_allele == b"<INS>"
+                        || alt_allele.len() > 1 && ref_allele.len() == 1
+                    {
+                        "INS"
                     } else if alt_allele.len() == 1 && ref_allele.len() == 1 {
                         "SNV"
+                    } else if alt_allele == b"<INV>" || alt_allele == &rev {
+                        "INV"
                     } else if alt_allele.len() == ref_allele.len() {
                         "MNV"
                     } else {
-                        "Complex"
+                        "Replacement"
                     };
 
-                    for entry in &ann {
+                    for entry in ann.iter() {
                         let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
-                        let alt = &fields[0];
-                        if alt != &alt_allele.as_slice() {
-                            continue;
-                        }
 
                         let get_field = |field: &str| {
                             str::from_utf8(
@@ -121,11 +130,19 @@ pub fn oncoprint(
 
                         let mut impact = get_field("IMPACT")?;
                         let clin_sig = get_field("CLIN_SIG")?;
-                        let gene = get_field("SYMBOL")?;
+                        let gene = if !get_field("SYMBOL")?.is_empty() {
+                            get_field("SYMBOL")?
+                        } else if !get_field("Gene")?.is_empty() {
+                            get_field("Gene")?
+                        } else {
+                            warn!("Warning! Found allele in {:?} without SYMBOL or Gene field. This record will be skipped!", record);
+                            continue;
+                        };
                         let dna_alteration = get_field("HGVSg")?;
                         let canonical = get_field("CANONICAL")? == "YES";
                         let protein_alteration = get_field("HGVSp")?;
                         let consequence = get_field("Consequence")?;
+                        let existing_var = get_field("Existing_variation")?;
 
                         let gene_rec = unique_genes.entry(gene.to_owned()).or_insert_with(Vec::new);
                         gene_rec.push(sample.to_owned());
@@ -134,31 +151,55 @@ pub fn oncoprint(
                             .entry(gene.to_owned())
                             .or_insert_with(|| Record::new(sample.to_owned(), gene.to_owned()));
 
-                        // data for second stage
-                        let gene_entry = gene_data.entry(gene.to_owned()).or_insert_with(&Vec::new);
-                        gene_entry.push(SecondStageRecord {
-                            sample: rec.sample.clone(),
-                            alteration: if protein_alteration.is_empty() {
-                                dna_alteration.to_owned()
-                            } else {
-                                protein_alteration.to_owned()
+                        // Data for second stage including whether the record is marked as canonical or not.
+                        let gene_entry = gene_data_per_record
+                            .entry(gene.to_owned())
+                            .or_insert_with(&Vec::new);
+                        gene_entry.push((
+                            SecondStageRecord {
+                                sample: rec.sample.clone(),
+                                alteration: if protein_alteration.is_empty() {
+                                    dna_alteration.to_owned()
+                                } else {
+                                    protein_alteration.to_owned()
+                                },
+                                variant: variant.to_owned(),
                             },
-                            variant: variant.to_owned(),
-                        });
+                            canonical,
+                        ));
 
                         rec.variants.push(variant.to_owned());
 
                         let imp_rec = impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
-                        if impact == "" {
+                        if impact.is_empty() {
                             impact = "unknown";
                         }
                         imp_rec.push(BarPlotRecord::new(gene.to_owned(), impact.to_owned()));
+
+                        let ev_rec = existing_variations
+                            .entry(gene.to_owned())
+                            .or_insert_with(Vec::new);
+                        let gene_ev_rec = gene_existing_variations
+                            .entry(gene.to_owned())
+                            .or_insert_with(Vec::new);
 
                         let alt = if protein_alteration.is_empty() {
                             dna_alteration
                         } else {
                             protein_alteration
                         };
+
+                        let split_ev = existing_var.split('&').collect_vec();
+                        for ex_var in split_ev {
+                            let mut ev: String =
+                                ex_var.chars().filter(|c| !c.is_digit(10)).collect();
+                            if ev.is_empty() {
+                                ev = String::from("unknown");
+                            }
+                            ev_rec.push(BarPlotRecord::new(gene.to_owned(), ev.clone()));
+                            gene_ev_rec.push(BarPlotRecord::new(alt.to_owned(), ev));
+                        }
+
                         let gene_imp_rec =
                             gene_impacts.entry(gene.to_owned()).or_insert_with(Vec::new);
                         gene_imp_rec.push(BarPlotRecord::new(alt.to_owned(), impact.to_owned()));
@@ -172,7 +213,7 @@ pub fn oncoprint(
                             .or_insert_with(Vec::new);
 
                         for mut c in split_consequences {
-                            if c == "" {
+                            if c.is_empty() {
                                 c = "unknown";
                             }
                             cons_rec.push(BarPlotRecord::new(gene.to_owned(), c.to_owned()));
@@ -186,7 +227,7 @@ pub fn oncoprint(
                         let clin_rec = clin_sigs.entry(gene.to_owned()).or_insert_with(Vec::new);
                         let sigs: Vec<_> = clin_sig.split('&').collect();
                         for mut s in sigs {
-                            if s == "" {
+                            if s.is_empty() {
                                 s = "unknown";
                             }
                             s = s.trim_matches('_');
@@ -219,6 +260,21 @@ pub fn oncoprint(
                     }
                 }
             }
+            // Filter records marked with canonical. Keep all if no one is marked.
+            for (k, record_tuples) in &gene_data_per_record {
+                let rec = gene_data.entry(k.to_owned()).or_insert_with(&Vec::new);
+                let filter_canonical = record_tuples
+                    .iter()
+                    .filter(|(_, canonical)| *canonical)
+                    .collect_vec();
+                match filter_canonical.len() {
+                    0 => {
+                        rec.extend(record_tuples.iter().map(|(r, _)| r.clone()));
+                    }
+                    1 => rec.extend(filter_canonical.iter().map(|(r, _)| r.clone())),
+                    _ => panic!("Found more than one variant annotated as canonical!"),
+                }
+            }
         }
 
         for gene in genes.keys().sorted() {
@@ -231,6 +287,10 @@ pub fn oncoprint(
             let impact = impacts.get(gene).unwrap();
             let final_impacts = make_final_bar_plot_records(impact);
             impact_data.push(final_impacts);
+
+            let ex_var = existing_variations.get(gene).unwrap();
+            let final_evs = make_final_bar_plot_records(ex_var);
+            existing_var_data.push(final_evs);
 
             let consequence = consequences.get(gene).unwrap();
             let final_consequences = make_final_bar_plot_records(consequence);
@@ -248,6 +308,13 @@ pub fn oncoprint(
                 .entry(gene.to_owned())
                 .or_insert_with(Vec::new);
             e.push(final_gene_impacts);
+
+            let gene_evs = gene_existing_variations.get(gene).unwrap();
+            let final_gene_evs = make_final_bar_plot_records(gene_evs);
+            let v = gene_existing_var_data
+                .entry(gene.to_owned())
+                .or_insert_with(Vec::new);
+            v.push(final_gene_evs);
 
             // data for second stage consequence
             let gene_consequence = gene_consequences.get(gene).unwrap();
@@ -299,6 +366,8 @@ pub fn oncoprint(
         let mut specs = gene_specs.clone();
         let impact_data = gene_impact_data.get(&gene).unwrap();
         let final_impact: Vec<_> = impact_data.iter().flatten().sorted().collect();
+        let existing_var_data = gene_existing_var_data.get(&gene).unwrap();
+        let final_ev: Vec<_> = existing_var_data.iter().flatten().sorted().collect();
         let consequence_data = gene_consequence_data.get(&gene).unwrap();
         let final_consequence: Vec<_> = consequence_data.iter().flatten().sorted().collect();
         let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
@@ -356,6 +425,12 @@ pub fn oncoprint(
                     .sorted()
                     .collect();
 
+                let ev_page_data: Vec<_> = final_ev
+                    .iter()
+                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .sorted()
+                    .collect();
+
                 let consequence_page_data: Vec<_> = final_consequence
                     .iter()
                     .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
@@ -381,7 +456,7 @@ pub fn oncoprint(
                 let samples: Vec<_> = page_data.iter().map(|r| r.sample.clone()).collect();
                 let unique_samples: Vec<_> = samples.iter().unique().collect();
 
-                let mut values = json!({ "main": page_data, "impact": impact_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+                let mut values = json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
                 if let Some(ref tsv) = tsv_data {
                     for (title, data) in tsv {
                         values[title] = json!(data);
@@ -441,6 +516,7 @@ pub fn oncoprint(
     }
 
     let impact_data: Vec<_> = impact_data.iter().flatten().collect();
+    let ev_data: Vec<_> = existing_var_data.iter().flatten().collect();
     let consequence_data: Vec<_> = consequence_data.iter().flatten().collect();
     let clin_sig_data: Vec<_> = clin_sig_data.iter().flatten().collect();
 
@@ -476,6 +552,51 @@ pub fn oncoprint(
         )
     });
 
+    let prefixes = make_prefixes(ordered_genes.clone(), page_size);
+    let prefix_path = output_path.to_owned() + "/prefixes/";
+    fs::create_dir(Path::new(&prefix_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for report files at location: {:?}",
+            prefix_path
+        )
+    });
+
+    let mut templates = Tera::default();
+    templates.add_raw_template(
+        "prefix_table.html.tera",
+        include_str!("prefix_table.html.tera"),
+    )?;
+    let mut context = Context::new();
+    context.insert("table", &prefixes);
+    let html = templates.render("prefix_table.html.tera", &context)?;
+
+    let file_path = output_path.to_owned() + "/prefixes/prefixes.html";
+    let mut file = File::create(file_path)?;
+    file.write_all(html.as_bytes())?;
+
+    let gene_path = prefix_path + "/genes/";
+    fs::create_dir(Path::new(&gene_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for report files at location: {:?}",
+            gene_path
+        )
+    });
+
+    for (prefix, values) in prefixes {
+        let mut templates = Tera::default();
+        templates.add_raw_template(
+            "lookup_table.html.tera",
+            include_str!("lookup_table.html.tera"),
+        )?;
+        let mut context = Context::new();
+        context.insert("values", &values);
+        let html = templates.render("lookup_table.html.tera", &context)?;
+
+        let file_path = gene_path.to_owned() + &prefix + ".html";
+        let mut file = File::create(file_path)?;
+        file.write_all(html.as_bytes())?;
+    }
+
     for i in 0..pages + 1 {
         let current_genes = if i != pages {
             &v[(i * page_size)..((i + 1) * page_size)] // get genes for current page
@@ -498,6 +619,12 @@ pub fn oncoprint(
                 .collect();
 
             let impact_page_data: Vec<_> = impact_data
+                .iter()
+                .filter(|entry| sorted_genes.contains(&&entry.record.key))
+                .sorted()
+                .collect();
+
+            let ev_page_data: Vec<_> = ev_data
                 .iter()
                 .filter(|entry| sorted_genes.contains(&&entry.record.key))
                 .sorted()
@@ -530,7 +657,7 @@ pub fn oncoprint(
 
             let mut vl_specs: Value =
                 serde_json::from_str(include_str!("report_specs.json")).unwrap();
-            let mut values = json!({"main": page_data , "impact": impact_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+            let mut values = json!({"main": page_data , "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
 
             if let Some(ref tsv) = tsv_data {
                 for (title, data) in tsv {
@@ -581,7 +708,7 @@ pub fn oncoprint(
     Ok(())
 }
 
-#[derive(new, Debug)]
+#[derive(new, Debug, Clone)]
 struct Record {
     sample: String,
     gene: String,
@@ -724,7 +851,7 @@ fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TSVRecord>>,
         .from_path(tsv_path)?;
 
     let header = rdr.headers()?.clone();
-    let titles = Vec::from_iter(header.iter().skip(1));
+    let titles: Vec<_> = header.iter().skip(1).collect();
     for res in rdr.records() {
         let row = res?;
         let sample = row[0].to_owned();
@@ -809,4 +936,23 @@ fn order_by_clin_sig(clin_sigs: Vec<&Counter>) -> HashMap<String, Vec<ClinSig>> 
         order.insert(k, removed_count);
     }
     order
+}
+
+fn make_prefixes(
+    genes: Vec<&String>,
+    rows_per_page: usize,
+) -> HashMap<String, Vec<(&String, usize)>> {
+    let mut prefix_map = HashMap::new();
+    let prefix_len = 3;
+    for (i, partial_table) in genes.chunks(rows_per_page).enumerate() {
+        let page = i + 1;
+        for gene in partial_table {
+            if gene.len() >= prefix_len {
+                let prefix = gene.chars().take(prefix_len).collect::<String>();
+                let entry = prefix_map.entry(prefix).or_insert_with(Vec::new);
+                entry.push((gene.to_owned(), page));
+            }
+        }
+    }
+    prefix_map
 }

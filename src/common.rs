@@ -1,3 +1,4 @@
+use approx::relative_eq;
 use bio::stats::probs::{LogProb, PHREDProb};
 use bio_types::sequence::SequenceRead;
 use ordered_float::NotNaN;
@@ -41,27 +42,35 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
         consensus_qual: &mut Vec<u8>,
         offset: f64,
     ) {
-        let (max_posterior, allele_lh) = likelihoods
-            .iter()
-            .enumerate()
-            .max_by_key(|&(_, &lh)| NotNaN::new(*lh).unwrap())
-            .unwrap();
-        *consensus_lh += *allele_lh;
-        let marginal = LogProb::ln_sum_exp(&likelihoods);
-        // new base: MAP
-        consensus_seq.push(ALLELES[max_posterior]);
-        // new qual: (1 - MAP)
-        let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
-        // Assume the maximal quality, if the likelihood is infinite
-        let truncated_quality: f64;
-        if (*PHREDProb::from(qual)).is_infinite() {
-            truncated_quality = 41.0;
+        if relative_eq!(*likelihoods[0], *likelihoods[1])
+            && relative_eq!(*likelihoods[1], *likelihoods[2])
+            && relative_eq!(*likelihoods[2], *likelihoods[3])
+        {
+            consensus_seq.push(b'N');
+            consensus_qual.push(offset as u8);
         } else {
-            truncated_quality = *PHREDProb::from(qual);
+            let (max_posterior, allele_lh) = likelihoods
+                .iter()
+                .enumerate()
+                .max_by_key(|&(_, &lh)| NotNaN::new(*lh).unwrap())
+                .unwrap();
+            *consensus_lh += *allele_lh;
+            let marginal = LogProb::ln_sum_exp(&likelihoods);
+            // new base: MAP
+            consensus_seq.push(ALLELES[max_posterior]);
+            // new qual: (1 - MAP)
+            let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
+            // Assume the maximal quality, if the likelihood is infinite
+            let truncated_quality: f64;
+            if (*PHREDProb::from(qual)).is_infinite() {
+                truncated_quality = 41.0;
+            } else {
+                truncated_quality = *PHREDProb::from(qual);
+            }
+            // Truncate quality values to PHRED+33 range
+            consensus_qual
+                .push(cmp::min(41 + offset as u64, (truncated_quality + offset) as u64) as u8);
         }
-        // Truncate quality values to PHRED+33 range
-        consensus_qual
-            .push(cmp::min(41 + offset as u64, (truncated_quality + offset) as u64) as u8);
     }
 
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;

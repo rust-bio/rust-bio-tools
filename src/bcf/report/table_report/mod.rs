@@ -4,8 +4,6 @@ mod fasta_reader;
 mod static_reader;
 
 use crate::bcf::report::table_report::create_report_table::make_table_report;
-use clap::Values;
-use itertools::__std_iter::FromIterator;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
@@ -17,8 +15,8 @@ pub fn table_report(
     bam: &[(String, String)],
     output_path: &str,
     sample: &str,
-    info: Option<Values>,
-    format: Option<Values>,
+    info_strings: Option<Vec<String>>,
+    format_strings: Option<Vec<String>>,
     max_read_depth: u32,
     js_files: Vec<String>,
 ) -> Result<(), Box<dyn Error>> {
@@ -30,19 +28,13 @@ pub fn table_report(
         )
     });
 
-    let info_strings = if let Some(value) = info {
-        let strings = Vec::from_iter(value);
-        Some(strings)
-    } else {
-        None
-    };
-
-    let format_strings = if let Some(value) = format {
-        let strings = Vec::from_iter(value);
-        Some(strings)
-    } else {
-        None
-    };
+    let plot_path = detail_path + "/plots/";
+    fs::create_dir(Path::new(&plot_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for table report plots at location: {:?}",
+            plot_path
+        )
+    });
 
     Ok(make_table_report(
         Path::new(vcf),

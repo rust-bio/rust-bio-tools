@@ -1,13 +1,15 @@
 use crate::bcf::report::table_report::fasta_reader::{get_fasta_length, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
 use chrono::{DateTime, Local};
+use itertools::Itertools;
 use jsonm::packer::{PackOptions, Packer};
-use rust_htslib::bcf::header::TagType;
-use rust_htslib::bcf::{HeaderRecord, Read};
+use log::warn;
+use rust_htslib::bcf::header::{HeaderView, TagType};
+use rust_htslib::bcf::{HeaderRecord, Read, Record};
 use rustc_serialize::json::Json;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
@@ -32,9 +34,11 @@ pub struct Report {
     var_type: VariantType,
     alternatives: Option<String>,
     ann: Option<Vec<Vec<String>>>,
-    format: Option<String>,
-    info: Option<String>,
-    vis: HashMap<String, String>,
+    format: Option<BTreeMap<String, BTreeMap<String, Value>>>,
+    info: Option<HashMap<String, Vec<Value>>>,
+    json_format: Option<String>,
+    json_info: Option<String>,
+    vis: BTreeMap<String, String>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -42,8 +46,8 @@ pub(crate) fn make_table_report(
     vcf_path: &Path,
     fasta_path: &Path,
     bam_sample_path: &[(String, String)],
-    infos: Option<Vec<&str>>,
-    formats: Option<Vec<&str>>,
+    infos: Option<Vec<String>>,
+    formats: Option<Vec<String>>,
     sample: String,
     output_path: &str,
     max_read_depth: u32,
@@ -71,6 +75,9 @@ pub(crate) fn make_table_report(
         *ann_indices
             .get(&String::from("SYMBOL"))
             .expect("No field named SYMBOL found. Please only use VEP-annotated VCF-files."),
+        *ann_indices
+            .get(&String::from("Gene"))
+            .expect("No field named Gene found. Please only use VEP-annotated VCF-files."),
     )?;
 
     for (record_index, v) in vcf.records().enumerate() {
@@ -93,53 +100,51 @@ pub(crate) fn make_table_report(
             _ => None,
         };
 
-        let info_tags = if infos.is_some() {
+        let (info_tags, json_info_tags) = if infos.is_some() {
             let mut info_map = HashMap::new();
             for tag in infos.clone().unwrap() {
-                let (tag_type, _) = header.info_type(tag.as_bytes())?;
-                match tag_type {
-                    TagType::String => {
-                        let values = variant.info(tag.as_bytes()).string()?.unwrap();
-                        for v in values {
-                            let value = String::from_utf8(v.to_owned())?;
-                            let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                            entry.push(json!(value));
-                        }
+                if tag.chars().last().unwrap().eq(&'*') {
+                    let prefix_tags = header
+                        .header_records()
+                        .iter()
+                        .filter_map(|header_record| match header_record {
+                            HeaderRecord::Info { key: _, values } => {
+                                if values["ID"].starts_with(&tag[..(tag.len() - 1)]) {
+                                    Some(values["ID"].to_owned())
+                                } else {
+                                    None
+                                }
+                            }
+                            _ => None,
+                        })
+                        .collect::<Vec<String>>();
+                    for prefix_tag in prefix_tags {
+                        read_tag_entries(&mut info_map, &mut variant, &header, &prefix_tag)?;
                     }
-                    TagType::Float => {
-                        let values = variant.info(tag.as_bytes()).float()?;
-                        for v in values.unwrap() {
-                            let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                            entry.push(json!(v));
-                        }
-                    }
-                    TagType::Integer => {
-                        let values = variant.info(tag.as_bytes()).integer()?;
-                        for v in values.unwrap() {
-                            let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                            entry.push(json!(v));
-                        }
-                    }
-                    _ => {}
+                } else {
+                    read_tag_entries(&mut info_map, &mut variant, &header, &tag)?;
                 }
             }
-            Some(serde_json::to_string(&json!(info_map))?)
+            (
+                Some(info_map.clone()),
+                Some(serde_json::to_string(&json!(info_map))?),
+            )
         } else {
-            None
+            (None, None)
         };
 
-        let format_tags = if formats.is_some() {
-            let mut format_map = HashMap::new();
+        let (format_tags, json_format_tags) = if formats.is_some() {
+            let mut format_map = BTreeMap::new();
             for tag in formats.clone().unwrap() {
                 let (tag_type, _) = header.format_type(tag.as_bytes())?;
                 match tag_type {
                     TagType::String => {
                         let values = variant.format(tag.as_bytes()).string()?;
-                        for (i, v) in values.into_iter().enumerate() {
+                        for (i, v) in values.clone().into_iter().enumerate() {
                             let value = String::from_utf8(v.to_owned())?;
                             let entry = format_map
                                 .entry(tag.to_owned())
-                                .or_insert_with(HashMap::new);
+                                .or_insert_with(BTreeMap::new);
                             entry.insert(samples[i].clone(), json!(value));
                         }
                     }
@@ -149,7 +154,7 @@ pub(crate) fn make_table_report(
                             let value = v.to_vec();
                             let entry = format_map
                                 .entry(tag.to_owned())
-                                .or_insert_with(HashMap::new);
+                                .or_insert_with(BTreeMap::new);
                             entry.insert(samples[i].clone(), json!(value));
                         }
                     }
@@ -159,16 +164,19 @@ pub(crate) fn make_table_report(
                             let value = v.to_vec();
                             let entry = format_map
                                 .entry(tag.to_owned())
-                                .or_insert_with(HashMap::new);
+                                .or_insert_with(BTreeMap::new);
                             entry.insert(samples[i].clone(), json!(value));
                         }
                     }
                     _ => {}
                 }
             }
-            Some(serde_json::to_string(&json!(format_map))?)
+            (
+                Some(format_map.clone()),
+                Some(serde_json::to_string(&json!(format_map))?),
+            )
         } else {
-            None
+            (None, None)
         };
 
         let alleles: Vec<_> = variant
@@ -182,15 +190,29 @@ pub(crate) fn make_table_report(
         let mut genes = Vec::new();
 
         if let Some(ann) = variant.info(b"ANN").string()? {
-            for entry in ann {
-                let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
+            for entry in ann.iter() {
+                let fields = entry.split(|c| *c == b'|').collect_vec();
 
-                let gene = std::str::from_utf8(
-                    fields[*ann_indices.get(&String::from("SYMBOL")).expect(
-                        "No field named SYMBOL found. Please only use VEP-annotated VCF-files.",
-                    )],
-                )?;
-                genes.push(gene);
+                let get_field = |field: &str| {
+                    std::str::from_utf8(
+                        fields[*ann_indices.get(&field.to_owned()).unwrap_or_else(|| {
+                            panic!(
+                                "No field named {} found. Please only use VEP-annotated VCF-files.",
+                                field
+                            )
+                        })],
+                    )
+                };
+
+                let gene = if !get_field("SYMBOL")?.is_empty() {
+                    get_field("SYMBOL")?
+                } else if !get_field("Gene")?.is_empty() {
+                    get_field("Gene")?
+                } else {
+                    warn!("Warning! Found allele in {:?} without SYMBOL or Gene field. This record will be skipped!", variant);
+                    continue;
+                };
+                genes.push(gene.to_owned());
 
                 let mut ann_strings = Vec::new();
                 for f in fields {
@@ -281,7 +303,7 @@ pub(crate) fn make_table_report(
                     var_type,
                 };
 
-                let mut visualizations = HashMap::new();
+                let mut visualizations = BTreeMap::new();
 
                 for (sample, bam) in bam_sample_path {
                     let bam_path = Path::new(bam);
@@ -342,6 +364,8 @@ pub(crate) fn make_table_report(
                     ann: Some(annotations.clone()),
                     format: format_tags.clone(),
                     info: info_tags.clone(),
+                    json_format: json_format_tags.clone(),
+                    json_info: json_info_tags.clone(),
                     vis: visualizations,
                 };
 
@@ -351,12 +375,13 @@ pub(crate) fn make_table_report(
                 }
             }
         }
+
         for gene in genes {
-            if last_gene_index.get(gene).unwrap() <= &(record_index as u32) {
+            if last_gene_index.get(&gene).unwrap() <= &(record_index as u32) {
                 let detail_path = output_path.to_owned() + "/details/" + &sample;
                 let local: DateTime<Local> = Local::now();
 
-                let report_data = reports.remove(gene).unwrap();
+                let report_data = reports.remove(&gene).unwrap();
                 let mut templates = Tera::default();
                 templates
                     .add_raw_template(
@@ -376,9 +401,21 @@ pub(crate) fn make_table_report(
                 let html = templates
                     .render("table_report.html.tera", &context)
                     .unwrap();
-                let filepath = detail_path.clone() + "/" + gene + ".html";
+                let filepath = detail_path.clone() + "/" + &gene + ".html";
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
+
+                let mut templates = Tera::default();
+                templates
+                    .add_raw_template("plot.js.tera", include_str!("plot.js.tera"))
+                    .unwrap();
+
+                let plot_path = detail_path.clone() + "/plots/" + &gene + ".js";
+                let mut plot_context = Context::new();
+                plot_context.insert("variants", &report_data);
+                let plot_html = templates.render("plot.js.tera", &plot_context).unwrap();
+                let mut plot_file = File::create(plot_path)?;
+                plot_file.write_all(plot_html.as_bytes())?;
             }
         }
     }
@@ -406,6 +443,41 @@ pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<V
         }
     }
     None
+}
+
+fn read_tag_entries(
+    info_map: &mut HashMap<String, Vec<Value>>,
+    variant: &mut Record,
+    header: &HeaderView,
+    tag: &str,
+) -> Result<(), Box<dyn Error>> {
+    let (tag_type, _) = header.info_type(tag.as_bytes())?;
+    match tag_type {
+        TagType::String => {
+            let values = variant.info(tag.as_bytes()).string()?.unwrap();
+            for v in values.iter() {
+                let value = String::from_utf8(Vec::from(v.to_owned()))?;
+                let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                entry.push(json!(value));
+            }
+        }
+        TagType::Float => {
+            let values = variant.info(tag.as_bytes()).float()?.unwrap();
+            for v in values.iter() {
+                let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                entry.push(json!(v));
+            }
+        }
+        TagType::Integer => {
+            let values = variant.info(tag.as_bytes()).integer()?.unwrap();
+            for v in values.iter() {
+                let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                entry.push(json!(v));
+            }
+        }
+        _ => {}
+    }
+    Ok(())
 }
 
 fn create_report_data(
@@ -487,15 +559,19 @@ fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Value {
 fn get_gene_ending(
     vcf_path: &Path,
     symbol_index: usize,
+    gene_index: usize,
 ) -> Result<HashMap<String, u32>, Box<dyn Error>> {
     let mut endings = HashMap::new();
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     for (record_index, v) in vcf.records().enumerate() {
-        let mut variant = v.unwrap();
+        let variant = v.unwrap();
         if let Some(ann) = variant.info(b"ANN").string()? {
-            for entry in ann {
+            for entry in ann.iter() {
                 let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
-                let gene = std::str::from_utf8(fields[symbol_index])?;
+                let mut gene = std::str::from_utf8(fields[symbol_index])?;
+                if gene.is_empty() {
+                    gene = std::str::from_utf8(fields[gene_index])?;
+                }
                 endings.insert(gene.to_owned(), record_index as u32);
             }
         }

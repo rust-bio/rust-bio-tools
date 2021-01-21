@@ -50,6 +50,7 @@ pub fn oncoprint(
         None
     };
 
+    // Check every VCF file for presence of CLIN_SIG
     let mut clin_sig_present = HashMap::new();
     for (sample, path) in sample_calls.iter().sorted() {
         let bcf_reader = bcf::Reader::from_path(path)?;
@@ -63,6 +64,7 @@ pub fn oncoprint(
         );
     }
 
+    // Check wether any of the VCF files contain CLIN_SIG at all
     let cs_present_folded = clin_sig_present.iter().fold(false, |b, (_, c)| b || *c);
 
     for (sample, path) in sample_calls.iter().sorted() {

@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.17.0] - 2021-01-21
+### Changed
+- `rbt collapse-reads-to-fragments` now always writes FASTQ files since consensus reads need to be remapped anyways (MAPQ might change).
+- `rbt vcf-report` can now be parallelized.
+- various fixes and improvements for `rbt vcf-report`
+- various fixes for `rbt collapse-reads-to-fragments`
+
 ## [0.16.0] - 2020-11-17
 ### Changed
 - `rbt collapse-reads-to-fragments bam` writes skipped reads to separate bam file now

@@ -50,6 +50,21 @@ pub fn oncoprint(
         None
     };
 
+    let mut clin_sig_present = HashMap::new();
+    for (sample, path) in sample_calls.iter().sorted() {
+        let bcf_reader = bcf::Reader::from_path(path)?;
+        let header_records = bcf_reader.header().header_records();
+        let ann_fields: Vec<_> = get_ann_description(header_records).unwrap_or_else(|| {
+            panic!("No ANN field found. Please only use VEP-annotated VCF-files.")
+        });
+        clin_sig_present.insert(
+            sample.to_owned(),
+            ann_fields.contains(&"CLIN_SIG".to_owned()),
+        );
+    }
+
+    let cs_present_folded = clin_sig_present.iter().fold(false, |b, (_, c)| b || *c);
+
     for (sample, path) in sample_calls.iter().sorted() {
         let mut genes = HashMap::new();
         let mut impacts = HashMap::new();
@@ -68,11 +83,15 @@ pub fn oncoprint(
             sample_names.push(String::from_utf8(s.to_owned()).unwrap());
         }
         let header_records = header.header_records();
-        let ann_fields: Vec<_> = get_ann_description(header_records).unwrap();
+        let ann_fields: Vec<_> = get_ann_description(header_records).unwrap_or_else(|| {
+            panic!("No ANN field found. Please only use VEP-annotated VCF-files.")
+        });
 
         for (i, field) in ann_fields.iter().enumerate() {
             ann_indices.insert(field, i);
         }
+
+        let clin_sig_pres = clin_sig_present.get(sample).unwrap();
 
         for res in bcf_reader.records() {
             let mut gene_data_per_record = HashMap::new();
@@ -129,7 +148,11 @@ pub fn oncoprint(
                         };
 
                         let mut impact = get_field("IMPACT")?;
-                        let clin_sig = get_field("CLIN_SIG")?;
+                        let clin_sig = if *clin_sig_pres {
+                            get_field("CLIN_SIG")?
+                        } else {
+                            ""
+                        };
                         let gene = if !get_field("SYMBOL")?.is_empty() {
                             get_field("SYMBOL")?
                         } else if !get_field("Gene")?.is_empty() {
@@ -456,13 +479,23 @@ pub fn oncoprint(
                 let samples: Vec<_> = page_data.iter().map(|r| r.sample.clone()).collect();
                 let unique_samples: Vec<_> = samples.iter().unique().collect();
 
-                let mut values = json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+                let mut values = if cs_present_folded {
+                    json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data})
+                } else {
+                    json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allel_frequency": af_page_data})
+                };
+
                 if let Some(ref tsv) = tsv_data {
                     for (title, data) in tsv {
                         values[title] = json!(data);
                     }
                 }
                 specs["datasets"] = values;
+                if !cs_present_folded {
+                    let hconcat = specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
+                    hconcat.remove(4);
+                    specs["vconcat"][1]["hconcat"] = json!(hconcat);
+                }
 
                 if let Some(ref tsv) = tsv_data {
                     let tsv_specs: Value =
@@ -657,7 +690,12 @@ pub fn oncoprint(
 
             let mut vl_specs: Value =
                 serde_json::from_str(include_str!("report_specs.json")).unwrap();
-            let mut values = json!({"main": page_data , "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data , "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data});
+
+            let mut values = if cs_present_folded {
+                json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data})
+            } else {
+                json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allel_frequency": af_page_data})
+            };
 
             if let Some(ref tsv) = tsv_data {
                 for (title, data) in tsv {
@@ -666,6 +704,11 @@ pub fn oncoprint(
             }
 
             vl_specs["datasets"] = values;
+            if !cs_present_folded {
+                let hconcat = vl_specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
+                hconcat.remove(4);
+                vl_specs["vconcat"][1]["hconcat"] = json!(hconcat);
+            }
 
             if let Some(ref tsv) = tsv_data {
                 let tsv_specs: Value =

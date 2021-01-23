@@ -4,7 +4,7 @@ use chrono::{DateTime, Local};
 use itertools::Itertools;
 use jsonm::packer::{PackOptions, Packer};
 use log::warn;
-use lz_string::compress_to_utf16;
+use lz_str::compress_to_utf16;
 use rust_htslib::bcf::header::{HeaderView, TagType};
 use rust_htslib::bcf::{HeaderRecord, Read, Record};
 use rustc_serialize::json::Json;

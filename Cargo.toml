@@ -49,7 +49,7 @@ anyhow = "1"
 thiserror = "1"
 rayon = "1.5"
 structopt = "0.3"
-lz-string = { git = "https://github.com/adumbidiot/lz-string-rs.git" }
+lz-str = "0.1.0"
 
 [[bin]]
 name = "rbt"

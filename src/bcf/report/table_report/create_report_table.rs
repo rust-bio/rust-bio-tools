@@ -452,7 +452,7 @@ pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<V
     None
 }
 
-fn read_tag_entries(
+pub(crate) fn read_tag_entries(
     info_map: &mut HashMap<String, Vec<Value>>,
     variant: &mut Record,
     header: &HeaderView,
@@ -461,25 +461,28 @@ fn read_tag_entries(
     let (tag_type, _) = header.info_type(tag.as_bytes())?;
     match tag_type {
         TagType::String => {
-            let values = variant.info(tag.as_bytes()).string()?.unwrap();
-            for v in values.iter() {
-                let value = String::from_utf8(Vec::from(v.to_owned()))?;
-                let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                entry.push(json!(value));
+            if let Some(values) = variant.info(tag.as_bytes()).string()? {
+                for v in values.iter() {
+                    let value = String::from_utf8(Vec::from(v.to_owned()))?;
+                    let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                    entry.push(json!(value));
+                }
             }
         }
         TagType::Float => {
-            let values = variant.info(tag.as_bytes()).float()?.unwrap();
-            for v in values.iter() {
-                let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                entry.push(json!(v));
+            if let Some(values) = variant.info(tag.as_bytes()).float()? {
+                for v in values.iter() {
+                    let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                    entry.push(json!(v));
+                }
             }
         }
         TagType::Integer => {
-            let values = variant.info(tag.as_bytes()).integer()?.unwrap();
-            for v in values.iter() {
-                let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                entry.push(json!(v));
+            if let Some(values) = variant.info(tag.as_bytes()).integer()? {
+                for v in values.iter() {
+                    let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                    entry.push(json!(v));
+                }
             }
         }
         _ => {}

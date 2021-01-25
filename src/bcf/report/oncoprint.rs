@@ -12,6 +12,7 @@ use serde_derive::Serialize;
 use tera::{self, Context, Tera};
 
 use crate::bcf::report::table_report::create_report_table::get_ann_description;
+use crate::bcf::report::table_report::create_report_table::read_tag_entries;
 use chrono::{DateTime, Local};
 use jsonm::packer::{PackOptions, Packer};
 use rust_htslib::bcf::{self, Read};
@@ -29,6 +30,7 @@ pub fn oncoprint(
     output_path: &str,
     max_cells: u32,
     tsv_data_path: Option<&str>,
+    plot_info: Option<Vec<String>>,
 ) -> Result<(), Box<dyn Error>> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
@@ -43,6 +45,8 @@ pub fn oncoprint(
     let mut af_data = Vec::new();
     let mut gene_af_data = HashMap::new();
     let mut unique_genes = HashMap::new();
+    let mut plot_info_data = HashMap::new();
+    let mut gene_plot_info_data = HashMap::new();
 
     let tsv_data = if let Some(tsv) = tsv_data_path {
         Some(make_tsv_records(tsv.to_owned())?)
@@ -78,6 +82,9 @@ pub fn oncoprint(
         let mut clin_sigs = HashMap::new();
         let mut gene_clin_sigs = HashMap::new();
         let mut ann_indices = HashMap::new();
+        let mut pi_data = HashMap::new();
+        let mut gene_pi_data = HashMap::new();
+
         let mut bcf_reader = bcf::Reader::from_path(path)?;
         let header = bcf_reader.header().clone();
         let mut sample_names = Vec::new();
@@ -97,7 +104,7 @@ pub fn oncoprint(
 
         for res in bcf_reader.records() {
             let mut gene_data_per_record = HashMap::new();
-            let record = res?;
+            let mut record = res?;
             let alleles = record
                 .alleles()
                 .into_iter()
@@ -107,6 +114,13 @@ pub fn oncoprint(
             let ref_allele = alleles[0].to_owned();
             let dup = [ref_allele.clone(), ref_allele.clone()].concat();
             let rev = ref_allele.clone().into_iter().rev().collect_vec();
+
+            let mut info_map = HashMap::new();
+            if plot_info.is_some() {
+                for tag in &plot_info.clone().unwrap() {
+                    read_tag_entries(&mut info_map, &mut record, &header, tag)?;
+                }
+            }
 
             let allel_frequencies = record
                 .format(b"AF")
@@ -217,6 +231,52 @@ pub fn oncoprint(
                             protein_alteration
                         };
 
+                        if plot_info.is_some() {
+                            for key in plot_info.clone().unwrap() {
+                                let info = info_map.get(&key.clone());
+                                if info.is_none() {
+                                    let e = pi_data.entry(key.clone()).or_insert_with(HashMap::new);
+                                    let rec = e.entry(gene.to_owned()).or_insert_with(Vec::new);
+                                    rec.push(BarPlotRecord::new(
+                                        gene.to_owned(),
+                                        "unknown".to_string(),
+                                    ));
+                                    let e2 = gene_pi_data
+                                        .entry(key.clone())
+                                        .or_insert_with(HashMap::new);
+                                    let rec2 = e2.entry(gene.to_owned()).or_insert_with(Vec::new);
+                                    rec2.push(BarPlotRecord::new(
+                                        alt.to_owned(),
+                                        "unknown".to_string(),
+                                    ));
+                                } else {
+                                    for val in info.unwrap() {
+                                        let value = if val == &json!("") || val == &json!(".") {
+                                            "unknown".to_string()
+                                        } else {
+                                            val.to_string().trim_matches('\"').to_owned()
+                                        };
+                                        let e =
+                                            pi_data.entry(key.clone()).or_insert_with(HashMap::new);
+                                        let rec = e.entry(gene.to_owned()).or_insert_with(Vec::new);
+                                        rec.push(BarPlotRecord::new(
+                                            gene.to_owned(),
+                                            value.clone(),
+                                        ));
+                                        let e2 = gene_pi_data
+                                            .entry(key.clone())
+                                            .or_insert_with(HashMap::new);
+                                        let rec2 =
+                                            e2.entry(gene.to_owned()).or_insert_with(Vec::new);
+                                        rec2.push(BarPlotRecord::new(
+                                            alt.to_owned(),
+                                            value.clone(),
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+
                         let split_ev = existing_var.split('&').collect_vec();
                         for ex_var in split_ev {
                             let mut ev: String =
@@ -320,6 +380,14 @@ pub fn oncoprint(
             let final_evs = make_final_bar_plot_records(ex_var);
             existing_var_data.push(final_evs);
 
+            for (tag, map) in pi_data.clone() {
+                if let Some(t_data) = map.get(gene) {
+                    let final_data = make_final_bar_plot_records(t_data);
+                    let e = plot_info_data.entry(tag).or_insert_with(Vec::new);
+                    e.push(final_data);
+                }
+            }
+
             let consequence = consequences.get(gene).unwrap();
             let final_consequences = make_final_bar_plot_records(consequence);
             consequence_data.push(final_consequences);
@@ -336,6 +404,15 @@ pub fn oncoprint(
                 .entry(gene.to_owned())
                 .or_insert_with(Vec::new);
             e.push(final_gene_impacts);
+
+            for (tag, map) in gene_pi_data.clone() {
+                if let Some(t_data) = map.get(gene) {
+                    let final_data = make_final_bar_plot_records(t_data);
+                    let m = gene_plot_info_data.entry(tag).or_insert_with(HashMap::new);
+                    let e = m.entry(gene.to_owned()).or_insert_with(Vec::new);
+                    e.push(final_data);
+                }
+            }
 
             let gene_evs = gene_existing_variations.get(gene).unwrap();
             let final_gene_evs = make_final_bar_plot_records(gene_evs);
@@ -396,6 +473,13 @@ pub fn oncoprint(
         let final_impact: Vec<_> = impact_data.iter().flatten().sorted().collect();
         let existing_var_data = gene_existing_var_data.get(&gene).unwrap();
         let final_ev: Vec<_> = existing_var_data.iter().flatten().sorted().collect();
+        let mut inf_plot_data = HashMap::new();
+        for (tag, data) in &gene_plot_info_data {
+            if let Some(d) = data.get(&gene) {
+                let final_data: Vec<_> = d.iter().flatten().sorted().collect();
+                inf_plot_data.insert(tag.to_owned(), final_data.clone());
+            }
+        }
         let consequence_data = gene_consequence_data.get(&gene).unwrap();
         let final_consequence: Vec<_> = consequence_data.iter().flatten().sorted().collect();
         let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
@@ -476,6 +560,18 @@ pub fn oncoprint(
                     .filter(|entry| sorted_alterations.contains(&&&entry.key))
                     .collect();
 
+                let mut info_page_data = HashMap::new();
+                if plot_info.is_some() {
+                    for (tag, data) in inf_plot_data.clone() {
+                        info_page_data.insert(
+                            tag,
+                            data.into_iter()
+                                .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                                .collect_vec(),
+                        );
+                    }
+                }
+
                 let order: Vec<_> = ordered_alts
                     .iter()
                     .filter(|gene| sorted_alterations.contains(gene))
@@ -490,15 +586,43 @@ pub fn oncoprint(
                     json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allel_frequency": af_page_data})
                 };
 
+                if plot_info.is_some() {
+                    for (tag, data) in info_page_data {
+                        values[tag] = json!(data);
+                    }
+                }
+
                 if let Some(ref tsv) = tsv_data {
                     for (title, data) in tsv {
                         values[title] = json!(data);
                     }
                 }
+
                 specs["datasets"] = values;
                 if !cs_present_folded {
                     let hconcat = specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
                     hconcat.remove(4);
+                    specs["vconcat"][1]["hconcat"] = json!(hconcat);
+                }
+
+                if plot_info.is_some() {
+                    let info_specs: Value =
+                        serde_json::from_str(include_str!("info_specs.json")).unwrap();
+                    let highlight_specs: Value =
+                        serde_json::from_str(include_str!("highlight_specs.json")).unwrap();
+                    let hconcat = specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
+                    for tag in plot_info_data.keys() {
+                        let mut tag_specs = info_specs.clone();
+                        tag_specs["data"] = json!({ "name": tag });
+                        let highlight_name = "highlight_".to_string() + tag;
+                        tag_specs["selection"] = json!({ &highlight_name: highlight_specs });
+                        tag_specs["encoding"]["color"]["title"] = json!(tag);
+                        tag_specs["encoding"]["x"]["title"] = json!(tag);
+                        tag_specs["encoding"]["fillOpacity"]["condition"]["selection"] =
+                            json!(highlight_name);
+                        hconcat.push(tag_specs);
+                    }
+
                     specs["vconcat"][1]["hconcat"] = json!(hconcat);
                 }
 
@@ -557,6 +681,12 @@ pub fn oncoprint(
     let ev_data: Vec<_> = existing_var_data.iter().flatten().collect();
     let consequence_data: Vec<_> = consequence_data.iter().flatten().collect();
     let clin_sig_data: Vec<_> = clin_sig_data.iter().flatten().collect();
+    let mut i_plot_data = HashMap::new();
+    if plot_info.is_some() {
+        for (tag, data) in plot_info_data.clone() {
+            i_plot_data.insert(tag, data.into_iter().flatten().collect_vec());
+        }
+    }
 
     let sorted_impacts = order_by_impact(impact_data.clone());
     let sorted_clin_sigs = order_by_clin_sig(clin_sig_data.clone());
@@ -685,6 +815,18 @@ pub fn oncoprint(
                 .filter(|entry| sorted_genes.contains(&&entry.key))
                 .collect();
 
+            let mut info_page_data = HashMap::new();
+            if plot_info.is_some() {
+                for (tag, data) in i_plot_data.clone() {
+                    info_page_data.insert(
+                        tag,
+                        data.into_iter()
+                            .filter(|entry| sorted_genes.contains(&&entry.record.key))
+                            .collect_vec(),
+                    );
+                }
+            }
+
             let order: Vec<_> = ordered_genes
                 .iter()
                 .filter(|gene| sorted_genes.contains(gene))
@@ -702,6 +844,12 @@ pub fn oncoprint(
                 json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allel_frequency": af_page_data})
             };
 
+            if plot_info.is_some() {
+                for (tag, data) in info_page_data {
+                    values[tag] = json!(data);
+                }
+            }
+
             if let Some(ref tsv) = tsv_data {
                 for (title, data) in tsv {
                     values[title] = json!(data);
@@ -712,6 +860,27 @@ pub fn oncoprint(
             if !cs_present_folded {
                 let hconcat = vl_specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
                 hconcat.remove(4);
+                vl_specs["vconcat"][1]["hconcat"] = json!(hconcat);
+            }
+
+            if plot_info.is_some() {
+                let info_specs: Value =
+                    serde_json::from_str(include_str!("info_specs.json")).unwrap();
+                let highlight_specs: Value =
+                    serde_json::from_str(include_str!("highlight_specs.json")).unwrap();
+                let hconcat = vl_specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
+                for tag in plot_info_data.keys() {
+                    let mut tag_specs = info_specs.clone();
+                    tag_specs["data"] = json!({ "name": tag });
+                    let highlight_name = "highlight_".to_string() + tag;
+                    tag_specs["selection"] = json!({ &highlight_name: highlight_specs });
+                    tag_specs["encoding"]["color"]["title"] = json!(tag);
+                    tag_specs["encoding"]["x"]["title"] = json!(tag);
+                    tag_specs["encoding"]["fillOpacity"]["condition"]["selection"] =
+                        json!(highlight_name);
+                    hconcat.push(tag_specs);
+                }
+
                 vl_specs["vconcat"][1]["hconcat"] = json!(hconcat);
             }
 

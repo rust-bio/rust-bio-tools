@@ -52,7 +52,11 @@ vegaEmbed('#oncoprint', spec).then(function(result) {
     result.view.addEventListener('click', function(event, item) {
         if (item.datum.gene !== undefined || item.datum.key !== undefined) {
             if (item.datum.gene !== undefined ) {
-                window.location.href = '../genes/' + item.datum.gene + '1.html';
+                if (item.datum.gene.startsWith("ENST") && item.datum.sample !== undefined) {
+                    window.location.href = '../details/' + item.datum.sample + '/' + item.datum.gene + '.html';
+                } else {
+                    window.location.href = '../genes/' + item.datum.gene + '1.html';
+                }
             } else {
                 window.location.href = '../genes/' + item.datum.key + '1.html';
             }
@@ -61,7 +65,7 @@ vegaEmbed('#oncoprint', spec).then(function(result) {
     });
 });
 
-window.addEventListener('resize', function(event){
+window.addEventListener('resize', function(event) {
     let page_width =  $(window).width();
     let matrix_width = Math.min(page_width - 740, samples*20);
     if (matrix_width < 20 && samples >= 2) {
@@ -84,7 +88,11 @@ window.addEventListener('resize', function(event){
         result.view.addEventListener('click', function(event, item) {
             if (item.datum.gene !== undefined || item.datum.key !== undefined) {
                 if (item.datum.gene !== undefined ) {
-                    window.location.href = '../genes/' + item.datum.gene + '1.html';
+                    if (item.datum.gene.startsWith("ENST") && item.datum.sample !== undefined) {
+                        window.location.href = '../details/' + item.datum.sample + '/' + item.datum.gene + '.html';
+                    } else {
+                        window.location.href = '../genes/' + item.datum.gene + '1.html';
+                    }
                 } else {
                     window.location.href = '../genes/' + item.datum.key + '1.html';
                 }

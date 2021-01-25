@@ -251,7 +251,7 @@ pub fn oncoprint(
                                         let value = if val == &json!("") || val == &json!(".") {
                                             "unknown".to_string()
                                         } else {
-                                            val.to_string()
+                                            val.to_string().trim_matches('\"').to_owned()
                                         };
                                         let e =
                                             pi_data.entry(key.clone()).or_insert_with(HashMap::new);

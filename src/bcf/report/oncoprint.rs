@@ -608,7 +608,7 @@ pub fn oncoprint(
                     let highlight_specs: Value =
                         serde_json::from_str(include_str!("highlight_specs.json")).unwrap();
                     let hconcat = specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
-                    for (tag, _) in &plot_info_data {
+                    for tag in plot_info_data.keys() {
                         let mut tag_specs = info_specs.clone();
                         tag_specs["data"] = json!({ "name": tag });
                         let highlight_name = "highlight_".to_string() + tag;
@@ -866,7 +866,7 @@ pub fn oncoprint(
                 let highlight_specs: Value =
                     serde_json::from_str(include_str!("highlight_specs.json")).unwrap();
                 let hconcat = vl_specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
-                for (tag, _) in &plot_info_data {
+                for tag in plot_info_data.keys() {
                     let mut tag_specs = info_specs.clone();
                     tag_specs["data"] = json!({ "name": tag });
                     let highlight_name = "highlight_".to_string() + tag;

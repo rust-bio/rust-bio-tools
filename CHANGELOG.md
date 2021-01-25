@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.18.0] - 2021-01-25
+### Added
+- Parameter `--plot-info` for `rbt vcf-report` that allows to plot arbitrary info fields next to the oncoprint matrix.
+- Ability to display intergenic variants at the primary stage of `rbt vcf-report`.
+
 ## [0.17.0] - 2021-01-21
 ### Changed
 - `rbt collapse-reads-to-fragments` now always writes FASTQ files since consensus reads need to be remapped anyways (MAPQ might change).

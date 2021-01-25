@@ -87,6 +87,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             max_read_depth,
             infos,
             formats,
+            plot_info,
             custom_js_template,
             custom_js_files,
             tsv,
@@ -162,7 +163,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 .unwrap_or_else(|_| panic!("Failed building table report for sample {}", sample));
             });
 
-            bcf::report::oncoprint::oncoprint(&sample_calls, &output_path, cells, tsv.as_deref())?
+            bcf::report::oncoprint::oncoprint(
+                &sample_calls,
+                &output_path,
+                cells,
+                tsv.as_deref(),
+                plot_info,
+            )?
         }
         VcfSplit { input, output } => bcf::split::split(input, output.as_ref())?,
         CollapseReadsToFragments { cmd } => match cmd {

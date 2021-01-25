@@ -79,6 +79,9 @@ pub(crate) fn make_table_report(
         *ann_indices
             .get(&String::from("Gene"))
             .expect("No field named Gene found. Please only use VEP-annotated VCF-files."),
+        *ann_indices
+            .get(&String::from("HGVSg"))
+            .expect("No field named HGVSg found. Please only use VEP-annotated VCF-files."),
     )?;
 
     for (record_index, v) in vcf.records().enumerate() {
@@ -209,8 +212,11 @@ pub(crate) fn make_table_report(
                     get_field("SYMBOL")?
                 } else if !get_field("Gene")?.is_empty() {
                     get_field("Gene")?
+                } else if !get_field("HGVSg")?.is_empty() {
+                    warn!("Warning! Found allele in {:?} without SYMBOL or Gene field. Using HGVSg instead.", variant);
+                    get_field("HGVSg")?
                 } else {
-                    warn!("Warning! Found allele in {:?} without SYMBOL or Gene field. This record will be skipped!", variant);
+                    warn!("Warning! Found allele in {:?} without SYMBOL, Gene or HGVSg field. This record will be skipped!", variant);
                     continue;
                 };
                 genes.push(gene.to_owned());
@@ -446,7 +452,7 @@ pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<V
     None
 }
 
-fn read_tag_entries(
+pub(crate) fn read_tag_entries(
     info_map: &mut HashMap<String, Vec<Value>>,
     variant: &mut Record,
     header: &HeaderView,
@@ -455,25 +461,28 @@ fn read_tag_entries(
     let (tag_type, _) = header.info_type(tag.as_bytes())?;
     match tag_type {
         TagType::String => {
-            let values = variant.info(tag.as_bytes()).string()?.unwrap();
-            for v in values.iter() {
-                let value = String::from_utf8(Vec::from(v.to_owned()))?;
-                let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                entry.push(json!(value));
+            if let Some(values) = variant.info(tag.as_bytes()).string()? {
+                for v in values.iter() {
+                    let value = String::from_utf8(Vec::from(v.to_owned()))?;
+                    let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                    entry.push(json!(value));
+                }
             }
         }
         TagType::Float => {
-            let values = variant.info(tag.as_bytes()).float()?.unwrap();
-            for v in values.iter() {
-                let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                entry.push(json!(v));
+            if let Some(values) = variant.info(tag.as_bytes()).float()? {
+                for v in values.iter() {
+                    let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                    entry.push(json!(v));
+                }
             }
         }
         TagType::Integer => {
-            let values = variant.info(tag.as_bytes()).integer()?.unwrap();
-            for v in values.iter() {
-                let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
-                entry.push(json!(v));
+            if let Some(values) = variant.info(tag.as_bytes()).integer()? {
+                for v in values.iter() {
+                    let entry = info_map.entry(tag.to_owned()).or_insert_with(Vec::new);
+                    entry.push(json!(v));
+                }
             }
         }
         _ => {}
@@ -563,6 +572,7 @@ fn get_gene_ending(
     vcf_path: &Path,
     symbol_index: usize,
     gene_index: usize,
+    hgvsg_index: usize,
 ) -> Result<HashMap<String, u32>, Box<dyn Error>> {
     let mut endings = HashMap::new();
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
@@ -574,6 +584,9 @@ fn get_gene_ending(
                 let mut gene = std::str::from_utf8(fields[symbol_index])?;
                 if gene.is_empty() {
                     gene = std::str::from_utf8(fields[gene_index])?;
+                }
+                if gene.is_empty() {
+                    gene = std::str::from_utf8(fields[hgvsg_index])?;
                 }
                 endings.insert(gene.to_owned(), record_index as u32);
             }

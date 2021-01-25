@@ -121,7 +121,6 @@ pub fn oncoprint(
                     read_tag_entries(&mut info_map, &mut record, &header, tag)?;
                 }
             }
-            dbg!(&info_map);
 
             let allel_frequencies = record
                 .format(b"AF")

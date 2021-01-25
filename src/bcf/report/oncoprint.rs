@@ -159,8 +159,11 @@ pub fn oncoprint(
                             get_field("SYMBOL")?
                         } else if !get_field("Gene")?.is_empty() {
                             get_field("Gene")?
+                        } else if !get_field("HGVSg")?.is_empty() {
+                            warn!("Warning! Found allele in {:?} without SYMBOL or Gene field. Using HGVSg instead.", record);
+                            get_field("HGVSg")?
                         } else {
-                            warn!("Warning! Found allele in {:?} without SYMBOL or Gene field. This record will be skipped!", record);
+                            warn!("Warning! Found allele in {:?} without SYMBOL, Gene or HGVSg field. This record will be skipped!", record);
                             continue;
                         };
                         let dna_alteration = get_field("HGVSg")?;

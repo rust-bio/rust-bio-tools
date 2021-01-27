@@ -181,7 +181,12 @@ pub fn oncoprint(
                             continue;
                         };
                         let dna_alteration = get_field("HGVSg")?;
-                        let canonical = get_field("CANONICAL")? == "YES";
+                        let canonical =
+                            if let Some(index) = ann_indices.get(&"CANONICAL".to_owned()) {
+                                str::from_utf8(fields[*index])? == "YES"
+                            } else {
+                                false
+                            };
                         let protein_alteration = get_field("HGVSp")?;
                         let consequence = get_field("Consequence")?;
                         let existing_var = get_field("Existing_variation")?;

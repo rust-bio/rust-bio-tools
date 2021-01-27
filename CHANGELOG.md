@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.18.1] - 2021-01-27
+### Changed
+- If CANONICAL field is not present in ANN of bcf, rbt vcf-report now assumes that transcript is not the canonical one.
+
 ## [0.18.0] - 2021-01-25
 ### Added
 - Parameter `--plot-info` for `rbt vcf-report` that allows to plot arbitrary info fields next to the oncoprint matrix.

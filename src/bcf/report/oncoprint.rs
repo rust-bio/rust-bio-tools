@@ -47,6 +47,7 @@ pub fn oncoprint(
     let mut unique_genes = HashMap::new();
     let mut plot_info_data = HashMap::new();
     let mut gene_plot_info_data = HashMap::new();
+    let mut remove_existing_variation = true;
 
     let tsv_data = if let Some(tsv) = tsv_data_path {
         Some(make_tsv_records(tsv.to_owned())?)
@@ -288,6 +289,8 @@ pub fn oncoprint(
                                 ex_var.chars().filter(|c| !c.is_digit(10)).collect();
                             if ev.is_empty() {
                                 ev = String::from("unknown");
+                            } else {
+                                remove_existing_variation = false;
                             }
                             ev_rec.push(BarPlotRecord::new(gene.to_owned(), ev.clone()));
                             gene_ev_rec.push(BarPlotRecord::new(alt.to_owned(), ev));
@@ -604,9 +607,17 @@ pub fn oncoprint(
                 }
 
                 specs["datasets"] = values;
-                if !cs_present_folded {
+                if !cs_present_folded || remove_existing_variation {
                     let hconcat = specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
-                    hconcat.remove(4);
+                    match (!cs_present_folded, remove_existing_variation) {
+                        (true, true) => {
+                            hconcat.remove(6);
+                            hconcat.remove(4)
+                        }
+                        (true, false) => hconcat.remove(4),
+                        (false, true) => hconcat.remove(6),
+                        (_, _) => unreachable!(),
+                    };
                     specs["vconcat"][1]["hconcat"] = json!(hconcat);
                 }
 
@@ -862,9 +873,17 @@ pub fn oncoprint(
             }
 
             vl_specs["datasets"] = values;
-            if !cs_present_folded {
+            if !cs_present_folded || remove_existing_variation {
                 let hconcat = vl_specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
-                hconcat.remove(4);
+                match (!cs_present_folded, remove_existing_variation) {
+                    (true, true) => {
+                        hconcat.remove(6);
+                        hconcat.remove(4)
+                    }
+                    (true, false) => hconcat.remove(4),
+                    (false, true) => hconcat.remove(6),
+                    (_, _) => unreachable!(),
+                };
                 vl_specs["vconcat"][1]["hconcat"] = json!(hconcat);
             }
 

@@ -249,6 +249,10 @@ pub(crate) enum Command {
         #[structopt(long, short = "f", value_name = "FORMAT_TAG")]
         formats: Option<Vec<String>>,
 
+        /// Add multiple keys from the info field of your vcf to the plots of the first and second stage of the report.
+        #[structopt(long, value_name = "PLOT_INFO")]
+        plot_info: Option<Vec<String>>,
+
         /// Change the default javascript file for the table-report to a custom one to add own plots or tables to the sidebar by appending these to an empty div in the HTML template.
         #[structopt(long, short = "j", value_name = "JS_FILE_PATH")]
         custom_js_template: Option<String>,

@@ -1,0 +1,3 @@
+let plots = [{
+    {% for variant in variants %}{% set last = loop.last %}{% set rowloop = loop.index %}{% for k,v in variant.vis %}{% set inner_last = loop.last %}"{{ rowloop }}_{{ loop.index }}": {{ v | safe }}{% if not inner_last %},{% endif %}{% if not last %},{% endif %}{% endfor %}{% endfor %}
+}];

@@ -1161,16 +1161,6 @@
               "type":"nominal",
               "title":"existing variations",
               "scale":{
-                "domain":[
-                  "COSM",
-                  "rs",
-                  "unknown"
-                ],
-                "range": [
-                  "#e41234",
-                  "#9e225f",
-                  "#d4d4d4"
-                ],
                 "type":"ordinal"
               }
             }

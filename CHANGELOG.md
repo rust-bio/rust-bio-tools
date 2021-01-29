@@ -2,6 +2,22 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.18.1] - 2021-01-27
+### Changed
+- If CANONICAL field is not present in ANN of bcf, rbt vcf-report now assumes that transcript is not the canonical one.
+
+## [0.18.0] - 2021-01-25
+### Added
+- Parameter `--plot-info` for `rbt vcf-report` that allows to plot arbitrary info fields next to the oncoprint matrix.
+- Ability to display intergenic variants at the primary stage of `rbt vcf-report`.
+
+## [0.17.0] - 2021-01-21
+### Changed
+- `rbt collapse-reads-to-fragments` now always writes FASTQ files since consensus reads need to be remapped anyways (MAPQ might change).
+- `rbt vcf-report` can now be parallelized.
+- various fixes and improvements for `rbt vcf-report`
+- various fixes for `rbt collapse-reads-to-fragments`
+
 ## [0.16.0] - 2020-11-17
 ### Changed
 - `rbt collapse-reads-to-fragments bam` writes skipped reads to separate bam file now

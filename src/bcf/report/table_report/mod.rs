@@ -28,6 +28,14 @@ pub fn table_report(
         )
     });
 
+    let plot_path = detail_path + "/plots/";
+    fs::create_dir(Path::new(&plot_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for table report plots at location: {:?}",
+            plot_path
+        )
+    });
+
     Ok(make_table_report(
         Path::new(vcf),
         Path::new(fasta),

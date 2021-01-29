@@ -1,0 +1,41 @@
+{
+  "data":{
+    "name":""
+  },
+  "mark":"bar",
+  "width":100,
+  "selection":{
+  },
+  "encoding":{
+    "y":{
+      "field":"key",
+      "type":"ordinal",
+      "sort": {},
+      "axis": null
+    },
+    "x":{
+      "field":"count",
+      "aggregate":"sum",
+      "stack":  "normalize",
+      "type":"quantitative",
+      "axis":{
+        "title":""
+      }
+    },
+    "fillOpacity":{
+      "condition":{
+        "selection":"",
+        "value":0.5
+      },
+      "value":1
+    },
+    "color":{
+      "field":"value",
+      "type":"nominal",
+      "title":"existing variations",
+      "scale":{
+        "type":"ordinal"
+      }
+    }
+  }
+}

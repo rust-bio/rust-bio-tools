@@ -240,7 +240,7 @@ fn test_csv_report() {
         assert!(Command::new("bash")
             .arg("-c")
             .arg(
-                "sed -i '47d;54d' ".to_owned()
+                "sed -i '41d;34d' ".to_owned()
                     + "tests/test-csv-report/indexes/index"
                     + &i.to_string()
                     + ".html"

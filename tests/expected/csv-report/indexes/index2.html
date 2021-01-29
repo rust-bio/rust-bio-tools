@@ -4,6 +4,7 @@
     <title>rbt csv-report</title>
     <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../css/bootstrap-table.min.css">
+    <link rel="stylesheet" type="text/css" href="../css/csv_report.css">
 </head>
 
 <body>
@@ -13,6 +14,7 @@
 <script src="../js/vega.min.js"></script>
 <script src="../js/vega-lite.min.js"></script>
 <script src="../js/vega-embed.min.js"></script>
+<script src="../js/csv_report.js"></script>
 
 <script src="../plots/Index.js"></script>
 
@@ -24,21 +26,6 @@
 
 <script src="../plots/Movie.js"></script>
 
-<style>
-    .table-container { display: none; }
-    .loading { height: 100%; padding-top: 25%;}
-</style>
-
-<script>
-    $(document).ready(function() {
-        $('.table-container').show();
-        $('.loading').hide();
-        $('#table').bootstrapTable( 'resetView' , {height: window.innerHeight - 200} );
-        $('.modal').on('shown.bs.modal', function () {
-            window.dispatchEvent(new Event('resize'));
-        });
-    });
-</script>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">rbt report</a>
     <div class="collapse navbar-collapse" id="navbarText">
@@ -56,7 +43,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="collapse navbar-collapse" id="navbarText2">
         <ul class="navbar-nav mr-auto">
-            <li><a href="">csv-report</a></li>
+            <li><a href="index2.html">csv-report</a></li>
         </ul>
         <span class="pull-right">
             <a class="pull-right nav-link" href="../report.xlsx" download>
@@ -74,20 +61,20 @@
                 <span class="sr-only">Loading...</span>
             </div>
         </div>
-        <div class="col-md-12 table-container">
-            <table id="table" class="table table-hover" data-toggle="table" data-height="510" data-search="true" data-pagination="false" style="max-width: 90%;">
+        <div class="col-md-12 table-container" style="margin-top: 15px;">
+            <table id="table" class="table table-hover" data-toggle="table" data-height="510" style="max-width: 90%;">
                 <thead>
                 <tr>
                     
                     <th style="white-space: nowrap;">Index
-                        <a class="" data-toggle="modal" data-target="#Index" onclick="vegaEmbed('#Index_plot', Index_plot)">
+                        <a class="sym" data-toggle="modal" data-target="#Index" onclick="vegaEmbed('#Index_plot', Index_plot)">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="4" height="5" x="1" y="10" rx="1"/>
                                 <rect width="4" height="9" x="6" y="6" rx="1"/>
                                 <rect width="4" height="14" x="11" y="1" rx="1"/>
                             </svg>
                         </a>
-                        <a class="" data-toggle="modal" data-target="#Index-search">
+                        <a class="sym" data-toggle="modal" data-target="#Index-search">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
                                 <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
@@ -96,14 +83,14 @@
                     </th>
                     
                     <th style="white-space: nowrap;">Year
-                        <a class="" data-toggle="modal" data-target="#Year" onclick="vegaEmbed('#Year_plot', Year_plot)">
+                        <a class="sym" data-toggle="modal" data-target="#Year" onclick="vegaEmbed('#Year_plot', Year_plot)">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="4" height="5" x="1" y="10" rx="1"/>
                                 <rect width="4" height="9" x="6" y="6" rx="1"/>
                                 <rect width="4" height="14" x="11" y="1" rx="1"/>
                             </svg>
                         </a>
-                        <a class="" data-toggle="modal" data-target="#Year-search">
+                        <a class="sym" data-toggle="modal" data-target="#Year-search">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
                                 <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
@@ -112,14 +99,14 @@
                     </th>
                     
                     <th style="white-space: nowrap;">Age
-                        <a class="" data-toggle="modal" data-target="#Age" onclick="vegaEmbed('#Age_plot', Age_plot)">
+                        <a class="sym" data-toggle="modal" data-target="#Age" onclick="vegaEmbed('#Age_plot', Age_plot)">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="4" height="5" x="1" y="10" rx="1"/>
                                 <rect width="4" height="9" x="6" y="6" rx="1"/>
                                 <rect width="4" height="14" x="11" y="1" rx="1"/>
                             </svg>
                         </a>
-                        <a class="" data-toggle="modal" data-target="#Age-search">
+                        <a class="sym" data-toggle="modal" data-target="#Age-search">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
                                 <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
@@ -128,14 +115,14 @@
                     </th>
                     
                     <th style="white-space: nowrap;">Name
-                        <a class="" data-toggle="modal" data-target="#Name" onclick="vegaEmbed('#Name_plot', Name_plot)">
+                        <a class="sym" data-toggle="modal" data-target="#Name" onclick="vegaEmbed('#Name_plot', Name_plot)">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="4" height="5" x="1" y="10" rx="1"/>
                                 <rect width="4" height="9" x="6" y="6" rx="1"/>
                                 <rect width="4" height="14" x="11" y="1" rx="1"/>
                             </svg>
                         </a>
-                        <a class="" data-toggle="modal" data-target="#Name-search">
+                        <a class="sym" data-toggle="modal" data-target="#Name-search">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
                                 <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
@@ -144,14 +131,14 @@
                     </th>
                     
                     <th style="white-space: nowrap;">Movie
-                        <a class="" data-toggle="modal" data-target="#Movie" onclick="vegaEmbed('#Movie_plot', Movie_plot)">
+                        <a class="sym" data-toggle="modal" data-target="#Movie" onclick="vegaEmbed('#Movie_plot', Movie_plot)">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="4" height="5" x="1" y="10" rx="1"/>
                                 <rect width="4" height="9" x="6" y="6" rx="1"/>
                                 <rect width="4" height="14" x="11" y="1" rx="1"/>
                             </svg>
                         </a>
-                        <a class="" data-toggle="modal" data-target="#Movie-search">
+                        <a class="sym" data-toggle="modal" data-target="#Movie-search">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-search" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M10.442 10.442a1 1 0 0 1 1.415 0l3.85 3.85a1 1 0 0 1-1.414 1.415l-3.85-3.85a1 1 0 0 1 0-1.415z"/>
                                 <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/>
@@ -163,7 +150,7 @@
                 </thead>
                 <tbody>
                     
-                    <tr>
+                    <tr class="wor" data-idx="0">
                         
                         <td>49</td>
                         
@@ -177,7 +164,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="1">
                         
                         <td>52</td>
                         
@@ -191,7 +178,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="2">
                         
                         <td>61</td>
                         
@@ -205,7 +192,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="3">
                         
                         <td>18</td>
                         
@@ -219,7 +206,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="4">
                         
                         <td>32</td>
                         
@@ -233,7 +220,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="5">
                         
                         <td>70</td>
                         
@@ -247,7 +234,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="6">
                         
                         <td>15</td>
                         
@@ -261,7 +248,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="7">
                         
                         <td>24</td>
                         
@@ -275,7 +262,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="8">
                         
                         <td>58</td>
                         
@@ -289,7 +276,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="9">
                         
                         <td>2</td>
                         
@@ -303,7 +290,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="10">
                         
                         <td>47</td>
                         
@@ -317,7 +304,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="11">
                         
                         <td>50</td>
                         
@@ -331,7 +318,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="12">
                         
                         <td>67</td>
                         
@@ -345,7 +332,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="13">
                         
                         <td>20</td>
                         
@@ -359,7 +346,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="14">
                         
                         <td>39</td>
                         
@@ -373,7 +360,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="15">
                         
                         <td>43</td>
                         
@@ -387,7 +374,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="16">
                         
                         <td>75</td>
                         
@@ -401,7 +388,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="17">
                         
                         <td>76</td>
                         
@@ -415,7 +402,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="18">
                         
                         <td>44</td>
                         
@@ -429,7 +416,7 @@
                         
                     </tr>
                     
-                    <tr>
+                    <tr class="wor" data-idx="19">
                         
                         <td>45</td>
                         
@@ -487,7 +474,6 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -497,7 +483,7 @@
         <div class="modal-dialog modal-dialog-centered modal-md" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Prefix search for Index</h5>
+                    <h5 class="modal-title">Search for Index</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -506,7 +492,6 @@
                     <iframe src="../prefixes/Index.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Lorem Ipsum.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -527,7 +512,6 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -537,7 +521,7 @@
         <div class="modal-dialog modal-dialog-centered modal-md" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Prefix search for Year</h5>
+                    <h5 class="modal-title">Search for Year</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -546,7 +530,6 @@
                     <iframe src="../prefixes/Year.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Lorem Ipsum.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -567,7 +550,6 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -577,7 +559,7 @@
         <div class="modal-dialog modal-dialog-centered modal-md" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Prefix search for Age</h5>
+                    <h5 class="modal-title">Search for Age</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -586,7 +568,6 @@
                     <iframe src="../prefixes/Age.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Lorem Ipsum.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -607,7 +588,6 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -617,7 +597,7 @@
         <div class="modal-dialog modal-dialog-centered modal-md" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Prefix search for Name</h5>
+                    <h5 class="modal-title">Search for Name</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -626,7 +606,6 @@
                     <iframe src="../prefixes/Name.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Lorem Ipsum.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -647,7 +626,6 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Note: Non-numeric plots with 11 or more different values are reduced down to their 10 most frequent values.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -657,7 +635,7 @@
         <div class="modal-dialog modal-dialog-centered modal-md" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Prefix search for Movie</h5>
+                    <h5 class="modal-title">Search for Movie</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -666,7 +644,6 @@
                     <iframe src="../prefixes/Movie.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
                 </div>
                 <div class="modal-footer">
-                    <small class="mr-auto"><i>Lorem Ipsum.</i></small>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>

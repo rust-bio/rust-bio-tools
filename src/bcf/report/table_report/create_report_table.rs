@@ -213,10 +213,10 @@ pub(crate) fn make_table_report(
                 } else if !get_field("Gene")?.is_empty() {
                     get_field("Gene")?
                 } else if !get_field("HGVSg")?.is_empty() {
-                    warn!("Warning! Found allele in {:?} without SYMBOL or Gene field. Using HGVSg instead.", variant);
+                    warn!("Warning! Found allele without SYMBOL or Gene field in record at {}:{}. Using HGVSg instead.", &chrom, variant.pos());
                     get_field("HGVSg")?
                 } else {
-                    warn!("Warning! Found allele in {:?} without SYMBOL, Gene or HGVSg field. This record will be skipped!", variant);
+                    warn!("Warning! Found allele without SYMBOL, Gene or HGVSg field in record at {}:{}. This record will be skipped!",  &chrom, variant.pos());
                     continue;
                 };
                 genes.push(gene.to_owned());

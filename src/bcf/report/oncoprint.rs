@@ -6,7 +6,6 @@ use std::{fs, str};
 use derive_new::new;
 use itertools::Itertools;
 use lazy_static::lazy_static;
-use log::warn;
 use regex::Regex;
 use serde_derive::Serialize;
 use tera::{self, Context, Tera};
@@ -174,10 +173,8 @@ pub fn oncoprint(
                         } else if !get_field("Gene")?.is_empty() {
                             get_field("Gene")?
                         } else if !get_field("HGVSg")?.is_empty() {
-                            warn!("Warning! Found allele in {:?} without SYMBOL or Gene field. Using HGVSg instead.", record);
                             get_field("HGVSg")?
                         } else {
-                            warn!("Warning! Found allele in {:?} without SYMBOL, Gene or HGVSg field. This record will be skipped!", record);
                             continue;
                         };
                         let dna_alteration = get_field("HGVSg")?;

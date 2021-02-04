@@ -32,6 +32,7 @@ pub(crate) fn csv_report(
     let mut table = Vec::new();
     let mut numeric = HashMap::new();
     let mut non_numeric = HashMap::new();
+    let mut integer = HashMap::new();
     for res in rdr.records() {
         let row = res?;
         let mut table_entry = HashMap::new();
@@ -41,6 +42,13 @@ pub(crate) fn csv_report(
                 Ok(_) => {
                     let num = numeric.entry(tile.to_owned()).or_insert_with(|| 0);
                     *num += 1;
+                    match i32::from_str(&row[i]) {
+                        Ok(_) => {
+                            let int = integer.entry(tile.to_owned()).or_insert_with(|| 0);
+                            *int += 1;
+                        }
+                        _ => {}
+                    }
                 }
                 _ => {
                     let no_num = non_numeric.entry(tile.to_owned()).or_insert_with(|| 0);
@@ -60,6 +68,17 @@ pub(crate) fn csv_report(
             _ => unreachable!(),
         };
         is_numeric.insert(title.to_owned(), is_num);
+    }
+
+    let mut is_integer = HashMap::new();
+    for title in &titles {
+        let is_int = match (integer.get(title), non_numeric.get(title)) {
+            (Some(num), Some(no_num)) => num > no_num,
+            (None, Some(_)) => false,
+            (Some(_), None) => true,
+            _ => unreachable!(),
+        };
+        is_integer.insert(title.to_owned(), is_int);
     }
 
     let mut plot_data = HashMap::new();
@@ -198,19 +217,39 @@ pub(crate) fn csv_report(
             .into_iter()
             .map(|hm| {
                 hm.into_iter()
-                    .filter(|(k, _)| *is_numeric.get(k.as_str()).unwrap())
+                    .filter(|(k, _)| {
+                        *is_numeric.get(k.as_str()).unwrap() && !is_integer.get(k.as_str()).unwrap()
+                    })
                     .collect()
             })
             .collect(),
         titles
             .clone()
             .into_iter()
-            .filter(|e| *is_numeric.get(e).unwrap())
+            .filter(|e| *is_numeric.get(e).unwrap() && !is_integer.get(e).unwrap())
             .collect(),
         rows_per_page,
     );
 
-    for (k, v) in bin {
+    let int_bin = make_bins_for_integers(
+        table
+            .clone()
+            .into_iter()
+            .map(|hm| {
+                hm.into_iter()
+                    .filter(|(k, _)| *is_integer.get(k.as_str()).unwrap())
+                    .collect()
+            })
+            .collect(),
+        titles
+            .clone()
+            .into_iter()
+            .filter(|e| *is_integer.get(e).unwrap())
+            .collect(),
+        rows_per_page,
+    );
+
+    for (k, v) in bin.into_iter().chain(int_bin) {
         prefixes.insert(k, v);
     }
 
@@ -429,6 +468,72 @@ fn make_bins(
             let page = i + 1;
             for (index, row) in partial_table.iter().enumerate() {
                 if let Ok(val) = f32::from_str(row.get(title).unwrap()) {
+                    let entry = value_on_page
+                        .entry(val.to_string())
+                        .or_insert_with(HashSet::new);
+                    entry.insert((page, index));
+                }
+            }
+            // write stuff to output map with page like so: HashMap<column_title, HashMap<bin, Vec<(value, page, index)>>>
+        }
+        let mut bin_map = HashMap::new();
+        for (bin, values) in bin_data {
+            for v in values {
+                let entry = bin_map.entry(bin.to_string()).or_insert_with(Vec::new);
+                for (page, index) in value_on_page.get(&v).unwrap() {
+                    entry.push((v.to_string(), *page, *index));
+                }
+            }
+        }
+        title_map.insert(title.to_string(), bin_map);
+    }
+
+    title_map
+}
+
+fn make_bins_for_integers(
+    table: Vec<HashMap<String, String>>,
+    titles: Vec<&str>,
+    rows_per_page: usize,
+) -> LookupTable {
+    let mut title_map = HashMap::new();
+    for title in titles {
+        let mut values = Vec::new();
+        for row in &table {
+            if let Ok(val) = i32::from_str(row.get(title).unwrap()) {
+                values.push(val.to_owned())
+            }
+        }
+        let min = values.iter().min().unwrap().clone();
+        let max = values.iter().max().unwrap().clone();
+        let bins = 20;
+        let step = if max - min <= 20 {
+            1
+        } else {
+            (max - min) / bins
+        };
+        let mut bin_data = HashMap::new();
+        for val in values {
+            for i in 0..bins {
+                let lower_bound = min + i * step;
+                let upper_bound = if i == bins { max } else { lower_bound + step };
+                let bin_name = lower_bound.to_string() + "-" + &upper_bound.to_string();
+                let entry = bin_data
+                    .entry(bin_name.to_owned())
+                    .or_insert_with(HashSet::new);
+                if ((i < (bins - 1) && val < upper_bound) || (i < bins && val <= upper_bound))
+                    && val >= lower_bound
+                {
+                    entry.insert(val.to_string());
+                }
+            }
+        }
+
+        let mut value_on_page = HashMap::new();
+        for (i, partial_table) in table.chunks(rows_per_page).enumerate() {
+            let page = i + 1;
+            for (index, row) in partial_table.iter().enumerate() {
+                if let Ok(val) = i32::from_str(row.get(title).unwrap()) {
                     let entry = value_on_page
                         .entry(val.to_string())
                         .or_insert_with(HashSet::new);

@@ -42,12 +42,9 @@ pub(crate) fn csv_report(
                 Ok(_) => {
                     let num = numeric.entry(tile.to_owned()).or_insert_with(|| 0);
                     *num += 1;
-                    match i32::from_str(&row[i]) {
-                        Ok(_) => {
-                            let int = integer.entry(tile.to_owned()).or_insert_with(|| 0);
-                            *int += 1;
-                        }
-                        _ => {}
+                    if i32::from_str(&row[i]).is_ok() {
+                        let int = integer.entry(tile.to_owned()).or_insert_with(|| 0);
+                        *int += 1;
                     }
                 }
                 _ => {
@@ -505,8 +502,8 @@ fn make_bins_for_integers(
                 values.push(val.to_owned())
             }
         }
-        let min = values.iter().min().unwrap().clone();
-        let max = values.iter().max().unwrap().clone();
+        let min = *values.iter().min().unwrap();
+        let max = *values.iter().max().unwrap();
         let bins = 20;
         let step = if max - min <= 20 {
             1

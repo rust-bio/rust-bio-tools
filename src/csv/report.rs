@@ -271,6 +271,7 @@ pub(crate) fn csv_report(
             let mut context = Context::new();
             context.insert("title", title);
             context.insert("table", prefix_table);
+            context.insert("numeric", is_numeric.get(title).unwrap());
             let html = templates.render("prefix_table.html.tera", &context)?;
 
             let file_path = output_path.to_owned() + "/prefixes/" + title + ".html";

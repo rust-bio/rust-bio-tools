@@ -1,6 +1,7 @@
 use chrono::{DateTime, Local};
 use derive_new::new;
 use itertools::Itertools;
+use lz_str::compress_to_utf16;
 use serde_derive::Serialize;
 use serde_json::json;
 use simple_excel_writer::*;
@@ -323,6 +324,20 @@ pub(crate) fn csv_report(
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
         context.insert("version", &env!("CARGO_PKG_VERSION"));
+
+        let mut data = Vec::new();
+        for row in current_table {
+            let mut r = Vec::new();
+            for title in &titles {
+                r.push(row.get(*title).unwrap())
+            }
+            data.push(r);
+        }
+
+        context.insert(
+            "data",
+            &json!(compress_to_utf16(&json!(data).to_string())).to_string(),
+        );
 
         let html = templates.render("csv_report.html.tera", &context)?;
         let js = templates.render("data.js.tera", &context)?;

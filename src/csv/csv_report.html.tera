@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <title>rbt csv-report</title>
+    <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../css/bootstrap-table.min.css">
     <link rel="stylesheet" type="text/css" href="../css/csv_report.css">
@@ -14,6 +15,7 @@
 <script src="../js/vega.min.js"></script>
 <script src="../js/vega-lite.min.js"></script>
 <script src="../js/vega-embed.min.js"></script>
+<script src="../js/lz-string.min.js"></script>
 <script src="../data/index{{ current_page }}.js"></script>
 <script src="../js/csv_report.js"></script>
 {% for title in titles %}

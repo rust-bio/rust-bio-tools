@@ -6,7 +6,8 @@ $(document).ready(function() {
         window.dispatchEvent(new Event('resize'));
     });
     var i = 0;
-    for (const r of data) {
+    var decompressed = JSON.parse(LZString.decompressFromUTF16(data));
+    for (const r of decompressed) {
         var table_row = "<tr class=\"wor\" data-idx=\"" + i + "\">";
         i++;
         for (const el of r) {

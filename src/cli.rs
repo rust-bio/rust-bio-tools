@@ -175,6 +175,37 @@ pub(crate) enum Command {
         genes_per_request: usize,
     },
 
+    /// Creates report from a given csv file containing a table with the given data
+    /// Examples:
+    /// With current directory as default ouput path:
+    /// rbt csv-report path/to/table.csv --rows-per-page 100 --sort-column "p-value" --sort-order ascending
+    #[structopt(author = "Felix Wiegand <felix.wiegand@tu-dortmund.de>")]
+    CsvReport {
+        /// CSV file including the data for the report.
+        #[structopt()]
+        csv_path: String,
+
+        /// Sets the numbers of rows of each table per page. Default is 100.
+        #[structopt(long, short = "r", default_value = "100")]
+        rows_per_page: u32,
+
+        /// Column that the data should be sorted by.
+        #[structopt(long, short = "c")]
+        sort_column: Option<String>,
+
+        /// Order the data ascending or descending. Default is descending.
+        #[structopt(long, short = "o", default_value = "descending", possible_values = &["ascending","descending"])]
+        sort_order: String,
+
+        /// Change the separator of the csv file to tab or anything else. Default is ",".
+        #[structopt(long, short = "s", default_value = ",")]
+        separator: char,
+
+        /// Relative output path for the report files. Default value is the current directory.
+        #[structopt(default_value = ".")]
+        output_path: String,
+    },
+
     /// Creates report from a given VCF file including a visual plot
     /// for every variant with the given BAM and FASTA file.
     /// The VCF file has to be annotated with VEP, using the options --hgvs and --hgvsg.

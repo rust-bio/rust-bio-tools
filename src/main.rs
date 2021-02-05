@@ -15,6 +15,7 @@ pub mod bam;
 pub mod bcf;
 mod cli;
 pub mod common;
+pub mod csv;
 pub mod fastq;
 pub mod sequences_stats;
 
@@ -79,6 +80,36 @@ fn main() -> Result<(), Box<dyn Error>> {
             datasources.as_deref(),
             genes_per_request,
         )?,
+        CsvReport {
+            csv_path,
+            rows_per_page,
+            sort_column,
+            sort_order,
+            separator,
+            output_path,
+        } => {
+            if !Path::new(&output_path).exists() {
+                fs::create_dir_all(Path::new(&output_path))?;
+            }
+            bcf::report::embed_js(&output_path, false, None, vec![])?;
+            bcf::report::embed_css(&output_path, false)?;
+            bcf::report::embed_html(&output_path)?;
+
+            let order = match sort_order.as_str() {
+                "ascending" => Some(true),
+                "descending" => Some(false),
+                _ => None,
+            };
+
+            csv::report::csv_report(
+                &csv_path,
+                &output_path,
+                rows_per_page as usize,
+                separator,
+                sort_column.as_deref(),
+                order,
+            )?
+        }
         VcfReport {
             fasta,
             vcfs,
@@ -123,8 +154,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             } else {
                 vec![]
             };
-            bcf::report::embed_js(&output_path, custom_js_template.as_deref(), js_files_vec)?;
-            bcf::report::embed_css(&output_path)?;
+            bcf::report::embed_js(
+                &output_path,
+                true,
+                custom_js_template.as_deref(),
+                js_files_vec,
+            )?;
+            bcf::report::embed_css(&output_path, true)?;
             bcf::report::embed_html(&output_path)?;
             let detail_path = output_path.to_owned() + "/details/";
             fs::create_dir(Path::new(&detail_path))?;

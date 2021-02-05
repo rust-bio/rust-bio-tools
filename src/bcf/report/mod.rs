@@ -10,6 +10,7 @@ pub mod table_report;
 
 pub fn embed_js(
     output_path: &str,
+    vcf_report: bool,
     custom_table_report_js: Option<&str>,
     custom_js_files: Vec<String>,
 ) -> Result<(), Box<dyn Error>> {
@@ -21,33 +22,42 @@ pub fn embed_js(
         )
     });
     let mut files = vec![
-        ("vega.min.js", include_str!("js/vega.min.js")),
-        ("vega-lite.min.js", include_str!("js/vega-lite.min.js")),
-        ("vega-embed.min.js", include_str!("js/vega-embed.min.js")),
-        ("jsonm.min.js", include_str!("js/jsonm.min.js")),
+        (
+            "bootstrap.bundle.min.js",
+            include_str!("js/bootstrap.bundle.min.js"),
+        ),
         ("jquery.min.js", include_str!("js/jquery.min.js")),
         ("lz-string.min.js", include_str!("js/lz-string.min.js")),
         (
             "bootstrap-table.min.js",
             include_str!("js/bootstrap-table.min.js"),
         ),
-        (
-            "bootstrap.bundle.min.js",
-            include_str!("js/bootstrap.bundle.min.js"),
-        ),
+        ("vega.min.js", include_str!("js/vega.min.js")),
+        ("vega-lite.min.js", include_str!("js/vega-lite.min.js")),
+        ("vega-embed.min.js", include_str!("js/vega-embed.min.js")),
+    ];
+    let vcf_report_files = vec![
+        ("jsonm.min.js", include_str!("js/jsonm.min.js")),
+        ("table-report.js", include_str!("js/table-report.js")),
         ("report.js", include_str!("js/report.js")),
         ("gene-report.js", include_str!("js/gene-report.js")),
     ];
-    if let Some(path) = custom_table_report_js {
-        let mut file_string = String::new();
-        let mut custom_file = File::open(path).expect("Unable to open custom JS file");
-        custom_file
-            .read_to_string(&mut file_string)
-            .expect("Unable to read string");
-        let mut out_file = File::create(js_path.to_owned() + "table-report.js")?;
-        out_file.write_all(file_string.as_bytes())?;
+    let csv_report_files = vec![("csv_report.js", include_str!("../../csv/csv_report.js"))];
+    if vcf_report {
+        files.extend(vcf_report_files.iter());
+        if let Some(path) = custom_table_report_js {
+            let mut file_string = String::new();
+            let mut custom_file = File::open(path).expect("Unable to open custom JS file");
+            custom_file
+                .read_to_string(&mut file_string)
+                .expect("Unable to read string");
+            let mut out_file = File::create(js_path.to_owned() + "table-report.js")?;
+            out_file.write_all(file_string.as_bytes())?;
+        } else {
+            files.push(("table-report.js", include_str!("js/table-report.js")))
+        }
     } else {
-        files.push(("table-report.js", include_str!("js/table-report.js")))
+        files.extend(csv_report_files.iter());
     }
     for (name, file) in files {
         let mut out_file = File::create(js_path.to_owned() + name)?;
@@ -72,7 +82,7 @@ pub fn embed_js(
     Ok(())
 }
 
-pub fn embed_css(output_path: &str) -> Result<(), Box<dyn Error>> {
+pub fn embed_css(output_path: &str, vcf_report: bool) -> Result<(), Box<dyn Error>> {
     let css_path = output_path.to_owned() + "/css/";
     fs::create_dir(Path::new(&css_path)).unwrap_or_else(|_| {
         panic!(
@@ -80,14 +90,20 @@ pub fn embed_css(output_path: &str) -> Result<(), Box<dyn Error>> {
             css_path
         )
     });
-    let files = vec![
+    let mut files = vec![
         ("bootstrap.min.css", include_str!("css/bootstrap.min.css")),
         (
             "bootstrap-table.min.css",
             include_str!("css/bootstrap-table.min.css"),
         ),
-        ("oncoprint.css", include_str!("css/oncoprint.css")),
     ];
+    let vcf_report_files = vec![("oncoprint.css", include_str!("css/oncoprint.css"))];
+    let csv_report_files = vec![("csv_report.css", include_str!("../../csv/csv_report.css"))];
+    if vcf_report {
+        files.extend(vcf_report_files.iter());
+    } else {
+        files.extend(csv_report_files.iter());
+    }
     for (name, file) in files {
         let mut out_file = File::create(css_path.to_owned() + name)?;
         out_file.write_all(file.as_bytes())?;

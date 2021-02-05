@@ -12,6 +12,7 @@ Rust-Bio-Tools provides a command `rbt`, which currently supports the following 
 * a utility to quickly filter records from a FASTQ file (`rbt fastq-filter`)
 * a tool to merge BAM or FASTQ reads using marked duplicates respectively unique molecular identifiers (UMIs) (`rbt collapse-reads-to-fragments bam|fastq`)
 * a tool to generate interactive HTML based reports that offer multiple plots visualizing the provided genomics data in VCF and BAM format (`rbt vcf-report`)
+* a tool to generate an interactive HTML based report from a csv file including visualizations (`rbt csv-report`)
 * a tool for splitting VCF/BCF files into N equal chunks, including BND support (`rbt vcf-split`)
 
 Further functionality is added as it is needed by the authors. Check out the [Contributing](#Contributing) section if you want contribute anything yourself.

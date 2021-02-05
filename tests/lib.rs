@@ -234,8 +234,7 @@ fn test_csv_report() {
 
     for i in 1..=5 {
         let result = "tests/test-csv-report/data/index".to_owned() + &i.to_string() + ".js";
-        let expected =
-            "tests/expected/csv-report/data/index".to_owned() + &i.to_string() + ".js";
+        let expected = "tests/expected/csv-report/data/index".to_owned() + &i.to_string() + ".js";
         test_output(&result, &expected);
     }
 

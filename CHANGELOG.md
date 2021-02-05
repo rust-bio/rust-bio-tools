@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.19.0] - 2021-02-05
+### Added
+- New subcommand csv-report that allows to generate an interactive HTML report from a CSV/TSV table.
+### Changed
+- Some polishing for vcf-report.
+
 ## [0.18.1] - 2021-01-27
 ### Changed
 - If CANONICAL field is not present in ANN of bcf, rbt vcf-report now assumes that transcript is not the canonical one.

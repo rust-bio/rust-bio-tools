@@ -233,23 +233,9 @@ fn test_csv_report() {
     );
 
     for i in 1..=5 {
-        let result = "tests/test-csv-report/indexes/index".to_owned() + &i.to_string() + ".html";
+        let result = "tests/test-csv-report/data/index".to_owned() + &i.to_string() + ".js";
         let expected =
-            "tests/expected/csv-report/indexes/index".to_owned() + &i.to_string() + ".html";
-
-        assert!(Command::new("bash")
-            .arg("-c")
-            .arg(
-                "sed -i '41d;34d' ".to_owned()
-                    + "tests/test-csv-report/indexes/index"
-                    + &i.to_string()
-                    + ".html"
-            )
-            .spawn()
-            .unwrap()
-            .wait()
-            .unwrap()
-            .success());
+            "tests/expected/csv-report/data/index".to_owned() + &i.to_string() + ".js";
         test_output(&result, &expected);
     }
 

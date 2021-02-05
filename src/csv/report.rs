@@ -190,6 +190,14 @@ pub(crate) fn csv_report(
         )
     });
 
+    let data_path = output_path.to_owned() + "/data/";
+    fs::create_dir(Path::new(&data_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for report files at location: {:?}",
+            data_path
+        )
+    });
+
     let mut prefixes = make_prefixes(
         table
             .clone()
@@ -306,6 +314,7 @@ pub(crate) fn csv_report(
 
         let mut templates = Tera::default();
         templates.add_raw_template("csv_report.html.tera", include_str!("csv_report.html.tera"))?;
+        templates.add_raw_template("data.js.tera", include_str!("data.js.tera"))?;
         let mut context = Context::new();
         context.insert("table", &current_table);
         context.insert("titles", &titles);
@@ -316,10 +325,15 @@ pub(crate) fn csv_report(
         context.insert("version", &env!("CARGO_PKG_VERSION"));
 
         let html = templates.render("csv_report.html.tera", &context)?;
+        let js = templates.render("data.js.tera", &context)?;
 
         let file_path = output_path.to_owned() + "/indexes/index" + &page.to_string() + ".html";
         let mut file = File::create(file_path)?;
         file.write_all(html.as_bytes())?;
+
+        let js_file_path = output_path.to_owned() + "/data/index" + &page.to_string() + ".js";
+        let mut js_file = File::create(js_file_path)?;
+        js_file.write_all(js.as_bytes())?;
     }
     Ok(())
 }

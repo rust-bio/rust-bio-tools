@@ -1,0 +1,1 @@
+const data = [{% for element in table %}[{% for title in titles %}"{{ element[title] }}"{% if not loop.last %},{% endif %}{% endfor %}]{% if not loop.last %},{% endif %}{% endfor %}]

@@ -14,6 +14,7 @@
 <script src="../js/vega.min.js"></script>
 <script src="../js/vega-lite.min.js"></script>
 <script src="../js/vega-embed.min.js"></script>
+<script src="../data/index{{ current_page }}.js"></script>
 <script src="../js/csv_report.js"></script>
 {% for title in titles %}
 <script src="../plots/{{ title }}.js"></script>
@@ -79,13 +80,6 @@
                 </tr>
                 </thead>
                 <tbody>
-                    {% for element in table %}
-                    <tr class="wor" data-idx="{{ loop.index0 }}">
-                        {% for title in titles %}
-                        <td>{{ element[title] }}</td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
                 </tbody>
             </table>
         </div>

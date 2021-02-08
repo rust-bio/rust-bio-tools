@@ -17,11 +17,11 @@
 <script src="../../js/vega-lite.min.js"></script>
 <script src="../../js/vega-embed.min.js"></script>
 <script src="../../js/lz-string.min.js"></script>
-{% for file in js_imports %}
-<script src="../../js/{{ file }}"></script>
-{% endfor %}
 <script src="plots/{{ gene }}.js"></script>
 <script src="../../js/table-report.js"></script>
+{% for file in js_imports %}
+    <script src="../../js/{{ file }}"></script>
+{% endfor %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">rbt report</a>
     <div class="collapse navbar-collapse" id="navbarText">
@@ -144,5 +144,6 @@
             </div>
         </div>
     </div>
+<script>$(document).ready(function () { $('#variant1').trigger('click');});</script>
 </body>
 </html>

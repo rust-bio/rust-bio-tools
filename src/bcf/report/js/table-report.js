@@ -110,5 +110,4 @@ $(document).ready(function () {
             $('#ann-sidebar').append('</tr>');
         });
     })
-    $('#variant1').trigger('click');
 })

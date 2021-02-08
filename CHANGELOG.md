@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.19.1] - 2021-02-08
+### Changed
+- Fix for javascript import order problem in `rbt vcf-report`.
+
 ## [0.19.0] - 2021-02-05
 ### Added
 - New subcommand csv-report that allows to generate an interactive HTML report from a CSV/TSV table.
@@ -21,18 +25,18 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - `rbt collapse-reads-to-fragments` now always writes FASTQ files since consensus reads need to be remapped anyways (MAPQ might change).
 - `rbt vcf-report` can now be parallelized.
-- various fixes and improvements for `rbt vcf-report`
-- various fixes for `rbt collapse-reads-to-fragments`
+- Various fixes and improvements for `rbt vcf-report`
+- Various fixes for `rbt collapse-reads-to-fragments`
 
 ## [0.16.0] - 2020-11-17
 ### Changed
 - `rbt collapse-reads-to-fragments bam` writes skipped reads to separate bam file now
 - `rbt collapse-reads-to-fragments bam` does not perform starcode clustering anymore
-- Fixed bug in `rbt collapse-reads-to-fragments bam` failing when read mates map to different chromosomes 
+- Fixed bug in `rbt collapse-reads-to-fragments bam` failing when read mates map to different chromosomes
 
 ## [0.15.1] - 2020-11-12
 ### Changed
-- fixed bug in vcf-split that led to unequally filled splitted VCF/BCFs.
+- Fixed bug in vcf-split that led to unequally filled splitted VCF/BCFs.
 
 ## [0.15.0] - 2020-11-11
 ### Changed
@@ -139,7 +143,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.2.0] - 2018-02-23
 ### Added
-- A tool to selectively remove records from a FASTQ file. 
+- A tool to selectively remove records from a FASTQ file.
 - A tool to calculate b-allele frequencies (BAF) from a VCF file.
 
 ## [0.1.3] - 2017-12-05

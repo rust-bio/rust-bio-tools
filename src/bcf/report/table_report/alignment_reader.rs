@@ -58,20 +58,9 @@ pub struct AlignmentMatch {
 }
 
 pub fn decode_flags(code: u16) -> Vec<u16> {
-    let mut flags_map = Vec::new();
-    flags_map.push(0x1);
-    flags_map.push(0x2);
-    flags_map.push(0x4);
-    flags_map.push(0x8);
-    flags_map.push(0x10);
-    flags_map.push(0x20);
-    flags_map.push(0x40);
-    flags_map.push(0x80);
-    flags_map.push(0x100);
-    flags_map.push(0x200);
-    flags_map.push(0x400);
-    flags_map.push(0x800);
-
+    let flags_map = vec![
+        0x1, 0x2, 0x4, 0x8, 0x10, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800,
+    ];
     let mut read_map = Vec::new();
 
     for flag in flags_map {

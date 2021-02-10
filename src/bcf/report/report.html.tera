@@ -88,11 +88,8 @@
         <script src="../js/vega-lite.min.js"></script>
         <script src="../js/vega-embed.min.js"></script>
         <script src="../js/bootstrap.bundle.min.js"></script>
-        <script>
-            var order = {{ order | safe }};
-            var spec = {{ oncoprint | safe }};
-            let samples = {{ samples | safe }};
-        </script>
+        <script src="../js/lz-string.min.js"></script>
+        <script src="plot{{ current_page }}.js"></script>
         <script src="../js/report.js"></script>
     </body>
 </html>

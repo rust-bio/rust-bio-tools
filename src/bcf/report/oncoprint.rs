@@ -14,6 +14,7 @@ use crate::bcf::report::table_report::create_report_table::get_ann_description;
 use crate::bcf::report::table_report::create_report_table::read_tag_entries;
 use chrono::{DateTime, Local};
 use jsonm::packer::{PackOptions, Packer};
+use lz_str::compress_to_utf16;
 use rust_htslib::bcf::{self, Read};
 use serde_json::{json, Value};
 use std::fs::File;
@@ -451,8 +452,18 @@ pub fn oncoprint(
             gene_path
         )
     });
+
+    let gene_plots_path = output_path.to_owned() + "/genes/plots/";
+    fs::create_dir(Path::new(&gene_plots_path)).unwrap_or_else(|_| {
+        panic!(
+            "Could not create directory for gene plot files at location: {:?}",
+            gene_plots_path
+        )
+    });
+
     let mut gene_templates = Tera::default();
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
+    gene_templates.add_raw_template("plots.js.tera", include_str!("plots.js.tera"))?;
 
     let gene_specs: Value = serde_json::from_str(include_str!("gene_specs.json")).unwrap();
 
@@ -657,7 +668,11 @@ pub fn oncoprint(
                 let options = PackOptions::new();
                 let packed_gene_specs = packer.pack(&specs, &options).unwrap();
                 let mut context = Context::new();
-                context.insert("genespecs", &serde_json::to_string(&packed_gene_specs)?);
+                let oncoprint = json!(compress_to_utf16(&serde_json::to_string(
+                    &packed_gene_specs
+                )?))
+                .to_string();
+                context.insert("oncoprint", &oncoprint);
                 context.insert("gene", &gene);
                 context.insert("samples", &unique_samples.len());
                 context.insert("current_page", &page);
@@ -667,9 +682,13 @@ pub fn oncoprint(
                 context.insert("time", &local.format("%a %b %e %T %Y").to_string());
                 context.insert("version", &env!("CARGO_PKG_VERSION"));
                 let html = gene_templates.render("genes.html.tera", &context)?;
+                let js = gene_templates.render("plots.js.tera", &context)?;
                 let filepath = gene_path.clone() + &gene + &page.to_string() + ".html";
+                let js_filepath = gene_plots_path.clone() + &gene + &page.to_string() + ".js";
                 let mut file = File::create(filepath)?;
+                let mut js_file = File::create(js_filepath)?;
                 file.write_all(html.as_bytes())?;
+                js_file.write_all(js.as_bytes())?;
             }
         }
     }
@@ -924,8 +943,9 @@ pub fn oncoprint(
             let packed_specs = packer.pack(&vl_specs, &options).unwrap();
             let mut templates = Tera::default();
             templates.add_raw_template("report.html.tera", include_str!("report.html.tera"))?;
+            templates.add_raw_template("plots.js.tera", include_str!("plots.js.tera"))?;
             let mut context = Context::new();
-            let data = serde_json::to_string(&packed_specs)?;
+            let data = json!(compress_to_utf16(&serde_json::to_string(&packed_specs)?)).to_string();
             context.insert("oncoprint", &data);
             context.insert("current_page", &page);
             context.insert("pages", &(pages + 1));
@@ -936,10 +956,14 @@ pub fn oncoprint(
             context.insert("version", &env!("CARGO_PKG_VERSION"));
 
             let html = templates.render("report.html.tera", &context)?;
+            let js = templates.render("plots.js.tera", &context)?;
 
             let index = format!("{}/index{}.html", index_path, page.to_string());
+            let js_index = format!("{}/plot{}.js", index_path, page.to_string());
             let mut file = File::create(index)?;
+            let mut js_file = File::create(js_index)?;
             file.write_all(html.as_bytes())?;
+            js_file.write_all(js.as_bytes())?;
         }
     }
 

@@ -1,5 +1,6 @@
+let decompressed = LZString.decompressFromUTF16(spec);
 const unpacker = new jsonm.Unpacker();
-spec = unpacker.unpack(spec);
+spec = unpacker.unpack(JSON.parse(decompressed));
 let changed_records = []
 let delete_records = []
 spec.datasets.main.forEach(function(record, j) {

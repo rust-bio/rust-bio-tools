@@ -2,7 +2,6 @@ use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensu
 use bio::io::fastq;
 use derive_new::new;
 use rust_htslib::bam;
-use rust_htslib::bam::record::Cigar;
 use rust_htslib::bam::Read;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::error::Error;
@@ -187,27 +186,17 @@ impl<W: io::Write> CallConsensusRead<W> {
                                     }
                                     RecordStorage::SingleRecord { .. } => unreachable!(),
                                 };
-                                let overlap_opt = calc_overlap(&l_rec, &record);
-                                //TODO overlap_opt ist part of skipping softclips
-                                // Handle soft clips later
-                                if let Some(overlap) = overlap_opt {
-                                    if overlap > 0
-                                        && is_valid_overlap(
-                                            overlap as u32,
-                                            l_rec.cigar_cached().unwrap().into_iter().rev(),
-                                        )
-                                        && is_valid_overlap(
-                                            overlap as u32,
-                                            record.cigar_cached().unwrap().into_iter(),
-                                        )
-                                    {
+                                let alignment_vectors = calc_read_alignments(&l_rec, &record);
+                                match alignment_vectors {
+                                    Some((r1_alignment, r2_alignment)) => {
                                         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
                                         self.fq_se_writer.write_record(
                                             &CalcOverlappingConsensus::new(
                                                 &[l_rec],
                                                 &[record],
-                                                overlap as usize,
+                                                &r1_alignment,
+                                                &r2_alignment,
                                                 &[rec_id, i],
                                                 uuid,
                                                 self.verbose_read_names,
@@ -215,14 +204,12 @@ impl<W: io::Write> CallConsensusRead<W> {
                                             .calc_consensus()
                                             .0,
                                         )?;
-                                    } else {
+                                    }
+                                    None => {
                                         self.bam_skipped_writer.write(&l_rec)?;
                                         self.bam_skipped_writer.write(&record)?;
                                     }
-                                } else {
-                                    self.bam_skipped_writer.write(&l_rec)?;
-                                    self.bam_skipped_writer.write(&record)?;
-                                }
+                                };
                             }
                         }
                     }
@@ -286,25 +273,17 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
         }
 
         if !r_recs.is_empty() {
-            let overlap_opt = calc_overlap(&l_recs[0], &r_recs[0]);
-            if let Some(overlap) = overlap_opt {
-                if overlap > 0
-                    && is_valid_overlap(
-                        overlap as u32,
-                        l_recs[0].cigar_cached().unwrap().into_iter().rev(),
-                    )
-                    && is_valid_overlap(
-                        overlap as u32,
-                        r_recs[0].cigar_cached().unwrap().into_iter(),
-                    )
-                {
+            let alignment_vectors = calc_read_alignments(&l_recs[0], &r_recs[0]);
+            match alignment_vectors {
+                Some((r1_alignment, r2_alignment)) => {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     l_seqids.append(&mut r_seqids);
                     fq_se_writer.write_record(
                         &CalcOverlappingConsensus::new(
                             &l_recs,
                             &r_recs,
-                            overlap as usize,
+                            &r1_alignment,
+                            &r2_alignment,
                             &l_seqids,
                             uuid,
                             verbose_read_names,
@@ -312,7 +291,8 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                         .calc_consensus()
                         .0,
                     )?;
-                } else {
+                }
+                None => {
                     let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                     fq1_writer.write_record(
                         &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
@@ -325,9 +305,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                             .0,
                     )?;
                 }
-            } else {
-                unreachable!()
-            }
+            };
         } else {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
             fq_se_writer.write_record(
@@ -340,83 +318,201 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     Ok(())
 }
 
-fn is_valid_overlap<'a, I>(overlap: u32, cigar: I) -> bool
-where
-    I: Iterator<Item = &'a Cigar>,
-{
-    let mut i = 0;
-    for c in cigar {
-        match i < overlap {
-            true => match c {
-                Cigar::Ins(_) | Cigar::Del(_) => return false,
-                Cigar::Match(l)
-                | Cigar::RefSkip(l)
-                | Cigar::SoftClip(l)
-                | Cigar::Pad(l)
-                | Cigar::Equal(l)
-                | Cigar::Diff(l) => i += l,
-                Cigar::HardClip(_) => {}
-            },
-            false => return true,
+fn calc_read_alignments(
+    r1_rec: &bam::Record,
+    r2_rec: &bam::Record,
+) -> Option<(Vec<bool>, Vec<bool>)> {
+    let r1_start_softclips = r1_rec.cigar_cached().unwrap().leading_softclips();
+    let r1_start = r1_rec.pos() - r1_start_softclips as i64;
+
+    let r1_end_softclips = r1_rec.cigar_cached().unwrap().trailing_softclips();
+    let r1_end = r1_rec.cigar_cached().unwrap().end_pos() + r1_end_softclips as i64;
+
+    let r2_start_softclips = r2_rec.cigar_cached().unwrap().leading_softclips();
+    let r2_start = r2_rec.pos() - r2_start_softclips as i64;
+
+    let r2_end_softclips = r2_rec.cigar_cached().unwrap().trailing_softclips();
+    let r2_end = r1_rec.cigar_cached().unwrap().end_pos() + r2_end_softclips as i64;
+
+    if r1_start <= r2_start {
+        //Check if reads overlap
+        if r1_end >= r2_start {
+            let offset = r2_start - r1_start;
+            let (r1_vec, r2_vec) = calc_alignment_vectors(offset, r1_rec, r2_rec);
+            Some((r1_vec, r2_vec))
+        } else {
+            //Reads do not overlap
+            None
         }
-    }
-    true
-}
-
-fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Option<i64> {
-    let l_start_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter());
-    let l_start_pos = l_rec.pos() - l_start_softclips as i64;
-
-    let l_end_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev());
-    let l_end_pos = l_rec.cigar_cached().unwrap().end_pos() + l_end_softclips as i64;
-
-    let r_start_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter());
-    let r_start_pos = r_rec.pos() - r_start_softclips as i64;
-
-    let r_end_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter().rev());
-    let r_end_pos = l_rec.cigar_cached().unwrap().end_pos() + r_end_softclips as i64;
-
-    //TODO Skipping soft clips here. Handle this correctly
-    if (l_start_softclips > 0)
-        | (l_end_softclips > 0)
-        | (r_start_softclips > 0)
-        | (r_end_softclips > 0)
-    {
-        return None;
-    }
-    //TODO if-closure is just a hotfix to ensure reads only overlap by end of r1 and start of r2
-    // or are at exact same position
-    // Fix this later by handling any other alignments
-    if l_end_pos <= r_end_pos && l_start_pos <= r_start_pos {
-        let left_overlap_pos = match l_start_pos >= r_start_pos {
-            true => l_start_pos,
-            false => r_start_pos,
-        };
-        let right_overlap_pos = match l_end_pos <= r_end_pos {
-            true => l_end_pos,
-            false => r_end_pos,
-        };
-        Some(right_overlap_pos - left_overlap_pos)
     } else {
-        None
-    }
-}
-
-//Gets an Iterator over Cigar-items and returns number of soft-clips at the beginning
-fn count_softclips<'a, I>(cigar: I) -> i32
-where
-    I: Iterator<Item = &'a Cigar>,
-{
-    for c in cigar {
-        match c {
-            Cigar::HardClip(_) => {}
-            Cigar::SoftClip(l) => return *l as i32,
-            _ => return 0,
+        //R2 starts before R1
+        if r2_end >= r1_start {
+            let offset = r1_start - r2_start;
+            let (r2_vec, r1_vec) = calc_alignment_vectors(offset, r2_rec, r1_rec);
+            Some((r1_vec, r2_vec))
+        } else {
+            None
         }
     }
-    unreachable!();
 }
 
+fn calc_alignment_vectors(
+    mut offset: i64,
+    r1_rec: &bam::Record,
+    r2_rec: &bam::Record,
+) -> (Vec<bool>, Vec<bool>) {
+    let mut r1_vec = Vec::new();
+    let mut r2_vec = Vec::new();
+    let mut r1_cigarstring = r1_rec
+        .cigar_cached()
+        .unwrap()
+        .iter()
+        .flat_map(|cigar| vec![cigar.char(); cigar.len() as usize])
+        .collect::<Vec<char>>()
+        .into_iter();
+    let mut r2_cigarstring = r2_rec
+        .cigar_cached()
+        .unwrap()
+        .iter()
+        .flat_map(|cigar| vec![cigar.char(); cigar.len() as usize])
+        .collect::<Vec<char>>()
+        .into_iter();
+    let mut r1_cigar = r1_cigarstring.next();
+    let mut r2_cigar = match offset == 0 {
+        true => r2_cigarstring.next(),
+        false => None,
+    };
+    loop {
+        if r2_cigar == None {
+            match r1_cigar {
+                None => break,
+                Some('M') | Some('S') | Some('X') | Some('=') | Some('D') | Some('N') => {
+                    offset -= 1;
+                }
+                Some(_) => {}
+            }
+            match_single_cigar(&r1_cigar, &mut r1_vec, &mut r2_vec);
+            r1_cigar = r1_cigarstring.next();
+            if offset == 0 {
+                r2_cigar = r2_cigarstring.next();
+            }
+        } else if r1_cigar == None {
+            match_single_cigar(&r2_cigar, &mut r2_vec, &mut r1_vec);
+            r2_cigar = r2_cigarstring.next();
+        } else {
+            match (r1_cigar, r2_cigar) {
+                // If r1 ended append all of r2
+                (Some('M'), Some('M'))
+                | (Some('S'), Some('S'))
+                | (Some('X'), Some('X'))
+                | (Some('='), Some('='))
+                | (Some('I'), Some('I'))
+                | (Some('M'), Some('S'))
+                | (Some('M'), Some('X'))
+                | (Some('M'), Some('='))
+                | (Some('S'), Some('M'))
+                | (Some('S'), Some('X'))
+                | (Some('S'), Some('='))
+                | (Some('X'), Some('M'))
+                | (Some('X'), Some('S'))
+                | (Some('X'), Some('='))
+                | (Some('='), Some('M'))
+                | (Some('='), Some('S'))
+                | (Some('='), Some('X')) => {
+                    r1_vec.push(true);
+                    r2_vec.push(true);
+                    r1_cigar = r1_cigarstring.next();
+                    r2_cigar = r2_cigarstring.next();
+                }
+                (Some('D'), Some('D'))
+                | (Some('H'), Some('H'))
+                | (Some('N'), Some('N'))
+                | (Some('P'), Some('P'))
+                | (Some('D'), Some('H'))
+                | (Some('D'), Some('N'))
+                | (Some('D'), Some('P'))
+                | (Some('H'), Some('D'))
+                | (Some('H'), Some('N'))
+                | (Some('H'), Some('P'))
+                | (Some('N'), Some('D'))
+                | (Some('N'), Some('P'))
+                | (Some('N'), Some('H'))
+                | (Some('P'), Some('D'))
+                | (Some('P'), Some('N'))
+                | (Some('P'), Some('H')) => {
+                    r1_cigar = r1_cigarstring.next();
+                    r2_cigar = r2_cigarstring.next();
+                }
+                (Some('I'), Some(_)) => {
+                    r1_vec.push(true);
+                    r1_cigar = r1_cigarstring.next();
+                    r2_vec.push(false);
+                }
+                (Some(_), Some('I')) => {
+                    r1_vec.push(false);
+                    r2_vec.push(true);
+                    r2_cigar = r2_cigarstring.next();
+                }
+                (Some('M'), Some('D'))
+                | (Some('M'), Some('N'))
+                | (Some('M'), Some('H'))
+                | (Some('M'), Some('P'))
+                | (Some('S'), Some('D'))
+                | (Some('S'), Some('N'))
+                | (Some('S'), Some('H'))
+                | (Some('S'), Some('P'))
+                | (Some('X'), Some('D'))
+                | (Some('X'), Some('N'))
+                | (Some('X'), Some('H'))
+                | (Some('X'), Some('P'))
+                | (Some('='), Some('D'))
+                | (Some('='), Some('N'))
+                | (Some('='), Some('H'))
+                | (Some('='), Some('P')) => {
+                    r1_vec.push(true);
+                    r2_vec.push(false);
+                    r1_cigar = r1_cigarstring.next();
+                    r2_cigar = r2_cigarstring.next();
+                }
+                (Some('D'), Some('M'))
+                | (Some('N'), Some('M'))
+                | (Some('H'), Some('M'))
+                | (Some('P'), Some('M'))
+                | (Some('D'), Some('S'))
+                | (Some('N'), Some('S'))
+                | (Some('H'), Some('S'))
+                | (Some('P'), Some('S'))
+                | (Some('D'), Some('X'))
+                | (Some('N'), Some('X'))
+                | (Some('H'), Some('X'))
+                | (Some('P'), Some('X'))
+                | (Some('D'), Some('='))
+                | (Some('N'), Some('='))
+                | (Some('H'), Some('='))
+                | (Some('P'), Some('=')) => {
+                    r1_vec.push(false);
+                    r2_vec.push(true);
+                    r1_cigar = r1_cigarstring.next();
+                    r2_cigar = r2_cigarstring.next();
+                }
+                (None, None) | (None, Some(_)) | (Some(_), Some(_)) | (Some(_), None) => {
+                    unreachable!()
+                }
+            };
+        }
+    }
+    (r1_vec, r2_vec)
+}
+
+fn match_single_cigar(cigar: &Option<char>, first_vec: &mut Vec<bool>, second_vec: &mut Vec<bool>) {
+    match cigar {
+        Some('M') | Some('S') | Some('X') | Some('=') | Some('I') => {
+            first_vec.push(true);
+            second_vec.push(false);
+        }
+        Some(_) | None => {}
+    };
+}
 pub enum RecordStorage {
     PairedRecords {
         l_rec: IndexedRecord,

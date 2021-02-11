@@ -33,7 +33,8 @@ impl BitOrAssign for StrandObservation {
 pub struct CalcOverlappingConsensus<'a> {
     recs1: &'a [bam::Record],
     recs2: &'a [bam::Record],
-    overlap: usize,
+    r1_vec: &'a [bool],
+    r2_vec: &'a [bool],
     seqids: &'a [usize],
     uuid: &'a str,
     verbose_read_names: bool,
@@ -41,12 +42,13 @@ pub struct CalcOverlappingConsensus<'a> {
 
 impl<'a> CalcOverlappingConsensus<'a> {
     pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
-        let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap();
+        let seq_len = self.r1_vec().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_strand = b"SI:Z:".to_vec();
         let read_orientations_opt = self.build_read_orientation_string();
         // assert that all reads have the same length here
+        //Todo Check for equal cigars instead of length?
         assert_eq!(
             Self::validate_read_lengths(self.recs1()),
             true,
@@ -61,7 +63,6 @@ impl<'a> CalcOverlappingConsensus<'a> {
             self.seqids()
         );
         let mut consensus_lh = LogProb::ln_one();
-
         for i in 0..seq_len {
             let likelihoods = ALLELES
                 .iter()
@@ -108,57 +109,37 @@ impl<'a> CalcOverlappingConsensus<'a> {
         self.recs2
     }
 
-    fn overlap(&self) -> usize {
-        self.overlap
+    fn r1_vec(&self) -> &[bool] {
+        self.r1_vec
     }
-    fn build_consensus_strand(
-        &self,
-        consensus_strand: &mut Vec<u8>,
-        ref_base: u8,
-        base_pos: usize,
-    ) {
+
+    fn r2_vec(&self) -> &[bool] {
+        self.r2_vec
+    }
+
+    fn build_consensus_strand(&self, consensus_strand: &mut Vec<u8>, ref_base: u8, pos: usize) {
         let mut strand = StrandObservation::None;
-        let first_end_pos = self.recs1()[0].len();
-        let second_start_pos = first_end_pos - self.overlap();
-        if base_pos < first_end_pos {
-            self.recs1().iter().for_each(|rec| {
-                if rec.base(base_pos) == ref_base {
-                    match rec.is_reverse() {
-                        true => strand |= StrandObservation::Reverse,
-                        false => strand |= StrandObservation::Forward,
-                    };
-                }
-            });
-        }
-        if base_pos >= second_start_pos {
-            let second_base_pos = base_pos - second_start_pos;
-            self.recs2().iter().for_each(|rec| {
-                if rec.base(second_base_pos) == ref_base {
-                    match rec.is_reverse() {
-                        true => strand |= StrandObservation::Reverse,
-                        false => strand |= StrandObservation::Forward,
-                    };
-                }
-            });
-        }
+        let rec1_pos = self.map_read_pos(pos, self.r1_vec());
+        let rec2_pos = self.map_read_pos(pos, self.r2_vec());
+        let mut strand_observation = |recs: &[bam::Record], rec_pos: i32| {
+            if rec_pos != -1 {
+                recs.iter().for_each(|rec| {
+                    if rec.base(rec_pos as usize) == ref_base {
+                        match rec.is_reverse() {
+                            true => strand |= StrandObservation::Reverse,
+                            false => strand |= StrandObservation::Forward,
+                        };
+                    }
+                });
+            }
+        };
+        strand_observation(self.recs1(), rec1_pos);
+        strand_observation(self.recs2(), rec2_pos);
         match strand {
             StrandObservation::Forward => consensus_strand.push(b'+'),
             StrandObservation::Reverse => consensus_strand.push(b'-'),
             StrandObservation::Both => consensus_strand.push(b'*'),
             StrandObservation::None => {
-                dbg!(&base_pos);
-                dbg!(String::from_utf8([ref_base].to_vec()).unwrap());
-                dbg!(&self.overlap());
-                dbg!(&self.recs1()[0].pos());
-                dbg!(&self.recs1()[0].len());
-                dbg!(&self.recs1()[0].cigar_cached().unwrap().end_pos());
-                dbg!(&self.recs1()[0].cigar_cached().unwrap().into_iter());
-                dbg!(String::from_utf8([self.recs1()[0].base(base_pos)].to_vec()).unwrap());
-                dbg!(&self.recs2()[0].pos());
-                dbg!(&self.recs2()[0].len());
-                dbg!(&self.recs2()[0].cigar_cached().unwrap().end_pos());
-                dbg!(&self.recs2()[0].cigar_cached().unwrap().into_iter());
-                dbg!(&self.recs2()[0].seq());
                 unreachable!()
             }
         }
@@ -190,28 +171,42 @@ impl<'a> CalcOverlappingConsensus<'a> {
             None => unreachable!(),
         }
     }
+    fn map_read_pos(&self, consensus_pos: usize, alignment_vec: &[bool]) -> i32 {
+        match alignment_vec[consensus_pos] {
+            true => {
+                alignment_vec[0..(consensus_pos + 1)]
+                    .iter()
+                    .filter(|&v| *v)
+                    .count() as i32
+                    - 1
+            }
+            false => -1,
+        }
+    }
 }
 
 impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
-    fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb {
+    fn overall_allele_likelihood(&self, allele: &u8, pos: usize) -> LogProb {
         let mut lh = LogProb::ln_one();
+        //Todo get pos in read
+        let rec1_pos = self.map_read_pos(pos, &self.r1_vec());
+        let rec2_pos = self.map_read_pos(pos, &self.r2_vec());
         for (rec1, rec2) in self.recs1().iter().zip(self.recs2()) {
-            if i < rec1.seq().len() {
+            if rec1_pos != -1 {
                 lh += Self::allele_likelihood_in_rec(
                     allele,
                     &rec1.seq().as_bytes(),
                     rec1.qual(),
-                    i,
+                    rec1_pos as usize,
                     0,
                 );
             };
-            if i >= rec1.seq().len() - self.overlap() {
-                let rec2_i = i - (rec1.seq().len() - self.overlap());
+            if rec2_pos != -1 {
                 lh += Self::allele_likelihood_in_rec(
                     allele,
                     &rec2.seq().as_bytes(),
                     &rec2.qual(),
-                    rec2_i,
+                    rec2_pos as usize,
                     0,
                 );
             };

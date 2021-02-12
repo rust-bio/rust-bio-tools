@@ -60,11 +60,8 @@
         <script src="../js/vega.min.js"></script>
         <script src="../js/vega-lite.min.js"></script>
         <script src="../js/vega-embed.min.js"></script>
-        <script>
-            var order = {{ order | safe }};
-            var spec = {{ genespecs | safe }};
-            let samples = {{ samples | safe }};
-        </script>
+        <script src="../js/lz-string.min.js"></script>
+        <script src="plots/{{ gene | safe }}{{ current_page }}.js"></script>
         <script src="../js/gene-report.js"></script>
     </body>
 </html>

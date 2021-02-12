@@ -473,7 +473,6 @@ pub fn oncoprint(
             sort_alterations.insert(alteration, samples.len());
         }
 
-        let mut specs = gene_specs.clone();
         let impact_data = gene_impact_data.get(&gene).unwrap();
         let final_impact: Vec<_> = impact_data.iter().flatten().sorted().collect();
         let existing_var_data = gene_existing_var_data.get(&gene).unwrap();
@@ -584,6 +583,8 @@ pub fn oncoprint(
 
                 let samples: Vec<_> = page_data.iter().map(|r| r.sample.clone()).collect();
                 let unique_samples: Vec<_> = samples.iter().unique().collect();
+
+                let mut specs = gene_specs.clone();
 
                 let mut values = if cs_present_folded {
                     json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data})

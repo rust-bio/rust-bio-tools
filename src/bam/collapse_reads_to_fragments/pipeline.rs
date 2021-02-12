@@ -401,7 +401,6 @@ fn calc_alignment_vectors(
             r2_cigar = r2_cigarstring.next();
         } else {
             match (r1_cigar, r2_cigar) {
-                // If r1 ended append all of r2
                 (Some('M'), Some('M'))
                 | (Some('S'), Some('S'))
                 | (Some('X'), Some('X'))

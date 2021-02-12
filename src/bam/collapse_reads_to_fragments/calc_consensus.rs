@@ -121,10 +121,10 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let mut strand = StrandObservation::None;
         let rec1_pos = self.map_read_pos(pos, self.r1_vec());
         let rec2_pos = self.map_read_pos(pos, self.r2_vec());
-        let mut strand_observation = |recs: &[bam::Record], rec_pos: i32| {
-            if rec_pos != -1 {
+        let mut strand_observation = |recs: &[bam::Record], rec_pos: Option<usize>| {
+            if let Some(pos) = rec_pos {
                 recs.iter().for_each(|rec| {
-                    if rec.base(rec_pos as usize) == ref_base {
+                    if rec.base(pos) == ref_base {
                         match rec.is_reverse() {
                             true => strand |= StrandObservation::Reverse,
                             false => strand |= StrandObservation::Forward,
@@ -171,16 +171,16 @@ impl<'a> CalcOverlappingConsensus<'a> {
             None => unreachable!(),
         }
     }
-    fn map_read_pos(&self, consensus_pos: usize, alignment_vec: &[bool]) -> i32 {
+    fn map_read_pos(&self, consensus_pos: usize, alignment_vec: &[bool]) -> Option<usize> {
         match alignment_vec[consensus_pos] {
-            true => {
+            true => Some(
                 alignment_vec[0..(consensus_pos + 1)]
                     .iter()
                     .filter(|&v| *v)
-                    .count() as i32
-                    - 1
-            }
-            false => -1,
+                    .count()
+                    - 1,
+            ),
+            false => None,
         }
     }
 }
@@ -188,25 +188,24 @@ impl<'a> CalcOverlappingConsensus<'a> {
 impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
     fn overall_allele_likelihood(&self, allele: &u8, pos: usize) -> LogProb {
         let mut lh = LogProb::ln_one();
-        //Todo get pos in read
         let rec1_pos = self.map_read_pos(pos, &self.r1_vec());
         let rec2_pos = self.map_read_pos(pos, &self.r2_vec());
         for (rec1, rec2) in self.recs1().iter().zip(self.recs2()) {
-            if rec1_pos != -1 {
+            if let Some(pos) = rec1_pos {
                 lh += Self::allele_likelihood_in_rec(
                     allele,
                     &rec1.seq().as_bytes(),
                     rec1.qual(),
-                    rec1_pos as usize,
+                    pos,
                     0,
                 );
             };
-            if rec2_pos != -1 {
+            if let Some(pos) = rec2_pos {
                 lh += Self::allele_likelihood_in_rec(
                     allele,
                     &rec2.seq().as_bytes(),
                     &rec2.qual(),
-                    rec2_pos as usize,
+                    pos,
                     0,
                 );
             };

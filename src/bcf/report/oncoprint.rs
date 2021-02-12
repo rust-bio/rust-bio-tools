@@ -944,6 +944,23 @@ pub fn oncoprint(
         }
     }
 
+    // Add index1 when no variants are found
+    let index1_path = output_path.to_owned() + "/indexes/index1.html";
+    if !Path::new(&index1_path).exists() {
+        let mut templates = Tera::default();
+        templates.add_raw_template(
+            "empty_report.html",
+            include_str!("html/empty_report.html.tera"),
+        )?;
+        let mut context = Context::new();
+        let local: DateTime<Local> = Local::now();
+        context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+        context.insert("version", &env!("CARGO_PKG_VERSION"));
+        let no_variants = templates.render("empty_report.html", &context)?;
+        let mut file = File::create(index1_path)?;
+        file.write_all(no_variants.as_bytes())?;
+    }
+
     Ok(())
 }
 

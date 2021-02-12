@@ -314,7 +314,7 @@ pub(crate) fn make_table_report(
 
                 for (sample, bam) in bam_sample_path {
                     let bam_path = Path::new(bam);
-                    let fasta_length = get_fasta_length(fasta_path);
+                    let fasta_length = get_fasta_length(fasta_path, &chrom)?;
                     let visualization: String;
                     if pos < 75 {
                         let (content, max_rows) = create_report_data(

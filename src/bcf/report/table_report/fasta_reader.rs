@@ -37,11 +37,15 @@ pub fn read_fasta(
     fasta
 }
 
-pub fn get_fasta_length(path: &Path) -> u64 {
+pub fn get_fasta_length(path: &Path, chrom: &str) -> Result<u64, &'static str> {
     let index = fasta::Index::with_fasta_file(&path).unwrap();
     let sequences = index.sequences();
-
-    sequences[0].len
+    for seq in sequences {
+        if seq.name == chrom {
+            return Ok(seq.len);
+        }
+    }
+    Err("No sequence found")
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]

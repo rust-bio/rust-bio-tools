@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.19.2] - 2021-02-12
+### Changed
+- Various small bug fixes in `rbt vcf-report`.
+
 ## [0.19.1] - 2021-02-08
 ### Changed
 - Fix for javascript import order problem in `rbt vcf-report`.

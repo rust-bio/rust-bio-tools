@@ -1,0 +1,3 @@
+var order = {{ order | safe }};
+var spec = {{ oncoprint | safe }};
+var samples = {{ samples | safe }};

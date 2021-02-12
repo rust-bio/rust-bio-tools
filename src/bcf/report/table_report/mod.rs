@@ -36,7 +36,7 @@ pub fn table_report(
         )
     });
 
-    Ok(make_table_report(
+    make_table_report(
         Path::new(vcf),
         Path::new(fasta),
         bam,
@@ -46,5 +46,5 @@ pub fn table_report(
         output_path,
         max_read_depth,
         js_files,
-    )?)
+    )
 }

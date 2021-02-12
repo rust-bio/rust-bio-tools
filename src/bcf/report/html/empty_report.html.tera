@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="../css/oncoprint.css">
+        <title>Oncoprint (only recurrent genes)</title>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <a class="navbar-brand" href="#">rbt report</a>
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools/blob/master/CHANGELOG.md">{{ version }}</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+                    </li>
+                </ul>
+                <span class="navbar-text">
+                    created {{ time }}
+                </span>
+            </div>
+        </nav>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item active" aria-current="page">Oncoprint</li>
+            </ol>
+        </nav>
+
+        <div class="container h-100">
+            <div class="row align-items-center h-100">
+                <div class="col-6 mx-auto" style="padding-top: calc(50vh - 120px)">
+                    <h4>
+                        No variants found
+                    </h4>
+                </div>
+            </div>
+        </div>
+
+        <script src="../js/jquery.min.js"></script>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+    </body>
+</html>

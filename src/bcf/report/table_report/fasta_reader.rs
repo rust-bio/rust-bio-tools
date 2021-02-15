@@ -1,5 +1,6 @@
 use bio::io::fasta;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::path::Path;
 
 pub fn read_fasta(
@@ -37,15 +38,13 @@ pub fn read_fasta(
     fasta
 }
 
-pub fn get_fasta_length(path: &Path, chrom: &str) -> Result<u64, &'static str> {
+pub fn get_fasta_lengths(path: &Path) -> HashMap<String, u64> {
     let index = fasta::Index::with_fasta_file(&path).unwrap();
     let sequences = index.sequences();
-    for seq in sequences {
-        if seq.name == chrom {
-            return Ok(seq.len);
-        }
-    }
-    Err("No sequence found")
+    sequences
+        .iter()
+        .map(|s| (s.name.to_owned(), s.len))
+        .collect()
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]

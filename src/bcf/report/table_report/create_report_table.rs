@@ -1,4 +1,4 @@
-use crate::bcf::report::table_report::fasta_reader::{get_fasta_length, read_fasta};
+use crate::bcf::report::table_report::fasta_reader::{get_fasta_lengths, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
 use chrono::{DateTime, Local};
 use itertools::Itertools;
@@ -70,6 +70,8 @@ pub(crate) fn make_table_report(
     for (i, field) in ann_field_description.iter().enumerate() {
         ann_indices.insert(field, i);
     }
+
+    let reference_lengths = get_fasta_lengths(fasta_path);
 
     let last_gene_index = get_gene_ending(
         vcf_path,
@@ -314,7 +316,7 @@ pub(crate) fn make_table_report(
 
                 for (sample, bam) in bam_sample_path {
                     let bam_path = Path::new(bam);
-                    let fasta_length = get_fasta_length(fasta_path, &chrom)?;
+                    let fasta_length = *reference_lengths.get(&chrom).unwrap();
                     let visualization: String;
                     if pos < 75 {
                         let (content, max_rows) = create_report_data(

@@ -529,10 +529,7 @@ fn calc_alignment_vectors(
 
 fn cigar_has_softclips(rec: &bam::Record) -> bool {
     let cigar = rec.cigar_cached().unwrap();
-    if cigar.leading_softclips() > 0 || cigar.trailing_softclips() > 0 {
-        return true;
-    }
-    false
+    cigar.leading_softclips() > 0 || cigar.trailing_softclips() > 0
 }
 
 fn match_single_cigar(cigar: &Option<char>, first_vec: &mut Vec<bool>, second_vec: &mut Vec<bool>) {

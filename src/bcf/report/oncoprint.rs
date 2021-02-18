@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::error::Error;
 use std::io::Write;
 use std::{fs, str};
 
@@ -12,6 +11,8 @@ use tera::{self, Context, Tera};
 
 use crate::bcf::report::table_report::create_report_table::get_ann_description;
 use crate::bcf::report::table_report::create_report_table::read_tag_entries;
+use anyhow::Context as AnyhowContext;
+use anyhow::Result;
 use chrono::{DateTime, Local};
 use jsonm::packer::{PackOptions, Packer};
 use lz_str::compress_to_utf16;
@@ -31,7 +32,7 @@ pub fn oncoprint(
     max_cells: u32,
     tsv_data_path: Option<&str>,
     plot_info: Option<Vec<String>>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
     let mut impact_data = Vec::new();
@@ -90,7 +91,7 @@ pub fn oncoprint(
         let header = bcf_reader.header().clone();
         let mut sample_names = Vec::new();
         for s in header.samples() {
-            sample_names.push(String::from_utf8(s.to_owned()).unwrap());
+            sample_names.push(String::from_utf8(s.to_owned())?);
         }
         let header_records = header.header_records();
         let ann_fields: Vec<_> = get_ann_description(header_records).unwrap_or_else(|| {
@@ -446,26 +447,26 @@ pub fn oncoprint(
     }
 
     let gene_path = output_path.to_owned() + "/genes/";
-    fs::create_dir(Path::new(&gene_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for gene plot files at location: {:?}",
+    fs::create_dir(Path::new(&gene_path)).with_context(|| {
+        format!(
+            "Could not create directory for gene plot files at location: {}",
             gene_path
         )
-    });
+    })?;
 
     let gene_plots_path = output_path.to_owned() + "/genes/plots/";
-    fs::create_dir(Path::new(&gene_plots_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for gene plot files at location: {:?}",
+    fs::create_dir(Path::new(&gene_plots_path)).with_context(|| {
+        format!(
+            "Could not create directory for gene plot files at location: {}",
             gene_plots_path
         )
-    });
+    })?;
 
     let mut gene_templates = Tera::default();
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
     gene_templates.add_raw_template("plots.js.tera", include_str!("plots.js.tera"))?;
 
-    let gene_specs: Value = serde_json::from_str(include_str!("gene_specs.json")).unwrap();
+    let gene_specs: Value = serde_json::from_str(include_str!("gene_specs.json"))?;
 
     let page_size = max_cells as usize / sample_calls.len();
 
@@ -631,10 +632,9 @@ pub fn oncoprint(
                 }
 
                 if plot_info.is_some() {
-                    let info_specs: Value =
-                        serde_json::from_str(include_str!("info_specs.json")).unwrap();
+                    let info_specs: Value = serde_json::from_str(include_str!("info_specs.json"))?;
                     let highlight_specs: Value =
-                        serde_json::from_str(include_str!("highlight_specs.json")).unwrap();
+                        serde_json::from_str(include_str!("highlight_specs.json"))?;
                     let hconcat = specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
                     for tag in plot_info_data.keys() {
                         let mut tag_specs = info_specs.clone();
@@ -652,8 +652,7 @@ pub fn oncoprint(
                 }
 
                 if let Some(ref tsv) = tsv_data {
-                    let tsv_specs: Value =
-                        serde_json::from_str(include_str!("tsv_specs.json")).unwrap();
+                    let tsv_specs: Value = serde_json::from_str(include_str!("tsv_specs.json"))?;
 
                     for title in tsv.keys() {
                         let mut tsv_plot = tsv_specs.clone();
@@ -667,7 +666,7 @@ pub fn oncoprint(
 
                 let mut packer = Packer::new();
                 let options = PackOptions::new();
-                let packed_gene_specs = packer.pack(&specs, &options).unwrap();
+                let packed_gene_specs = packer.pack(&specs, &options)?;
                 let mut context = Context::new();
                 let oncoprint = json!(compress_to_utf16(&serde_json::to_string(
                     &packed_gene_specs
@@ -746,21 +745,21 @@ pub fn oncoprint(
     };
 
     let index_path = output_path.to_owned() + "/indexes";
-    fs::create_dir(Path::new(&index_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for oncoprint files at location: {:?}",
+    fs::create_dir(Path::new(&index_path)).with_context(|| {
+        format!(
+            "Could not create directory for oncoprint files at location: {}",
             index_path
         )
-    });
+    })?;
 
     let prefixes = make_prefixes(ordered_genes.clone(), page_size);
     let prefix_path = output_path.to_owned() + "/prefixes/";
-    fs::create_dir(Path::new(&prefix_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for report files at location: {:?}",
+    fs::create_dir(Path::new(&prefix_path)).with_context(|| {
+        format!(
+            "Could not create directory for oncoprint files at location: {}",
             prefix_path
         )
-    });
+    })?;
 
     let mut templates = Tera::default();
     templates.add_raw_template(
@@ -776,12 +775,12 @@ pub fn oncoprint(
     file.write_all(html.as_bytes())?;
 
     let gene_path = prefix_path + "/genes/";
-    fs::create_dir(Path::new(&gene_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for report files at location: {:?}",
+    fs::create_dir(Path::new(&gene_path)).with_context(|| {
+        format!(
+            "Could not create directory for report files at location: {}",
             gene_path
         )
-    });
+    })?;
 
     for (prefix, values) in prefixes {
         let mut templates = Tera::default();
@@ -868,8 +867,7 @@ pub fn oncoprint(
             let samples: Vec<_> = page_data.iter().map(|r| r.sample.clone()).collect();
             let unique_samples: Vec<_> = samples.iter().unique().collect();
 
-            let mut vl_specs: Value =
-                serde_json::from_str(include_str!("report_specs.json")).unwrap();
+            let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json"))?;
 
             let mut values = if cs_present_folded {
                 json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data})
@@ -905,10 +903,9 @@ pub fn oncoprint(
             }
 
             if plot_info.is_some() {
-                let info_specs: Value =
-                    serde_json::from_str(include_str!("info_specs.json")).unwrap();
+                let info_specs: Value = serde_json::from_str(include_str!("info_specs.json"))?;
                 let highlight_specs: Value =
-                    serde_json::from_str(include_str!("highlight_specs.json")).unwrap();
+                    serde_json::from_str(include_str!("highlight_specs.json"))?;
                 let hconcat = vl_specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
                 for tag in plot_info_data.keys() {
                     let mut tag_specs = info_specs.clone();
@@ -926,8 +923,7 @@ pub fn oncoprint(
             }
 
             if let Some(ref tsv) = tsv_data {
-                let tsv_specs: Value =
-                    serde_json::from_str(include_str!("tsv_specs.json")).unwrap();
+                let tsv_specs: Value = serde_json::from_str(include_str!("tsv_specs.json"))?;
 
                 for title in tsv.keys() {
                     let mut tsv_plot = tsv_specs.clone();
@@ -941,7 +937,7 @@ pub fn oncoprint(
 
             let mut packer = Packer::new();
             let options = PackOptions::new();
-            let packed_specs = packer.pack(&vl_specs, &options).unwrap();
+            let packed_specs = packer.pack(&vl_specs, &options)?;
             let mut templates = Tera::default();
             templates.add_raw_template("report.html.tera", include_str!("report.html.tera"))?;
             templates.add_raw_template("plots.js.tera", include_str!("plots.js.tera"))?;
@@ -1124,7 +1120,7 @@ impl From<&Record> for FinalRecord {
     }
 }
 
-fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TSVRecord>>, Box<dyn Error>> {
+fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TSVRecord>>> {
     let mut tsv_values = HashMap::new();
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(b'\t')

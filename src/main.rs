@@ -16,7 +16,6 @@ pub mod bcf;
 mod cli;
 pub mod common;
 pub mod csv;
-mod errors;
 pub mod fastq;
 pub mod sequences_stats;
 

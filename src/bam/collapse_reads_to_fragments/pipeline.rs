@@ -53,6 +53,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                     &mut self.fq1_writer,
                     &mut self.fq2_writer,
                     &mut self.fq_se_writer,
+                    &mut self.bam_skipped_writer,
                     self.verbose_read_names,
                 )?;
                 group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
@@ -158,7 +159,6 @@ impl<W: io::Write> CallConsensusRead<W> {
                         || record.is_mate_unmapped()
                         || (record.tid() != record.mtid())
                     {
-                        //TODO Handle intersecting reads mapped on different chromosomes
                         self.bam_skipped_writer.write(&record)?;
                     } else {
                         match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
@@ -186,30 +186,36 @@ impl<W: io::Write> CallConsensusRead<W> {
                                     }
                                     RecordStorage::SingleRecord { .. } => unreachable!(),
                                 };
-                                let alignment_vectors = calc_read_alignments(&l_rec, &record);
-                                match alignment_vectors {
-                                    Some((r1_alignment, r2_alignment)) => {
-                                        let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                                if cigar_has_softclips(&l_rec) || cigar_has_softclips(&record) {
+                                    self.bam_skipped_writer.write(&l_rec)?;
+                                    self.bam_skipped_writer.write(&record)?;
+                                } else {
+                                    //TODO Alignment vectors need to include alignment of insertions and deletions
+                                    let alignment_vectors = calc_read_alignments(&l_rec, &record);
+                                    match alignment_vectors {
+                                        Some((r1_alignment, r2_alignment)) => {
+                                            let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
-                                        self.fq_se_writer.write_record(
-                                            &CalcOverlappingConsensus::new(
-                                                &[l_rec],
-                                                &[record],
-                                                &r1_alignment,
-                                                &r2_alignment,
-                                                &[rec_id, i],
-                                                uuid,
-                                                self.verbose_read_names,
-                                            )
-                                            .calc_consensus()
-                                            .0,
-                                        )?;
-                                    }
-                                    None => {
-                                        self.bam_skipped_writer.write(&l_rec)?;
-                                        self.bam_skipped_writer.write(&record)?;
-                                    }
-                                };
+                                            self.fq_se_writer.write_record(
+                                                &CalcOverlappingConsensus::new(
+                                                    &[l_rec],
+                                                    &[record],
+                                                    &r1_alignment,
+                                                    &r2_alignment,
+                                                    &[rec_id, i],
+                                                    uuid,
+                                                    self.verbose_read_names,
+                                                )
+                                                .calc_consensus()
+                                                .0,
+                                            )?;
+                                        }
+                                        None => {
+                                            self.bam_skipped_writer.write(&l_rec)?;
+                                            self.bam_skipped_writer.write(&record)?;
+                                        }
+                                    };
+                                }
                             }
                         }
                     }
@@ -225,6 +231,7 @@ impl<W: io::Write> CallConsensusRead<W> {
             &mut self.fq1_writer,
             &mut self.fq2_writer,
             &mut self.fq_se_writer,
+            &mut self.bam_skipped_writer,
             self.verbose_read_names,
         )?;
         Ok(())
@@ -240,6 +247,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     fq1_writer: &'a mut fastq::Writer<W>,
     fq2_writer: &'a mut fastq::Writer<W>,
     fq_se_writer: &'a mut fastq::Writer<W>,
+    bam_skipped_writer: &'a mut bam::Writer,
     verbose_read_names: bool,
 ) -> Result<(), Box<dyn Error>> {
     let group_ids: HashSet<GroupID> = group_end_idx
@@ -259,20 +267,35 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
         let mut r_recs = Vec::new();
         let mut l_seqids = Vec::new();
         let mut r_seqids = Vec::new();
-
         for rec_id in duplicate_groups.remove(&group_id).unwrap() {
             match record_storage.remove(&rec_id).unwrap() {
                 RecordStorage::PairedRecords { l_rec, r_rec } => {
-                    l_seqids.push(l_rec.rec_id);
-                    l_recs.push(l_rec.into_rec());
-                    r_seqids.push(r_rec.as_ref().unwrap().rec_id);
-                    r_recs.push(r_rec.unwrap().into_rec());
+                    let r_rec_unwraped = r_rec.unwrap();
+                    let r_rec_id = r_rec_unwraped.rec_id;
+                    let r_rec_enty = r_rec_unwraped.into_rec();
+                    if cigar_has_softclips(&r_rec_enty) || cigar_has_softclips(&r_rec_enty) {
+                        bam_skipped_writer.write(&l_rec.into_rec())?;
+                        bam_skipped_writer.write(&r_rec_enty)?;
+                    } else {
+                        l_seqids.push(l_rec.rec_id);
+                        l_recs.push(l_rec.into_rec());
+                        r_seqids.push(r_rec_id);
+                        r_recs.push(r_rec_enty);
+                    }
                 }
-                RecordStorage::SingleRecord { rec } => l_recs.push(rec.into_rec()),
+                RecordStorage::SingleRecord { rec } => {
+                    let rec = rec.into_rec();
+                    if cigar_has_softclips(&rec) {
+                        bam_skipped_writer.write(&rec)?;
+                    } else {
+                        l_recs.push(rec);
+                    }
+                }
             };
         }
 
         if !r_recs.is_empty() {
+            //TODO Alignment vectors need to include alignment of insertions and deletions
             let alignment_vectors = calc_read_alignments(&l_recs[0], &r_recs[0]);
             match alignment_vectors {
                 Some((r1_alignment, r2_alignment)) => {
@@ -306,7 +329,8 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                     )?;
                 }
             };
-        } else {
+        } else if !l_recs.is_empty() {
+            //TODO Calculate alignment vectors
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
             fq_se_writer.write_record(
                 &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
@@ -501,6 +525,14 @@ fn calc_alignment_vectors(
         }
     }
     (r1_vec, r2_vec)
+}
+
+fn cigar_has_softclips(rec: &bam::Record) -> bool {
+    let cigar = rec.cigar_cached().unwrap();
+    if cigar.leading_softclips() > 0 || cigar.trailing_softclips() > 0 {
+        return true;
+    }
+    false
 }
 
 fn match_single_cigar(cigar: &Option<char>, first_vec: &mut Vec<bool>, second_vec: &mut Vec<bool>) {

@@ -155,6 +155,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                 //If record is right mate consensus is calculated
                 //Else record is added to hashMap
                 None => {
+                    dbg!(String::from_utf8(record.qname().to_vec()));
                     if record.is_unmapped()
                         || record.is_mate_unmapped()
                         || (record.tid() != record.mtid())
@@ -316,20 +317,25 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                     )?;
                 }
                 None => {
-                    let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                    fq1_writer.write_record(
-                        &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
-                            .calc_consensus()
-                            .0,
-                    )?;
-                    fq2_writer.write_record(
-                        &CalcNonOverlappingConsensus::new(&r_recs, &r_seqids, uuid)
-                            .calc_consensus()
-                            .0,
-                    )?;
+                    if l_recs.len() > 1 {
+                        let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                        fq1_writer.write_record(
+                            &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
+                                .calc_consensus()
+                                .0,
+                        )?;
+                        fq2_writer.write_record(
+                            &CalcNonOverlappingConsensus::new(&r_recs, &r_seqids, uuid)
+                                .calc_consensus()
+                                .0,
+                        )?;
+                    } else {
+                        bam_skipped_writer.write(&l_recs[0])?;
+                        bam_skipped_writer.write(&r_recs[0])?;
+                    }
                 }
             };
-        } else if !l_recs.is_empty() {
+        } else if l_recs.len() > 1 {
             //TODO Calculate alignment vectors
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
             fq_se_writer.write_record(
@@ -337,6 +343,8 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                     .calc_consensus()
                     .0,
             )?;
+        } else if l_recs.len() == 1 {
+            bam_skipped_writer.write(&l_recs[0])?;
         }
     }
     Ok(())

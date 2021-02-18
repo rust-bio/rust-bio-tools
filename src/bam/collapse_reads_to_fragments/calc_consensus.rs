@@ -47,8 +47,8 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_strand = b"SI:Z:".to_vec();
         let read_orientations_opt = self.build_read_orientation_string();
-        // assert that all reads have the same length here
-        //Todo Check for equal cigars instead of length?
+        //Todo Calculate alignment vectors based on intervall trees
+        //TODO Remove read length validation
         assert_eq!(
             Self::validate_read_lengths(self.recs1()),
             true,
@@ -235,7 +235,8 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_strand = b"SI:Z:".to_vec();
-        // assert that all reads have the same length here
+        //Todo Calculate alignment vectors based on intervall trees
+        //TODO Read length validation
         assert_eq!(
             Self::validate_read_lengths(self.recs()),
             true,

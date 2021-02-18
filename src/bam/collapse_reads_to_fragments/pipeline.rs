@@ -57,7 +57,9 @@ impl<W: io::Write> CallConsensusRead<W> {
                     self.verbose_read_names,
                 )?;
                 group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
-            } else {
+            }
+            if record.is_unmapped() || record.is_mate_unmapped() || (record.tid() != record.mtid())
+            {
                 self.bam_skipped_writer.write(&record)?;
                 continue;
             }
@@ -117,10 +119,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 .entry(GroupID::Regular(duplicate_id.integer()))
                                 .or_insert_with(Vec::new)
                                 .push(RecordID::Regular(record_id.to_owned()));
-                            if !record.is_paired()
-                                || record.is_mate_unmapped()
-                                || (record.tid() != record.mtid())
-                            {
+                            if !record.is_paired() {
                                 //If right or single record save end position and duplicate group ID
                                 group_end_idx
                                     .entry(record.cigar_cached().unwrap().end_pos() - 1)
@@ -155,68 +154,60 @@ impl<W: io::Write> CallConsensusRead<W> {
                 //If record is right mate consensus is calculated
                 //Else record is added to hashMap
                 None => {
-                    dbg!(String::from_utf8(record.qname().to_vec()));
-                    if record.is_unmapped()
-                        || record.is_mate_unmapped()
-                        || (record.tid() != record.mtid())
-                    {
-                        self.bam_skipped_writer.write(&record)?;
-                    } else {
-                        match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
-                            //Case: Left record
-                            None => {
-                                record_storage.insert(
-                                    RecordID::Regular(record_id.to_owned()),
-                                    RecordStorage::PairedRecords {
-                                        l_rec: IndexedRecord {
-                                            rec: record,
-                                            rec_id: i,
-                                        },
-                                        r_rec: None,
+                    match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
+                        //Case: Left record
+                        None => {
+                            record_storage.insert(
+                                RecordID::Regular(record_id.to_owned()),
+                                RecordStorage::PairedRecords {
+                                    l_rec: IndexedRecord {
+                                        rec: record,
+                                        rec_id: i,
                                     },
-                                );
-                            }
-                            //Case: Left record already stored
-                            Some(_record_pair) => {
-                                let (rec_id, l_rec) = match record_storage
-                                    .remove(&RecordID::Regular(record_id.to_owned()))
-                                    .unwrap()
-                                {
-                                    RecordStorage::PairedRecords { l_rec, .. } => {
-                                        (l_rec.rec_id, l_rec.into_rec())
-                                    }
-                                    RecordStorage::SingleRecord { .. } => unreachable!(),
-                                };
-                                if cigar_has_softclips(&l_rec) || cigar_has_softclips(&record) {
-                                    self.bam_skipped_writer.write(&l_rec)?;
-                                    self.bam_skipped_writer.write(&record)?;
-                                } else {
-                                    //TODO Alignment vectors need to include alignment of insertions and deletions
-                                    let alignment_vectors = calc_read_alignments(&l_rec, &record);
-                                    match alignment_vectors {
-                                        Some((r1_alignment, r2_alignment)) => {
-                                            let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-
-                                            self.fq_se_writer.write_record(
-                                                &CalcOverlappingConsensus::new(
-                                                    &[l_rec],
-                                                    &[record],
-                                                    &r1_alignment,
-                                                    &r2_alignment,
-                                                    &[rec_id, i],
-                                                    uuid,
-                                                    self.verbose_read_names,
-                                                )
-                                                .calc_consensus()
-                                                .0,
-                                            )?;
-                                        }
-                                        None => {
-                                            self.bam_skipped_writer.write(&l_rec)?;
-                                            self.bam_skipped_writer.write(&record)?;
-                                        }
-                                    };
+                                    r_rec: None,
+                                },
+                            );
+                        }
+                        //Case: Left record already stored
+                        Some(_record_pair) => {
+                            let (rec_id, l_rec) = match record_storage
+                                .remove(&RecordID::Regular(record_id.to_owned()))
+                                .unwrap()
+                            {
+                                RecordStorage::PairedRecords { l_rec, .. } => {
+                                    (l_rec.rec_id, l_rec.into_rec())
                                 }
+                                RecordStorage::SingleRecord { .. } => unreachable!(),
+                            };
+                            if cigar_has_softclips(&l_rec) || cigar_has_softclips(&record) {
+                                self.bam_skipped_writer.write(&l_rec)?;
+                                self.bam_skipped_writer.write(&record)?;
+                            } else {
+                                //TODO Alignment vectors need to include alignment of insertions and deletions
+                                let alignment_vectors = calc_read_alignments(&l_rec, &record);
+                                match alignment_vectors {
+                                    Some((r1_alignment, r2_alignment)) => {
+                                        let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+
+                                        self.fq_se_writer.write_record(
+                                            &CalcOverlappingConsensus::new(
+                                                &[l_rec],
+                                                &[record],
+                                                &r1_alignment,
+                                                &r2_alignment,
+                                                &[rec_id, i],
+                                                uuid,
+                                                self.verbose_read_names,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                    }
+                                    None => {
+                                        self.bam_skipped_writer.write(&l_rec)?;
+                                        self.bam_skipped_writer.write(&record)?;
+                                    }
+                                };
                             }
                         }
                     }

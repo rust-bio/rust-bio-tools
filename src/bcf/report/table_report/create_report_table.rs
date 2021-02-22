@@ -204,7 +204,7 @@ pub(crate) fn make_table_report(
                     std::str::from_utf8(
                         fields[*ann_indices
                             .get(&field.to_owned())
-                            .with_context(|| {
+                            .context({
                                 format!(
                                 "No field named {} found. Please only use VEP-annotated VCF-files.",
                                 field
@@ -331,7 +331,7 @@ pub(crate) fn make_table_report(
                             0,
                             end_position as u64 + 75,
                             max_read_depth,
-                        );
+                        )?;
                         visualization =
                             manipulate_json(content, 0, end_position as u64 + 75, max_rows)?;
                     } else if pos + 75 >= fasta_length as i64 {
@@ -343,7 +343,7 @@ pub(crate) fn make_table_report(
                             pos as u64 - 75,
                             fasta_length - 1,
                             max_read_depth,
-                        );
+                        )?;
                         visualization =
                             manipulate_json(content, pos as u64 - 75, fasta_length - 1, max_rows)?;
                     } else {
@@ -355,7 +355,7 @@ pub(crate) fn make_table_report(
                             pos as u64 - 75,
                             end_position as u64 + 75,
                             max_read_depth,
-                        );
+                        )?;
                         visualization = manipulate_json(
                             content,
                             pos as u64 - 75,
@@ -498,16 +498,16 @@ fn create_report_data(
     from: u64,
     to: u64,
     max_read_depth: u32,
-) -> (Json, usize) {
+) -> Result<(Json, usize)> {
     let mut data = Vec::new();
 
-    for f in read_fasta(fasta_path, chrom.clone(), from, to, true) {
+    for f in read_fasta(fasta_path, chrom.clone(), from, to, true)? {
         let nucleobase = json!(f);
         data.push(nucleobase);
     }
 
     let (bases, matches, max_rows) =
-        get_static_reads(bam_path, fasta_path, chrom, from, to, max_read_depth);
+        get_static_reads(bam_path, fasta_path, chrom, from, to, max_read_depth)?;
 
     for b in bases {
         let base = json!(b);
@@ -521,7 +521,7 @@ fn create_report_data(
 
     data.push(json!(variant));
 
-    (Json::from_str(&json!(data).to_string()).unwrap(), max_rows)
+    Ok((Json::from_str(&json!(data).to_string()).unwrap(), max_rows))
 }
 
 /// Inserts the json containing the genome data into the vega specs.

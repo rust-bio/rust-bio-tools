@@ -50,6 +50,13 @@ pub fn oncoprint(
     let mut gene_plot_info_data = HashMap::new();
     let mut remove_existing_variation = true;
 
+    let dir_err = |path: &str| {
+        format!(
+            "Could not create directory for vcf-report files at location: {}",
+            path
+        )
+    };
+
     let tsv_data = if let Some(tsv) = tsv_data_path {
         Some(make_tsv_records(tsv.to_owned())?)
     } else {
@@ -447,20 +454,10 @@ pub fn oncoprint(
     }
 
     let gene_path = output_path.to_owned() + "/genes/";
-    fs::create_dir(Path::new(&gene_path)).with_context(|| {
-        format!(
-            "Could not create directory for gene plot files at location: {}",
-            gene_path
-        )
-    })?;
+    fs::create_dir(Path::new(&gene_path)).context(dir_err(&gene_path))?;
 
     let gene_plots_path = output_path.to_owned() + "/genes/plots/";
-    fs::create_dir(Path::new(&gene_plots_path)).with_context(|| {
-        format!(
-            "Could not create directory for gene plot files at location: {}",
-            gene_plots_path
-        )
-    })?;
+    fs::create_dir(Path::new(&gene_plots_path)).context(dir_err(&gene_plots_path))?;
 
     let mut gene_templates = Tera::default();
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
@@ -745,21 +742,11 @@ pub fn oncoprint(
     };
 
     let index_path = output_path.to_owned() + "/indexes";
-    fs::create_dir(Path::new(&index_path)).with_context(|| {
-        format!(
-            "Could not create directory for oncoprint files at location: {}",
-            index_path
-        )
-    })?;
+    fs::create_dir(Path::new(&index_path)).context(dir_err(&index_path))?;
 
     let prefixes = make_prefixes(ordered_genes.clone(), page_size);
     let prefix_path = output_path.to_owned() + "/prefixes/";
-    fs::create_dir(Path::new(&prefix_path)).with_context(|| {
-        format!(
-            "Could not create directory for oncoprint files at location: {}",
-            prefix_path
-        )
-    })?;
+    fs::create_dir(Path::new(&prefix_path)).context(dir_err(&prefix_path))?;
 
     let mut templates = Tera::default();
     templates.add_raw_template(
@@ -775,12 +762,7 @@ pub fn oncoprint(
     file.write_all(html.as_bytes())?;
 
     let gene_path = prefix_path + "/genes/";
-    fs::create_dir(Path::new(&gene_path)).with_context(|| {
-        format!(
-            "Could not create directory for report files at location: {}",
-            gene_path
-        )
-    })?;
+    fs::create_dir(Path::new(&gene_path)).context(dir_err(&gene_path))?;
 
     for (prefix, values) in prefixes {
         let mut templates = Tera::default();

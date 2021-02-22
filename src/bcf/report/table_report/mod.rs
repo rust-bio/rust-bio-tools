@@ -20,21 +20,17 @@ pub fn table_report(
     max_read_depth: u32,
     js_files: Vec<String>,
 ) -> Result<()> {
-    let detail_path = output_path.to_owned() + "/details/" + sample;
-    fs::create_dir(Path::new(&detail_path)).with_context(|| {
+    let dir_err = |path: &str| {
         format!(
-            "Could not create directory for table report files at location: {}",
-            detail_path
+            "Could not create directory for vcf-report files at location: {}",
+            path
         )
-    })?;
+    };
+    let detail_path = output_path.to_owned() + "/details/" + sample;
+    fs::create_dir(Path::new(&detail_path)).context(dir_err(&detail_path))?;
 
     let plot_path = detail_path + "/plots/";
-    fs::create_dir(Path::new(&plot_path)).with_context(|| {
-        format!(
-            "Could not create directory for table report plots at location: {}",
-            plot_path
-        )
-    })?;
+    fs::create_dir(Path::new(&plot_path)).context(dir_err(&plot_path))?;
 
     make_table_report(
         Path::new(vcf),

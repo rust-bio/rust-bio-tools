@@ -1,10 +1,10 @@
+use anyhow::Result;
 use itertools::Itertools;
 use regex::Regex;
 use rust_htslib::bcf;
 use rust_htslib::bcf::{Format, Read};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
-use std::error::Error;
 use std::path::Path;
 use std::str;
 
@@ -35,7 +35,7 @@ pub fn annotate_dgidb<P: AsRef<Path>, T: AsRef<str>>(
     field_name: &str,
     datasources: Option<&[T]>,
     genes_per_request: usize,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let datasources = datasources.map(|d| d.iter().map(|s| s.as_ref()).collect());
     let gene_drug_interactions =
         request_interaction_drugs(vcf_path.as_ref(), api_path, datasources, genes_per_request)?;
@@ -49,7 +49,7 @@ fn request_interaction_drugs<P: AsRef<Path>>(
     api_path: String,
     datasources_opt: Option<Vec<&str>>,
     genes_per_request: usize,
-) -> Result<Option<Interactions>, Box<dyn Error>> {
+) -> Result<Option<Interactions>> {
     let mut genes = collect_genes(vcf_path)?;
     let datasources = if let Some(entries) = datasources_opt {
         let mut b = String::from("&interaction_sources=");
@@ -88,7 +88,7 @@ fn request_interaction_drugs<P: AsRef<Path>>(
     Ok(Some(gene_drug_interactions))
 }
 
-fn collect_genes<P: AsRef<Path>>(vcf_path: P) -> Result<HashSet<String>, Box<dyn Error>> {
+fn collect_genes<P: AsRef<Path>>(vcf_path: P) -> Result<HashSet<String>> {
     let mut total_genes = HashSet::new();
     let mut reader = bcf::Reader::from_path(vcf_path)?;
     for result in reader.records() {
@@ -103,9 +103,7 @@ fn collect_genes<P: AsRef<Path>>(vcf_path: P) -> Result<HashSet<String>, Box<dyn
     Ok(total_genes)
 }
 
-fn extract_genes(
-    rec: &mut bcf::Record,
-) -> Result<Option<impl Iterator<Item = String> + '_>, Box<dyn Error>> {
+fn extract_genes(rec: &mut bcf::Record) -> Result<Option<impl Iterator<Item = String> + '_>> {
     let annotation = rec.info(b"ANN").string()?;
     match annotation {
         Some(transcripts) => Ok(Some(transcripts.clone().into_iter().map(|transcript| {
@@ -121,7 +119,7 @@ fn modify_vcf_entries<P: AsRef<Path>>(
     vcf_path: P,
     gene_drug_interactions_opt: Option<Interactions>,
     field_name: &str,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let mut reader = bcf::Reader::from_path(vcf_path)?;
     let mut header = bcf::header::Header::from_template(reader.header());
     header.push_record(format!("##INFO=<ID={},Number=.,Type=String,Description=\"Combination of gene, drug, interaction types extracted from dgiDB. Each combination is pipe-seperated annotated as GENE|DRUG|TYPE\">", field_name).as_bytes());

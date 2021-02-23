@@ -1,3 +1,5 @@
+use anyhow::Context as AnyhowContext;
+use anyhow::Result;
 use chrono::{DateTime, Local};
 use derive_new::new;
 use itertools::Itertools;
@@ -6,9 +8,7 @@ use serde_derive::Serialize;
 use serde_json::json;
 use simple_excel_writer::*;
 use std::collections::{HashMap, HashSet};
-use std::error::Error;
 use std::fs;
-use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::str::FromStr;
@@ -23,10 +23,17 @@ pub(crate) fn csv_report(
     separator: char,
     sort_column: Option<&str>,
     ascending: Option<bool>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(separator as u8)
         .from_path(csv_path)?;
+
+    let dir_err = |path: &str| {
+        format!(
+            "Could not create directory for csv-report files at location: {}",
+            path
+        )
+    };
 
     let header = rdr.headers()?.clone();
     let titles = header.iter().collect_vec();
@@ -150,12 +157,7 @@ pub(crate) fn csv_report(
     };
 
     let plot_path = output_path.to_owned() + "/plots/";
-    fs::create_dir(Path::new(&plot_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for plot files at location: {:?}",
-            plot_path
-        )
-    });
+    fs::create_dir(Path::new(&plot_path)).context(dir_err(&plot_path))?;
 
     for title in &titles {
         let mut templates = Tera::default();
@@ -179,25 +181,15 @@ pub(crate) fn csv_report(
         let js = templates.render("plot.js.tera", &context)?;
 
         let file_path = plot_path.to_owned() + title + ".js";
-        let mut file = File::create(file_path)?;
+        let mut file = fs::File::create(file_path)?;
         file.write_all(js.as_bytes())?;
     }
 
     let index_path = output_path.to_owned() + "/indexes/";
-    fs::create_dir(Path::new(&index_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for report files at location: {:?}",
-            index_path
-        )
-    });
+    fs::create_dir(Path::new(&index_path)).context(dir_err(&index_path))?;
 
     let data_path = output_path.to_owned() + "/data/";
-    fs::create_dir(Path::new(&data_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for report files at location: {:?}",
-            data_path
-        )
-    });
+    fs::create_dir(Path::new(&data_path)).context(dir_err(&data_path))?;
 
     let mut prefixes = make_prefixes(
         table
@@ -260,12 +252,7 @@ pub(crate) fn csv_report(
     }
 
     let prefix_path = output_path.to_owned() + "/prefixes/";
-    fs::create_dir(Path::new(&prefix_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for report files at location: {:?}",
-            prefix_path
-        )
-    });
+    fs::create_dir(Path::new(&prefix_path)).context(dir_err(&prefix_path))?;
 
     for title in &titles {
         if let Some(prefix_table) = prefixes.get(title.to_owned()) {
@@ -281,16 +268,11 @@ pub(crate) fn csv_report(
             let html = templates.render("prefix_table.html.tera", &context)?;
 
             let file_path = output_path.to_owned() + "/prefixes/" + title + ".html";
-            let mut file = File::create(file_path)?;
+            let mut file = fs::File::create(file_path)?;
             file.write_all(html.as_bytes())?;
 
             let title_path = prefix_path.to_owned() + "/" + title + "/";
-            fs::create_dir(Path::new(&title_path)).unwrap_or_else(|_| {
-                panic!(
-                    "Could not create directory for report files at location: {:?}",
-                    title_path
-                )
-            });
+            fs::create_dir(Path::new(&title_path)).context(dir_err(&title_path))?;
 
             for (prefix, values) in prefix_table {
                 let mut templates = Tera::default();
@@ -304,7 +286,7 @@ pub(crate) fn csv_report(
                 let html = templates.render("lookup_table.html.tera", &context)?;
 
                 let file_path = title_path.to_owned() + prefix + ".html";
-                let mut file = File::create(file_path)?;
+                let mut file = fs::File::create(file_path)?;
                 file.write_all(html.as_bytes())?;
             }
         }
@@ -343,11 +325,11 @@ pub(crate) fn csv_report(
         let js = templates.render("data.js.tera", &context)?;
 
         let file_path = output_path.to_owned() + "/indexes/index" + &page.to_string() + ".html";
-        let mut file = File::create(file_path)?;
+        let mut file = fs::File::create(file_path)?;
         file.write_all(html.as_bytes())?;
 
         let js_file_path = output_path.to_owned() + "/data/index" + &page.to_string() + ".js";
-        let mut js_file = File::create(js_file_path)?;
+        let mut js_file = fs::File::create(js_file_path)?;
         js_file.write_all(js.as_bytes())?;
     }
     Ok(())

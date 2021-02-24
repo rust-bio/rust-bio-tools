@@ -16,7 +16,9 @@ pub fn embed_js(
     custom_js_files: Vec<String>,
 ) -> Result<()> {
     let js_path = output_path.to_owned() + "/js/";
-    fs::create_dir(Path::new(&js_path)).context(WriteErr::CantCreateDir(js_path.to_owned()))?;
+    fs::create_dir(Path::new(&js_path)).context(WriteErr::CantCreateDir {
+        dir_path: js_path.to_owned(),
+    })?;
     let mut files = vec![
         (
             "bootstrap.bundle.min.js",
@@ -80,7 +82,9 @@ pub fn embed_js(
 
 pub fn embed_css(output_path: &str, vcf_report: bool) -> Result<()> {
     let css_path = output_path.to_owned() + "/css/";
-    fs::create_dir(Path::new(&css_path)).context(WriteErr::CantCreateDir(css_path.to_owned()))?;
+    fs::create_dir(Path::new(&css_path)).context(WriteErr::CantCreateDir {
+        dir_path: css_path.to_owned(),
+    })?;
     let mut files = vec![
         ("bootstrap.min.css", include_str!("css/bootstrap.min.css")),
         (
@@ -106,8 +110,9 @@ pub fn embed_html(output_path: &str) -> Result<()> {
     let files = vec![("index.html", include_str!("html/index.html"))];
     for (name, file) in files {
         let out_path = output_path.to_owned() + "/" + name;
-        let mut out_file =
-            File::create(&out_path).context(WriteErr::CantCreateDir(out_path.to_owned()))?;
+        let mut out_file = File::create(&out_path).context(WriteErr::CantCreateDir {
+            dir_path: out_path.to_owned(),
+        })?;
         out_file.write_all(file.as_bytes())?;
     }
     Ok(())

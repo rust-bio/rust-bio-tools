@@ -22,11 +22,14 @@ pub fn table_report(
     js_files: Vec<String>,
 ) -> Result<()> {
     let detail_path = output_path.to_owned() + "/details/" + sample;
-    fs::create_dir(Path::new(&detail_path))
-        .context(WriteErr::CantCreateDir(detail_path.to_owned()))?;
+    fs::create_dir(Path::new(&detail_path)).context(WriteErr::CantCreateDir {
+        dir_path: detail_path.to_owned(),
+    })?;
 
     let plot_path = detail_path + "/plots/";
-    fs::create_dir(Path::new(&plot_path)).context(WriteErr::CantCreateDir(plot_path.to_owned()))?;
+    fs::create_dir(Path::new(&plot_path)).context(WriteErr::CantCreateDir {
+        dir_path: plot_path.to_owned(),
+    })?;
 
     make_table_report(
         Path::new(vcf),

@@ -168,7 +168,9 @@ impl Variant {
                     (Some(svlens), _) => svlens[0] as u64,
                     (None, Some(end)) => end as u64 - 1 - pos as u64,
                     _ => {
-                        bail!(MatchError::MissingTag("SVLEN or END".to_owned()));
+                        bail!(MatchError::MissingTag {
+                            tag: "SVLEN or END".to_owned()
+                        });
                     }
                 };
                 VariantType::Deletion(svlen)
@@ -183,7 +185,9 @@ impl Variant {
                     if let Some(ref svlens) = svlens {
                         VariantType::Deletion(svlens[i] as u64)
                     } else {
-                        bail!(MatchError::MissingTag("SVLEN".to_owned()));
+                        bail!(MatchError::MissingTag {
+                            tag: "SVLEN".to_owned()
+                        });
                     }
                 } else if a.len() < refallele.len() {
                     VariantType::Deletion((refallele.len() - a.len()) as u64)
@@ -276,6 +280,6 @@ impl VariantType {
 
 #[derive(Error, Debug)]
 pub enum MatchError {
-    #[error("missing tag {0}")]
-    MissingTag(String),
+    #[error("missing tag {tag}")]
+    MissingTag { tag: String },
 }

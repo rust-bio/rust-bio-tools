@@ -151,7 +151,9 @@ pub(crate) fn csv_report(
     };
 
     let plot_path = output_path.to_owned() + "/plots/";
-    fs::create_dir(Path::new(&plot_path)).context(WriteErr::CantCreateDir(plot_path.to_owned()))?;
+    fs::create_dir(Path::new(&plot_path)).context(WriteErr::CantCreateDir {
+        dir_path: plot_path.to_owned(),
+    })?;
 
     for title in &titles {
         let mut templates = Tera::default();
@@ -180,11 +182,14 @@ pub(crate) fn csv_report(
     }
 
     let index_path = output_path.to_owned() + "/indexes/";
-    fs::create_dir(Path::new(&index_path))
-        .context(WriteErr::CantCreateDir(index_path.to_owned()))?;
+    fs::create_dir(Path::new(&index_path)).context(WriteErr::CantCreateDir {
+        dir_path: index_path.to_owned(),
+    })?;
 
     let data_path = output_path.to_owned() + "/data/";
-    fs::create_dir(Path::new(&data_path)).context(WriteErr::CantCreateDir(data_path.to_owned()))?;
+    fs::create_dir(Path::new(&data_path)).context(WriteErr::CantCreateDir {
+        dir_path: data_path.to_owned(),
+    })?;
 
     let mut prefixes = make_prefixes(
         table
@@ -247,8 +252,9 @@ pub(crate) fn csv_report(
     }
 
     let prefix_path = output_path.to_owned() + "/prefixes/";
-    fs::create_dir(Path::new(&prefix_path))
-        .context(WriteErr::CantCreateDir(prefix_path.to_owned()))?;
+    fs::create_dir(Path::new(&prefix_path)).context(WriteErr::CantCreateDir {
+        dir_path: prefix_path.to_owned(),
+    })?;
 
     for title in &titles {
         if let Some(prefix_table) = prefixes.get(title.to_owned()) {
@@ -268,8 +274,9 @@ pub(crate) fn csv_report(
             file.write_all(html.as_bytes())?;
 
             let title_path = prefix_path.to_owned() + "/" + title + "/";
-            fs::create_dir(Path::new(&title_path))
-                .context(WriteErr::CantCreateDir(title_path.to_owned()))?;
+            fs::create_dir(Path::new(&title_path)).context(WriteErr::CantCreateDir {
+                dir_path: title_path.to_owned(),
+            })?;
 
             for (prefix, values) in prefix_table {
                 let mut templates = Tera::default();

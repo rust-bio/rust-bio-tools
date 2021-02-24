@@ -448,11 +448,14 @@ pub fn oncoprint(
     }
 
     let gene_path = output_path.to_owned() + "/genes/";
-    fs::create_dir(Path::new(&gene_path)).context(WriteErr::CantCreateDir(gene_path.to_owned()))?;
+    fs::create_dir(Path::new(&gene_path)).context(WriteErr::CantCreateDir {
+        dir_path: gene_path.to_owned(),
+    })?;
 
     let gene_plots_path = output_path.to_owned() + "/genes/plots/";
-    fs::create_dir(Path::new(&gene_plots_path))
-        .context(WriteErr::CantCreateDir(gene_plots_path.to_owned()))?;
+    fs::create_dir(Path::new(&gene_plots_path)).context(WriteErr::CantCreateDir {
+        dir_path: gene_plots_path.to_owned(),
+    })?;
 
     let mut gene_templates = Tera::default();
     gene_templates.add_raw_template("genes.html.tera", include_str!("genes.html.tera"))?;
@@ -737,13 +740,15 @@ pub fn oncoprint(
     };
 
     let index_path = output_path.to_owned() + "/indexes";
-    fs::create_dir(Path::new(&index_path))
-        .context(WriteErr::CantCreateDir(index_path.to_owned()))?;
+    fs::create_dir(Path::new(&index_path)).context(WriteErr::CantCreateDir {
+        dir_path: index_path.to_owned(),
+    })?;
 
     let prefixes = make_prefixes(ordered_genes.clone(), page_size);
     let prefix_path = output_path.to_owned() + "/prefixes/";
-    fs::create_dir(Path::new(&prefix_path))
-        .context(WriteErr::CantCreateDir(prefix_path.to_owned()))?;
+    fs::create_dir(Path::new(&prefix_path)).context(WriteErr::CantCreateDir {
+        dir_path: prefix_path.to_owned(),
+    })?;
 
     let mut templates = Tera::default();
     templates.add_raw_template(
@@ -759,7 +764,9 @@ pub fn oncoprint(
     file.write_all(html.as_bytes())?;
 
     let gene_path = prefix_path + "/genes/";
-    fs::create_dir(Path::new(&gene_path)).context(WriteErr::CantCreateDir(gene_path.to_owned()))?;
+    fs::create_dir(Path::new(&gene_path)).context(WriteErr::CantCreateDir {
+        dir_path: gene_path.to_owned(),
+    })?;
 
     for (prefix, values) in prefixes {
         let mut templates = Tera::default();
@@ -1214,6 +1221,6 @@ fn make_prefixes(
 
 #[derive(Error, Debug)]
 pub enum WriteErr {
-    #[error("could not create directory at {0}")]
-    CantCreateDir(String),
+    #[error("could not create directory at {dir_path}")]
+    CantCreateDir { dir_path: String },
 }

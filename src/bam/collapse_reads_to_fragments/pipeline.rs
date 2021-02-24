@@ -1,11 +1,11 @@
 use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
+use anyhow::Result;
 use bio::io::fastq;
 use derive_new::new;
 use rust_htslib::bam;
 use rust_htslib::bam::record::Cigar;
 use rust_htslib::bam::Read;
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::error::Error;
 use std::io;
 use std::ops::Deref;
 use uuid::Uuid;
@@ -37,7 +37,7 @@ pub enum GroupID {
 }
 
 impl<W: io::Write> CallConsensusRead<W> {
-    pub fn call_consensus_reads(&mut self) -> Result<(), Box<dyn Error>> {
+    pub fn call_consensus_reads(&mut self) -> Result<()> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
         let mut duplicate_groups: HashMap<GroupID, RecordIDs> = HashMap::new();
         let mut record_storage: HashMap<RecordID, RecordStorage> = HashMap::new();
@@ -254,7 +254,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     fq2_writer: &'a mut fastq::Writer<W>,
     fq_se_writer: &'a mut fastq::Writer<W>,
     verbose_read_names: bool,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let group_ids: HashSet<GroupID> = group_end_idx
         .range(
             ..end_pos.unwrap_or(

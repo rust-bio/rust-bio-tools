@@ -16,24 +16,12 @@
 //! $ rbt sequences-stats -q < A.fastq
 //! ```
 
+use anyhow::{bail, Result};
 use bio::io::{fasta, fastq};
-
-use quick_error::quick_error;
-
-use std::error::Error;
 use std::io;
+use thiserror::Error;
 
-quick_error! {
-    #[derive(Debug)]
-    pub enum InputError {
-        NoSequence {
-            description("stdin didn't contains any sequence")
-        }
-
-    }
-}
-
-pub fn stats(fastq: bool) -> Result<(), Box<dyn Error>> {
+pub fn stats(fastq: bool) -> Result<()> {
     let mut lengths = if fastq {
         fastq_lengths()
     } else {
@@ -41,7 +29,7 @@ pub fn stats(fastq: bool) -> Result<(), Box<dyn Error>> {
     };
 
     if lengths.is_empty() {
-        return Err(Box::new(InputError::NoSequence));
+        bail!(InputError::NoSequence);
     }
     // Sort lengths one time
     lengths.sort_unstable();
@@ -121,4 +109,10 @@ fn median(data: &[usize]) -> f64 {
         }
         len => data[len / 2] as f64,
     }
+}
+
+#[derive(Error, Debug)]
+pub enum InputError {
+    #[error("stdin didn't contain any sequence")]
+    NoSequence,
 }

@@ -1,5 +1,7 @@
 use crate::bcf::report::table_report::fasta_reader::{get_fasta_lengths, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
+use anyhow::Context as AnyhowContext;
+use anyhow::Result;
 use chrono::{DateTime, Local};
 use itertools::Itertools;
 use jsonm::packer::{PackOptions, Packer};
@@ -11,7 +13,6 @@ use rustc_serialize::json::Json;
 use serde::Serialize;
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap};
-use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -53,7 +54,7 @@ pub(crate) fn make_table_report(
     output_path: &str,
     max_read_depth: u32,
     js_files: Vec<String>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
     let mut reports = HashMap::new();
     let mut ann_indices = HashMap::new();
@@ -201,12 +202,15 @@ pub(crate) fn make_table_report(
 
                 let get_field = |field: &str| {
                     std::str::from_utf8(
-                        fields[*ann_indices.get(&field.to_owned()).unwrap_or_else(|| {
-                            panic!(
+                        fields[*ann_indices
+                            .get(&field.to_owned())
+                            .context({
+                                format!(
                                 "No field named {} found. Please only use VEP-annotated VCF-files.",
                                 field
                             )
-                        })],
+                            })
+                            .unwrap()],
                     )
                 };
 
@@ -225,7 +229,7 @@ pub(crate) fn make_table_report(
 
                 let mut ann_strings = Vec::new();
                 for f in fields {
-                    let attr = String::from_utf8(f.to_owned()).unwrap();
+                    let attr = String::from_utf8(f.to_owned())?;
                     ann_strings.push(attr);
                 }
                 annotations.push(ann_strings);
@@ -237,7 +241,7 @@ pub(crate) fn make_table_report(
 
         if !alleles.is_empty() {
             let ref_vec = alleles[0].to_owned();
-            let ref_allele = String::from_utf8(ref_vec).unwrap();
+            let ref_allele = String::from_utf8(ref_vec)?;
 
             let len: u8 = ref_allele.len() as u8;
 
@@ -327,9 +331,9 @@ pub(crate) fn make_table_report(
                             0,
                             end_position as u64 + 75,
                             max_read_depth,
-                        );
+                        )?;
                         visualization =
-                            manipulate_json(content, 0, end_position as u64 + 75, max_rows);
+                            manipulate_json(content, 0, end_position as u64 + 75, max_rows)?;
                     } else if pos + 75 >= fasta_length as i64 {
                         let (content, max_rows) = create_report_data(
                             fasta_path,
@@ -339,9 +343,9 @@ pub(crate) fn make_table_report(
                             pos as u64 - 75,
                             fasta_length - 1,
                             max_read_depth,
-                        );
+                        )?;
                         visualization =
-                            manipulate_json(content, pos as u64 - 75, fasta_length - 1, max_rows);
+                            manipulate_json(content, pos as u64 - 75, fasta_length - 1, max_rows)?;
                     } else {
                         let (content, max_rows) = create_report_data(
                             fasta_path,
@@ -351,13 +355,13 @@ pub(crate) fn make_table_report(
                             pos as u64 - 75,
                             end_position as u64 + 75,
                             max_read_depth,
-                        );
+                        )?;
                         visualization = manipulate_json(
                             content,
                             pos as u64 - 75,
                             end_position as u64 + 75,
                             max_rows,
-                        );
+                        )?;
                     }
 
                     visualizations.insert(sample.to_owned(), visualization.to_string());
@@ -392,12 +396,10 @@ pub(crate) fn make_table_report(
 
                 let report_data = reports.remove(&gene).unwrap();
                 let mut templates = Tera::default();
-                templates
-                    .add_raw_template(
-                        "table_report.html.tera",
-                        include_str!("report_table.html.tera"),
-                    )
-                    .unwrap();
+                templates.add_raw_template(
+                    "table_report.html.tera",
+                    include_str!("report_table.html.tera"),
+                )?;
                 let mut context = Context::new();
                 context.insert("variants", &report_data);
                 context.insert("gene", &gene);
@@ -407,22 +409,18 @@ pub(crate) fn make_table_report(
                 context.insert("time", &local.format("%a %b %e %T %Y").to_string());
                 context.insert("version", &env!("CARGO_PKG_VERSION"));
 
-                let html = templates
-                    .render("table_report.html.tera", &context)
-                    .unwrap();
+                let html = templates.render("table_report.html.tera", &context)?;
                 let filepath = detail_path.clone() + "/" + &gene + ".html";
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
 
                 let mut templates = Tera::default();
-                templates
-                    .add_raw_template("plot.js.tera", include_str!("plot.js.tera"))
-                    .unwrap();
+                templates.add_raw_template("plot.js.tera", include_str!("plot.js.tera"))?;
 
                 let plot_path = detail_path.clone() + "/plots/" + &gene + ".js";
                 let mut plot_context = Context::new();
                 plot_context.insert("variants", &report_data);
-                let plot_html = templates.render("plot.js.tera", &plot_context).unwrap();
+                let plot_html = templates.render("plot.js.tera", &plot_context)?;
                 let mut plot_file = File::create(plot_path)?;
                 plot_file.write_all(plot_html.as_bytes())?;
             }
@@ -459,7 +457,7 @@ pub(crate) fn read_tag_entries(
     variant: &mut Record,
     header: &HeaderView,
     tag: &str,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let (tag_type, _) = header.info_type(tag.as_bytes())?;
     match tag_type {
         TagType::String => {
@@ -500,16 +498,16 @@ fn create_report_data(
     from: u64,
     to: u64,
     max_read_depth: u32,
-) -> (Json, usize) {
+) -> Result<(Json, usize)> {
     let mut data = Vec::new();
 
-    for f in read_fasta(fasta_path, chrom.clone(), from, to, true) {
+    for f in read_fasta(fasta_path, chrom.clone(), from, to, true)? {
         let nucleobase = json!(f);
         data.push(nucleobase);
     }
 
     let (bases, matches, max_rows) =
-        get_static_reads(bam_path, fasta_path, chrom, from, to, max_read_depth);
+        get_static_reads(bam_path, fasta_path, chrom, from, to, max_read_depth)?;
 
     for b in bases {
         let base = json!(b);
@@ -523,16 +521,16 @@ fn create_report_data(
 
     data.push(json!(variant));
 
-    (Json::from_str(&json!(data).to_string()).unwrap(), max_rows)
+    Ok((Json::from_str(&json!(data).to_string()).unwrap(), max_rows))
 }
 
 /// Inserts the json containing the genome data into the vega specs.
 /// It also changes keys and values of the json data for the vega plot to look better and compresses the json with jsonm.
-fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> String {
+fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Result<String> {
     let json_string = include_str!("vegaSpecs.json");
 
-    let mut vega_specs: Value = serde_json::from_str(&json_string).unwrap();
-    let values: Value = serde_json::from_str(&data.to_string()).unwrap();
+    let mut vega_specs: Value = serde_json::from_str(&json_string)?;
+    let values: Value = serde_json::from_str(&data.to_string())?;
     let mut values = json!({"values": values, "name": "fasta"});
 
     let v = values["values"].as_array().unwrap().clone();
@@ -565,9 +563,9 @@ fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> String {
     let mut packer = Packer::new();
     packer.set_max_dict_size(100000);
     let options = PackOptions::new();
-    let packed_specs = packer.pack(&vega_specs, &options).unwrap();
+    let packed_specs = packer.pack(&vega_specs, &options)?;
 
-    json!(compress_to_utf16(&packed_specs.to_string())).to_string()
+    Ok(json!(compress_to_utf16(&packed_specs.to_string())).to_string())
 }
 
 fn get_gene_ending(
@@ -575,11 +573,11 @@ fn get_gene_ending(
     symbol_index: usize,
     gene_index: usize,
     hgvsg_index: usize,
-) -> Result<HashMap<String, u32>, Box<dyn Error>> {
+) -> Result<HashMap<String, u32>> {
     let mut endings = HashMap::new();
-    let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
+    let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path)?;
     for (record_index, v) in vcf.records().enumerate() {
-        let variant = v.unwrap();
+        let variant = v?;
         if let Some(ann) = variant.info(b"ANN").string()? {
             for entry in ann.iter() {
                 let fields: Vec<_> = entry.split(|c| *c == b'|').collect();

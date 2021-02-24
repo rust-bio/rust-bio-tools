@@ -9,15 +9,15 @@
 //! rbt vcf-match -d 50 -l 20 tests/test3.vcf < tests/test2.vcf > tests/matching.bcf
 //! ```
 //!
+use anyhow::{bail, Result};
 use itertools::Itertools;
 use log::{info, warn};
-use quick_error::quick_error;
 use rust_htslib::bcf;
 use rust_htslib::bcf::{Format, Read};
 use std::collections::{btree_map, BTreeMap, HashMap};
-use std::error::Error;
 use std::path::Path;
 use std::str;
+use thiserror::Error;
 
 pub struct VarIndex {
     inner: HashMap<Vec<u8>, BTreeMap<u64, Vec<Variant>>>,
@@ -25,7 +25,7 @@ pub struct VarIndex {
 }
 
 impl VarIndex {
-    pub fn new(mut reader: bcf::Reader, max_dist: u64) -> Result<Self, Box<dyn Error>> {
+    pub fn new(mut reader: bcf::Reader, max_dist: u64) -> Result<Self> {
         let mut inner: HashMap<Vec<u8>, BTreeMap<u64, Vec<Variant>>> = HashMap::new();
         let mut i = 0;
         let mut rec = reader.empty_record();
@@ -33,7 +33,7 @@ impl VarIndex {
             match reader.read(&mut rec) {
                 Some(Ok(())) => (),
                 None => break,
-                Some(Err(e)) => return Err(Box::new(e)),
+                Some(Err(e)) => bail!(e),
             };
             if let Some(rid) = rec.rid() {
                 let chrom = reader.header().rid2name(rid)?;
@@ -59,11 +59,7 @@ impl VarIndex {
     }
 }
 
-pub fn match_variants<P: AsRef<Path>>(
-    matchbcf: P,
-    max_dist: u32,
-    max_len_diff: u32,
-) -> Result<(), Box<dyn Error>> {
+pub fn match_variants<P: AsRef<Path>>(matchbcf: P, max_dist: u32, max_len_diff: u32) -> Result<()> {
     let mut inbcf = bcf::Reader::from_stdin()?;
     let mut header = bcf::Header::from_template(inbcf.header());
 
@@ -83,7 +79,7 @@ pub fn match_variants<P: AsRef<Path>>(
         match inbcf.read(&mut rec) {
             Some(Ok(())) => (),
             None => break,
-            Some(Err(e)) => return Err(Box::new(e)),
+            Some(Err(e)) => bail!(e),
         };
         outbcf.translate(&mut rec);
 
@@ -131,7 +127,7 @@ pub struct Variant {
 }
 
 impl Variant {
-    pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self, Box<dyn Error>> {
+    pub fn new(rec: &mut bcf::Record, id: &mut u32) -> Result<Self> {
         let pos = rec.pos();
 
         let svlens = if let Ok(Some(svlens)) = rec.info(b"SVLEN").integer() {
@@ -172,7 +168,9 @@ impl Variant {
                     (Some(svlens), _) => svlens[0] as u64,
                     (None, Some(end)) => end as u64 - 1 - pos as u64,
                     _ => {
-                        return Err(Box::new(MatchError::MissingTag("SVLEN or END".to_owned())));
+                        bail!(MatchError::MissingTag {
+                            tag: "SVLEN or END".to_owned()
+                        });
                     }
                 };
                 VariantType::Deletion(svlen)
@@ -187,7 +185,9 @@ impl Variant {
                     if let Some(ref svlens) = svlens {
                         VariantType::Deletion(svlens[i] as u64)
                     } else {
-                        return Err(Box::new(MatchError::MissingTag("SVLEN".to_owned())));
+                        bail!(MatchError::MissingTag {
+                            tag: "SVLEN".to_owned()
+                        });
                     }
                 } else if a.len() < refallele.len() {
                     VariantType::Deletion((refallele.len() - a.len()) as u64)
@@ -278,12 +278,8 @@ impl VariantType {
     }
 }
 
-quick_error! {
-    #[derive(Debug)]
-    pub enum MatchError {
-        MissingTag(tag: String) {
-            description("missing tag")
-            display("missing tag {}", tag)
-        }
-    }
+#[derive(Error, Debug)]
+pub enum MatchError {
+    #[error("missing tag {tag}")]
+    MissingTag { tag: String },
 }

@@ -7,14 +7,14 @@
 //! $ rbt fastq-split A.fastq B.fastq < test.fastq
 //! ```
 //!
+use anyhow::Result;
 use bio::io::fastq;
 use bio::io::fastq::FastqRead;
 use log::info;
-use std::error::Error;
 use std::io;
 use std::path::Path;
 
-pub fn split<P: AsRef<Path>>(out_paths: &[P]) -> Result<(), Box<dyn Error>> {
+pub fn split<P: AsRef<Path>>(out_paths: &[P]) -> Result<()> {
     let mut reader = fastq::Reader::new(io::stdin());
     let mut writers = Vec::new();
     for path in out_paths {

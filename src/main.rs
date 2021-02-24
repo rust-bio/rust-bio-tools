@@ -1,12 +1,11 @@
 //! Documentation for Rust Bio Tools
-use std::collections::HashMap;
-use std::error::Error;
-use std::fs;
-use std::path::Path;
-
+use anyhow::{Context, Result};
 use itertools::Itertools;
 use log::LevelFilter;
 use rayon::prelude::*;
+use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
 use structopt::StructOpt;
 
 use cli::Command::*;
@@ -19,7 +18,7 @@ pub mod csv;
 pub mod fastq;
 pub mod sequences_stats;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<()> {
     let args = cli::Rbt::from_args();
 
     fern::Dispatch::new()
@@ -128,12 +127,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             let mut sample_calls = HashMap::new();
             let mut bam_paths = HashMap::new();
             if !Path::new(&output_path).exists() {
-                fs::create_dir(Path::new(&output_path)).unwrap_or_else(|_| {
-                    panic!(
-                        "Couldn't create output directory at {}. Please make sure the path exists.",
-                        output_path
-                    )
-                });
+                fs::create_dir(Path::new(&output_path)).context(format!(
+                    "Couldn't create output directory at {}. Please make sure the path exists.",
+                    output_path
+                ))?;
             }
             let js_files_vec = custom_js_files
                 .clone()

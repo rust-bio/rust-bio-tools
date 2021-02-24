@@ -1,12 +1,12 @@
 mod calc_consensus;
 mod pipeline;
 
+use anyhow::Result;
 use bio::io::fastq;
 use log::info;
 use pipeline::CallConsensusRead;
 use rust_htslib::bam;
 use rust_htslib::bam::{Format, Header, Read};
-use std::error::Error;
 use std::path::Path;
 
 pub fn call_consensus_reads_from_paths<P: AsRef<Path>>(
@@ -16,7 +16,7 @@ pub fn call_consensus_reads_from_paths<P: AsRef<Path>>(
     fq_se: P,
     bam_skipped_out: P,
     verbose_read_names: bool,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     info!("Reading input files:\n    {}", bam_in.as_ref().display());
     info!(
         "Writing forward consensus reads to:\n    {}",

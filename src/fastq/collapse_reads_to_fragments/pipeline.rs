@@ -1,3 +1,4 @@
+use anyhow::Result;
 use bio::io::fastq;
 use bio::io::fastq::{FastqRead, Record};
 use bio::stats::probs::LogProb;
@@ -5,7 +6,6 @@ use derive_new::new;
 use ordered_float::NotNaN;
 use rgsl::randist::gaussian::ugaussian_P;
 use rocksdb::DB;
-use std::error::Error;
 use std::io;
 use std::io::Write;
 use std::mem;
@@ -19,7 +19,7 @@ use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensu
 const HAMMING_THRESHOLD: f64 = 10.0;
 
 /// Interpret a cluster returned by starcode
-fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>, Box<dyn Error>> {
+fn parse_cluster(record: csv::StringRecord) -> Result<Vec<usize>> {
     let seqids = &record[2];
     Ok(csv::ReaderBuilder::new()
         .delimiter(b',')
@@ -69,7 +69,7 @@ struct FASTQStorage {
 impl FASTQStorage {
     /// Create a new FASTQStorage using a Rocksdb database
     /// that maps read indices to read seqeunces.
-    pub fn new() -> Result<Self, Box<dyn Error>> {
+    pub fn new() -> Result<Self> {
         // Save storage_dir to prevent it from leaving scope and
         // in turn deleting the tempdir
         let storage_dir = tempdir()?.path().join("db");
@@ -85,12 +85,7 @@ impl FASTQStorage {
     }
 
     /// Enter a (read index, read sequence) pair into the database.
-    pub fn put(
-        &mut self,
-        i: usize,
-        f_rec: &fastq::Record,
-        r_rec: &fastq::Record,
-    ) -> Result<(), Box<dyn Error>> {
+    pub fn put(&mut self, i: usize, f_rec: &fastq::Record, r_rec: &fastq::Record) -> Result<()> {
         Ok(self.db.put(
             &Self::as_key(i as u64),
             serde_json::to_string(&(f_rec, r_rec))?.as_bytes(),
@@ -98,7 +93,7 @@ impl FASTQStorage {
     }
 
     /// Retrieve the read sequence of the read with index `i`.
-    pub fn get(&self, i: usize) -> Result<(fastq::Record, fastq::Record), Box<dyn Error>> {
+    pub fn get(&self, i: usize) -> Result<(fastq::Record, fastq::Record)> {
         Ok(serde_json::from_str(
             str::from_utf8(&self.db.get(&Self::as_key(i as u64))?.unwrap()).unwrap(),
         )?)
@@ -127,7 +122,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
     /// Next, compute a consensus read for each unique read,
     /// i.e. a cluster with similar sequences and identical UMI,
     /// and write it into the output files.
-    fn call_consensus_reads(&'a mut self) -> Result<(), Box<dyn Error>> {
+    fn call_consensus_reads(&'a mut self) -> Result<()> {
         let spinner_style = indicatif::ProgressStyle::default_spinner()
             .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ")
             .template("{prefix:.bold.dim} {spinner} {wide_msg}");
@@ -292,7 +287,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         f_recs: Vec<Record>,
         r_recs: Vec<Record>,
         outer_seqids: Vec<usize>,
-    ) -> Result<(), Box<dyn Error>>;
+    ) -> Result<()>;
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R>;
     fn fq2_reader(&mut self) -> &mut fastq::Reader<R>;
     fn umi_len(&self) -> usize;
@@ -325,7 +320,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         f_recs: Vec<Record>,
         r_recs: Vec<Record>,
         outer_seqids: Vec<usize>,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         if f_recs.len() > 1 {
             let uuid = &Uuid::new_v4().to_hyphenated().to_string();
             self.fq1_writer.write_record(
@@ -493,7 +488,7 @@ impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
         f_recs: Vec<Record>,
         r_recs: Vec<Record>,
         outer_seqids: Vec<usize>,
-    ) -> Result<(), Box<dyn Error>> {
+    ) -> Result<()> {
         //TODO Add deterministic uuid considering read ids
         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
         let ol_consensus =

@@ -1,10 +1,9 @@
-use std::error::Error;
-
+use anyhow::Result;
 use bio::alphabets::dna::n_alphabet;
 use itertools::Itertools;
 use rust_htslib::bcf::{self, Format, Read};
 
-pub fn fix_iupac_alleles() -> Result<(), Box<dyn Error>> {
+pub fn fix_iupac_alleles() -> Result<()> {
     let mut inbcf = bcf::Reader::from_stdin()?;
     let mut outbcf = bcf::Writer::from_stdout(
         &bcf::Header::from_template(inbcf.header()),

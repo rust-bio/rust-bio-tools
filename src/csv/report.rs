@@ -426,14 +426,16 @@ fn make_prefixes(
         for (index, row) in partial_table.iter().enumerate() {
             for key in &titles {
                 let value = &row[key.to_owned()];
-                let entry = value.split_whitespace().take(1).collect_vec()[0];
-                if entry.len() >= prefix_len {
-                    let prefix = entry.chars().take(prefix_len).collect::<String>();
-                    let prefix_map = title_map
-                        .entry(key.to_string())
-                        .or_insert_with(HashMap::new);
-                    let values = prefix_map.entry(prefix).or_insert_with(Vec::new);
-                    values.push((value.to_owned(), page, index));
+                if !value.is_empty() {
+                    let entry = value.split_whitespace().take(1).collect_vec()[0];
+                    if entry.len() >= prefix_len {
+                        let prefix = entry.chars().take(prefix_len).collect::<String>();
+                        let prefix_map = title_map
+                            .entry(key.to_string())
+                            .or_insert_with(HashMap::new);
+                        let values = prefix_map.entry(prefix).or_insert_with(Vec::new);
+                        values.push((value.to_owned(), page, index));
+                    }
                 }
             }
         }

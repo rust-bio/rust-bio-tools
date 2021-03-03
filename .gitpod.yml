@@ -3,4 +3,3 @@ image:
 
 tasks:
   - command: source ~/anaconda3/bin/activate rbt
-  - command: cargo build

@@ -2,5 +2,5 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: cargo build
-    command: cargo watch -x run
+  - command: source ~/anaconda3/bin/activate rbt
+  - command: cargo build

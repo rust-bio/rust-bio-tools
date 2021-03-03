@@ -221,22 +221,18 @@ fn test_vcf_report() {
 
 #[test]
 fn test_csv_report() {
-    assert!(
-        Command::new("bash")
-            .arg("-c")
-            .arg("target/debug/rbt csv-report tests/oscar_age_female.csv -r 20 -c Age -- tests/test-csv-report")
-            .spawn()
-            .unwrap()
-            .wait()
-            .unwrap()
-            .success()
-    );
+    assert!(Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt csv-report tests/test_report.csv -- tests/test-csv-report")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
 
-    for i in 1..=5 {
-        let result = "tests/test-csv-report/data/index".to_owned() + &i.to_string() + ".js";
-        let expected = "tests/expected/csv-report/data/index".to_owned() + &i.to_string() + ".js";
-        test_output(&result, &expected);
-    }
+    let result = "tests/test-csv-report/data/index1.js";
+    let expected = "tests/expected/csv-report/data/index1.js";
+    test_output(&result, &expected);
 
     fs::remove_dir_all("tests/test-csv-report").unwrap();
 }

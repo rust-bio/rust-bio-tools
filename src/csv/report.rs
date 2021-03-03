@@ -73,9 +73,8 @@ pub(crate) fn csv_report(
     for title in &titles {
         let is_int = match (integer.get(title), non_numeric.get(title)) {
             (Some(num), Some(no_num)) => num > no_num,
-            (None, Some(_)) => false,
             (Some(_), None) => true,
-            _ => unreachable!(),
+            _ => false,
         };
         is_integer.insert(title.to_owned(), is_int);
     }
@@ -425,7 +424,7 @@ fn make_prefixes(
         let prefix_len = 3;
         for (index, row) in partial_table.iter().enumerate() {
             for key in &titles {
-                let value = &row[key.to_owned()];
+                let value = &row[key.to_owned()].trim().to_owned();
                 if !value.is_empty() {
                     let entry = value.split_whitespace().take(1).collect_vec()[0];
                     if entry.len() >= prefix_len {

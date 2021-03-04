@@ -2,9 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.19.4] - 2021-03-04
+### Changed
+- Fixed further bugs in the csv-report.
+
 ## [0.19.3] - 2021-03-02
 ### Changed
-- Imrpvoed fasta sequence length retrieval in `rbt vcf-report` (@fxwiegand).
+- Improved fasta sequence length retrieval in `rbt vcf-report` (@fxwiegand).
 - Better error messages (@fxwiegand).
 - Add check for empty values in `rbt csv-report` (@fxwiegand).
 - Removed unused dependencies (@fxwiegand).

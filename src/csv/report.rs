@@ -154,7 +154,7 @@ pub(crate) fn csv_report(
         dir_path: plot_path.to_owned(),
     })?;
 
-    for title in &titles {
+    for (n, title) in titles.iter().enumerate() {
         let mut templates = Tera::default();
         templates.add_raw_template("plot.js.tera", include_str!("plot.js.tera"))?;
         let mut context = Context::new();
@@ -173,9 +173,10 @@ pub(crate) fn csv_report(
             _ => unreachable!(),
         }
         context.insert("title", &title);
+        context.insert("index", &n.to_string());
         let js = templates.render("plot.js.tera", &context)?;
 
-        let file_path = plot_path.to_owned() + title + ".js";
+        let file_path = plot_path.to_owned() + "plot_" + &n.to_string() + ".js";
         let mut file = fs::File::create(file_path)?;
         file.write_all(js.as_bytes())?;
     }
@@ -255,7 +256,7 @@ pub(crate) fn csv_report(
         dir_path: prefix_path.to_owned(),
     })?;
 
-    for title in &titles {
+    for (n, title) in titles.iter().enumerate() {
         if let Some(prefix_table) = prefixes.get(title.to_owned()) {
             let mut templates = Tera::default();
             templates.add_raw_template(
@@ -264,15 +265,16 @@ pub(crate) fn csv_report(
             )?;
             let mut context = Context::new();
             context.insert("title", title);
+            context.insert("index", &n.to_string());
             context.insert("table", prefix_table);
             context.insert("numeric", is_numeric.get(title).unwrap());
             let html = templates.render("prefix_table.html.tera", &context)?;
 
-            let file_path = output_path.to_owned() + "/prefixes/" + title + ".html";
+            let file_path = output_path.to_owned() + "/prefixes/col_" + &n.to_string() + ".html";
             let mut file = fs::File::create(file_path)?;
             file.write_all(html.as_bytes())?;
 
-            let title_path = prefix_path.to_owned() + "/" + title + "/";
+            let title_path = prefix_path.to_owned() + "/col_" + &n.to_string() + "/";
             fs::create_dir(Path::new(&title_path)).context(WriteErr::CantCreateDir {
                 dir_path: title_path.to_owned(),
             })?;
@@ -286,6 +288,7 @@ pub(crate) fn csv_report(
                 let mut context = Context::new();
                 context.insert("title", title);
                 context.insert("values", values);
+                context.insert("index", &n.to_string());
                 let html = templates.render("lookup_table.html.tera", &context)?;
 
                 let file_path = title_path.to_owned() + prefix + ".html";

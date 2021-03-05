@@ -23,7 +23,7 @@
                 <tbody>
                 {% for prefix, v in table %}
                 <tr>
-                    <td><a href="{{ title }}/{{ prefix }}.html" style="display: table-cell">{{ prefix }}</a></td>
+                    <td><a href="col_{{ index }}/{{ prefix }}.html" style="display: table-cell">{{ prefix }}</a></td>
                 </tr>
                 {% endfor %}
                 </tbody>

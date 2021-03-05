@@ -1,4 +1,4 @@
-let {{ title }}_plot = {
+let plot_{{ index }} = {
     "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
     "data": {"values": {{ table }}},
     "width": "container",

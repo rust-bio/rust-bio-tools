@@ -31,7 +31,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="col-3 ml-auto" style="padding-top: 10px"><a role="button" href="../{{ title }}.html" class="btn btn-primary">Back</a></div>
+        <div class="col-3 ml-auto" style="padding-top: 10px"><a role="button" href="../col_{{ index }}.html" class="btn btn-primary">Back</a></div>
     </div>
 </div>
 </body>

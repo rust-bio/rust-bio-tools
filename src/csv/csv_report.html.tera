@@ -63,7 +63,7 @@
                 <thead>
                 <tr>
                     {% for title in titles %}
-                    <th style="white-space: nowrap;">{{ title }}
+                    <th style="white-space: nowrap;" data-field="{{ title }}" data-formatter="functions[{{ title | json_encode | escape }}]">{{ title }}
                         <a class="sym" data-toggle="modal" data-target="#{{ title }}" onclick="vegaEmbed('#{{ title }}_plot', {{ title }}_plot)">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="4" height="5" x="1" y="10" rx="1"/>
@@ -154,5 +154,16 @@
     </div>
     {% endfor %}
 </div>
+
+{% if formatter %}
+<script>
+    var functions = {{ formatter }};
+    {% for title in titles %}
+    if (functions.{{ title }} === undefined) {
+        functions.{{ title }} = function (value) { return value; };
+    }
+    {% endfor %}
+</script>
+{% endif %}
 </body>
 </html>

@@ -5,25 +5,28 @@ $(document).ready(function() {
     $('.modal').on('shown.bs.modal', function () {
         window.dispatchEvent(new Event('resize'));
     });
-    var i = 0;
     var decompressed = JSON.parse(LZString.decompressFromUTF16(data));
-    for (const r of decompressed) {
-        var table_row = "<tr class=\"wor\" data-idx=\"" + i + "\">";
-        i++;
-        for (const el of r) {
-            var cell = "<td>" + el + "</td>";
-            table_row = table_row.concat(cell);
-        }
-        table_row = table_row.concat("</tr>")
-        $(table).find('tbody').append(table_row);
+    let titles = $('#table').bootstrapTable('getVisibleColumns');
+    let columns = [];
+    for (var x of titles) {
+        let title = x.title.split("<a")[0].trim();
+        columns.push(title);
     }
-    // Remove "No matching records found" row
-    $('table tr.no-records-found').remove();
-    $('.fixed-table-border').css("height", "0px");
+    var table_rows = [];
+    for (const r of decompressed) {
+        var i = 0;
+        row = {};
+        for (const el of r) {
+            row[columns[i]] = el;
+            i++;
+        }
+        table_rows.push(row);
+    }
+    $('#table').bootstrapTable('append', table_rows)
     let to_be_highlighted = window.location.href.toString().split("highlight=").pop();
-    let rows = $('.wor');
+    let rows = $("table > tbody > tr");
     rows.each(function() {
-        if (this.dataset.idx === to_be_highlighted) {
+        if (this.dataset.index === to_be_highlighted) {
             $(this).children().addClass('active-row');
         }
     });

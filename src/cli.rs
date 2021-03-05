@@ -201,6 +201,10 @@ pub(crate) enum Command {
         #[structopt(long, short = "s", default_value = ",")]
         separator: char,
 
+        /// Configure a custom formatter function for each column.
+        #[structopt(long, short = "f")]
+        formatter: Option<String>,
+
         /// Relative output path for the report files. Default value is the current directory.
         #[structopt(default_value = ".")]
         output_path: String,

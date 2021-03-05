@@ -10,10 +10,11 @@ use serde_json::json;
 use simple_excel_writer::*;
 use std::collections::{HashMap, HashSet};
 use std::fs;
-use std::io::Write;
+use std::io::{Write, Read};
 use std::path::Path;
 use std::str::FromStr;
 use tera::{Context, Tera};
+use std::fs::File;
 
 type LookupTable = HashMap<String, HashMap<String, Vec<(String, usize, usize)>>>;
 
@@ -24,6 +25,7 @@ pub(crate) fn csv_report(
     separator: char,
     sort_column: Option<&str>,
     ascending: Option<bool>,
+    formatter: Option<&str>,
 ) -> Result<()> {
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(separator as u8)
@@ -73,9 +75,8 @@ pub(crate) fn csv_report(
     for title in &titles {
         let is_int = match (integer.get(title), non_numeric.get(title)) {
             (Some(num), Some(no_num)) => num > no_num,
-            (None, Some(_)) => false,
             (Some(_), None) => true,
-            _ => unreachable!(),
+            _ => false,
         };
         is_integer.insert(title.to_owned(), is_int);
     }
@@ -295,6 +296,18 @@ pub(crate) fn csv_report(
             }
         }
     }
+    
+    let formatter_object = if let Some(f) = formatter {
+        let mut file_string = "".to_string();
+        let mut custom_file = File::open(f).context("Unable to open given file for formatting colums")?;
+        custom_file
+            .read_to_string(&mut file_string)
+            .context("Unable to read string from formatting file")?;
+        
+        Some(file_string)
+    } else {
+        None
+    };
 
     for (i, current_table) in table.chunks(rows_per_page).enumerate() {
         let page = i + 1;
@@ -310,6 +323,8 @@ pub(crate) fn csv_report(
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
         context.insert("version", &env!("CARGO_PKG_VERSION"));
+        context.insert("formatter", &formatter_object);
+
 
         let mut data = Vec::new();
         for row in current_table {

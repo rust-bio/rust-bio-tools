@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.19.5] - 2021-03-05
+### Changed
+- Fixed internal file naming in order to avoid too long filenames.
+
 ## [0.19.4] - 2021-03-04
 ### Changed
 - Fixed further bugs in the csv-report.

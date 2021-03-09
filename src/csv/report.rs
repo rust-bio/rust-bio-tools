@@ -336,7 +336,7 @@ pub(crate) fn csv_report(
     Ok(())
 }
 
-fn num_plot(table: &Vec<HashMap<String, String>>, column: String) -> Vec<BinnedPlotRecord> {
+fn num_plot(table: &[HashMap<String, String>], column: String) -> Vec<BinnedPlotRecord> {
     let mut values = Vec::new();
     let mut nan = 0;
     for row in table {
@@ -385,7 +385,7 @@ fn num_plot(table: &Vec<HashMap<String, String>>, column: String) -> Vec<BinnedP
     plot_data
 }
 
-fn nominal_plot(table: &Vec<HashMap<String, String>>, column: String) -> Vec<PlotRecord> {
+fn nominal_plot(table: &[HashMap<String, String>], column: String) -> Vec<PlotRecord> {
     let mut values = Vec::new();
     for row in table {
         let val = row.get(&column).unwrap();

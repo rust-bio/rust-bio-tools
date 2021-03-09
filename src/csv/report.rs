@@ -85,11 +85,11 @@ pub(crate) fn csv_report(
     for title in &titles {
         match is_numeric.get(title) {
             Some(true) => {
-                let plot = num_plot(table.clone(), title.to_string());
+                let plot = num_plot(&table, title.to_string());
                 num_plot_data.insert(title, plot);
             }
             Some(false) => {
-                let plot = nominal_plot(table.clone(), title.to_string());
+                let plot = nominal_plot(&table, title.to_string());
                 plot_data.insert(title, plot);
             }
             _ => unreachable!(),
@@ -118,6 +118,8 @@ pub(crate) fn csv_report(
         (_, _) => {}
     }
 
+    dbg!("Workbook start");
+
     let mut wb = Workbook::create(&(output_path.to_owned() + "/report.xlsx"));
     let mut sheet = wb.create_sheet("Report");
     for _ in 1..titles.len() {
@@ -127,14 +129,14 @@ pub(crate) fn csv_report(
     wb.write_sheet(&mut sheet, |sheet_writer| {
         let sw = sheet_writer;
         let mut title_row = Row::new();
-        for title in titles.clone() {
-            title_row.add_cell(title);
+        for title in &titles {
+            title_row.add_cell(*title);
         }
         sw.append_row(title_row)?;
-        for row in table.clone() {
+        for row in &table {
             let mut excel_row = Row::new();
-            for title in titles.clone() {
-                excel_row.add_cell(row.get(title).unwrap().as_str());
+            for title in &titles {
+                excel_row.add_cell(row.get(*title).unwrap().as_str());
             }
             sw.append_row(excel_row)?;
         }
@@ -142,6 +144,8 @@ pub(crate) fn csv_report(
     })?;
 
     wb.close()?;
+
+    dbg!("Workbook created");
 
     let pages = if table.len() % rows_per_page == 0 {
         (table.len() / rows_per_page) - 1
@@ -341,7 +345,7 @@ pub(crate) fn csv_report(
     Ok(())
 }
 
-fn num_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<BinnedPlotRecord> {
+fn num_plot(table: &Vec<HashMap<String, String>>, column: String) -> Vec<BinnedPlotRecord> {
     let mut values = Vec::new();
     let mut nan = 0;
     for row in table {
@@ -390,7 +394,7 @@ fn num_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<BinnedPl
     plot_data
 }
 
-fn nominal_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<PlotRecord> {
+fn nominal_plot(table: &Vec<HashMap<String, String>>, column: String) -> Vec<PlotRecord> {
     let mut values = Vec::new();
     for row in table {
         let val = row.get(&column).unwrap();

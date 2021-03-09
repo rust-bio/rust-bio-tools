@@ -7,13 +7,14 @@ use itertools::Itertools;
 use lz_str::compress_to_utf16;
 use serde_derive::Serialize;
 use serde_json::json;
-use simple_excel_writer::*;
 use std::collections::{HashMap, HashSet};
+use std::convert::TryInto;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
 use std::str::FromStr;
 use tera::{Context, Tera};
+use xlsxwriter::*;
 
 type LookupTable = HashMap<String, HashMap<String, Vec<(String, usize, usize)>>>;
 
@@ -118,34 +119,24 @@ pub(crate) fn csv_report(
         (_, _) => {}
     }
 
-    dbg!("Workbook start");
-
-    let mut wb = Workbook::create(&(output_path.to_owned() + "/report.xlsx"));
-    let mut sheet = wb.create_sheet("Report");
-    for _ in 1..titles.len() {
-        sheet.add_column(Column { width: 50.0 });
+    let wb = Workbook::new(&(output_path.to_owned() + "/report.xlsx"));
+    let mut sheet = wb.add_worksheet(Some("Report"))?;
+    for (i, title) in titles.iter().enumerate() {
+        sheet.write_string(0, i.try_into()?, title, None)?;
     }
 
-    wb.write_sheet(&mut sheet, |sheet_writer| {
-        let sw = sheet_writer;
-        let mut title_row = Row::new();
-        for title in &titles {
-            title_row.add_cell(*title);
+    for (i, row) in table.iter().enumerate() {
+        for (c, title) in titles.iter().enumerate() {
+            sheet.write_string(
+                (i + 1).try_into()?,
+                c.try_into()?,
+                row.get(*title).unwrap(),
+                None,
+            )?;
         }
-        sw.append_row(title_row)?;
-        for row in &table {
-            let mut excel_row = Row::new();
-            for title in &titles {
-                excel_row.add_cell(row.get(*title).unwrap().as_str());
-            }
-            sw.append_row(excel_row)?;
-        }
-        Ok(())
-    })?;
+    }
 
     wb.close()?;
-
-    dbg!("Workbook created");
 
     let pages = if table.len() % rows_per_page == 0 {
         (table.len() / rows_per_page) - 1

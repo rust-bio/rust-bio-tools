@@ -2,9 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.19.7] - 2021-03-09
+### Changed
+- Performance improvement for `rbt csv-report`.
+
 ## [0.19.6] - 2021-03-09
 ### Changed
-- Fixed a JSON syntax error in `rbt vcf-report`
+- Fixed a JSON syntax error in `rbt vcf-report`.
 
 ## [0.19.5] - 2021-03-05
 ### Changed

@@ -308,6 +308,18 @@ pub(crate) fn csv_report(
         None
     };
 
+    let mut templates = Tera::default();
+    templates.add_raw_template("csv_report.js.tera", include_str!("csv_report.js.tera"))?;
+    let mut context = Context::new();
+    context.insert("titles", &titles);
+    context.insert("formatter", &formatter_object);
+
+    let js = templates.render("csv_report.js.tera", &context)?;
+
+    let file_path = output_path.to_owned() + "/js/csv_report.js";
+    let mut file = fs::File::create(file_path)?;
+    file.write_all(js.as_bytes())?;
+
     for (i, current_table) in table.chunks(rows_per_page).enumerate() {
         let page = i + 1;
 

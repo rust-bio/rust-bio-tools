@@ -2,6 +2,29 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.19.7] - 2021-03-09
+### Changed
+- Performance improvement for `rbt csv-report`.
+
+## [0.19.6] - 2021-03-09
+### Changed
+- Fixed a JSON syntax error in `rbt vcf-report`.
+
+## [0.19.5] - 2021-03-05
+### Changed
+- Fixed internal file naming in order to avoid too long filenames.
+
+## [0.19.4] - 2021-03-04
+### Changed
+- Fixed further bugs in the csv-report.
+
+## [0.19.3] - 2021-03-02
+### Changed
+- Improved fasta sequence length retrieval in `rbt vcf-report` (@fxwiegand).
+- Better error messages (@fxwiegand).
+- Add check for empty values in `rbt csv-report` (@fxwiegand).
+- Removed unused dependencies (@fxwiegand).
+
 ## [0.19.2] - 2021-02-12
 ### Changed
 - Various small bug fixes in `rbt vcf-report`.

@@ -19,7 +19,7 @@
 <script src="../data/index{{ current_page }}.js"></script>
 <script src="../js/csv_report.js"></script>
 {% for title in titles %}
-<script src="../plots/{{ title }}.js"></script>
+<script src="../plots/plot_{{ loop.index0 }}.js"></script>
 {% endfor %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <a class="navbar-brand" href="#">rbt report</a>
@@ -63,8 +63,8 @@
                 <thead>
                 <tr>
                     {% for title in titles %}
-                    <th style="white-space: nowrap;" data-field="{{ title }}" data-formatter="functions[{{ title | json_encode | escape }}]">{{ title }}
-                        <a class="sym" data-toggle="modal" data-target="#{{ title }}" onclick="vegaEmbed('#{{ title }}_plot', {{ title }}_plot)">
+                    <th style="white-space: nowrap;">{{ title }}
+                        <a class="sym" data-toggle="modal" data-target="#{{ title }}" onclick="vegaEmbed('#plot_{{ loop.index0 }}', plot_{{ loop.index0 }})">
                             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bar-chart-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                                 <rect width="4" height="5" x="1" y="10" rx="1"/>
                                 <rect width="4" height="9" x="6" y="6" rx="1"/>
@@ -125,7 +125,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div id="{{ title }}_plot" style="width: 100%; height: 300px; border:none;">
+                    <div id="plot_{{ loop.index0 }}" style="width: 100%; height: 300px; border:none;">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -144,7 +144,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <iframe src="../prefixes/{{ title }}.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
+                    <iframe src="../prefixes/col_{{ loop.index0 }}.html" frameBorder="0" style="width: 100%; height: min(530px, 50vh)"></iframe>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -154,16 +154,5 @@
     </div>
     {% endfor %}
 </div>
-
-{% if formatter %}
-<script>
-    var functions = {{ formatter }};
-    {% for title in titles %}
-    if (functions.{{ title }} === undefined) {
-        functions.{{ title }} = function (value) { return value; };
-    }
-    {% endfor %}
-</script>
-{% endif %}
 </body>
 </html>

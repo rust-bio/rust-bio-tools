@@ -10,7 +10,8 @@ use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryInto;
 use std::fs;
-use std::io::Write;
+use std::fs::File;
+use std::io::{Read, Write};
 use std::path::Path;
 use std::str::FromStr;
 use tera::{Context, Tera};
@@ -25,6 +26,7 @@ pub(crate) fn csv_report(
     separator: char,
     sort_column: Option<&str>,
     ascending: Option<bool>,
+    formatter: Option<&str>,
 ) -> Result<()> {
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(separator as u8)
@@ -292,6 +294,31 @@ pub(crate) fn csv_report(
             }
         }
     }
+
+    let formatter_object = if let Some(f) = formatter {
+        let mut file_string = "".to_string();
+        let mut custom_file =
+            File::open(f).context("Unable to open given file for formatting colums")?;
+        custom_file
+            .read_to_string(&mut file_string)
+            .context("Unable to read string from formatting file")?;
+
+        Some(file_string)
+    } else {
+        None
+    };
+
+    let mut templates = Tera::default();
+    templates.add_raw_template("csv_report.js.tera", include_str!("csv_report.js.tera"))?;
+    let mut context = Context::new();
+    context.insert("titles", &titles);
+    context.insert("formatter", &formatter_object);
+
+    let js = templates.render("csv_report.js.tera", &context)?;
+
+    let file_path = output_path.to_owned() + "/js/csv_report.js";
+    let mut file = fs::File::create(file_path)?;
+    file.write_all(js.as_bytes())?;
 
     for (i, current_table) in table.chunks(rows_per_page).enumerate() {
         let page = i + 1;

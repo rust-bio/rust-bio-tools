@@ -85,6 +85,7 @@ fn main() -> Result<()> {
             sort_column,
             sort_order,
             separator,
+            formatter,
             output_path,
         } => {
             if !Path::new(&output_path).exists() {
@@ -107,6 +108,7 @@ fn main() -> Result<()> {
                 separator,
                 sort_column.as_deref(),
                 order,
+                formatter.as_deref(),
             )?
         }
         VcfReport {

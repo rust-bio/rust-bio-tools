@@ -2,3 +2,5 @@
 .table-container { display: none; }
 .loading { height: 100%; padding-top: 25%;}
 .active-row { background: lightgray !important; }
+th { white-space: nowrap; }
+#table { max-width: 90%; }

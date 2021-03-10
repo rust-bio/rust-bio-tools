@@ -201,7 +201,8 @@ pub(crate) enum Command {
         #[structopt(long, short = "s", default_value = ",")]
         separator: char,
 
-        /// Configure a custom formatter function for each column.
+        /// Configure a custom formatter function for each column by providing a file containing a javascript object with csv column title as the key and a format function as the value.
+        /// More information on the formatting functions and how to use them here: https://examples.bootstrap-table.com/index.html#column-options/formatter.html.
         #[structopt(long, short = "f")]
         formatter: Option<String>,
 

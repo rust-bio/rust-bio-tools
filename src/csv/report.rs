@@ -334,7 +334,6 @@ pub(crate) fn csv_report(
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
         context.insert("version", &env!("CARGO_PKG_VERSION"));
-        context.insert("formatter", &formatter_object);
 
         let mut data = Vec::new();
         for row in current_table {

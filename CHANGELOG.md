@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.19.8] - 2021-03-10
+## [0.20.0] - 2021-03-10
 ### Added
 - New parameter `--formatter` for `rbt csv-report`.
 - `--formatter` allows the specification of custom formatting functions for one or multiple columns of the given csv file.

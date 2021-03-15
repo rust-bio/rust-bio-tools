@@ -1,6 +1,9 @@
 $(document).ready(function() {
     $('.table-container').show();
     $('.loading').hide();
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    })
     $('#table').bootstrapTable( 'resetView' , {height: window.innerHeight - 200} );
     $('.modal').on('shown.bs.modal', function () {
         window.dispatchEvent(new Event('resize'));
@@ -20,12 +23,17 @@ $(document).ready(function() {
     })
 
     let columns = [{% for title in titles %}"{{ title }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    let num = [{% for title in titles %}{{ num[title] }}{% if not loop.last %},{% endif %}{% endfor %}];
     var table_rows = [];
     for (const r of decompressed) {
         var i = 0;
         row = {};
         for (const el of r) {
-            row[columns[i]] = el;
+            if (num[i]) {
+                row[columns[i]] = "<div data-toggle=\"tooltip\" data-placement=\"right\" title=\"Click on cell to plot value in histogram.\">" + el + "</div>";
+            } else {
+                row[columns[i]] = el;
+            }
             i++;
         }
         table_rows.push(row);
@@ -33,7 +41,8 @@ $(document).ready(function() {
     $('#table').bootstrapTable('append', table_rows)
 
     $(document).ready(function () {
-        $('#table').on('dbl-click-cell.bs.table', function (e, col, field) {
+        $('#table').on('click-cell.bs.table', function (e, col, f) {
+            var field = f.split('</div>')[0].split('<div data-toggle=\"tooltip\" data-placement=\"right\" title=\"Click on cell to plot value in histogram.\">').pop();
             var marker = { "bin_start": field};
             var index = columns.indexOf(col);
             switch (index) {

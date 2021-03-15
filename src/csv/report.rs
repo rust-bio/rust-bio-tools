@@ -312,6 +312,7 @@ pub(crate) fn csv_report(
     templates.add_raw_template("csv_report.js.tera", include_str!("csv_report.js.tera"))?;
     let mut context = Context::new();
     context.insert("titles", &titles);
+    context.insert("num", &is_numeric);
     context.insert("formatter", &formatter_object);
 
     let js = templates.render("csv_report.js.tera", &context)?;

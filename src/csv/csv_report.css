@@ -4,3 +4,4 @@
 .active-row { background: lightgray !important; }
 th { white-space: nowrap; }
 #table { max-width: 90%; }
+td:hover { background: lightgray }

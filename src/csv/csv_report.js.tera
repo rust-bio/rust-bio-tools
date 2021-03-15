@@ -55,6 +55,7 @@ $(document).ready(function() {
     rows.each(function() {
         if (this.dataset.index === to_be_highlighted) {
             $(this).children().addClass('active-row');
+            $('#table').bootstrapTable('scrollTo', {unit: 'rows', value: to_be_highlighted})
         }
     });
 });

@@ -30,7 +30,7 @@ $(document).ready(function() {
         row = {};
         for (const el of r) {
             if (num[i]) {
-                row[columns[i]] = "<div data-toggle=\"tooltip\" data-placement=\"right\" title=\"Click on cell to plot value in histogram.\">" + el + "</div>";
+                row[columns[i]] = el + "<button type=\"button\" class=\"btn btn-primary btn-sm\" data-val=\"" + el + "\" data-col=\"" + columns[i] + "\"><svg xmlns=\"http:\/\/www.w3.org\/2000\/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-bar-chart-fill\" viewBox=\"0 0 16 16\">\r\n  <path d=\"M1 11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3zm5-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm5-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V2z\"\/>\r\n<\/svg><\/button>";
             } else {
                 row[columns[i]] = el;
             }
@@ -40,24 +40,23 @@ $(document).ready(function() {
     }
     $('#table').bootstrapTable('append', table_rows)
 
-    $(document).ready(function () {
-        $('#table').on('click-cell.bs.table', function (e, col, f) {
-            var field = f.split('</div>')[0].split('<div data-toggle=\"tooltip\" data-placement=\"right\" title=\"Click on cell to plot value in histogram.\">').pop();
-            var marker = { "bin_start": field};
-            var index = columns.indexOf(col);
-            switch (index) {
-                {% for title in titles %}case {{ loop.index0 }}:
-                    if (plot_{{ loop.index0 }}["layer"].length > 1) {
-                        $('#modal_{{ loop.index0 }}').modal();
-                        var marked_plot = JSON.parse(JSON.stringify(plot_{{ loop.index0 }}));
-                        marked_plot["layer"][1]["data"]["values"].push(marker);
-                        vegaEmbed('#plot_{{ loop.index0 }}', marked_plot);
-                    }
-                    break;
-                {% endfor %}
-            }
-        })
-    })
+    $( ".btn-sm" ).click(function() {
+        var col = $(this).data( "col" );
+        var field = $(this).data( "val" );
+        var marker = { "bin_start": field};
+        var index = columns.indexOf(col);
+        switch (index) {
+            {% for title in titles %}case {{ loop.index0 }}:
+                if (plot_{{ loop.index0 }}["layer"].length > 1) {
+                    $('#modal_{{ loop.index0 }}').modal();
+                    var marked_plot = JSON.parse(JSON.stringify(plot_{{ loop.index0 }}));
+                    marked_plot["layer"][1]["data"]["values"].push(marker);
+                    vegaEmbed('#plot_{{ loop.index0 }}', marked_plot);
+                }
+                break;
+            {% endfor %}
+        }
+    });
 
     let to_be_highlighted = window.location.href.toString().split("highlight=").pop();
     let rows = $("table > tbody > tr");

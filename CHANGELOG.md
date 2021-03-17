@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.20.1] - 2021-03-17
+### Changed
+- Added button to highlight numeric values in column histogram (`rbt csv-report`).
+
 ## [0.20.0] - 2021-03-10
 ### Added
 - New parameter `--formatter` for `rbt csv-report`.

@@ -84,6 +84,7 @@ pub(crate) fn csv_report(
 
     let mut plot_data = HashMap::new();
     let mut num_plot_data = HashMap::new();
+    let mut reasonable_plot = titles.iter().map(|t| (*t, true)).collect::<HashMap<_, _>>();
 
     for title in &titles {
         match is_numeric.get(title) {
@@ -92,8 +93,12 @@ pub(crate) fn csv_report(
                 num_plot_data.insert(title, plot);
             }
             Some(false) => {
-                let plot = nominal_plot(&table, title.to_string());
-                plot_data.insert(title, plot);
+                if let Some(plot) = nominal_plot(&table, title.to_string()) {
+                    plot_data.insert(title, plot);
+                } else {
+                    plot_data.insert(title, vec![]);
+                    reasonable_plot.insert(title, false);
+                }
             }
             _ => unreachable!(),
         };
@@ -335,6 +340,7 @@ pub(crate) fn csv_report(
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
         context.insert("version", &env!("CARGO_PKG_VERSION"));
+        context.insert("is_reasonable", &reasonable_plot);
 
         let mut data = Vec::new();
         for row in current_table {
@@ -413,7 +419,7 @@ fn num_plot(table: &[HashMap<String, String>], column: String) -> Vec<BinnedPlot
     plot_data
 }
 
-fn nominal_plot(table: &[HashMap<String, String>], column: String) -> Vec<PlotRecord> {
+fn nominal_plot(table: &[HashMap<String, String>], column: String) -> Option<Vec<PlotRecord>> {
     let mut values = Vec::new();
     for row in table {
         let val = row.get(&column).unwrap();
@@ -426,17 +432,24 @@ fn nominal_plot(table: &[HashMap<String, String>], column: String) -> Vec<PlotRe
     }
 
     let mut plot_data = Vec::new();
-    for (k, v) in count_values {
-        let plot_record = PlotRecord { key: k, value: v };
+    for (k, v) in &count_values {
+        let plot_record = PlotRecord {
+            key: k.to_owned(),
+            value: *v,
+        };
         plot_data.push(plot_record);
     }
 
     if plot_data.len() > 10 {
+        let unique_values = count_values.iter().map(|(_, v)| v).collect::<HashSet<_>>();
+        if unique_values.len() <= 1 {
+            return None;
+        };
         plot_data.sort_by(|a, b| b.value.cmp(&a.value));
         plot_data = plot_data.into_iter().take(10).collect();
     }
 
-    plot_data
+    Some(plot_data)
 }
 
 fn make_prefixes(

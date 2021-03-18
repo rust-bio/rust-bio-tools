@@ -423,7 +423,9 @@ fn nominal_plot(table: &[HashMap<String, String>], column: String) -> Option<Vec
     let mut values = Vec::new();
     for row in table {
         let val = row.get(&column).unwrap();
-        values.push(val.to_owned());
+        if !val.is_empty() {
+            values.push(val.to_owned());
+        }
     }
     let mut count_values = HashMap::new();
     for v in values {

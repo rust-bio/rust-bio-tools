@@ -441,7 +441,7 @@ fn nominal_plot(table: &[HashMap<String, String>], column: String) -> Option<Vec
         .collect_vec();
 
     if plot_data.len() > 10 {
-        let unique_values = count_values.iter().map(|(_, v)| v).collect::<HashSet<_>>();
+        let unique_values: HashSet<_> = count_values.iter().map(|(_, v)| v).collect();
         if unique_values.len() <= 1 {
             return None;
         };

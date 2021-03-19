@@ -420,27 +420,25 @@ fn num_plot(table: &[HashMap<String, String>], column: String) -> Vec<BinnedPlot
 }
 
 fn nominal_plot(table: &[HashMap<String, String>], column: String) -> Option<Vec<PlotRecord>> {
-    let mut values = Vec::new();
-    for row in table {
-        let val = row.get(&column).unwrap();
-        if !val.is_empty() {
-            values.push(val.to_owned());
-        }
-    }
+    let values = table
+        .iter()
+        .map(|row| row.get(&column).unwrap().to_owned())
+        .filter(|s| s.is_empty())
+        .collect_vec();
+
     let mut count_values = HashMap::new();
     for v in values {
         let entry = count_values.entry(v.to_owned()).or_insert_with(|| 0);
         *entry += 1;
     }
 
-    let mut plot_data = Vec::new();
-    for (k, v) in &count_values {
-        let plot_record = PlotRecord {
+    let mut plot_data = count_values
+        .iter()
+        .map(|(k, v)| PlotRecord {
             key: k.to_owned(),
             value: *v,
-        };
-        plot_data.push(plot_record);
-    }
+        })
+        .collect_vec();
 
     if plot_data.len() > 10 {
         let unique_values = count_values.iter().map(|(_, v)| v).collect::<HashSet<_>>();

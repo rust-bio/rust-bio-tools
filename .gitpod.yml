@@ -1,5 +1,5 @@
 image:
-  file: .gitpod.Dockerfile
+  file: Dockerfile
 
 tasks:
-  - command: source ~/anaconda3/bin/activate rbt
+  - before: micromamba activate rbt

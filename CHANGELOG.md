@@ -2,9 +2,38 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.20.2] - 2021-03-19
+### Changed
+- Cleaned up histogram presentation for pathologic columns.
+
+## [0.20.1] - 2021-03-17
+### Changed
+- Added button to highlight numeric values in column histogram (`rbt csv-report`).
+
+## [0.20.0] - 2021-03-10
+### Added
+- New parameter `--formatter` for `rbt csv-report`.
+- `--formatter` allows the specification of custom formatting functions for one or multiple columns of the given csv file.
+
+## [0.19.7] - 2021-03-09
+### Changed
+- Performance improvement for `rbt csv-report`.
+
+## [0.19.6] - 2021-03-09
+### Changed
+- Fixed a JSON syntax error in `rbt vcf-report`.
+
+## [0.19.5] - 2021-03-05
+### Changed
+- Fixed internal file naming in order to avoid too long filenames.
+
+## [0.19.4] - 2021-03-04
+### Changed
+- Fixed further bugs in the csv-report.
+
 ## [0.19.3] - 2021-03-02
 ### Changed
-- Imrpvoed fasta sequence length retrieval in `rbt vcf-report` (@fxwiegand).
+- Improved fasta sequence length retrieval in `rbt vcf-report` (@fxwiegand).
 - Better error messages (@fxwiegand).
 - Add check for empty values in `rbt csv-report` (@fxwiegand).
 - Removed unused dependencies (@fxwiegand).

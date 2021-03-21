@@ -1,22 +1,36 @@
-let {{ title }}_plot = {
+let plot_{{ index }} = {
     "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
-    "data": {"values": {{ table }}},
     "width": "container",
-    "mark": "bar",
-    "encoding": {
-    "x": {
-        {% if not num %}
-        "field": "key",
-        "sort": {"field": "value", "order": "descending"},
-        {% else %}
-        "field": "bin_start",
-        "bin": "binned",
-        {% endif %}
-        "title": "{{ title }}"
-    },
-    {% if num %}
-    "x2": {"field": "bin_end"},
-    {% endif %}
-    "y": {"field": "value", "type": "quantitative", "title": null}
-    }
+    "layer": [
+        {
+            "data": {"values": {{ table }}},
+            "mark": "bar",
+            "encoding": {
+                "x": {
+                    {% if not num %}
+                    "field": "key",
+                    "sort": {"field": "value", "order": "descending"},
+                    {% else %}
+                    "field": "bin_start",
+                    "bin": "binned",
+                    {% endif %}
+                    "title": "{{ title }}"
+                },
+                {% if num %}
+                "x2": {"field": "bin_end"},
+                {% endif %}
+                "y": {"field": "value", "type": "quantitative", "title": null}
+            }
+        }{% if num %},
+        {
+            "data": {
+                "values":[]
+            },
+            "mark": "rule",
+            "encoding": {
+                "x": {"field": "bin_start", "bin": "binned"},
+                "color": {"value": "red"}
+            }
+        }{% endif %}
+    ]
 }

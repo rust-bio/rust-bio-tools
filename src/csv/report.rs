@@ -423,7 +423,7 @@ fn nominal_plot(table: &[HashMap<String, String>], column: String) -> Option<Vec
     let values = table
         .iter()
         .map(|row| row.get(&column).unwrap().to_owned())
-        .filter(|s| s.is_empty())
+        .filter(|s| !s.is_empty())
         .collect_vec();
 
     let mut count_values = HashMap::new();

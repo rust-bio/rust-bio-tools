@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.20.3] - 2021-03-31
+### Changed
+- Cosmetic changed and bug fixes for `rbt csv-report`.
+
 ## [0.20.2] - 2021-03-19
 ### Changed
 - Cleaned up histogram presentation for pathologic columns.

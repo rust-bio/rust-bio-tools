@@ -6,7 +6,7 @@ use bio_types::sequence::SequenceReadPairOrientation;
 use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::ops::BitOrAssign;
 
 const ALLELES: &[u8] = b"ACGT";
@@ -235,7 +235,15 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_strand = b"SI:Z:".to_vec();
-        //Todo Calculate alignment vectors based on intervall trees
+        //Todo Split reads by cigar
+        let mut cigar_map = HashMap::new();
+        for record in self.recs() {
+            let cached_cigar = record.raw_cigar();
+            if !cigar_map.contains_key(cached_cigar) {
+                cigar_map.insert(cached_cigar, Vec::new());
+            }
+            cigar_map.get_mut(cached_cigar).unwrap().push(record);
+        }
         //TODO Read length validation
         assert_eq!(
             Self::validate_read_lengths(self.recs()),

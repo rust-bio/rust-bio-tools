@@ -171,11 +171,11 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                 (false, false) => (),
                 (true, false) => {
                     let error_message = format!("Given FASTQ files have unequal lengths. Forward file returned record {} as empty, reverse record is not: id:'{}' seq:'{:?}'.", i, r_rec.id(), str::from_utf8(r_rec.seq()));
-                    panic!(error_message);
+                    panic!("{}", error_message);
                 }
                 (false, true) => {
                     let error_message = format!("Given FASTQ files have unequal lengths. Reverse file returned record {} as empty, forward record is not: id:'{}' seq:'{:?}'.", i, f_rec.id(), str::from_utf8(f_rec.seq()));
-                    panic!(error_message);
+                    panic!("{}", error_message);
                 }
             }
             // extract umi for clustering

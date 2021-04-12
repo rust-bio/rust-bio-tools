@@ -6,6 +6,7 @@ use rust_htslib::bam;
 use rust_htslib::bam::Read;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::error::Error;
 use std::io;
 use std::ops::Deref;
 use uuid::Uuid;

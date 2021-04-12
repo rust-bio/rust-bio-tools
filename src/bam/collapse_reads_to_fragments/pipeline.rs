@@ -6,7 +6,6 @@ use rust_htslib::bam;
 use rust_htslib::bam::Read;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::error::Error;
 use std::io;
 use std::ops::Deref;
 use uuid::Uuid;
@@ -335,7 +334,7 @@ fn group_reads_by_cigar(
     record_ids: Vec<RecordID>,
     record_storage: &mut HashMap<RecordID, RecordStorage>,
     bam_skipped_writer: &mut bam::Writer,
-) -> Result<HashMap<Cigar, CigarGroup>, Box<dyn Error>> {
+) -> Result<HashMap<Cigar, CigarGroup>> {
     let mut cigar_groups: HashMap<Cigar, CigarGroup> = HashMap::new();
     for rec_id in record_ids {
         match record_storage.remove(&rec_id).unwrap() {

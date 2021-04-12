@@ -3,6 +3,7 @@ use bio::io::fastq;
 use derive_new::new;
 use rust_htslib::bam;
 use rust_htslib::bam::Read;
+use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::error::Error;
 use std::io;
@@ -310,28 +311,29 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                         }
                     };
                 }
-                CigarGroup::SingleRecords { recs, seqids } => {
-                    if recs.len() > 1 {
+                CigarGroup::SingleRecords { recs, seqids } => match recs.len().cmp(&1) {
+                    Ordering::Greater => {
                         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                         fq_se_writer.write_record(
                             &CalcNonOverlappingConsensus::new(&recs, &seqids, uuid)
                                 .calc_consensus()
                                 .0,
                         )?;
-                    } else if recs.len() == 1 {
+                    }
+                    _ => {
                         bam_skipped_writer.write(&recs[0])?;
                     }
-                }
+                },
             }
         }
     }
     Ok(())
 }
 
-fn group_reads_by_cigar<'a>(
+fn group_reads_by_cigar(
     record_ids: Vec<RecordID>,
     record_storage: &mut HashMap<RecordID, RecordStorage>,
-    bam_skipped_writer: &'a mut bam::Writer,
+    bam_skipped_writer: &mut bam::Writer,
 ) -> Result<HashMap<Cigar, CigarGroup>, Box<dyn Error>> {
     let mut cigar_groups: HashMap<Cigar, CigarGroup> = HashMap::new();
     for rec_id in record_ids {
@@ -414,18 +416,10 @@ fn calc_read_alignments(
     r1_rec: &bam::Record,
     r2_rec: &bam::Record,
 ) -> Option<(Vec<bool>, Vec<bool>)> {
-    //TODO Softclips do not need to be concidered as these reads get skipped
-    let r1_start_softclips = r1_rec.cigar_cached().unwrap().leading_softclips(); //TODO Reads should not have softclips at this point
-    let r1_start = r1_rec.pos() - r1_start_softclips as i64;
-
-    let r1_end_softclips = r1_rec.cigar_cached().unwrap().trailing_softclips();
-    let r1_end = r1_rec.cigar_cached().unwrap().end_pos() + r1_end_softclips as i64;
-
-    let r2_start_softclips = r2_rec.cigar_cached().unwrap().leading_softclips();
-    let r2_start = r2_rec.pos() - r2_start_softclips as i64;
-
-    let r2_end_softclips = r2_rec.cigar_cached().unwrap().trailing_softclips();
-    let r2_end = r1_rec.cigar_cached().unwrap().end_pos() + r2_end_softclips as i64;
+    let r1_start = r1_rec.pos();
+    let r1_end = r1_rec.cigar_cached().unwrap().end_pos();
+    let r2_start = r2_rec.pos();
+    let r2_end = r1_rec.cigar_cached().unwrap().end_pos();
 
     if r1_start <= r2_start {
         //Check if reads overlap
@@ -452,7 +446,6 @@ fn calc_alignment_vectors(
     r1_rec: &bam::Record,
     r2_rec: &bam::Record,
 ) -> Option<(Vec<bool>, Vec<bool>)> {
-    //TODO Remove softclips as softclipping reads are not being handled
     let mut r1_vec = Vec::new();
     let mut r2_vec = Vec::new();
     let mut r1_cigarstring = r1_rec
@@ -478,9 +471,10 @@ fn calc_alignment_vectors(
         if r2_cigar == None {
             match r1_cigar {
                 None => break,
-                Some('M') | Some('S') | Some('X') | Some('=') | Some('D') | Some('N') => {
+                Some('M') | Some('X') | Some('=') | Some('D') | Some('N') => {
                     offset -= 1;
                 }
+                Some('S') => unreachable!(),
                 Some(_) => {}
             }
             match_single_cigar(&r1_cigar, &mut r1_vec, &mut r2_vec);

@@ -47,21 +47,6 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_strand = b"SI:Z:".to_vec();
         let read_orientations_opt = self.build_read_orientation_string();
-        //Todo Calculate alignment vectors based on intervall trees
-        //TODO Remove read length validation
-        assert_eq!(
-            Self::validate_read_lengths(self.recs1()),
-            true,
-            "Read length of FASTQ forward records {:?} differ. Cannot compute consensus sequence.",
-            self.seqids()
-        );
-
-        assert_eq!(
-            Self::validate_read_lengths(self.recs2()),
-            true,
-            "Read length of FASTQ reverse records {:?} differ. Cannot compute consensus sequence.",
-            self.seqids()
-        );
         let mut consensus_lh = LogProb::ln_one();
         for i in 0..seq_len {
             let likelihoods = ALLELES
@@ -235,7 +220,6 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_strand = b"SI:Z:".to_vec();
-        //Todo Split reads by cigar
         let mut cigar_map = HashMap::new();
         for record in self.recs() {
             let cached_cigar = record.raw_cigar();
@@ -244,13 +228,6 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             }
             cigar_map.get_mut(cached_cigar).unwrap().push(record);
         }
-        //TODO Read length validation
-        assert_eq!(
-            Self::validate_read_lengths(self.recs()),
-            true,
-            "Read length of FASTQ records {:?} differ. Cannot compute consensus sequence.",
-            self.seqids()
-        );
 
         // Potential workflow for different read lengths
         // compute consensus of all reads with max len

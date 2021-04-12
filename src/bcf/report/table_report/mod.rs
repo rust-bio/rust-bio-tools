@@ -3,8 +3,9 @@ pub mod create_report_table;
 mod fasta_reader;
 mod static_reader;
 
+use crate::bcf::report::oncoprint::WriteErr;
 use crate::bcf::report::table_report::create_report_table::make_table_report;
-use std::error::Error;
+use anyhow::{Context, Result};
 use std::fs;
 use std::path::Path;
 
@@ -19,24 +20,18 @@ pub fn table_report(
     format_strings: Option<Vec<String>>,
     max_read_depth: u32,
     js_files: Vec<String>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let detail_path = output_path.to_owned() + "/details/" + sample;
-    fs::create_dir(Path::new(&detail_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for table report files at location: {:?}",
-            detail_path
-        )
-    });
+    fs::create_dir(Path::new(&detail_path)).context(WriteErr::CantCreateDir {
+        dir_path: detail_path.to_owned(),
+    })?;
 
     let plot_path = detail_path + "/plots/";
-    fs::create_dir(Path::new(&plot_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for table report plots at location: {:?}",
-            plot_path
-        )
-    });
+    fs::create_dir(Path::new(&plot_path)).context(WriteErr::CantCreateDir {
+        dir_path: plot_path.to_owned(),
+    })?;
 
-    Ok(make_table_report(
+    make_table_report(
         Path::new(vcf),
         Path::new(fasta),
         bam,
@@ -46,5 +41,5 @@ pub fn table_report(
         output_path,
         max_read_depth,
         js_files,
-    )?)
+    )
 }

@@ -33,9 +33,9 @@
 //! Where `pos.txt` is a positions file, as described above.
 //!
 //!
+use anyhow::Result;
 use log::info;
 use std::cmp;
-use std::error::Error;
 use std::io;
 
 use serde::Deserialize;
@@ -56,7 +56,7 @@ pub fn depth<P: AsRef<Path>>(
     include_flags: u16,
     exclude_flags: u16,
     min_mapq: u8,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<()> {
     let mut bam_reader = bam::IndexedReader::from_path(&bam_path)?;
     let bam_header = bam_reader.header().clone();
     let mut pos_reader = csv::ReaderBuilder::new()

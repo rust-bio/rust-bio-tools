@@ -5,15 +5,15 @@
 //! $ rbt vcf-baf < tests/test-freebayes.vcf > tests/baf.
 //! ```
 //!
+use anyhow::Result;
 use itertools::repeat_n;
 use itertools::Itertools;
 use rust_htslib::bcf;
 use rust_htslib::bcf::record::Numeric;
 use rust_htslib::bcf::{Format, Read};
-use std::error::Error;
 use std::f32;
 
-pub fn calculate_baf() -> Result<(), Box<dyn Error>> {
+pub fn calculate_baf() -> Result<()> {
     let mut reader = bcf::Reader::from_stdin()?;
 
     let mut header = bcf::Header::from_template(reader.header());

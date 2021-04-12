@@ -1,6 +1,10 @@
-# Rust-Bio-Tools
-
+[![Bioconda downloads](https://img.shields.io/conda/dn/bioconda/rust-bio-tools.svg?style=flat)](http://bioconda.github.io/recipes/rust-bio-tools/README.html)
+[![Bioconda version](https://img.shields.io/conda/vn/bioconda/rust-bio-tools.svg?style=flat)](http://bioconda.github.io/recipes/rust-bio-tools/README.html)
+[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/rust-bio-tools/README.html)
+[![Licence](https://img.shields.io/conda/l/bioconda/rust-bio-tools.svg?style=flat)](http://bioconda.github.io/recipes/rust-bio-tools/README.html)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/rust-bio/rust-bio-tools/CI)](https://github.com/rust-bio/rust-bio-tools/actions)
+
+# Rust-Bio-Tools
 
 A set of ultra fast and robust command line utilities for bioinformatics tasks based on Rust-Bio.
 Rust-Bio-Tools provides a command `rbt`, which currently supports the following operations:

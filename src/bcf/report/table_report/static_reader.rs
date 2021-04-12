@@ -2,6 +2,7 @@ use crate::bcf::report::table_report::alignment_reader::{
     make_nucleobases, read_indexed_bam, AlignmentMatch, AlignmentNucleobase,
 };
 use crate::bcf::report::table_report::create_report_table::VariantType;
+use anyhow::Result;
 use rand::rngs::StdRng;
 use rand::seq::IteratorRandom;
 use rand_core::SeedableRng;
@@ -133,12 +134,12 @@ pub fn get_static_reads(
     from: u64,
     to: u64,
     max_read_depth: u32,
-) -> (
+) -> Result<(
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
     usize,
-) {
-    let alignments = read_indexed_bam(path, chrom.clone(), from, to);
-    let (msm, m) = make_nucleobases(fasta_path, chrom, alignments, from, to);
-    calc_rows(msm, m, max_read_depth)
+)> {
+    let alignments = read_indexed_bam(path, chrom.clone(), from, to)?;
+    let (msm, m) = make_nucleobases(fasta_path, chrom, alignments, from, to)?;
+    Ok(calc_rows(msm, m, max_read_depth))
 }

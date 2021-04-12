@@ -26,16 +26,16 @@
 //! !!!!!!!!!!
 //! ```
 //!
+use anyhow::Result;
 use bio::io::fastq;
 use bio::io::fastq::FastqRead;
 use std::collections::HashSet;
-use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use std::iter::FromIterator;
 use std::path::Path;
 
-pub fn filter<P: AsRef<Path>>(ids_path: P) -> Result<(), Box<dyn Error>> {
+pub fn filter<P: AsRef<Path>>(ids_path: P) -> Result<()> {
     let mut reader = fastq::Reader::new(io::stdin());
     let mut writer = fastq::Writer::new(io::stdout());
     let f = File::open(ids_path)?;

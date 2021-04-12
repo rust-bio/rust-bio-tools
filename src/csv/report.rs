@@ -1,18 +1,21 @@
+use crate::bcf::report::oncoprint::WriteErr;
+use anyhow::Context as AnyhowContext;
+use anyhow::Result;
 use chrono::{DateTime, Local};
 use derive_new::new;
 use itertools::Itertools;
 use lz_str::compress_to_utf16;
 use serde_derive::Serialize;
 use serde_json::json;
-use simple_excel_writer::*;
 use std::collections::{HashMap, HashSet};
-use std::error::Error;
+use std::convert::TryInto;
 use std::fs;
 use std::fs::File;
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::Path;
 use std::str::FromStr;
 use tera::{Context, Tera};
+use xlsxwriter::*;
 
 type LookupTable = HashMap<String, HashMap<String, Vec<(String, usize, usize)>>>;
 
@@ -23,7 +26,8 @@ pub(crate) fn csv_report(
     separator: char,
     sort_column: Option<&str>,
     ascending: Option<bool>,
-) -> Result<(), Box<dyn Error>> {
+    formatter: Option<&str>,
+) -> Result<()> {
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(separator as u8)
         .from_path(csv_path)?;
@@ -72,25 +76,29 @@ pub(crate) fn csv_report(
     for title in &titles {
         let is_int = match (integer.get(title), non_numeric.get(title)) {
             (Some(num), Some(no_num)) => num > no_num,
-            (None, Some(_)) => false,
             (Some(_), None) => true,
-            _ => unreachable!(),
+            _ => false,
         };
         is_integer.insert(title.to_owned(), is_int);
     }
 
     let mut plot_data = HashMap::new();
     let mut num_plot_data = HashMap::new();
+    let mut reasonable_plot = titles.iter().map(|t| (*t, true)).collect::<HashMap<_, _>>();
 
     for title in &titles {
         match is_numeric.get(title) {
             Some(true) => {
-                let plot = num_plot(table.clone(), title.to_string());
+                let plot = num_plot(&table, title.to_string());
                 num_plot_data.insert(title, plot);
             }
             Some(false) => {
-                let plot = nominal_plot(table.clone(), title.to_string());
-                plot_data.insert(title, plot);
+                if let Some(plot) = nominal_plot(&table, title.to_string()) {
+                    plot_data.insert(title, plot);
+                } else {
+                    plot_data.insert(title, vec![]);
+                    reasonable_plot.insert(title, false);
+                }
             }
             _ => unreachable!(),
         };
@@ -118,28 +126,22 @@ pub(crate) fn csv_report(
         (_, _) => {}
     }
 
-    let mut wb = Workbook::create(&(output_path.to_owned() + "/report.xlsx"));
-    let mut sheet = wb.create_sheet("Report");
-    for _ in 1..titles.len() {
-        sheet.add_column(Column { width: 50.0 });
+    let wb = Workbook::new(&(output_path.to_owned() + "/report.xlsx"));
+    let mut sheet = wb.add_worksheet(Some("Report"))?;
+    for (i, title) in titles.iter().enumerate() {
+        sheet.write_string(0, i.try_into()?, title, None)?;
     }
 
-    wb.write_sheet(&mut sheet, |sheet_writer| {
-        let sw = sheet_writer;
-        let mut title_row = Row::new();
-        for title in titles.clone() {
-            title_row.add_cell(title);
+    for (i, row) in table.iter().enumerate() {
+        for (c, title) in titles.iter().enumerate() {
+            sheet.write_string(
+                (i + 1).try_into()?,
+                c.try_into()?,
+                row.get(*title).unwrap(),
+                None,
+            )?;
         }
-        sw.append_row(title_row)?;
-        for row in table.clone() {
-            let mut excel_row = Row::new();
-            for title in titles.clone() {
-                excel_row.add_cell(row.get(title).unwrap().as_str());
-            }
-            sw.append_row(excel_row)?;
-        }
-        Ok(())
-    })?;
+    }
 
     wb.close()?;
 
@@ -150,14 +152,11 @@ pub(crate) fn csv_report(
     };
 
     let plot_path = output_path.to_owned() + "/plots/";
-    fs::create_dir(Path::new(&plot_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for plot files at location: {:?}",
-            plot_path
-        )
-    });
+    fs::create_dir(Path::new(&plot_path)).context(WriteErr::CantCreateDir {
+        dir_path: plot_path.to_owned(),
+    })?;
 
-    for title in &titles {
+    for (n, title) in titles.iter().enumerate() {
         let mut templates = Tera::default();
         templates.add_raw_template("plot.js.tera", include_str!("plot.js.tera"))?;
         let mut context = Context::new();
@@ -176,28 +175,23 @@ pub(crate) fn csv_report(
             _ => unreachable!(),
         }
         context.insert("title", &title);
+        context.insert("index", &n.to_string());
         let js = templates.render("plot.js.tera", &context)?;
 
-        let file_path = plot_path.to_owned() + title + ".js";
-        let mut file = File::create(file_path)?;
+        let file_path = plot_path.to_owned() + "plot_" + &n.to_string() + ".js";
+        let mut file = fs::File::create(file_path)?;
         file.write_all(js.as_bytes())?;
     }
 
     let index_path = output_path.to_owned() + "/indexes/";
-    fs::create_dir(Path::new(&index_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for report files at location: {:?}",
-            index_path
-        )
-    });
+    fs::create_dir(Path::new(&index_path)).context(WriteErr::CantCreateDir {
+        dir_path: index_path.to_owned(),
+    })?;
 
     let data_path = output_path.to_owned() + "/data/";
-    fs::create_dir(Path::new(&data_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for report files at location: {:?}",
-            data_path
-        )
-    });
+    fs::create_dir(Path::new(&data_path)).context(WriteErr::CantCreateDir {
+        dir_path: data_path.to_owned(),
+    })?;
 
     let mut prefixes = make_prefixes(
         table
@@ -260,14 +254,11 @@ pub(crate) fn csv_report(
     }
 
     let prefix_path = output_path.to_owned() + "/prefixes/";
-    fs::create_dir(Path::new(&prefix_path)).unwrap_or_else(|_| {
-        panic!(
-            "Could not create directory for report files at location: {:?}",
-            prefix_path
-        )
-    });
+    fs::create_dir(Path::new(&prefix_path)).context(WriteErr::CantCreateDir {
+        dir_path: prefix_path.to_owned(),
+    })?;
 
-    for title in &titles {
+    for (n, title) in titles.iter().enumerate() {
         if let Some(prefix_table) = prefixes.get(title.to_owned()) {
             let mut templates = Tera::default();
             templates.add_raw_template(
@@ -276,21 +267,19 @@ pub(crate) fn csv_report(
             )?;
             let mut context = Context::new();
             context.insert("title", title);
+            context.insert("index", &n.to_string());
             context.insert("table", prefix_table);
             context.insert("numeric", is_numeric.get(title).unwrap());
             let html = templates.render("prefix_table.html.tera", &context)?;
 
-            let file_path = output_path.to_owned() + "/prefixes/" + title + ".html";
-            let mut file = File::create(file_path)?;
+            let file_path = output_path.to_owned() + "/prefixes/col_" + &n.to_string() + ".html";
+            let mut file = fs::File::create(file_path)?;
             file.write_all(html.as_bytes())?;
 
-            let title_path = prefix_path.to_owned() + "/" + title + "/";
-            fs::create_dir(Path::new(&title_path)).unwrap_or_else(|_| {
-                panic!(
-                    "Could not create directory for report files at location: {:?}",
-                    title_path
-                )
-            });
+            let title_path = prefix_path.to_owned() + "/col_" + &n.to_string() + "/";
+            fs::create_dir(Path::new(&title_path)).context(WriteErr::CantCreateDir {
+                dir_path: title_path.to_owned(),
+            })?;
 
             for (prefix, values) in prefix_table {
                 let mut templates = Tera::default();
@@ -301,14 +290,41 @@ pub(crate) fn csv_report(
                 let mut context = Context::new();
                 context.insert("title", title);
                 context.insert("values", values);
+                context.insert("index", &n.to_string());
                 let html = templates.render("lookup_table.html.tera", &context)?;
 
                 let file_path = title_path.to_owned() + prefix + ".html";
-                let mut file = File::create(file_path)?;
+                let mut file = fs::File::create(file_path)?;
                 file.write_all(html.as_bytes())?;
             }
         }
     }
+
+    let formatter_object = if let Some(f) = formatter {
+        let mut file_string = "".to_string();
+        let mut custom_file =
+            File::open(f).context("Unable to open given file for formatting colums")?;
+        custom_file
+            .read_to_string(&mut file_string)
+            .context("Unable to read string from formatting file")?;
+
+        Some(file_string)
+    } else {
+        None
+    };
+
+    let mut templates = Tera::default();
+    templates.add_raw_template("csv_report.js.tera", include_str!("csv_report.js.tera"))?;
+    let mut context = Context::new();
+    context.insert("titles", &titles);
+    context.insert("num", &is_numeric);
+    context.insert("formatter", &formatter_object);
+
+    let js = templates.render("csv_report.js.tera", &context)?;
+
+    let file_path = output_path.to_owned() + "/js/csv_report.js";
+    let mut file = fs::File::create(file_path)?;
+    file.write_all(js.as_bytes())?;
 
     for (i, current_table) in table.chunks(rows_per_page).enumerate() {
         let page = i + 1;
@@ -324,6 +340,7 @@ pub(crate) fn csv_report(
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
         context.insert("version", &env!("CARGO_PKG_VERSION"));
+        context.insert("is_reasonable", &reasonable_plot);
 
         let mut data = Vec::new();
         for row in current_table {
@@ -343,17 +360,17 @@ pub(crate) fn csv_report(
         let js = templates.render("data.js.tera", &context)?;
 
         let file_path = output_path.to_owned() + "/indexes/index" + &page.to_string() + ".html";
-        let mut file = File::create(file_path)?;
+        let mut file = fs::File::create(file_path)?;
         file.write_all(html.as_bytes())?;
 
         let js_file_path = output_path.to_owned() + "/data/index" + &page.to_string() + ".js";
-        let mut js_file = File::create(js_file_path)?;
+        let mut js_file = fs::File::create(js_file_path)?;
         js_file.write_all(js.as_bytes())?;
     }
     Ok(())
 }
 
-fn num_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<BinnedPlotRecord> {
+fn num_plot(table: &[HashMap<String, String>], column: String) -> Vec<BinnedPlotRecord> {
     let mut values = Vec::new();
     let mut nan = 0;
     for row in table {
@@ -402,30 +419,37 @@ fn num_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<BinnedPl
     plot_data
 }
 
-fn nominal_plot(table: Vec<HashMap<String, String>>, column: String) -> Vec<PlotRecord> {
-    let mut values = Vec::new();
-    for row in table {
-        let val = row.get(&column).unwrap();
-        values.push(val.to_owned());
-    }
+fn nominal_plot(table: &[HashMap<String, String>], column: String) -> Option<Vec<PlotRecord>> {
+    let values = table
+        .iter()
+        .map(|row| row.get(&column).unwrap().to_owned())
+        .filter(|s| !s.is_empty())
+        .collect_vec();
+
     let mut count_values = HashMap::new();
     for v in values {
         let entry = count_values.entry(v.to_owned()).or_insert_with(|| 0);
         *entry += 1;
     }
 
-    let mut plot_data = Vec::new();
-    for (k, v) in count_values {
-        let plot_record = PlotRecord { key: k, value: v };
-        plot_data.push(plot_record);
-    }
+    let mut plot_data = count_values
+        .iter()
+        .map(|(k, v)| PlotRecord {
+            key: k.to_owned(),
+            value: *v,
+        })
+        .collect_vec();
 
     if plot_data.len() > 10 {
+        let unique_values: HashSet<_> = count_values.iter().map(|(_, v)| v).collect();
+        if unique_values.len() <= 1 {
+            return None;
+        };
         plot_data.sort_by(|a, b| b.value.cmp(&a.value));
         plot_data = plot_data.into_iter().take(10).collect();
     }
 
-    plot_data
+    Some(plot_data)
 }
 
 fn make_prefixes(
@@ -439,15 +463,17 @@ fn make_prefixes(
         let prefix_len = 3;
         for (index, row) in partial_table.iter().enumerate() {
             for key in &titles {
-                let value = &row[key.to_owned()];
-                let entry = value.split_whitespace().take(1).collect_vec()[0];
-                if entry.len() >= prefix_len {
-                    let prefix = entry.chars().take(prefix_len).collect::<String>();
-                    let prefix_map = title_map
-                        .entry(key.to_string())
-                        .or_insert_with(HashMap::new);
-                    let values = prefix_map.entry(prefix).or_insert_with(Vec::new);
-                    values.push((value.to_owned(), page, index));
+                let value = &row[key.to_owned()].trim().to_owned();
+                if !value.is_empty() {
+                    let entry = value.split_whitespace().take(1).collect_vec()[0];
+                    if entry.len() >= prefix_len {
+                        let prefix = entry.chars().take(prefix_len).collect::<String>();
+                        let prefix_map = title_map
+                            .entry(key.to_string())
+                            .or_insert_with(HashMap::new);
+                        let values = prefix_map.entry(prefix).or_insert_with(Vec::new);
+                        values.push((value.to_owned(), page, index));
+                    }
                 }
             }
         }

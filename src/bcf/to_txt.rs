@@ -5,16 +5,16 @@
 //! $ rbt vcf-to-txt --genotypes --fmt S --info T X SOMATIC < tests/test.vcf > tests/variant-table.txt
 //! ```
 //!
+use anyhow::{bail, Result};
 use derive_new::new;
 use itertools::Itertools;
-use quick_error::quick_error;
 use rust_htslib::bcf;
 use rust_htslib::bcf::record::Numeric;
 use rust_htslib::bcf::Read;
-use std::error::Error;
 use std::io;
 use std::io::Write;
 use std::str;
+use thiserror::Error;
 
 #[derive(new)]
 pub struct Writer {
@@ -24,7 +24,7 @@ pub struct Writer {
 }
 
 impl Writer {
-    fn write_integer(&mut self, value: i32) -> Result<(), Box<dyn Error>> {
+    fn write_integer(&mut self, value: i32) -> Result<()> {
         let fmt = if value.is_missing() {
             "".to_owned()
         } else {
@@ -33,7 +33,7 @@ impl Writer {
         self.write_field(fmt.as_bytes())
     }
 
-    fn write_float(&mut self, value: f32) -> Result<(), Box<dyn Error>> {
+    fn write_float(&mut self, value: f32) -> Result<()> {
         let fmt = if value.is_missing() {
             "".to_owned()
         } else {
@@ -42,11 +42,11 @@ impl Writer {
         self.write_field(fmt.as_bytes())
     }
 
-    fn write_flag(&mut self, value: bool) -> Result<(), Box<dyn Error>> {
+    fn write_flag(&mut self, value: bool) -> Result<()> {
         self.write_field(format!("{}", value).as_bytes())
     }
 
-    fn write_field(&mut self, value: &[u8]) -> Result<(), Box<dyn Error>> {
+    fn write_field(&mut self, value: &[u8]) -> Result<()> {
         if self.field_count > 0 {
             self.inner.write_all(b"\t")?;
         }
@@ -55,7 +55,7 @@ impl Writer {
         Ok(())
     }
 
-    fn newline(&mut self) -> Result<(), Box<dyn Error>> {
+    fn newline(&mut self) -> Result<()> {
         self.inner.write_all(b"\n")?;
         self.field_count = 0;
         Ok(())
@@ -64,11 +64,7 @@ impl Writer {
 
 const HEADER_COMMON: &[u8] = b"VARIANT";
 
-pub fn to_txt(
-    info_tags: &[&str],
-    format_tags: &[&str],
-    show_genotypes: bool,
-) -> Result<(), Box<dyn Error>> {
+pub fn to_txt(info_tags: &[&str], format_tags: &[&str], show_genotypes: bool) -> Result<()> {
     let mut reader = bcf::Reader::from_stdin()?;
     let mut writer = Writer::new(io::BufWriter::new(io::stdout()));
 
@@ -111,7 +107,7 @@ pub fn to_txt(
         match reader.read(&mut rec) {
             Some(Ok(())) => (),
             None => break,
-            Some(Err(e)) => return Err(Box::new(e)),
+            Some(Err(e)) => bail!(e),
         };
         let alleles = rec
             .alleles()
@@ -197,7 +193,7 @@ pub fn to_txt(
                             bcf::header::TagLength::Fixed(_) => 0,
                             bcf::header::TagLength::AltAlleles => i,
                             bcf::header::TagLength::Alleles => i + 1,
-                            _ => return Err(Box::new(ParseError::UnsupportedTagLength)),
+                            _ => bail!(ParseError::UnsupportedTagLength),
                         };
 
                         match tag_type {
@@ -231,12 +227,8 @@ pub fn to_txt(
     Ok(())
 }
 
-quick_error! {
-    #[derive(Debug)]
-    pub enum ParseError {
-        UnsupportedTagLength {
-            description("currently, only R, A, and 1 are supported multiplicities of tags")
-        }
-
-    }
+#[derive(Error, Debug)]
+pub enum ParseError {
+    #[error("currently, only R, A, and 1 are supported multiplicities of tags")]
+    UnsupportedTagLength,
 }

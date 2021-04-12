@@ -1,5 +1,8 @@
+use anyhow::Context;
+use anyhow::Result;
 use bio::io::fasta;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::path::Path;
 
 pub fn read_fasta(
@@ -8,15 +11,15 @@ pub fn read_fasta(
     start: u64,
     stop: u64,
     compensate_0_basing: bool,
-) -> Vec<Nucleobase> {
+) -> Result<Vec<Nucleobase>> {
     let mut reader = fasta::IndexedReader::from_file(&path).unwrap();
-    let index = fasta::Index::with_fasta_file(&path).unwrap();
+    let index = fasta::Index::with_fasta_file(&path).context("error reading input FASTA")?;
     let _sequences = index.sequences();
 
     let mut seq: Vec<u8> = Vec::new();
 
-    reader.fetch(&chrom, start, stop).unwrap();
-    reader.read(&mut seq).unwrap();
+    reader.fetch(&chrom, start, stop)?;
+    reader.read(&mut seq)?;
 
     let mut fasta = Vec::new();
     let mut ind = start;
@@ -34,14 +37,16 @@ pub fn read_fasta(
         ind += 1;
     }
 
-    fasta
+    Ok(fasta)
 }
 
-pub fn get_fasta_length(path: &Path) -> u64 {
+pub fn get_fasta_lengths(path: &Path) -> HashMap<String, u64> {
     let index = fasta::Index::with_fasta_file(&path).unwrap();
     let sequences = index.sequences();
-
-    sequences[0].len
+    sequences
+        .iter()
+        .map(|s| (s.name.to_owned(), s.len))
+        .collect()
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]

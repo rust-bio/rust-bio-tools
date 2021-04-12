@@ -185,7 +185,6 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 self.bam_skipped_writer.write(&l_rec)?;
                                 self.bam_skipped_writer.write(&record)?;
                             } else {
-                                //TODO Alignment vectors need to include alignment of insertions and deletions
                                 let alignment_vectors = calc_read_alignments(&l_rec, &record);
                                 match alignment_vectors {
                                     Some((r1_alignment, r2_alignment)) => {
@@ -291,6 +290,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                             )?;
                         }
                         None => {
+                            // If reads do not overlap or CIGAR in overlapping region differs R1 and R2 are handled sepperatly
                             if r1_recs.len() > 1 {
                                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                                 fq1_writer.write_record(
@@ -312,7 +312,6 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                 }
                 CigarGroup::SingleRecords { recs, seqids } => {
                     if recs.len() > 1 {
-                        //TODO Calculate alignment vectors
                         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                         fq_se_writer.write_record(
                             &CalcNonOverlappingConsensus::new(&recs, &seqids, uuid)
@@ -348,7 +347,6 @@ fn group_reads_by_cigar<'a>(
                     bam_skipped_writer.write(&r1_rec_entry)?;
                     bam_skipped_writer.write(&r2_rec_entry)?;
                 } else {
-                    //TODO Check if overlap of cigars is identical
                     let cigar_tuple = Cigar::Tuple {
                         r1_cigar: r1_rec_entry.raw_cigar().to_vec(),
                         r2_cigar: r2_rec_entry.raw_cigar().to_vec(),
@@ -416,7 +414,8 @@ fn calc_read_alignments(
     r1_rec: &bam::Record,
     r2_rec: &bam::Record,
 ) -> Option<(Vec<bool>, Vec<bool>)> {
-    let r1_start_softclips = r1_rec.cigar_cached().unwrap().leading_softclips();
+    //TODO Softclips do not need to be concidered as these reads get skipped
+    let r1_start_softclips = r1_rec.cigar_cached().unwrap().leading_softclips(); //TODO Reads should not have softclips at this point
     let r1_start = r1_rec.pos() - r1_start_softclips as i64;
 
     let r1_end_softclips = r1_rec.cigar_cached().unwrap().trailing_softclips();
@@ -432,8 +431,7 @@ fn calc_read_alignments(
         //Check if reads overlap
         if r1_end >= r2_start {
             let offset = r2_start - r1_start;
-            let (r1_vec, r2_vec) = calc_alignment_vectors(offset, r1_rec, r2_rec);
-            Some((r1_vec, r2_vec))
+            calc_alignment_vectors(offset, r1_rec, r2_rec)
         } else {
             //Reads do not overlap
             None
@@ -442,8 +440,7 @@ fn calc_read_alignments(
         //R2 starts before R1
         if r2_end >= r1_start {
             let offset = r1_start - r2_start;
-            let (r2_vec, r1_vec) = calc_alignment_vectors(offset, r2_rec, r1_rec);
-            Some((r1_vec, r2_vec))
+            calc_alignment_vectors(offset, r2_rec, r1_rec)
         } else {
             None
         }
@@ -451,6 +448,77 @@ fn calc_read_alignments(
 }
 
 fn calc_alignment_vectors(
+    mut offset: i64,
+    r1_rec: &bam::Record,
+    r2_rec: &bam::Record,
+) -> Option<(Vec<bool>, Vec<bool>)> {
+    //TODO Remove softclips as softclipping reads are not being handled
+    let mut r1_vec = Vec::new();
+    let mut r2_vec = Vec::new();
+    let mut r1_cigarstring = r1_rec
+        .cigar_cached()
+        .unwrap()
+        .iter()
+        .flat_map(|cigar| vec![cigar.char(); cigar.len() as usize])
+        .collect::<Vec<char>>()
+        .into_iter();
+    let mut r2_cigarstring = r2_rec
+        .cigar_cached()
+        .unwrap()
+        .iter()
+        .flat_map(|cigar| vec![cigar.char(); cigar.len() as usize])
+        .collect::<Vec<char>>()
+        .into_iter();
+    let mut r1_cigar = r1_cigarstring.next();
+    let mut r2_cigar = match offset == 0 {
+        true => r2_cigarstring.next(),
+        false => None,
+    };
+    loop {
+        if r2_cigar == None {
+            match r1_cigar {
+                None => break,
+                Some('M') | Some('S') | Some('X') | Some('=') | Some('D') | Some('N') => {
+                    offset -= 1;
+                }
+                Some(_) => {}
+            }
+            match_single_cigar(&r1_cigar, &mut r1_vec, &mut r2_vec);
+            r1_cigar = r1_cigarstring.next();
+            if offset == 0 {
+                r2_cigar = r2_cigarstring.next();
+            }
+        } else if r1_cigar == None {
+            match_single_cigar(&r2_cigar, &mut r2_vec, &mut r1_vec);
+            r2_cigar = r2_cigarstring.next();
+        } else {
+            if r1_cigar != r2_cigar {
+                return None;
+            }
+            match (r1_cigar, r2_cigar) {
+                (Some('M'), Some('M'))
+                | (Some('X'), Some('X'))
+                | (Some('='), Some('='))
+                | (Some('I'), Some('I')) => {
+                    r1_vec.push(true);
+                    r2_vec.push(true);
+                    r1_cigar = r1_cigarstring.next();
+                    r2_cigar = r2_cigarstring.next();
+                }
+                (Some('D'), Some('D')) | (Some('H'), Some('H')) => {
+                    r1_cigar = r1_cigarstring.next();
+                    r2_cigar = r2_cigarstring.next();
+                }
+                (None, None) | (None, Some(_)) | (Some(_), None) | (Some(_), Some(_)) => {
+                    unreachable!()
+                }
+            };
+        }
+    }
+    Some((r1_vec, r2_vec))
+}
+
+/* fn calc_alignment_vectors(
     mut offset: i64,
     r1_rec: &bam::Record,
     r2_rec: &bam::Record,
@@ -595,7 +663,7 @@ fn calc_alignment_vectors(
         }
     }
     (r1_vec, r2_vec)
-}
+} */
 
 fn cigar_has_softclips(rec: &bam::Record) -> bool {
     let cigar = rec.cigar_cached().unwrap();

@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.20.4] - 2021-04-15
+### Changed
+- Fixed a JS bug in VCF report leading to an error with empty annotation fields.
+
 ## [0.20.3] - 2021-03-31
 ### Changed
 - Cosmetic changed and bug fixes for `rbt csv-report`.

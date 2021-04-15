@@ -83,7 +83,7 @@ $(document).ready(function () {
                 let ix = x + 1;
                 let field = 'ann[' + j + '][' + ix + ']';
                 let vl = $(that).data(field);
-                if (name === "Existing_variation" && vl !== "") {
+                if (name === "Existing_variation" && vl) {
                     let fields = vl.split('&');
                     let result = "";
                     for (var o = 0; o < fields.length; o++) {

@@ -19,6 +19,7 @@ use xlsxwriter::*;
 
 type LookupTable = HashMap<String, HashMap<String, Vec<(String, usize, usize)>>>;
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn csv_report(
     csv_path: &str,
     output_path: &str,

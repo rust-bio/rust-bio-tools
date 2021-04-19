@@ -206,6 +206,10 @@ pub(crate) enum Command {
         #[structopt(long, short = "f")]
         formatter: Option<String>,
 
+        /// Pins the table until the given column such that scrolling to the right does not hide the given column and those before.
+        #[structopt(long, short = "p")]
+        pin_until: Option<String>,
+
         /// Relative output path for the report files. Default value is the current directory.
         #[structopt(default_value = ".")]
         output_path: String,

@@ -59,8 +59,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                 )?;
                 group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
             }
-            if record.is_unmapped() || record.is_mate_unmapped() || (record.tid() != record.mtid())
-            {
+            if record.is_unmapped() || record.is_mate_unmapped() {
                 self.bam_skipped_writer.write(&record)?;
                 continue;
             }
@@ -73,6 +72,7 @@ impl<W: io::Write> CallConsensusRead<W> {
             let record_id = record.qname();
             //Check if record has duplicate ID
             match duplicate_id_option {
+                //TODO Handle reads on different references
                 //Case: duplicate ID exists
                 Some(duplicate_id) => {
                     match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
@@ -92,6 +92,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 // This arm is reached if a mate is mapped to another chromosome.
                                 // In that case a new duplicate and record ID is required
                                 //TODO Handle split reads correctly (see TODO below)
+                                //TODO Can this arm be reached, as records with mate on other reference are skipped.
                                 RecordStorage::SingleRecord { .. } => {
                                     let group_id = duplicate_id.integer();
                                     duplicate_groups
@@ -153,23 +154,30 @@ impl<W: io::Write> CallConsensusRead<W> {
                     }
                 }
                 //Duplicate ID not existing
-                //Record is writen to bam file if it or its mate is unmapped
+                //Record is written to bam file if it or its mate is unmapped
                 //If record is right mate consensus is calculated
                 //Else record is added to hashMap
                 None => {
                     match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
                         //Case: Left record
                         None => {
-                            record_storage.insert(
-                                RecordID::Regular(record_id.to_owned()),
-                                RecordStorage::PairedRecords {
-                                    r1_rec: IndexedRecord {
-                                        rec: record,
-                                        rec_id: i,
+                            if !record.is_paired()
+                                || cigar_has_softclips(&record)
+                                || record.tid() != record.mtid()
+                            {
+                                self.bam_skipped_writer.write(&record)?;
+                            } else {
+                                record_storage.insert(
+                                    RecordID::Regular(record_id.to_owned()),
+                                    RecordStorage::PairedRecords {
+                                        r1_rec: IndexedRecord {
+                                            rec: record,
+                                            rec_id: i,
+                                        },
+                                        r2_rec: None,
                                     },
-                                    r2_rec: None,
-                                },
-                            );
+                                );
+                            }
                         }
                         //Case: Left record already stored
                         Some(_record_pair) => {
@@ -182,35 +190,30 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 }
                                 RecordStorage::SingleRecord { .. } => unreachable!(),
                             };
-                            if cigar_has_softclips(&l_rec) || cigar_has_softclips(&record) {
-                                self.bam_skipped_writer.write(&l_rec)?;
-                                self.bam_skipped_writer.write(&record)?;
-                            } else {
-                                let alignment_vectors = calc_read_alignments(&l_rec, &record);
-                                match alignment_vectors {
-                                    Some((r1_alignment, r2_alignment)) => {
-                                        let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                            let alignment_vectors = calc_read_alignments(&l_rec, &record);
+                            match alignment_vectors {
+                                Some((r1_alignment, r2_alignment)) => {
+                                    let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
-                                        self.fq_se_writer.write_record(
-                                            &CalcOverlappingConsensus::new(
-                                                &[l_rec],
-                                                &[record],
-                                                &r1_alignment,
-                                                &r2_alignment,
-                                                &[rec_id, i],
-                                                uuid,
-                                                self.verbose_read_names,
-                                            )
-                                            .calc_consensus()
-                                            .0,
-                                        )?;
-                                    }
-                                    None => {
-                                        self.bam_skipped_writer.write(&l_rec)?;
-                                        self.bam_skipped_writer.write(&record)?;
-                                    }
-                                };
-                            }
+                                    self.fq_se_writer.write_record(
+                                        &CalcOverlappingConsensus::new(
+                                            &[l_rec],
+                                            &[record],
+                                            &r1_alignment,
+                                            &r2_alignment,
+                                            &[rec_id, i],
+                                            uuid,
+                                            self.verbose_read_names,
+                                        )
+                                        .calc_consensus()
+                                        .0,
+                                    )?;
+                                }
+                                None => {
+                                    self.bam_skipped_writer.write(&l_rec)?;
+                                    self.bam_skipped_writer.write(&record)?;
+                                }
+                            };
                         }
                     }
                 }

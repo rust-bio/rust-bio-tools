@@ -232,7 +232,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
                     .stdin
                     .as_mut()
                     .unwrap()
-                    .write_all(&[&f_rec.seq()[..], &r_rec.seq()[..]].concat())?;
+                    .write_all(&[f_rec.seq(), r_rec.seq()].concat())?;
                 seq_cluster.stdin.as_mut().unwrap().write_all(b"\n")?;
             }
             seq_cluster.stdin.as_mut().unwrap().flush()?;

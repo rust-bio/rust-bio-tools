@@ -3,9 +3,10 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [0.20.5] - 2021-04-19
+### Changed
+- Bugfix for `rbt vcf-report` that stops displaying undefined values in the table-report.
 ### Added
-- New parameter `--pin-until` for `rbt csv-report`.
-- `--pin-until` pins the table until the given column such that scrolling to the right does not hide the given column and those before.
+- New parameter `--pin-until` for `rbt csv-report`. `--pin-until` pins the table until the given column such that scrolling to the right does not hide the given column and those before.
 
 ## [0.20.4] - 2021-04-15
 ### Changed

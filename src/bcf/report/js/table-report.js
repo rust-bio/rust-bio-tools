@@ -83,29 +83,33 @@ $(document).ready(function () {
                 let ix = x + 1;
                 let field = 'ann[' + j + '][' + ix + ']';
                 let vl = $(that).data(field);
-                if (name === "Existing_variation" && vl) {
-                    let fields = vl.split('&');
-                    let result = "";
-                    for (var o = 0; o < fields.length; o++) {
-                        let val = fields[o];
-                        if (val.startsWith("rs")) {
-                            result = result + "<a href='https://www.ncbi.nlm.nih.gov/snp/" + val + "'>" + val + "</a>";
-                        } else if (val.startsWith("COSM")) {
-                            let num = val.replace( /^\D+/g, '');
-                            result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + num + "'>" + val + "</a>";
-                        } else if (val.startsWith("COSN")) {
-                            let num = val.replace( /^\D+/g, '');
-                            result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + num + "'>" + val + "</a>";
-                        } else {
-                            result = result + val;
+                if (vl) {
+                    if (name === "Existing_variation") {
+                        let fields = vl.split('&');
+                        let result = "";
+                        for (var o = 0; o < fields.length; o++) {
+                            let val = fields[o];
+                            if (val.startsWith("rs")) {
+                                result = result + "<a href='https://www.ncbi.nlm.nih.gov/snp/" + val + "'>" + val + "</a>";
+                            } else if (val.startsWith("COSM")) {
+                                let num = val.replace( /^\D+/g, '');
+                                result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/mutation/overview?id=" + num + "'>" + val + "</a>";
+                            } else if (val.startsWith("COSN")) {
+                                let num = val.replace( /^\D+/g, '');
+                                result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + num + "'>" + val + "</a>";
+                            } else {
+                                result = result + val;
+                            }
+                            if (!(o === fields.length - 1)) {
+                                result = result + ", ";
+                            }
                         }
-                        if (!(o === fields.length - 1)) {
-                            result = result + ", ";
-                        }
+                        vl = result;
                     }
-                    vl = result;
+                    $('#ann-sidebar').append('<td>' + vl + '</td>');
+                } else {
+                    $('#ann-sidebar').append('<td></td>');
                 }
-                $('#ann-sidebar').append('<td>' + vl + '</td>');
             }
             $('#ann-sidebar').append('</tr>');
         });

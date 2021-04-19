@@ -27,6 +27,7 @@ pub(crate) fn csv_report(
     sort_column: Option<&str>,
     ascending: Option<bool>,
     formatter: Option<&str>,
+    pin_until: Option<&str>,
 ) -> Result<()> {
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(separator as u8)
@@ -313,12 +314,22 @@ pub(crate) fn csv_report(
         None
     };
 
+    let pinned_columns = if let Some(col) = pin_until {
+        titles.iter().position(|&r| r == col).context(
+            "Given value for --pin-until did not match any of the columns of your csv file",
+        )? + 1
+    } else {
+        0
+    };
+
     let mut templates = Tera::default();
     templates.add_raw_template("csv_report.js.tera", include_str!("csv_report.js.tera"))?;
     let mut context = Context::new();
     context.insert("titles", &titles);
     context.insert("num", &is_numeric);
     context.insert("formatter", &formatter_object);
+    context.insert("pinned_columns", &pinned_columns);
+    context.insert("pin", &pin_until.is_some());
 
     let js = templates.render("csv_report.js.tera", &context)?;
 

@@ -21,17 +21,17 @@ pub struct CallConsensusRead<W: io::Write> {
 }
 
 type Position = i64;
-type GroupIDs = HashSet<GroupID>;
-type RecordIDs = Vec<RecordID>;
+type GroupIDs = HashSet<GroupId>;
+type RecordIDs = Vec<RecordId>;
 
 #[derive(Hash, PartialEq, Eq)]
-pub enum RecordID {
+pub enum RecordId {
     Regular(Vec<u8>),
     Splitted(Vec<u8>),
 }
 
 #[derive(Hash, PartialEq, Eq, Clone)]
-pub enum GroupID {
+pub enum GroupId {
     Regular(i64),
     Splitted(i64),
 }
@@ -39,8 +39,8 @@ pub enum GroupID {
 impl<W: io::Write> CallConsensusRead<W> {
     pub fn call_consensus_reads(&mut self) -> Result<()> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
-        let mut duplicate_groups: HashMap<GroupID, RecordIDs> = HashMap::new();
-        let mut record_storage: HashMap<RecordID, RecordStorage> = HashMap::new();
+        let mut duplicate_groups: HashMap<GroupId, RecordIDs> = HashMap::new();
+        let mut record_storage: HashMap<RecordId, RecordStorage> = HashMap::new();
 
         for (i, result) in self.bam_reader.records().enumerate() {
             let mut record = result?;
@@ -72,7 +72,7 @@ impl<W: io::Write> CallConsensusRead<W> {
             match duplicate_id_option {
                 //Case: duplicate ID exists
                 Some(duplicate_id) => {
-                    match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
+                    match record_storage.get_mut(&RecordId::Regular(record_id.to_owned())) {
                         //Case: Right record
                         Some(record_pair) => {
                             //For right record save end position and duplicate group ID
@@ -84,18 +84,18 @@ impl<W: io::Write> CallConsensusRead<W> {
                                         rec: record,
                                         rec_id: i,
                                     });
-                                    GroupID::Regular(group_id)
+                                    GroupId::Regular(group_id)
                                 }
                                 // This arm is reached if a mate is mapped to another chromosome.
                                 // In that case a new duplicate and record ID is required
                                 RecordStorage::SingleRecord { .. } => {
                                     let group_id = duplicate_id.integer();
                                     duplicate_groups
-                                        .entry(GroupID::Splitted(group_id))
+                                        .entry(GroupId::Splitted(group_id))
                                         .or_insert_with(Vec::new)
-                                        .push(RecordID::Splitted(record_id.to_owned()));
+                                        .push(RecordId::Splitted(record_id.to_owned()));
                                     record_storage.insert(
-                                        RecordID::Splitted(record_id.to_owned()),
+                                        RecordId::Splitted(record_id.to_owned()),
                                         RecordStorage::SingleRecord {
                                             rec: IndexedRecord {
                                                 rec: record,
@@ -103,7 +103,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                             },
                                         },
                                     );
-                                    GroupID::Splitted(group_id)
+                                    GroupId::Splitted(group_id)
                                 }
                             };
                             group_end_idx
@@ -114,9 +114,9 @@ impl<W: io::Write> CallConsensusRead<W> {
                         //Case: Left record or record w/o mate
                         None => {
                             duplicate_groups
-                                .entry(GroupID::Regular(duplicate_id.integer()))
+                                .entry(GroupId::Regular(duplicate_id.integer()))
                                 .or_insert_with(Vec::new)
-                                .push(RecordID::Regular(record_id.to_owned()));
+                                .push(RecordId::Regular(record_id.to_owned()));
                             if !record.is_paired()
                                 || record.is_mate_unmapped()
                                 || (record.tid() != record.mtid())
@@ -125,9 +125,9 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 group_end_idx
                                     .entry(record.cigar_cached().unwrap().end_pos() - 1)
                                     .or_insert_with(HashSet::new)
-                                    .insert(GroupID::Regular(duplicate_id.integer()));
+                                    .insert(GroupId::Regular(duplicate_id.integer()));
                                 record_storage.insert(
-                                    RecordID::Regular(record_id.to_owned()),
+                                    RecordId::Regular(record_id.to_owned()),
                                     RecordStorage::SingleRecord {
                                         rec: IndexedRecord {
                                             rec: record,
@@ -137,7 +137,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 );
                             } else {
                                 record_storage.insert(
-                                    RecordID::Regular(record_id.to_owned()),
+                                    RecordId::Regular(record_id.to_owned()),
                                     RecordStorage::PairedRecords {
                                         l_rec: IndexedRecord {
                                             rec: record,
@@ -162,11 +162,11 @@ impl<W: io::Write> CallConsensusRead<W> {
                         //TODO Handle intersecting reads mapped on different chromosomes
                         self.bam_skipped_writer.write(&record)?;
                     } else {
-                        match record_storage.get_mut(&RecordID::Regular(record_id.to_owned())) {
+                        match record_storage.get_mut(&RecordId::Regular(record_id.to_owned())) {
                             //Case: Left record
                             None => {
                                 record_storage.insert(
-                                    RecordID::Regular(record_id.to_owned()),
+                                    RecordId::Regular(record_id.to_owned()),
                                     RecordStorage::PairedRecords {
                                         l_rec: IndexedRecord {
                                             rec: record,
@@ -179,7 +179,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                             //Case: Left record already stored
                             Some(_record_pair) => {
                                 let (rec_id, l_rec) = match record_storage
-                                    .remove(&RecordID::Regular(record_id.to_owned()))
+                                    .remove(&RecordId::Regular(record_id.to_owned()))
                                     .unwrap()
                                 {
                                     RecordStorage::PairedRecords { l_rec, .. } => {
@@ -247,15 +247,15 @@ impl<W: io::Write> CallConsensusRead<W> {
 #[allow(clippy::too_many_arguments)]
 pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
-    duplicate_groups: &mut HashMap<GroupID, RecordIDs>,
+    duplicate_groups: &mut HashMap<GroupId, RecordIDs>,
     end_pos: Option<&i64>,
-    record_storage: &mut HashMap<RecordID, RecordStorage>,
+    record_storage: &mut HashMap<RecordId, RecordStorage>,
     fq1_writer: &'a mut fastq::Writer<W>,
     fq2_writer: &'a mut fastq::Writer<W>,
     fq_se_writer: &'a mut fastq::Writer<W>,
     verbose_read_names: bool,
 ) -> Result<()> {
-    let group_ids: HashSet<GroupID> = group_end_idx
+    let group_ids: HashSet<GroupId> = group_end_idx
         .range(
             ..end_pos.unwrap_or(
                 &(group_end_idx

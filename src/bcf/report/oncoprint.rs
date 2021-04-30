@@ -1005,7 +1005,7 @@ struct BarPlotRecord {
 }
 
 #[derive(new, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-struct TSVRecord {
+struct TsvRecord {
     sample: String,
     value: String,
 }
@@ -1117,7 +1117,7 @@ impl From<&Record> for FinalRecord {
     }
 }
 
-fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TSVRecord>>> {
+fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TsvRecord>>> {
     let mut tsv_values = HashMap::new();
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(b'\t')
@@ -1132,7 +1132,7 @@ fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TSVRecord>>>
             let rec = tsv_values
                 .entry(titles[i].to_owned())
                 .or_insert_with(Vec::new);
-            let entry = TSVRecord {
+            let entry = TsvRecord {
                 sample: sample.clone(),
                 value: value.to_owned(),
             };

@@ -194,7 +194,7 @@ impl Variant {
                 } else if a.len() > refallele.len() {
                     VariantType::Insertion((a.len() - refallele.len()) as u64)
                 } else if a.len() == 1 {
-                    VariantType::SNV(a[0])
+                    VariantType::Snv(a[0])
                 } else {
                     warn!(
                         "Unsupported variant {} -> {}",
@@ -218,7 +218,7 @@ impl Variant {
 
     pub fn centerpoint(&self, allele: &VariantType) -> u64 {
         match *allele {
-            VariantType::SNV(_) => self.pos,
+            VariantType::Snv(_) => self.pos,
             VariantType::Insertion(_) => self.pos,
             VariantType::Deletion(len) => (self.pos as f64 + len as f64 / 2.0) as u64,
             VariantType::Unsupported => panic!("Unsupported variant."),
@@ -241,7 +241,7 @@ impl Variant {
             }
             let dist = (self.centerpoint(allele) as i32 - other.centerpoint(b) as i32).abs() as u32;
             match (allele, b) {
-                (&VariantType::SNV(a), &VariantType::SNV(b)) => {
+                (&VariantType::Snv(a), &VariantType::Snv(b)) => {
                     if a == b && dist == 0 {
                         return Some(other.id(j));
                     }
@@ -266,7 +266,7 @@ impl Variant {
 
 #[derive(Debug)]
 pub enum VariantType {
-    SNV(u8),
+    Snv(u8),
     Insertion(u64),
     Deletion(u64),
     Unsupported,

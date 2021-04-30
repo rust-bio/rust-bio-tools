@@ -9,7 +9,7 @@ use rust_htslib::bcf;
 use rust_htslib::bcf::Read;
 
 pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
-    let info = BCFInfo::new(&input_bcf).context("error reading input VCF/BCF")?;
+    let info = BcfInfo::new(&input_bcf).context("error reading input VCF/BCF")?;
     let mut reader = bcf::Reader::from_path(input_bcf).context("error reading input VCF/BCF")?;
     let header = bcf::Header::from_template(reader.header());
     let mut bnd_cache = HashMap::new();
@@ -138,13 +138,13 @@ impl BreakendGroup {
 }
 
 #[derive(Debug)]
-struct BCFInfo {
+struct BcfInfo {
     n_records: u64,
     bnd_ends: HashMap<BreakendGroup, u64>,
     supergroups: HashMap<BreakendGroup, BreakendGroup>,
 }
 
-impl BCFInfo {
+impl BcfInfo {
     fn new<P: AsRef<Path>>(input_bcf: P) -> Result<Self> {
         let mut reader = bcf::Reader::from_path(input_bcf)?;
         let mut bnd_ends = HashMap::new();
@@ -179,7 +179,7 @@ impl BCFInfo {
             i += 1;
         }
 
-        Ok(BCFInfo {
+        Ok(BcfInfo {
             n_records: i,
             bnd_ends,
             supergroups,

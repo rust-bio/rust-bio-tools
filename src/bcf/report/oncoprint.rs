@@ -373,12 +373,12 @@ pub fn oncoprint(
                     1 => rec.extend(filter_canonical.iter().map(|(r, _, _)| r.clone())),
                     _ => {
                         rec.extend(filter_canonical.iter().map(|(r, _, _)| r.clone()));
-                        let alterations = filter_canonical
+                        let transcripts = filter_canonical
                             .iter()
                             .map(|(r, _, _)| r.alteration.clone())
                             .collect_vec();
                         let positions = filter_canonical.iter().map(|(_, _, p)| p).collect_vec();
-                        warn!("Found more than one variant of gene {} annotated as canonical! The alterations marked as canonical are {:?} located at {:?}", &k, &alterations, &positions);
+                        warn!("Found more than one variant of gene {} annotated as canonical! The transcripts marked as canonical are {:?} located at {:?}", &k, &transcripts, &positions);
                     }
                 }
             }

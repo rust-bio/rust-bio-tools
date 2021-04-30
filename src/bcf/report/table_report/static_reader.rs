@@ -39,6 +39,7 @@ fn calc_rows(
     reads: Vec<AlignmentNucleobase>,
     matches: Vec<AlignmentMatch>,
     max_read_depth: u32,
+    variant: &Variant,
 ) -> (
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
@@ -54,57 +55,63 @@ fn calc_rows(
     let mut max_row = 0;
 
     for r in matches {
-        let mut row: u16 = 0;
+        if r.read_start < variant.start_position as u32 && r.read_end > variant.end_position as u32
+        {
+            let mut row: u16 = 0;
 
-        if read_names.contains_key(&r.name) {
-            row = *read_names.get(&r.name).unwrap();
-        } else {
-            for (i, _) in row_ends.iter().enumerate().take(10000).skip(1) {
-                if r.read_start > row_ends[i] {
-                    if i > max_row {
-                        max_row = i;
+            if read_names.contains_key(&r.name) {
+                row = *read_names.get(&r.name).unwrap();
+            } else {
+                for (i, _) in row_ends.iter().enumerate().take(10000).skip(1) {
+                    if r.read_start > row_ends[i] {
+                        if i > max_row {
+                            max_row = i;
+                        }
+                        row = i as u16;
+                        row_ends[i] = r.read_end;
+                        read_names.insert(r.name.clone(), i as u16);
+                        break;
                     }
-                    row = i as u16;
-                    row_ends[i] = r.read_end;
-                    read_names.insert(r.name.clone(), i as u16);
-                    break;
                 }
             }
+
+            let base = StaticAlignmentMatch {
+                alignment: r.clone(),
+                row,
+            };
+
+            matches_wr.push(base);
         }
-
-        let base = StaticAlignmentMatch {
-            alignment: r.clone(),
-            row,
-        };
-
-        matches_wr.push(base);
     }
 
     for r in reads {
-        let mut row: u16 = 0;
+        if r.read_start < variant.start_position as u32 && r.read_end > variant.end_position as u32
+        {
+            let mut row: u16 = 0;
 
-        if read_names.contains_key(&r.name) {
-            row = *read_names.get(&r.name).unwrap();
-        } else {
-            for (i, _) in row_ends.iter().enumerate().take(1000).skip(1) {
-                if r.read_start > row_ends[i] {
-                    if i > max_row {
-                        max_row = i;
+            if read_names.contains_key(&r.name) {
+                row = *read_names.get(&r.name).unwrap();
+            } else {
+                for (i, _) in row_ends.iter().enumerate().take(10000).skip(1) {
+                    if r.read_start > row_ends[i] {
+                        if i > max_row {
+                            max_row = i;
+                        }
+                        row = i as u16;
+                        row_ends[i] = r.read_end;
+                        read_names.insert(r.name.clone(), i as u16);
+                        break;
                     }
-                    row = i as u16;
-                    row_ends[i] = r.read_end;
-                    read_names.insert(r.name.clone(), i as u16);
-                    break;
                 }
             }
+
+            let base = StaticAlignmentNucleobase {
+                nucleobase: r.clone(),
+                row,
+            };
+
+            reads_wr.push(base);
         }
-
-        let base = StaticAlignmentNucleobase {
-            nucleobase: r.clone(),
-            row,
-        };
-
-        reads_wr.push(base);
     }
 
     if max_row > max_read_depth as usize {
@@ -134,6 +141,7 @@ pub fn get_static_reads(
     from: u64,
     to: u64,
     max_read_depth: u32,
+    variant: &Variant,
 ) -> Result<(
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
@@ -141,5 +149,5 @@ pub fn get_static_reads(
 )> {
     let alignments = read_indexed_bam(path, chrom.clone(), from, to)?;
     let (msm, m) = make_nucleobases(fasta_path, chrom, alignments, from, to)?;
-    Ok(calc_rows(msm, m, max_read_depth))
+    Ok(calc_rows(msm, m, max_read_depth, &variant))
 }

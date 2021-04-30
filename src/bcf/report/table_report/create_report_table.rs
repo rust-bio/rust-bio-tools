@@ -506,8 +506,15 @@ fn create_report_data(
         data.push(nucleobase);
     }
 
-    let (bases, matches, max_rows) =
-        get_static_reads(bam_path, fasta_path, chrom, from, to, max_read_depth)?;
+    let (bases, matches, max_rows) = get_static_reads(
+        bam_path,
+        fasta_path,
+        chrom,
+        from,
+        to,
+        max_read_depth,
+        &variant,
+    )?;
 
     for b in bases {
         let base = json!(b);

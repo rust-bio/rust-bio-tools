@@ -109,6 +109,7 @@ pub fn oncoprint(
         for res in bcf_reader.records() {
             let mut gene_data_per_record = HashMap::new();
             let mut record = res?;
+            let pos = record.pos();
             let alleles = record
                 .alleles()
                 .into_iter()
@@ -215,6 +216,7 @@ pub fn oncoprint(
                                 variant: variant.to_owned(),
                             },
                             canonical,
+                            &pos,
                         ));
 
                         rec.variants.push(variant.to_owned());
@@ -362,23 +364,21 @@ pub fn oncoprint(
                 let rec = gene_data.entry(k.to_owned()).or_insert_with(&Vec::new);
                 let filter_canonical = record_tuples
                     .iter()
-                    .filter(|(_, canonical)| *canonical)
+                    .filter(|(_, canonical, _)| *canonical)
                     .collect_vec();
                 match filter_canonical.len() {
                     0 => {
-                        rec.extend(record_tuples.iter().map(|(r, _)| r.clone()));
+                        rec.extend(record_tuples.iter().map(|(r, _, _)| r.clone()));
                     }
-                    1 => rec.extend(filter_canonical.iter().map(|(r, _)| r.clone())),
+                    1 => rec.extend(filter_canonical.iter().map(|(r, _, _)| r.clone())),
                     _ => {
-                        rec.extend(filter_canonical.iter().map(|(r, _)| {
-                            dbg!(&r);
-                            r.clone()
-                        }));
+                        rec.extend(filter_canonical.iter().map(|(r, _, _)| r.clone()));
                         let alterations = filter_canonical
                             .iter()
-                            .map(|(r, _)| r.alteration.clone())
+                            .map(|(r, _, _)| r.alteration.clone())
                             .collect_vec();
-                        warn!("Found more than one variant of gene {} annotated as canonical! The alterations marked as canonical are: {:?}", &k, &alterations);
+                        let positions = filter_canonical.iter().map(|(_, _, p)| p).collect_vec();
+                        warn!("Found more than one variant of gene {} annotated as canonical! The alterations marked as canonical are {:?} located at {:?}", &k, &alterations, &positions);
                     }
                 }
             }

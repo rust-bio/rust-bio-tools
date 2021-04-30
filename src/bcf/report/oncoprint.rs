@@ -370,8 +370,15 @@ pub fn oncoprint(
                     }
                     1 => rec.extend(filter_canonical.iter().map(|(r, _)| r.clone())),
                     _ => {
-                        rec.extend(filter_canonical.iter().map(|(r, _)| r.clone()));
-                        warn!("Found more than one variant annotated as canonical!");
+                        rec.extend(filter_canonical.iter().map(|(r, _)| {
+                            dbg!(&r);
+                            r.clone()
+                        }));
+                        let alterations = filter_canonical
+                            .iter()
+                            .map(|(r, _)| r.alteration.clone())
+                            .collect_vec();
+                        warn!("Found more than one variant of gene {} annotated as canonical! The alterations marked as canonical are: {:?}", &k, &alterations);
                     }
                 }
             }

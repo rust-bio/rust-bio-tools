@@ -15,6 +15,7 @@ use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use jsonm::packer::{PackOptions, Packer};
+use log::warn;
 use lz_str::compress_to_utf16;
 use rust_htslib::bcf::{self, Read};
 use serde_json::{json, Value};
@@ -368,7 +369,10 @@ pub fn oncoprint(
                         rec.extend(record_tuples.iter().map(|(r, _)| r.clone()));
                     }
                     1 => rec.extend(filter_canonical.iter().map(|(r, _)| r.clone())),
-                    _ => panic!("Found more than one variant annotated as canonical!"),
+                    _ => {
+                        rec.extend(filter_canonical.iter().map(|(r, _)| r.clone()));
+                        warn!("Found more than one variant annotated as canonical!");
+                    }
                 }
             }
         }

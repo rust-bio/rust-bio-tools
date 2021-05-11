@@ -219,6 +219,73 @@ fn test_vcf_report() {
     fs::remove_dir_all("tests/test-vcf-report").unwrap();
 }
 
+
+#[test]
+fn test_vcf_report_with_custom_js() {
+    assert!(
+        Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-report tests/ref.fa -v a=tests/report-test.vcf -v b=tests/report-test.vcf -b a:tumor=tests/test-report.bam -b b:tumor=tests/test-report.bam --custom-js-files https://raw.githubusercontent.com/rust-bio/rust-bio-tools/v0.21.0/src/bcf/report/js/table-report.js -- tests/test-vcf-report-with-custom-js")
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success()
+    );
+    let files1 = vec![
+        (
+            "tests/test-vcf-report-with-custom-js/indexes/index1.html",
+            "tests/expected/report/indexes/index1.html",
+        ),
+        (
+            "tests/test-vcf-report-with-custom-js/genes/KRAS1.html",
+            "tests/expected/report/genes/KRAS1.html",
+        ),
+    ];
+
+    let files2 = vec![
+        (
+            "tests/test-vcf-report-with-custom-js/details/a/KRAS.html",
+            "tests/expected/report/details/a/KRAS.html",
+        ),
+        (
+            "tests/test-vcf-report-with-custom-js/details/b/KRAS.html",
+            "tests/expected/report/details/b/KRAS.html",
+        ),
+    ];
+
+    for (result, expected) in files1 {
+        // delete line 22 with timestamp and 15 with version
+        // this may fail on OS X due to the wrong sed being installed
+        assert!(Command::new("bash")
+            .arg("-c")
+            .arg("sed -i '22d;15d' ".to_owned() + result)
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success());
+        test_output(result, expected)
+    }
+    for (result, expected) in files2 {
+        // Delete line 37 with timestamp and 30 with version
+        // Delete lines 24 and 23 that add another copy of
+        // <script src="../../js/table-report.js"></script> due to
+        // the --custom-js-files
+        // This may fail on OS X due to the wrong sed being installed
+        assert!(Command::new("bash")
+            .arg("-c")
+            .arg("sed -i '37d;30d;24d;23d' ".to_owned() + result)
+            .spawn()
+            .unwrap()
+            .wait()
+            .unwrap()
+            .success());
+        test_output(result, expected)
+    }
+    fs::remove_dir_all("tests/test-vcf-report-with-custom-js").unwrap();
+}
+
 #[test]
 fn test_csv_report() {
     assert!(Command::new("bash")

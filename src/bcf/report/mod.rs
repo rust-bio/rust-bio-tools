@@ -1,9 +1,10 @@
 use crate::bcf::report::oncoprint::WriteErr;
 use anyhow::{Context, Result};
 use itertools::Itertools;
+use smart_open::smart_open;
 use std::fs;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::path::Path;
 
 pub mod oncoprint;
@@ -43,13 +44,9 @@ pub fn embed_js(
     if vcf_report {
         files.extend(vcf_report_files.iter());
         if let Some(path) = custom_table_report_js {
-            let mut file_string = String::new();
-            let mut custom_file = File::open(path).context("Unable to open custom JS file")?;
-            custom_file
-                .read_to_string(&mut file_string)
-                .context("Unable to read string")?;
+            let custom_file_string = smart_open(path).context("Unable to open custom JS file")?;
             let mut out_file = File::create(js_path.to_owned() + "table-report.js")?;
-            out_file.write_all(file_string.as_bytes())?;
+            out_file.write_all(custom_file_string.as_bytes())?;
         } else {
             files.push(("table-report.js", include_str!("js/table-report.js")))
         }
@@ -65,13 +62,9 @@ pub fn embed_js(
             .collect_vec()
             .pop()
             .context(format!("Unable to extract file name from path: {}", file))?;
-        let mut file_string = String::new();
-        let mut custom_file = File::open(&file).context("Unable to open JS file")?;
-        custom_file
-            .read_to_string(&mut file_string)
-            .context("Unable to read string")?;
+        let custom_file_string = smart_open(&file).context("Unable to open JS file")?;
         let mut out_file = File::create(js_path.to_owned() + file_name)?;
-        out_file.write_all(file_string.as_bytes())?;
+        out_file.write_all(custom_file_string.as_bytes())?;
     }
 
     Ok(())

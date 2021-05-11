@@ -219,7 +219,6 @@ fn test_vcf_report() {
     fs::remove_dir_all("tests/test-vcf-report").unwrap();
 }
 
-
 #[test]
 fn test_vcf_report_with_custom_js() {
     assert!(

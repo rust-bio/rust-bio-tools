@@ -370,7 +370,7 @@ pub(crate) fn make_table_report(
                 let r = Report {
                     id: id.clone(),
                     name: chrom.clone(),
-                    position: pos,
+                    position: pos + 1,
                     reference: ref_allele.clone(),
                     var_type: var.var_type,
                     alternatives: var.alternatives,

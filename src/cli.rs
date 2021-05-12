@@ -266,7 +266,7 @@ pub(crate) enum Command {
         #[structopt(long, short = "j", value_name = "JS_FILE_PATH")]
         custom_js_template: Option<String>,
 
-        /// Add one or multiple js file (e.g. libraries) for usage in the custom-js-file. The ordering of the arguments will be the same as they will be imported.
+        /// Add one or multiple js files (e.g. libraries) for usage in the custom-js-file. Files will be imported in the order they are specified as arguments. File locations can be on the local file system or remote (e.g. via https)
         #[structopt(long, short = "l", value_name = "JS_FILE_PATH")]
         custom_js_files: Option<Vec<String>>,
 

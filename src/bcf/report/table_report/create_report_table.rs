@@ -72,7 +72,7 @@ pub(crate) fn make_table_report(
         ann_indices.insert(field, i);
     }
 
-    let reference_lengths = get_fasta_lengths(fasta_path);
+    let reference_lengths = get_fasta_lengths(fasta_path)?;
 
     let last_gene_index = get_gene_ending(
         vcf_path,

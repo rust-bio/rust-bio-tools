@@ -40,13 +40,13 @@ pub fn read_fasta(
     Ok(fasta)
 }
 
-pub fn get_fasta_lengths(path: &Path) -> HashMap<String, u64> {
-    let index = fasta::Index::with_fasta_file(&path).unwrap();
+pub fn get_fasta_lengths(path: &Path) -> Result<HashMap<String, u64>> {
+    let index = fasta::Index::with_fasta_file(&path).context("error reading input FASTA")?;
     let sequences = index.sequences();
-    sequences
+    Ok(sequences
         .iter()
         .map(|s| (s.name.to_owned(), s.len))
-        .collect()
+        .collect())
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]

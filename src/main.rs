@@ -197,7 +197,9 @@ fn main() -> Result<()> {
                     max_read_depth,
                     js_file_names.clone(),
                 )
-                .unwrap_or_else(|_| panic!("Failed building table report for sample {}", sample));
+                .unwrap_or_else(|e| {
+                    panic!("Failed building table report for sample {}. {}", sample, e)
+                });
             });
 
             bcf::report::oncoprint::oncoprint(

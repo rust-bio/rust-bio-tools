@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.21.1] - 2021-05-20
+### Changed
+- Further fixes for `rbt vcf-report` (@fxwiegand).
+
 ## [0.21.0] - 2021-04-30
 ### Changed
 - Small fixes for `rbt vcf-report`, e.g. for handling unexpected multiple canonical transcripts and eliminating the potential risk of receiving plots without any reads overlaying the variant when using `--max-read-depth`.

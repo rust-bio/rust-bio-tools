@@ -21,7 +21,7 @@ pub struct CallConsensusRead<W: io::Write> {
 }
 
 type Position = i64;
-type GroupID = HashSet<GroupId>;
+type GroupIDs = HashSet<GroupId>;
 type RecordIDs = Vec<RecordId>;
 
 #[derive(Hash, PartialEq, Eq)]
@@ -38,7 +38,7 @@ pub enum GroupId {
 
 impl<W: io::Write> CallConsensusRead<W> {
     pub fn call_consensus_reads(&mut self) -> Result<()> {
-        let mut group_end_idx: BTreeMap<Position, GroupID> = BTreeMap::new();
+        let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
         let mut duplicate_groups: HashMap<GroupId, RecordIDs> = HashMap::new();
         let mut record_storage: HashMap<RecordId, RecordStorage> = HashMap::new();
 
@@ -237,7 +237,7 @@ impl<W: io::Write> CallConsensusRead<W> {
 
 #[allow(clippy::too_many_arguments)]
 pub fn calc_consensus_complete_groups<'a, W: io::Write>(
-    group_end_idx: &mut BTreeMap<Position, GroupID>,
+    group_end_idx: &mut BTreeMap<Position, GroupIDs>,
     duplicate_groups: &mut HashMap<GroupId, RecordIDs>,
     end_pos: Option<&i64>,
     record_storage: &mut HashMap<RecordId, RecordStorage>,

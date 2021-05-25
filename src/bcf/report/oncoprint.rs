@@ -15,6 +15,7 @@ use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use jsonm::packer::{PackOptions, Packer};
+use log::warn;
 use lz_str::compress_to_utf16;
 use rust_htslib::bcf::{self, Read};
 use serde_json::{json, Value};
@@ -108,6 +109,7 @@ pub fn oncoprint(
         for res in bcf_reader.records() {
             let mut gene_data_per_record = HashMap::new();
             let mut record = res?;
+            let pos = record.pos();
             let alleles = record
                 .alleles()
                 .into_iter()
@@ -214,6 +216,7 @@ pub fn oncoprint(
                                 variant: variant.to_owned(),
                             },
                             canonical,
+                            &pos,
                         ));
 
                         rec.variants.push(variant.to_owned());
@@ -361,14 +364,22 @@ pub fn oncoprint(
                 let rec = gene_data.entry(k.to_owned()).or_insert_with(&Vec::new);
                 let filter_canonical = record_tuples
                     .iter()
-                    .filter(|(_, canonical)| *canonical)
+                    .filter(|(_, canonical, _)| *canonical)
                     .collect_vec();
                 match filter_canonical.len() {
                     0 => {
-                        rec.extend(record_tuples.iter().map(|(r, _)| r.clone()));
+                        rec.extend(record_tuples.iter().map(|(r, _, _)| r.clone()));
                     }
-                    1 => rec.extend(filter_canonical.iter().map(|(r, _)| r.clone())),
-                    _ => panic!("Found more than one variant annotated as canonical!"),
+                    1 => rec.extend(filter_canonical.iter().map(|(r, _, _)| r.clone())),
+                    _ => {
+                        rec.extend(filter_canonical.iter().map(|(r, _, _)| r.clone()));
+                        let alterations = filter_canonical
+                            .iter()
+                            .map(|(r, _, _)| r.alteration.clone())
+                            .collect_vec();
+                        let positions = filter_canonical.iter().map(|(_, _, p)| p).collect_vec();
+                        warn!("Found more than one transcript in gene {} annotated as canonical! The corresponding alterations are {:?}, located at {:?}", &k, &alterations, &positions);
+                    }
                 }
             }
         }
@@ -994,7 +1005,7 @@ struct BarPlotRecord {
 }
 
 #[derive(new, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
-struct TSVRecord {
+struct TsvRecord {
     sample: String,
     value: String,
 }
@@ -1106,7 +1117,7 @@ impl From<&Record> for FinalRecord {
     }
 }
 
-fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TSVRecord>>> {
+fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TsvRecord>>> {
     let mut tsv_values = HashMap::new();
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(b'\t')
@@ -1121,7 +1132,7 @@ fn make_tsv_records(tsv_path: String) -> Result<HashMap<String, Vec<TSVRecord>>>
             let rec = tsv_values
                 .entry(titles[i].to_owned())
                 .or_insert_with(Vec::new);
-            let entry = TSVRecord {
+            let entry = TsvRecord {
                 sample: sample.clone(),
                 value: value.to_owned(),
             };

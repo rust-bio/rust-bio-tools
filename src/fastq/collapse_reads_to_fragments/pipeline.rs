@@ -61,19 +61,19 @@ fn isize_pmf(value: f64, mean: f64, sd: f64) -> LogProb {
 
 /// Used to store a mapping of read index to read sequence
 #[derive(Debug)]
-struct FASTQStorage {
+struct FastqStorage {
     db: DB,
     storage_dir: std::path::PathBuf,
 }
 
-impl FASTQStorage {
+impl FastqStorage {
     /// Create a new FASTQStorage using a Rocksdb database
     /// that maps read indices to read seqeunces.
     pub fn new() -> Result<Self> {
         // Save storage_dir to prevent it from leaving scope and
         // in turn deleting the tempdir
         let storage_dir = tempdir()?.path().join("db");
-        Ok(FASTQStorage {
+        Ok(FastqStorage {
             db: DB::open_default(storage_dir.clone())?,
             storage_dir,
         })
@@ -146,7 +146,7 @@ pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
         let mut f_rec = fastq::Record::new();
         let mut r_rec = fastq::Record::new();
         // init temp storage for reads
-        let mut read_storage = FASTQStorage::new()?;
+        let mut read_storage = FastqStorage::new()?;
         let mut i = 0;
 
         // prepare spinner for user feedback

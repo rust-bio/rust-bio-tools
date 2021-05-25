@@ -1,3 +1,4 @@
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/rust-bio/rust-bio-tools)
 [![Bioconda downloads](https://img.shields.io/conda/dn/bioconda/rust-bio-tools.svg?style=flat)](http://bioconda.github.io/recipes/rust-bio-tools/README.html)
 [![Bioconda version](https://img.shields.io/conda/vn/bioconda/rust-bio-tools.svg?style=flat)](http://bioconda.github.io/recipes/rust-bio-tools/README.html)
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/rust-bio-tools/README.html)

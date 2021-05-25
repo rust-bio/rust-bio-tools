@@ -2,6 +2,24 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.21.1] - 2021-05-20
+### Changed
+- Further fixes for `rbt vcf-report` (@fxwiegand).
+
+## [0.21.0] - 2021-04-30
+### Changed
+- Small fixes for `rbt vcf-report`, e.g. for handling unexpected multiple canonical transcripts and eliminating the potential risk of receiving plots without any reads overlaying the variant when using `--max-read-depth`.
+
+## [0.20.5] - 2021-04-19
+### Changed
+- Bugfix for `rbt vcf-report` that stops displaying undefined values in the table-report.
+### Added
+- New parameter `--pin-until` for `rbt csv-report`. `--pin-until` pins the table until the given column such that scrolling to the right does not hide the given column and those before.
+
+## [0.20.4] - 2021-04-15
+### Changed
+- Fixed a JS bug in VCF report leading to an error with empty annotation fields.
+
 ## [0.20.3] - 2021-03-31
 ### Changed
 - Cosmetic changed and bug fixes for `rbt csv-report`.

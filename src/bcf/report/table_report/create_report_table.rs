@@ -72,7 +72,7 @@ pub(crate) fn make_table_report(
         ann_indices.insert(field, i);
     }
 
-    let reference_lengths = get_fasta_lengths(fasta_path);
+    let reference_lengths = get_fasta_lengths(fasta_path)?;
 
     let last_gene_index = get_gene_ending(
         vcf_path,
@@ -370,7 +370,7 @@ pub(crate) fn make_table_report(
                 let r = Report {
                     id: id.clone(),
                     name: chrom.clone(),
-                    position: pos,
+                    position: pos + 1,
                     reference: ref_allele.clone(),
                     var_type: var.var_type,
                     alternatives: var.alternatives,
@@ -506,8 +506,15 @@ fn create_report_data(
         data.push(nucleobase);
     }
 
-    let (bases, matches, max_rows) =
-        get_static_reads(bam_path, fasta_path, chrom, from, to, max_read_depth)?;
+    let (bases, matches, max_rows) = get_static_reads(
+        bam_path,
+        fasta_path,
+        chrom,
+        from,
+        to,
+        max_read_depth,
+        &variant,
+    )?;
 
     for b in bases {
         let base = json!(b);

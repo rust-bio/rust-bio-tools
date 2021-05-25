@@ -1,0 +1,5 @@
+image:
+  file: Dockerfile
+
+tasks:
+  - before: micromamba activate rbt

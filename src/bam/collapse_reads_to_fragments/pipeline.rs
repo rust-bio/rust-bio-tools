@@ -27,13 +27,13 @@ type RecordIDs = Vec<RecordID>;
 #[derive(Hash, PartialEq, Eq)]
 pub enum RecordID {
     Regular(Vec<u8>),
-    Splitted(Vec<u8>),
+    Split(Vec<u8>),
 }
 
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub enum GroupID {
     Regular(i64),
-    Splitted(i64),
+    Split(i64),
 }
 
 impl<W: io::Write> CallConsensusRead<W> {
@@ -96,11 +96,11 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 RecordStorage::SingleRecord { .. } => {
                                     let group_id = duplicate_id.integer();
                                     duplicate_groups
-                                        .entry(GroupID::Splitted(group_id))
+                                        .entry(GroupID::Split(group_id))
                                         .or_insert_with(Vec::new)
-                                        .push(RecordID::Splitted(record_id.to_owned()));
+                                        .push(RecordID::Split(record_id.to_owned()));
                                     record_storage.insert(
-                                        RecordID::Splitted(record_id.to_owned()),
+                                        RecordID::Split(record_id.to_owned()),
                                         RecordStorage::SingleRecord {
                                             rec: IndexedRecord {
                                                 rec: record,
@@ -108,7 +108,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                             },
                                         },
                                     );
-                                    GroupID::Splitted(group_id)
+                                    GroupID::Split(group_id)
                                 }
                             };
                             group_end_idx
@@ -118,12 +118,12 @@ impl<W: io::Write> CallConsensusRead<W> {
                         }
                         //Case: Left record or record w/o mate
                         None => {
-                            //TODO Records mapped to different chromosomes should be saved as single record with a Spliited recordID
+                            //TODO Records mapped to different chromosomes should be saved as single record with a Splited recordID
                             duplicate_groups
                                 .entry(GroupID::Regular(duplicate_id.integer()))
                                 .or_insert_with(Vec::new)
                                 .push(RecordID::Regular(record_id.to_owned()));
-                            if !record.is_paired() {
+                            if !record.is_paired() || record.tid() != record.mtid() {
                                 //If right or single record save end position and duplicate group ID
                                 group_end_idx
                                     .entry(record.cigar_cached().unwrap().end_pos() - 1)

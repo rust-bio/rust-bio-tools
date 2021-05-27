@@ -161,10 +161,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                     match record_storage.get_mut(&RecordId::Regular(record_id.to_owned())) {
                         //Case: Left record
                         None => {
-                            if !record.is_paired()
-                                || cigar_has_softclips(&record)
-                                || record.tid() != record.mtid()
-                            {
+                            if !record.is_paired() || record.tid() != record.mtid() {
                                 self.bam_skipped_writer.write(&record)?;
                             } else {
                                 record_storage.insert(
@@ -190,30 +187,35 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 }
                                 RecordStorage::SingleRecord { .. } => unreachable!(),
                             };
-                            let alignment_vectors = calc_read_alignments(&l_rec, &record);
-                            match alignment_vectors {
-                                Some((r1_alignment, r2_alignment)) => {
-                                    let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                            if cigar_has_softclips(&l_rec) || cigar_has_softclips(&record) {
+                                self.bam_skipped_writer.write(&l_rec)?;
+                                self.bam_skipped_writer.write(&record)?;
+                            } else {
+                                let alignment_vectors = calc_read_alignments(&l_rec, &record);
+                                match alignment_vectors {
+                                    Some((r1_alignment, r2_alignment)) => {
+                                        let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
-                                    self.fq_se_writer.write_record(
-                                        &CalcOverlappingConsensus::new(
-                                            &[l_rec],
-                                            &[record],
-                                            &r1_alignment,
-                                            &r2_alignment,
-                                            &[rec_id, i],
-                                            uuid,
-                                            self.verbose_read_names,
-                                        )
-                                        .calc_consensus()
-                                        .0,
-                                    )?;
-                                }
-                                None => {
-                                    self.bam_skipped_writer.write(&l_rec)?;
-                                    self.bam_skipped_writer.write(&record)?;
-                                }
-                            };
+                                        self.fq_se_writer.write_record(
+                                            &CalcOverlappingConsensus::new(
+                                                &[l_rec],
+                                                &[record],
+                                                &r1_alignment,
+                                                &r2_alignment,
+                                                &[rec_id, i],
+                                                uuid,
+                                                self.verbose_read_names,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                    }
+                                    None => {
+                                        self.bam_skipped_writer.write(&l_rec)?;
+                                        self.bam_skipped_writer.write(&record)?;
+                                    }
+                                };
+                            }
                         }
                     }
                 }
@@ -514,153 +516,6 @@ fn calc_alignment_vectors(
     }
     Some((r1_vec, r2_vec))
 }
-
-/* fn calc_alignment_vectors(
-    mut offset: i64,
-    r1_rec: &bam::Record,
-    r2_rec: &bam::Record,
-) -> (Vec<bool>, Vec<bool>) {
-    let mut r1_vec = Vec::new();
-    let mut r2_vec = Vec::new();
-    let mut r1_cigarstring = r1_rec
-        .cigar_cached()
-        .unwrap()
-        .iter()
-        .flat_map(|cigar| vec![cigar.char(); cigar.len() as usize])
-        .collect::<Vec<char>>()
-        .into_iter();
-    let mut r2_cigarstring = r2_rec
-        .cigar_cached()
-        .unwrap()
-        .iter()
-        .flat_map(|cigar| vec![cigar.char(); cigar.len() as usize])
-        .collect::<Vec<char>>()
-        .into_iter();
-    let mut r1_cigar = r1_cigarstring.next();
-    let mut r2_cigar = match offset == 0 {
-        true => r2_cigarstring.next(),
-        false => None,
-    };
-    loop {
-        if r2_cigar == None {
-            match r1_cigar {
-                None => break,
-                Some('M') | Some('S') | Some('X') | Some('=') | Some('D') | Some('N') => {
-                    offset -= 1;
-                }
-                Some(_) => {}
-            }
-            match_single_cigar(&r1_cigar, &mut r1_vec, &mut r2_vec);
-            r1_cigar = r1_cigarstring.next();
-            if offset == 0 {
-                r2_cigar = r2_cigarstring.next();
-            }
-        } else if r1_cigar == None {
-            match_single_cigar(&r2_cigar, &mut r2_vec, &mut r1_vec);
-            r2_cigar = r2_cigarstring.next();
-        } else {
-            match (r1_cigar, r2_cigar) {
-                (Some('M'), Some('M'))
-                | (Some('S'), Some('S'))
-                | (Some('X'), Some('X'))
-                | (Some('='), Some('='))
-                | (Some('I'), Some('I'))
-                | (Some('M'), Some('S'))
-                | (Some('M'), Some('X'))
-                | (Some('M'), Some('='))
-                | (Some('S'), Some('M'))
-                | (Some('S'), Some('X'))
-                | (Some('S'), Some('='))
-                | (Some('X'), Some('M'))
-                | (Some('X'), Some('S'))
-                | (Some('X'), Some('='))
-                | (Some('='), Some('M'))
-                | (Some('='), Some('S'))
-                | (Some('='), Some('X')) => {
-                    r1_vec.push(true);
-                    r2_vec.push(true);
-                    r1_cigar = r1_cigarstring.next();
-                    r2_cigar = r2_cigarstring.next();
-                }
-                (Some('D'), Some('D'))
-                | (Some('H'), Some('H'))
-                | (Some('N'), Some('N'))
-                | (Some('P'), Some('P'))
-                | (Some('D'), Some('H'))
-                | (Some('D'), Some('N'))
-                | (Some('D'), Some('P'))
-                | (Some('H'), Some('D'))
-                | (Some('H'), Some('N'))
-                | (Some('H'), Some('P'))
-                | (Some('N'), Some('D'))
-                | (Some('N'), Some('P'))
-                | (Some('N'), Some('H'))
-                | (Some('P'), Some('D'))
-                | (Some('P'), Some('N'))
-                | (Some('P'), Some('H')) => {
-                    r1_cigar = r1_cigarstring.next();
-                    r2_cigar = r2_cigarstring.next();
-                }
-                (Some('I'), Some(_)) => {
-                    r1_vec.push(true);
-                    r1_cigar = r1_cigarstring.next();
-                    r2_vec.push(false);
-                }
-                (Some(_), Some('I')) => {
-                    r1_vec.push(false);
-                    r2_vec.push(true);
-                    r2_cigar = r2_cigarstring.next();
-                }
-                (Some('M'), Some('D'))
-                | (Some('M'), Some('N'))
-                | (Some('M'), Some('H'))
-                | (Some('M'), Some('P'))
-                | (Some('S'), Some('D'))
-                | (Some('S'), Some('N'))
-                | (Some('S'), Some('H'))
-                | (Some('S'), Some('P'))
-                | (Some('X'), Some('D'))
-                | (Some('X'), Some('N'))
-                | (Some('X'), Some('H'))
-                | (Some('X'), Some('P'))
-                | (Some('='), Some('D'))
-                | (Some('='), Some('N'))
-                | (Some('='), Some('H'))
-                | (Some('='), Some('P')) => {
-                    r1_vec.push(true);
-                    r2_vec.push(false);
-                    r1_cigar = r1_cigarstring.next();
-                    r2_cigar = r2_cigarstring.next();
-                }
-                (Some('D'), Some('M'))
-                | (Some('N'), Some('M'))
-                | (Some('H'), Some('M'))
-                | (Some('P'), Some('M'))
-                | (Some('D'), Some('S'))
-                | (Some('N'), Some('S'))
-                | (Some('H'), Some('S'))
-                | (Some('P'), Some('S'))
-                | (Some('D'), Some('X'))
-                | (Some('N'), Some('X'))
-                | (Some('H'), Some('X'))
-                | (Some('P'), Some('X'))
-                | (Some('D'), Some('='))
-                | (Some('N'), Some('='))
-                | (Some('H'), Some('='))
-                | (Some('P'), Some('=')) => {
-                    r1_vec.push(false);
-                    r2_vec.push(true);
-                    r1_cigar = r1_cigarstring.next();
-                    r2_cigar = r2_cigarstring.next();
-                }
-                (None, None) | (None, Some(_)) | (Some(_), Some(_)) | (Some(_), None) => {
-                    unreachable!()
-                }
-            };
-        }
-    }
-    (r1_vec, r2_vec)
-} */
 
 fn cigar_has_softclips(rec: &bam::Record) -> bool {
     let cigar = rec.cigar_cached().unwrap();

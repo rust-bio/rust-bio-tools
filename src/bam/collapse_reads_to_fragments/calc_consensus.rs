@@ -212,6 +212,7 @@ pub struct CalcNonOverlappingConsensus<'a> {
     recs: &'a [bam::Record],
     seqids: &'a [usize],
     uuid: &'a str,
+    verbose_read_names: bool,
 }
 
 impl<'a> CalcNonOverlappingConsensus<'a> {
@@ -255,8 +256,20 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             );
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
+        let name = match self.verbose_read_names {
+            true => format!(
+                "{}_consensus-read-from:{}",
+                self.uuid(),
+                self.seqids().iter().map(|i| format!("{}", i)).join(",")
+            ),
+            false => format!(
+                "{}_consensus-read-from:{}_reads",
+                self.uuid(),
+                self.seqids().len(),
+            ),
+        };
         let consensus_rec = fastq::Record::with_attrs(
-            &self.uuid(),
+            &name,
             Some(&String::from_utf8(consensus_strand).unwrap()),
             &consensus_seq,
             &consensus_qual,

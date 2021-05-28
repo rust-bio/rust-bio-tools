@@ -302,14 +302,24 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                             if r1_recs.len() > 1 {
                                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                                 fq1_writer.write_record(
-                                    &CalcNonOverlappingConsensus::new(&r1_recs, &r1_seqids, uuid)
-                                        .calc_consensus()
-                                        .0,
+                                    &CalcNonOverlappingConsensus::new(
+                                        &r1_recs,
+                                        &r1_seqids,
+                                        uuid,
+                                        verbose_read_names,
+                                    )
+                                    .calc_consensus()
+                                    .0,
                                 )?;
                                 fq2_writer.write_record(
-                                    &CalcNonOverlappingConsensus::new(&r2_recs, &r2_seqids, uuid)
-                                        .calc_consensus()
-                                        .0,
+                                    &CalcNonOverlappingConsensus::new(
+                                        &r2_recs,
+                                        &r2_seqids,
+                                        uuid,
+                                        verbose_read_names,
+                                    )
+                                    .calc_consensus()
+                                    .0,
                                 )?;
                             } else {
                                 bam_skipped_writer.write(&r1_recs[0])?;
@@ -324,15 +334,25 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                         if *r1 {
                             fq1_writer.write_record(
-                                &CalcNonOverlappingConsensus::new(&recs, &seqids, uuid)
-                                    .calc_consensus()
-                                    .0,
+                                &CalcNonOverlappingConsensus::new(
+                                    &recs,
+                                    &seqids,
+                                    uuid,
+                                    verbose_read_names,
+                                )
+                                .calc_consensus()
+                                .0,
                             )?;
                         } else {
                             fq2_writer.write_record(
-                                &CalcNonOverlappingConsensus::new(&recs, &seqids, uuid)
-                                    .calc_consensus()
-                                    .0,
+                                &CalcNonOverlappingConsensus::new(
+                                    &recs,
+                                    &seqids,
+                                    uuid,
+                                    verbose_read_names,
+                                )
+                                .calc_consensus()
+                                .0,
                             )?;
                         }
                     }

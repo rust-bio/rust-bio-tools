@@ -472,6 +472,7 @@ fn calc_alignment_vectors(
         true => r2_cigarstring.next(),
         false => None,
     };
+    let mut intersection_entry_passed = false;
     loop {
         if r2_cigar == None {
             match r1_cigar {
@@ -490,10 +491,16 @@ fn calc_alignment_vectors(
         } else if r1_cigar == None {
             match_single_cigar(&r2_cigar, &mut r2_vec, &mut r1_vec);
             r2_cigar = r2_cigarstring.next();
-        } else {
-            if r1_cigar != r2_cigar {
+        } else if r1_cigar != r2_cigar {
+            if !intersection_entry_passed && r1_cigar == Some('I') {
+                r1_vec.push(true);
+                r2_vec.push(false);
+                r1_cigar = r1_cigarstring.next();
+            } else {
                 return None;
             }
+        } else {
+            intersection_entry_passed = true; // Can this me somehow only be called once?!
             match (r1_cigar, r2_cigar) {
                 (Some('M'), Some('M'))
                 | (Some('X'), Some('X'))

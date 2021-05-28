@@ -106,6 +106,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                                 rec: record,
                                                 rec_id: i,
                                             },
+                                            r1: false,
                                         },
                                     );
                                     GroupId::Split(group_id)
@@ -136,6 +137,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                             rec: record,
                                             rec_id: i,
                                         },
+                                        r1: true,
                                     },
                                 );
                             } else {
@@ -316,14 +318,23 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                         }
                     };
                 }
-                CigarGroup::SingleRecords { recs, seqids } => match recs.len().cmp(&1) {
+                CigarGroup::SingleRecords { recs, seqids, r1 } => match recs.len().cmp(&1) {
                     Ordering::Greater => {
+                        //Todo Check if
                         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                        fq_se_writer.write_record(
-                            &CalcNonOverlappingConsensus::new(&recs, &seqids, uuid)
-                                .calc_consensus()
-                                .0,
-                        )?;
+                        if *r1 {
+                            fq1_writer.write_record(
+                                &CalcNonOverlappingConsensus::new(&recs, &seqids, uuid)
+                                    .calc_consensus()
+                                    .0,
+                            )?;
+                        } else {
+                            fq2_writer.write_record(
+                                &CalcNonOverlappingConsensus::new(&recs, &seqids, uuid)
+                                    .calc_consensus()
+                                    .0,
+                            )?;
+                        }
                     }
                     _ => {
                         bam_skipped_writer.write(&recs[0])?;
@@ -385,7 +396,7 @@ fn group_reads_by_cigar(
                     }
                 }
             }
-            RecordStorage::SingleRecord { rec } => {
+            RecordStorage::SingleRecord { rec, r1 } => {
                 let rec_id = rec.rec_id;
                 let rec_entry = rec.into_rec();
                 if cigar_has_softclips(&rec_entry) {
@@ -400,11 +411,16 @@ fn group_reads_by_cigar(
                             CigarGroup::SingleRecords {
                                 recs: Vec::new(),
                                 seqids: Vec::new(),
+                                r1,
                             },
                         );
                     }
                     match cigar_groups.get_mut(&cigar_single) {
-                        Some(CigarGroup::SingleRecords { recs, seqids }) => {
+                        Some(CigarGroup::SingleRecords {
+                            recs,
+                            seqids,
+                            r1: _,
+                        }) => {
                             recs.push(rec_entry);
                             seqids.push(rec_id);
                         }
@@ -545,6 +561,7 @@ pub enum RecordStorage {
     },
     SingleRecord {
         rec: IndexedRecord,
+        r1: bool,
     },
 }
 
@@ -576,6 +593,7 @@ pub enum CigarGroup {
     SingleRecords {
         recs: Vec<bam::Record>,
         seqids: Vec<usize>,
+        r1: bool,
     },
 }
 

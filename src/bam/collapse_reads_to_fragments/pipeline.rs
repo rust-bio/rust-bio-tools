@@ -41,7 +41,6 @@ impl<W: io::Write> CallConsensusRead<W> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
         let mut duplicate_groups: HashMap<GroupId, RecordIDs> = HashMap::new();
         let mut record_storage: HashMap<RecordId, RecordStorage> = HashMap::new();
-
         for (i, result) in self.bam_reader.records().enumerate() {
             let mut record = result?;
             if !record.is_unmapped() {
@@ -72,8 +71,6 @@ impl<W: io::Write> CallConsensusRead<W> {
             let record_id = record.qname();
             //Check if record has duplicate ID
             match duplicate_id_option {
-                //TODO Handle reads on different references
-                //Case: duplicate ID exists
                 Some(duplicate_id) => {
                     match record_storage.get_mut(&RecordId::Regular(record_id.to_owned())) {
                         //Case: Right record
@@ -91,8 +88,6 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 }
                                 // This arm is reached if a mate is mapped to another chromosome.
                                 // In that case a new duplicate and record ID is required
-                                //TODO Handle split reads correctly (see TODO below)
-                                //TODO Can this arm be reached, as records with mate on other reference are skipped.
                                 RecordStorage::SingleRecord { .. } => {
                                     let group_id = duplicate_id.integer();
                                     duplicate_groups
@@ -118,12 +113,11 @@ impl<W: io::Write> CallConsensusRead<W> {
                         }
                         //Case: Left record or record w/o mate
                         None => {
-                            //TODO Records mapped to different chromosomes should be saved as single record with a Splited RecordId
                             duplicate_groups
                                 .entry(GroupId::Regular(duplicate_id.integer()))
                                 .or_insert_with(Vec::new)
                                 .push(RecordId::Regular(record_id.to_owned()));
-                            if !record.is_paired() || record.tid() != record.mtid() {
+                            if !record.is_paired() {
                                 //If right or single record save end position and duplicate group ID
                                 group_end_idx
                                     .entry(record.cigar_cached().unwrap().end_pos() - 1)
@@ -328,7 +322,6 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                 }
                 CigarGroup::SingleRecords { recs, seqids } => match recs.len().cmp(&1) {
                     Ordering::Greater => {
-                        //Todo Check if
                         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                         if recs[0].is_reverse() {
                             fq2_writer.write_record(
@@ -454,8 +447,9 @@ fn calc_read_alignments(
     let r1_end = r1_rec.cigar_cached().unwrap().end_pos();
     let r2_start = r2_rec.pos();
     let r2_end = r1_rec.cigar_cached().unwrap().end_pos();
-
-    if r1_start <= r2_start {
+    if r1_rec.tid() != r2_rec.tid() {
+        None
+    } else if r1_start <= r2_start {
         //Check if reads overlap
         if r1_end >= r2_start {
             let offset = r2_start - r1_start;

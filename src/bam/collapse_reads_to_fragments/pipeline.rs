@@ -334,29 +334,16 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                 CigarGroup::SingleRecords { recs, seqids } => match recs.len().cmp(&1) {
                     Ordering::Greater => {
                         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                        if recs[0].is_reverse() {
-                            fq2_writer.write_record(
-                                &CalcNonOverlappingConsensus::new(
-                                    &recs,
-                                    &seqids,
-                                    uuid,
-                                    verbose_read_names,
-                                )
-                                .calc_consensus()
-                                .0,
-                            )?;
-                        } else {
-                            fq1_writer.write_record(
-                                &CalcNonOverlappingConsensus::new(
-                                    &recs,
-                                    &seqids,
-                                    uuid,
-                                    verbose_read_names,
-                                )
-                                .calc_consensus()
-                                .0,
-                            )?;
-                        }
+                        fq_se_writer.write_record(
+                            &CalcNonOverlappingConsensus::new(
+                                &recs,
+                                &seqids,
+                                uuid,
+                                verbose_read_names,
+                            )
+                            .calc_consensus()
+                            .0,
+                        )?;
                     }
                     _ => {
                         bam_skipped_writer.write(&recs[0])?;

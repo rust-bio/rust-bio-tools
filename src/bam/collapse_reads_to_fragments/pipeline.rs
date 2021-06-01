@@ -41,14 +41,20 @@ impl<W: io::Write> CallConsensusRead<W> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
         let mut duplicate_groups: HashMap<GroupId, RecordIDs> = HashMap::new();
         let mut record_storage: HashMap<RecordId, RecordStorage> = HashMap::new();
+        let mut current_chrom = None;
         for (i, result) in self.bam_reader.records().enumerate() {
             let mut record = result?;
             if !record.is_unmapped() {
+                let mut record_pos = None;
+                match current_chrom == Some(record.tid()) {
+                    true => record_pos = Some(record.pos()),
+                    false => current_chrom = Some(record.tid()),
+                }
                 //Process completed duplicate groups
                 calc_consensus_complete_groups(
                     &mut group_end_idx,
                     &mut duplicate_groups,
-                    Some(&record.pos()),
+                    record_pos,
                     &mut record_storage,
                     &mut self.fq1_writer,
                     &mut self.fq2_writer,
@@ -56,7 +62,11 @@ impl<W: io::Write> CallConsensusRead<W> {
                     &mut self.bam_skipped_writer,
                     self.verbose_read_names,
                 )?;
-                group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
+                if record_pos.is_some() {
+                    group_end_idx = group_end_idx.split_off(&record.pos());
+                } else {
+                    group_end_idx.clear();
+                }
             }
             if record.is_unmapped() || record.is_mate_unmapped() {
                 self.bam_skipped_writer.write(&record)?;
@@ -71,6 +81,7 @@ impl<W: io::Write> CallConsensusRead<W> {
             let record_id = record.qname();
             //Check if record has duplicate ID
             match duplicate_id_option {
+                //Case: duplicate ID exists
                 Some(duplicate_id) => {
                     match record_storage.get_mut(&RecordId::Regular(record_id.to_owned())) {
                         //Case: Right record
@@ -235,7 +246,7 @@ impl<W: io::Write> CallConsensusRead<W> {
 pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
     duplicate_groups: &mut HashMap<GroupId, RecordIDs>,
-    end_pos: Option<&i64>,
+    end_pos: Option<i64>,
     record_storage: &mut HashMap<RecordId, RecordStorage>,
     fq1_writer: &'a mut fastq::Writer<W>,
     fq2_writer: &'a mut fastq::Writer<W>,
@@ -246,11 +257,11 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     let group_ids: HashSet<GroupId> = group_end_idx
         .range(
             ..end_pos.unwrap_or(
-                &(group_end_idx
+                group_end_idx
                     .iter()
                     .next_back()
                     .map_or(0, |(entry, _)| *entry)
-                    + 1),
+                    + 1,
             ),
         )
         .flat_map(|(_, group_ids)| group_ids.clone())

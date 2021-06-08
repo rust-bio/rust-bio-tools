@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.22.0] - 2021-06-08
+### Changed
+- Revised `rbt collapse-reads-to-fragments bam`, CIGAR strings will now considered when merging reads  (@FelixMoelder).
+
 ## [0.21.1] - 2021-05-20
 ### Changed
 - Further fixes for `rbt vcf-report` (@fxwiegand).

@@ -29,7 +29,7 @@ fn compare_fastq(result: &str, expected: &str, strand: bool) {
     let mut expected_recs: Vec<fastq::Record> =
         expected_reader.records().filter_map(Result::ok).collect();
     expected_recs.sort_by_key(|x| x.seq().to_owned());
-
+    assert_eq!(result_recs.len(), expected_recs.len());
     for (result, expected) in result_recs.iter().zip(expected_recs.iter()) {
         assert_eq!(result.seq(), expected.seq());
         assert_eq!(result.qual(), expected.qual());

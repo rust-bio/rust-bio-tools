@@ -6,7 +6,7 @@ use bio_types::sequence::SequenceReadPairOrientation;
 use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::ops::BitOrAssign;
 
 const ALLELES: &[u8] = b"ACGT";
@@ -33,7 +33,8 @@ impl BitOrAssign for StrandObservation {
 pub struct CalcOverlappingConsensus<'a> {
     recs1: &'a [bam::Record],
     recs2: &'a [bam::Record],
-    overlap: usize,
+    r1_vec: &'a [bool],
+    r2_vec: &'a [bool],
     seqids: &'a [usize],
     uuid: &'a str,
     verbose_read_names: bool,
@@ -41,27 +42,12 @@ pub struct CalcOverlappingConsensus<'a> {
 
 impl<'a> CalcOverlappingConsensus<'a> {
     pub fn calc_consensus(&self) -> (fastq::Record, LogProb) {
-        let seq_len = self.recs1()[0].seq().len() + self.recs2()[0].seq().len() - self.overlap();
+        let seq_len = self.r1_vec().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_strand = b"SI:Z:".to_vec();
         let read_orientations_opt = self.build_read_orientation_string();
-        // assert that all reads have the same length here
-        assert_eq!(
-            Self::validate_read_lengths(self.recs1()),
-            true,
-            "Read length of FASTQ forward records {:?} differ. Cannot compute consensus sequence.",
-            self.seqids()
-        );
-
-        assert_eq!(
-            Self::validate_read_lengths(self.recs2()),
-            true,
-            "Read length of FASTQ reverse records {:?} differ. Cannot compute consensus sequence.",
-            self.seqids()
-        );
         let mut consensus_lh = LogProb::ln_one();
-
         for i in 0..seq_len {
             let likelihoods = ALLELES
                 .iter()
@@ -108,57 +94,37 @@ impl<'a> CalcOverlappingConsensus<'a> {
         self.recs2
     }
 
-    fn overlap(&self) -> usize {
-        self.overlap
+    fn r1_vec(&self) -> &[bool] {
+        self.r1_vec
     }
-    fn build_consensus_strand(
-        &self,
-        consensus_strand: &mut Vec<u8>,
-        ref_base: u8,
-        base_pos: usize,
-    ) {
+
+    fn r2_vec(&self) -> &[bool] {
+        self.r2_vec
+    }
+
+    fn build_consensus_strand(&self, consensus_strand: &mut Vec<u8>, ref_base: u8, pos: usize) {
         let mut strand = StrandObservation::None;
-        let first_end_pos = self.recs1()[0].len();
-        let second_start_pos = first_end_pos - self.overlap();
-        if base_pos < first_end_pos {
-            self.recs1().iter().for_each(|rec| {
-                if rec.base(base_pos) == ref_base {
-                    match rec.is_reverse() {
-                        true => strand |= StrandObservation::Reverse,
-                        false => strand |= StrandObservation::Forward,
-                    };
-                }
-            });
-        }
-        if base_pos >= second_start_pos {
-            let second_base_pos = base_pos - second_start_pos;
-            self.recs2().iter().for_each(|rec| {
-                if rec.base(second_base_pos) == ref_base {
-                    match rec.is_reverse() {
-                        true => strand |= StrandObservation::Reverse,
-                        false => strand |= StrandObservation::Forward,
-                    };
-                }
-            });
-        }
+        let rec1_pos = self.map_read_pos(pos, self.r1_vec());
+        let rec2_pos = self.map_read_pos(pos, self.r2_vec());
+        let mut strand_observation = |recs: &[bam::Record], rec_pos: Option<usize>| {
+            if let Some(pos) = rec_pos {
+                recs.iter().for_each(|rec| {
+                    if rec.base(pos) == ref_base {
+                        match rec.is_reverse() {
+                            true => strand |= StrandObservation::Reverse,
+                            false => strand |= StrandObservation::Forward,
+                        };
+                    }
+                });
+            }
+        };
+        strand_observation(self.recs1(), rec1_pos);
+        strand_observation(self.recs2(), rec2_pos);
         match strand {
             StrandObservation::Forward => consensus_strand.push(b'+'),
             StrandObservation::Reverse => consensus_strand.push(b'-'),
             StrandObservation::Both => consensus_strand.push(b'*'),
             StrandObservation::None => {
-                dbg!(&base_pos);
-                dbg!(String::from_utf8([ref_base].to_vec()).unwrap());
-                dbg!(&self.overlap());
-                dbg!(&self.recs1()[0].pos());
-                dbg!(&self.recs1()[0].len());
-                dbg!(&self.recs1()[0].cigar_cached().unwrap().end_pos());
-                dbg!(&self.recs1()[0].cigar_cached().unwrap().into_iter());
-                dbg!(String::from_utf8([self.recs1()[0].base(base_pos)].to_vec()).unwrap());
-                dbg!(&self.recs2()[0].pos());
-                dbg!(&self.recs2()[0].len());
-                dbg!(&self.recs2()[0].cigar_cached().unwrap().end_pos());
-                dbg!(&self.recs2()[0].cigar_cached().unwrap().into_iter());
-                dbg!(&self.recs2()[0].seq());
                 unreachable!()
             }
         }
@@ -190,28 +156,41 @@ impl<'a> CalcOverlappingConsensus<'a> {
             None => unreachable!(),
         }
     }
+    fn map_read_pos(&self, consensus_pos: usize, alignment_vec: &[bool]) -> Option<usize> {
+        match alignment_vec[consensus_pos] {
+            true => Some(
+                alignment_vec[0..(consensus_pos + 1)]
+                    .iter()
+                    .filter(|&v| *v)
+                    .count()
+                    - 1,
+            ),
+            false => None,
+        }
+    }
 }
 
 impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
-    fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb {
+    fn overall_allele_likelihood(&self, allele: &u8, pos: usize) -> LogProb {
         let mut lh = LogProb::ln_one();
+        let rec1_pos = self.map_read_pos(pos, &self.r1_vec());
+        let rec2_pos = self.map_read_pos(pos, &self.r2_vec());
         for (rec1, rec2) in self.recs1().iter().zip(self.recs2()) {
-            if i < rec1.seq().len() {
+            if let Some(pos) = rec1_pos {
                 lh += Self::allele_likelihood_in_rec(
                     allele,
                     &rec1.seq().as_bytes(),
                     rec1.qual(),
-                    i,
+                    pos,
                     0,
                 );
             };
-            if i >= rec1.seq().len() - self.overlap() {
-                let rec2_i = i - (rec1.seq().len() - self.overlap());
+            if let Some(pos) = rec2_pos {
                 lh += Self::allele_likelihood_in_rec(
                     allele,
                     &rec2.seq().as_bytes(),
                     &rec2.qual(),
-                    rec2_i,
+                    pos,
                     0,
                 );
             };
@@ -233,6 +212,7 @@ pub struct CalcNonOverlappingConsensus<'a> {
     recs: &'a [bam::Record],
     seqids: &'a [usize],
     uuid: &'a str,
+    verbose_read_names: bool,
 }
 
 impl<'a> CalcNonOverlappingConsensus<'a> {
@@ -241,13 +221,14 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_strand = b"SI:Z:".to_vec();
-        // assert that all reads have the same length here
-        assert_eq!(
-            Self::validate_read_lengths(self.recs()),
-            true,
-            "Read length of FASTQ records {:?} differ. Cannot compute consensus sequence.",
-            self.seqids()
-        );
+        let mut cigar_map = HashMap::new();
+        for record in self.recs() {
+            let cached_cigar = record.raw_cigar();
+            if !cigar_map.contains_key(cached_cigar) {
+                cigar_map.insert(cached_cigar, Vec::new());
+            }
+            cigar_map.get_mut(cached_cigar).unwrap().push(record);
+        }
 
         // Potential workflow for different read lengths
         // compute consensus of all reads with max len
@@ -275,8 +256,20 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             );
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
+        let name = match self.verbose_read_names {
+            true => format!(
+                "{}_consensus-read-from:{}",
+                self.uuid(),
+                self.seqids().iter().map(|i| format!("{}", i)).join(",")
+            ),
+            false => format!(
+                "{}_consensus-read-from:{}_reads",
+                self.uuid(),
+                self.seqids().len(),
+            ),
+        };
         let consensus_rec = fastq::Record::with_attrs(
-            &self.uuid(),
+            &name,
             Some(&String::from_utf8(consensus_strand).unwrap()),
             &consensus_seq,
             &consensus_qual,

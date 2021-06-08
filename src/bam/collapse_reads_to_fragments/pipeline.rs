@@ -3,8 +3,8 @@ use anyhow::Result;
 use bio::io::fastq;
 use derive_new::new;
 use rust_htslib::bam;
-use rust_htslib::bam::record::Cigar;
 use rust_htslib::bam::Read;
+use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io;
 use std::ops::Deref;
@@ -27,13 +27,13 @@ type RecordIDs = Vec<RecordId>;
 #[derive(Hash, PartialEq, Eq)]
 pub enum RecordId {
     Regular(Vec<u8>),
-    Splitted(Vec<u8>),
+    Split(Vec<u8>),
 }
 
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub enum GroupId {
     Regular(i64),
-    Splitted(i64),
+    Split(i64),
 }
 
 impl<W: io::Write> CallConsensusRead<W> {
@@ -41,23 +41,34 @@ impl<W: io::Write> CallConsensusRead<W> {
         let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
         let mut duplicate_groups: HashMap<GroupId, RecordIDs> = HashMap::new();
         let mut record_storage: HashMap<RecordId, RecordStorage> = HashMap::new();
-
+        let mut current_chrom = None;
         for (i, result) in self.bam_reader.records().enumerate() {
             let mut record = result?;
             if !record.is_unmapped() {
+                let mut record_pos = None;
+                match current_chrom == Some(record.tid()) {
+                    true => record_pos = Some(record.pos()),
+                    false => current_chrom = Some(record.tid()),
+                }
                 //Process completed duplicate groups
                 calc_consensus_complete_groups(
                     &mut group_end_idx,
                     &mut duplicate_groups,
-                    Some(&record.pos()),
+                    record_pos,
                     &mut record_storage,
                     &mut self.fq1_writer,
                     &mut self.fq2_writer,
                     &mut self.fq_se_writer,
+                    &mut self.bam_skipped_writer,
                     self.verbose_read_names,
                 )?;
-                group_end_idx = group_end_idx.split_off(&record.pos()); //Remove processed indexes
-            } else {
+                if record_pos.is_some() {
+                    group_end_idx = group_end_idx.split_off(&record.pos());
+                } else {
+                    group_end_idx.clear();
+                }
+            }
+            if record.is_unmapped() || record.is_mate_unmapped() {
                 self.bam_skipped_writer.write(&record)?;
                 continue;
             }
@@ -74,13 +85,13 @@ impl<W: io::Write> CallConsensusRead<W> {
                 Some(duplicate_id) => {
                     match record_storage.get_mut(&RecordId::Regular(record_id.to_owned())) {
                         //Case: Right record
-                        Some(record_pair) => {
+                        Some(storage_entry) => {
                             //For right record save end position and duplicate group ID
                             let record_end_pos = record.cigar_cached().unwrap().end_pos() - 1;
-                            let group_id = match record_pair {
-                                RecordStorage::PairedRecords { ref mut r_rec, .. } => {
+                            let group_id = match storage_entry {
+                                RecordStorage::PairedRecords { ref mut r2_rec, .. } => {
                                     let group_id = duplicate_id.integer();
-                                    r_rec.get_or_insert(IndexedRecord {
+                                    r2_rec.get_or_insert(IndexedRecord {
                                         rec: record,
                                         rec_id: i,
                                     });
@@ -91,11 +102,11 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 RecordStorage::SingleRecord { .. } => {
                                     let group_id = duplicate_id.integer();
                                     duplicate_groups
-                                        .entry(GroupId::Splitted(group_id))
+                                        .entry(GroupId::Split(group_id))
                                         .or_insert_with(Vec::new)
-                                        .push(RecordId::Splitted(record_id.to_owned()));
+                                        .push(RecordId::Split(record_id.to_owned()));
                                     record_storage.insert(
-                                        RecordId::Splitted(record_id.to_owned()),
+                                        RecordId::Split(record_id.to_owned()),
                                         RecordStorage::SingleRecord {
                                             rec: IndexedRecord {
                                                 rec: record,
@@ -103,7 +114,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                             },
                                         },
                                     );
-                                    GroupId::Splitted(group_id)
+                                    GroupId::Split(group_id)
                                 }
                             };
                             group_end_idx
@@ -117,10 +128,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 .entry(GroupId::Regular(duplicate_id.integer()))
                                 .or_insert_with(Vec::new)
                                 .push(RecordId::Regular(record_id.to_owned()));
-                            if !record.is_paired()
-                                || record.is_mate_unmapped()
-                                || (record.tid() != record.mtid())
-                            {
+                            if !record.is_paired() {
                                 //If right or single record save end position and duplicate group ID
                                 group_end_idx
                                     .entry(record.cigar_cached().unwrap().end_pos() - 1)
@@ -139,11 +147,11 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 record_storage.insert(
                                     RecordId::Regular(record_id.to_owned()),
                                     RecordStorage::PairedRecords {
-                                        l_rec: IndexedRecord {
+                                        r1_rec: IndexedRecord {
                                             rec: record,
                                             rec_id: i,
                                         },
-                                        r_rec: None,
+                                        r2_rec: None,
                                     },
                                 );
                             }
@@ -151,63 +159,54 @@ impl<W: io::Write> CallConsensusRead<W> {
                     }
                 }
                 //Duplicate ID not existing
-                //Record is writen to bam file if it or its mate is unmapped
+                //Record is written to bam file if it or its mate is unmapped
                 //If record is right mate consensus is calculated
                 //Else record is added to hashMap
                 None => {
-                    if record.is_unmapped()
-                        || record.is_mate_unmapped()
-                        || (record.tid() != record.mtid())
-                    {
-                        //TODO Handle intersecting reads mapped on different chromosomes
-                        self.bam_skipped_writer.write(&record)?;
-                    } else {
-                        match record_storage.get_mut(&RecordId::Regular(record_id.to_owned())) {
-                            //Case: Left record
-                            None => {
+                    match record_storage.get_mut(&RecordId::Regular(record_id.to_owned())) {
+                        //Case: Left record
+                        None => {
+                            if !record.is_paired() || record.tid() != record.mtid() {
+                                self.bam_skipped_writer.write(&record)?;
+                            } else {
                                 record_storage.insert(
                                     RecordId::Regular(record_id.to_owned()),
                                     RecordStorage::PairedRecords {
-                                        l_rec: IndexedRecord {
+                                        r1_rec: IndexedRecord {
                                             rec: record,
                                             rec_id: i,
                                         },
-                                        r_rec: None,
+                                        r2_rec: None,
                                     },
                                 );
                             }
-                            //Case: Left record already stored
-                            Some(_record_pair) => {
-                                let (rec_id, l_rec) = match record_storage
-                                    .remove(&RecordId::Regular(record_id.to_owned()))
-                                    .unwrap()
-                                {
-                                    RecordStorage::PairedRecords { l_rec, .. } => {
-                                        (l_rec.rec_id, l_rec.into_rec())
-                                    }
-                                    RecordStorage::SingleRecord { .. } => unreachable!(),
-                                };
-                                let overlap_opt = calc_overlap(&l_rec, &record);
-                                //TODO overlap_opt ist part of skipping softclips
-                                // Handle soft clips later
-                                if let Some(overlap) = overlap_opt {
-                                    if overlap > 0
-                                        && is_valid_overlap(
-                                            overlap as u32,
-                                            l_rec.cigar_cached().unwrap().into_iter().rev(),
-                                        )
-                                        && is_valid_overlap(
-                                            overlap as u32,
-                                            record.cigar_cached().unwrap().into_iter(),
-                                        )
-                                    {
+                        }
+                        //Case: Left record already stored
+                        Some(_record_pair) => {
+                            let (rec_id, l_rec) = match record_storage
+                                .remove(&RecordId::Regular(record_id.to_owned()))
+                                .unwrap()
+                            {
+                                RecordStorage::PairedRecords { r1_rec, .. } => {
+                                    (r1_rec.rec_id, r1_rec.into_rec())
+                                }
+                                RecordStorage::SingleRecord { .. } => unreachable!(),
+                            };
+                            if cigar_has_softclips(&l_rec) || cigar_has_softclips(&record) {
+                                self.bam_skipped_writer.write(&l_rec)?;
+                                self.bam_skipped_writer.write(&record)?;
+                            } else {
+                                let alignment_vectors = calc_read_alignments(&l_rec, &record);
+                                match alignment_vectors {
+                                    Some((r1_alignment, r2_alignment)) => {
                                         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
 
                                         self.fq_se_writer.write_record(
                                             &CalcOverlappingConsensus::new(
                                                 &[l_rec],
                                                 &[record],
-                                                overlap as usize,
+                                                &r1_alignment,
+                                                &r2_alignment,
                                                 &[rec_id, i],
                                                 uuid,
                                                 self.verbose_read_names,
@@ -215,14 +214,12 @@ impl<W: io::Write> CallConsensusRead<W> {
                                             .calc_consensus()
                                             .0,
                                         )?;
-                                    } else {
+                                    }
+                                    None => {
                                         self.bam_skipped_writer.write(&l_rec)?;
                                         self.bam_skipped_writer.write(&record)?;
                                     }
-                                } else {
-                                    self.bam_skipped_writer.write(&l_rec)?;
-                                    self.bam_skipped_writer.write(&record)?;
-                                }
+                                };
                             }
                         }
                     }
@@ -238,6 +235,7 @@ impl<W: io::Write> CallConsensusRead<W> {
             &mut self.fq1_writer,
             &mut self.fq2_writer,
             &mut self.fq_se_writer,
+            &mut self.bam_skipped_writer,
             self.verbose_read_names,
         )?;
         Ok(())
@@ -248,179 +246,323 @@ impl<W: io::Write> CallConsensusRead<W> {
 pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     group_end_idx: &mut BTreeMap<Position, GroupIDs>,
     duplicate_groups: &mut HashMap<GroupId, RecordIDs>,
-    end_pos: Option<&i64>,
+    end_pos: Option<i64>,
     record_storage: &mut HashMap<RecordId, RecordStorage>,
     fq1_writer: &'a mut fastq::Writer<W>,
     fq2_writer: &'a mut fastq::Writer<W>,
     fq_se_writer: &'a mut fastq::Writer<W>,
+    bam_skipped_writer: &'a mut bam::Writer,
     verbose_read_names: bool,
 ) -> Result<()> {
     let group_ids: HashSet<GroupId> = group_end_idx
         .range(
             ..end_pos.unwrap_or(
-                &(group_end_idx
+                group_end_idx
                     .iter()
                     .next_back()
                     .map_or(0, |(entry, _)| *entry)
-                    + 1),
+                    + 1,
             ),
         )
         .flat_map(|(_, group_ids)| group_ids.clone())
         .collect();
     for group_id in group_ids {
-        let mut l_recs = Vec::new();
-        let mut r_recs = Vec::new();
-        let mut l_seqids = Vec::new();
-        let mut r_seqids = Vec::new();
-
-        for rec_id in duplicate_groups.remove(&group_id).unwrap() {
-            match record_storage.remove(&rec_id).unwrap() {
-                RecordStorage::PairedRecords { l_rec, r_rec } => {
-                    l_seqids.push(l_rec.rec_id);
-                    l_recs.push(l_rec.into_rec());
-                    r_seqids.push(r_rec.as_ref().unwrap().rec_id);
-                    r_recs.push(r_rec.unwrap().into_rec());
+        let cigar_groups = group_reads_by_cigar(
+            duplicate_groups.remove(&group_id).unwrap(),
+            record_storage,
+            bam_skipped_writer,
+        )?;
+        for cigar_group in cigar_groups.values() {
+            match cigar_group {
+                CigarGroup::PairedRecords {
+                    r1_recs,
+                    r2_recs,
+                    r1_seqids,
+                    r2_seqids,
+                } => {
+                    let alignment_vectors = calc_read_alignments(&r1_recs[0], &r2_recs[0]);
+                    match alignment_vectors {
+                        Some((r1_alignment, r2_alignment)) => {
+                            let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                            let mut seqids = r1_seqids.clone();
+                            seqids.append(&mut r2_seqids.clone());
+                            fq_se_writer.write_record(
+                                &CalcOverlappingConsensus::new(
+                                    &r1_recs,
+                                    &r2_recs,
+                                    &r1_alignment,
+                                    &r2_alignment,
+                                    &seqids,
+                                    uuid,
+                                    verbose_read_names,
+                                )
+                                .calc_consensus()
+                                .0,
+                            )?;
+                        }
+                        None => {
+                            // If reads do not overlap or CIGAR in overlapping region differs R1 and R2 are handled sepperatly
+                            if r1_recs.len() > 1 {
+                                let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                                fq1_writer.write_record(
+                                    &CalcNonOverlappingConsensus::new(
+                                        &r1_recs,
+                                        &r1_seqids,
+                                        uuid,
+                                        verbose_read_names,
+                                    )
+                                    .calc_consensus()
+                                    .0,
+                                )?;
+                                fq2_writer.write_record(
+                                    &CalcNonOverlappingConsensus::new(
+                                        &r2_recs,
+                                        &r2_seqids,
+                                        uuid,
+                                        verbose_read_names,
+                                    )
+                                    .calc_consensus()
+                                    .0,
+                                )?;
+                            } else {
+                                bam_skipped_writer.write(&r1_recs[0])?;
+                                bam_skipped_writer.write(&r2_recs[0])?;
+                            }
+                        }
+                    };
                 }
-                RecordStorage::SingleRecord { rec } => l_recs.push(rec.into_rec()),
-            };
-        }
-
-        if !r_recs.is_empty() {
-            let overlap_opt = calc_overlap(&l_recs[0], &r_recs[0]);
-            if let Some(overlap) = overlap_opt {
-                if overlap > 0
-                    && is_valid_overlap(
-                        overlap as u32,
-                        l_recs[0].cigar_cached().unwrap().into_iter().rev(),
-                    )
-                    && is_valid_overlap(
-                        overlap as u32,
-                        r_recs[0].cigar_cached().unwrap().into_iter(),
-                    )
-                {
-                    let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                    l_seqids.append(&mut r_seqids);
-                    fq_se_writer.write_record(
-                        &CalcOverlappingConsensus::new(
-                            &l_recs,
-                            &r_recs,
-                            overlap as usize,
-                            &l_seqids,
-                            uuid,
-                            verbose_read_names,
-                        )
-                        .calc_consensus()
-                        .0,
-                    )?;
-                } else {
-                    let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                    fq1_writer.write_record(
-                        &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
+                CigarGroup::SingleRecords { recs, seqids } => match recs.len().cmp(&1) {
+                    Ordering::Greater => {
+                        let uuid = &Uuid::new_v4().to_hyphenated().to_string();
+                        fq_se_writer.write_record(
+                            &CalcNonOverlappingConsensus::new(
+                                &recs,
+                                &seqids,
+                                uuid,
+                                verbose_read_names,
+                            )
                             .calc_consensus()
                             .0,
-                    )?;
-                    fq2_writer.write_record(
-                        &CalcNonOverlappingConsensus::new(&r_recs, &r_seqids, uuid)
-                            .calc_consensus()
-                            .0,
-                    )?;
-                }
-            } else {
-                unreachable!()
+                        )?;
+                    }
+                    _ => {
+                        bam_skipped_writer.write(&recs[0])?;
+                    }
+                },
             }
-        } else {
-            let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-            fq_se_writer.write_record(
-                &CalcNonOverlappingConsensus::new(&l_recs, &l_seqids, uuid)
-                    .calc_consensus()
-                    .0,
-            )?;
         }
     }
     Ok(())
 }
 
-fn is_valid_overlap<'a, I>(overlap: u32, cigar: I) -> bool
-where
-    I: Iterator<Item = &'a Cigar>,
-{
-    let mut i = 0;
-    for c in cigar {
-        match i < overlap {
-            true => match c {
-                Cigar::Ins(_) | Cigar::Del(_) => return false,
-                Cigar::Match(l)
-                | Cigar::RefSkip(l)
-                | Cigar::SoftClip(l)
-                | Cigar::Pad(l)
-                | Cigar::Equal(l)
-                | Cigar::Diff(l) => i += l,
-                Cigar::HardClip(_) => {}
-            },
-            false => return true,
-        }
+fn group_reads_by_cigar(
+    record_ids: Vec<RecordId>,
+    record_storage: &mut HashMap<RecordId, RecordStorage>,
+    bam_skipped_writer: &mut bam::Writer,
+) -> Result<HashMap<Cigar, CigarGroup>> {
+    let mut cigar_groups: HashMap<Cigar, CigarGroup> = HashMap::new();
+    for rec_id in record_ids {
+        match record_storage.remove(&rec_id).unwrap() {
+            RecordStorage::PairedRecords { r1_rec, r2_rec } => {
+                let r1_rec_id = r1_rec.rec_id;
+                let r1_rec_entry = r1_rec.into_rec();
+                let r2_rec_unwrapped = r2_rec.unwrap();
+                let r2_rec_id = r2_rec_unwrapped.rec_id;
+                let r2_rec_entry = r2_rec_unwrapped.into_rec();
+
+                if cigar_has_softclips(&r1_rec_entry) || cigar_has_softclips(&r2_rec_entry) {
+                    bam_skipped_writer.write(&r1_rec_entry)?;
+                    bam_skipped_writer.write(&r2_rec_entry)?;
+                } else {
+                    let cigar_tuple = Cigar::Tuple {
+                        r1_cigar: r1_rec_entry.raw_cigar().to_vec(),
+                        r2_cigar: r2_rec_entry.raw_cigar().to_vec(),
+                    };
+                    if !cigar_groups.contains_key(&cigar_tuple) {
+                        cigar_groups.insert(
+                            cigar_tuple.clone(),
+                            CigarGroup::PairedRecords {
+                                r1_recs: Vec::new(),
+                                r2_recs: Vec::new(),
+                                r1_seqids: Vec::new(),
+                                r2_seqids: Vec::new(),
+                            },
+                        );
+                    }
+                    match cigar_groups.get_mut(&cigar_tuple) {
+                        Some(CigarGroup::PairedRecords {
+                            r1_recs,
+                            r2_recs,
+                            r1_seqids,
+                            r2_seqids,
+                        }) => {
+                            r1_recs.push(r1_rec_entry);
+                            r2_recs.push(r2_rec_entry);
+                            r1_seqids.push(r1_rec_id);
+                            r2_seqids.push(r2_rec_id);
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+            }
+            RecordStorage::SingleRecord { rec } => {
+                let rec_id = rec.rec_id;
+                let rec_entry = rec.into_rec();
+                if cigar_has_softclips(&rec_entry) {
+                    bam_skipped_writer.write(&rec_entry)?;
+                } else {
+                    let cigar_single = Cigar::Single {
+                        cigar: rec_entry.raw_cigar().to_vec(),
+                    };
+                    if !cigar_groups.contains_key(&cigar_single) {
+                        cigar_groups.insert(
+                            cigar_single.clone(),
+                            CigarGroup::SingleRecords {
+                                recs: Vec::new(),
+                                seqids: Vec::new(),
+                            },
+                        );
+                    }
+                    match cigar_groups.get_mut(&cigar_single) {
+                        Some(CigarGroup::SingleRecords { recs, seqids }) => {
+                            recs.push(rec_entry);
+                            seqids.push(rec_id);
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+            }
+        };
     }
-    true
+    Ok(cigar_groups)
 }
 
-fn calc_overlap(l_rec: &bam::Record, r_rec: &bam::Record) -> Option<i64> {
-    let l_start_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter());
-    let l_start_pos = l_rec.pos() - l_start_softclips as i64;
-
-    let l_end_softclips = count_softclips(l_rec.cigar_cached().unwrap().into_iter().rev());
-    let l_end_pos = l_rec.cigar_cached().unwrap().end_pos() + l_end_softclips as i64;
-
-    let r_start_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter());
-    let r_start_pos = r_rec.pos() - r_start_softclips as i64;
-
-    let r_end_softclips = count_softclips(r_rec.cigar_cached().unwrap().into_iter().rev());
-    let r_end_pos = l_rec.cigar_cached().unwrap().end_pos() + r_end_softclips as i64;
-
-    //TODO Skipping soft clips here. Handle this correctly
-    if (l_start_softclips > 0)
-        | (l_end_softclips > 0)
-        | (r_start_softclips > 0)
-        | (r_end_softclips > 0)
-    {
-        return None;
-    }
-    //TODO if-closure is just a hotfix to ensure reads only overlap by end of r1 and start of r2
-    // or are at exact same position
-    // Fix this later by handling any other alignments
-    if l_end_pos <= r_end_pos && l_start_pos <= r_start_pos {
-        let left_overlap_pos = match l_start_pos >= r_start_pos {
-            true => l_start_pos,
-            false => r_start_pos,
-        };
-        let right_overlap_pos = match l_end_pos <= r_end_pos {
-            true => l_end_pos,
-            false => r_end_pos,
-        };
-        Some(right_overlap_pos - left_overlap_pos)
-    } else {
+fn calc_read_alignments(
+    r1_rec: &bam::Record,
+    r2_rec: &bam::Record,
+) -> Option<(Vec<bool>, Vec<bool>)> {
+    let r1_start = r1_rec.pos();
+    let r1_end = r1_rec.cigar_cached().unwrap().end_pos();
+    let r2_start = r2_rec.pos();
+    let r2_end = r1_rec.cigar_cached().unwrap().end_pos();
+    if r1_rec.tid() != r2_rec.tid() {
         None
-    }
-}
-
-//Gets an Iterator over Cigar-items and returns number of soft-clips at the beginning
-fn count_softclips<'a, I>(cigar: I) -> i32
-where
-    I: Iterator<Item = &'a Cigar>,
-{
-    for c in cigar {
-        match c {
-            Cigar::HardClip(_) => {}
-            Cigar::SoftClip(l) => return *l as i32,
-            _ => return 0,
+    } else if r1_start <= r2_start {
+        //Check if reads overlap
+        if r1_end >= r2_start {
+            let offset = r2_start - r1_start;
+            calc_alignment_vectors(offset, r1_rec, r2_rec)
+        } else {
+            //Reads do not overlap
+            None
+        }
+    } else {
+        //R2 starts before R1
+        if r2_end >= r1_start {
+            let offset = r1_start - r2_start;
+            calc_alignment_vectors(offset, r2_rec, r1_rec)
+        } else {
+            None
         }
     }
-    unreachable!();
 }
 
+fn calc_alignment_vectors(
+    mut offset: i64,
+    r1_rec: &bam::Record,
+    r2_rec: &bam::Record,
+) -> Option<(Vec<bool>, Vec<bool>)> {
+    let mut r1_vec = Vec::new();
+    let mut r2_vec = Vec::new();
+    let mut r1_cigarstring = r1_rec
+        .cigar_cached()
+        .unwrap()
+        .iter()
+        .flat_map(|cigar| vec![cigar.char(); cigar.len() as usize])
+        .collect::<Vec<char>>()
+        .into_iter();
+    let mut r2_cigarstring = r2_rec
+        .cigar_cached()
+        .unwrap()
+        .iter()
+        .flat_map(|cigar| vec![cigar.char(); cigar.len() as usize])
+        .collect::<Vec<char>>()
+        .into_iter();
+    let mut r1_cigar = r1_cigarstring.next();
+    let mut r2_cigar = match offset == 0 {
+        true => r2_cigarstring.next(),
+        false => None,
+    };
+    let mut intersection_entry_passed = false;
+    loop {
+        if r2_cigar == None {
+            match r1_cigar {
+                None => break,
+                Some('M') | Some('X') | Some('=') | Some('D') | Some('N') => {
+                    offset -= 1;
+                }
+                Some('S') => unreachable!(),
+                Some(_) => {}
+            }
+            match_single_cigar(&r1_cigar, &mut r1_vec, &mut r2_vec);
+            r1_cigar = r1_cigarstring.next();
+            if offset == 0 {
+                r2_cigar = r2_cigarstring.next();
+            }
+        } else if r1_cigar == None {
+            match_single_cigar(&r2_cigar, &mut r2_vec, &mut r1_vec);
+            r2_cigar = r2_cigarstring.next();
+        } else if r1_cigar != r2_cigar {
+            if !intersection_entry_passed && r1_cigar == Some('I') {
+                r1_vec.push(true);
+                r2_vec.push(false);
+                r1_cigar = r1_cigarstring.next();
+            } else {
+                return None;
+            }
+        } else {
+            intersection_entry_passed = true; // Can this me somehow only be called once?!
+            match (r1_cigar, r2_cigar) {
+                (Some('M'), Some('M'))
+                | (Some('X'), Some('X'))
+                | (Some('='), Some('='))
+                | (Some('I'), Some('I')) => {
+                    r1_vec.push(true);
+                    r2_vec.push(true);
+                    r1_cigar = r1_cigarstring.next();
+                    r2_cigar = r2_cigarstring.next();
+                }
+                (Some('D'), Some('D')) | (Some('H'), Some('H')) => {
+                    r1_cigar = r1_cigarstring.next();
+                    r2_cigar = r2_cigarstring.next();
+                }
+                (None, None) | (None, Some(_)) | (Some(_), None) | (Some(_), Some(_)) => {
+                    unreachable!()
+                }
+            };
+        }
+    }
+    Some((r1_vec, r2_vec))
+}
+
+fn cigar_has_softclips(rec: &bam::Record) -> bool {
+    let cigar = rec.cigar_cached().unwrap();
+    cigar.leading_softclips() > 0 || cigar.trailing_softclips() > 0
+}
+
+fn match_single_cigar(cigar: &Option<char>, first_vec: &mut Vec<bool>, second_vec: &mut Vec<bool>) {
+    match cigar {
+        Some('M') | Some('S') | Some('X') | Some('=') | Some('I') => {
+            first_vec.push(true);
+            second_vec.push(false);
+        }
+        Some(_) | None => {}
+    };
+}
 pub enum RecordStorage {
     PairedRecords {
-        l_rec: IndexedRecord,
-        r_rec: Option<IndexedRecord>,
+        r1_rec: IndexedRecord,
+        r2_rec: Option<IndexedRecord>,
     },
     SingleRecord {
         rec: IndexedRecord,
@@ -443,4 +585,28 @@ impl Deref for IndexedRecord {
     fn deref(&self) -> &bam::Record {
         &self.rec
     }
+}
+
+pub enum CigarGroup {
+    PairedRecords {
+        r1_recs: Vec<bam::Record>,
+        r2_recs: Vec<bam::Record>,
+        r1_seqids: Vec<usize>,
+        r2_seqids: Vec<usize>,
+    },
+    SingleRecords {
+        recs: Vec<bam::Record>,
+        seqids: Vec<usize>,
+    },
+}
+
+#[derive(Hash, PartialEq, Eq, Clone)]
+pub enum Cigar {
+    Tuple {
+        r1_cigar: Vec<u32>,
+        r2_cigar: Vec<u32>,
+    },
+    Single {
+        cigar: Vec<u32>,
+    },
 }

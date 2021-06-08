@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>BAM Plot for {{ bam }}</title>
+    <meta charset="UTF-8">
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+</head>
+
+<body>
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">rbt report</a>
+    <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools/blob/master/CHANGELOG.md">{{ version }}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+            </li>
+        </ul>
+        <span class="navbar-text">
+            created {{ time }}
+        </span>
+    </div>
+</nav>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item active">chrom: {{ chrom|safe }}</li>
+        <li class="breadcrumb-item active" aria-current="page">region: {{ start }} - {{ end }}</li>
+    </ol>
+</nav>
+<div id="plot">
+
+</div>
+<script>
+    var specs = {{ specs || safe }};
+    vegaEmbed('#plot', specs);
+</script>
+</body>
+</html>

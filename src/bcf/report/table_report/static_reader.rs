@@ -39,7 +39,7 @@ fn calc_rows(
     reads: Vec<AlignmentNucleobase>,
     matches: Vec<AlignmentMatch>,
     max_read_depth: u32,
-    variant: &Variant,
+    variant: Option<&Variant>,
 ) -> (
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
@@ -55,8 +55,14 @@ fn calc_rows(
     let mut max_row = 0;
 
     for r in matches {
-        if r.read_start < variant.start_position as u32 && r.read_end > variant.end_position as u32
-        {
+        let overlaps = if variant.is_some() {
+            r.read_start < variant.unwrap().start_position as u32
+                && r.read_end > variant.unwrap().end_position as u32
+        } else {
+            true
+        };
+
+        if overlaps {
             let mut row: u16 = 0;
 
             if read_names.contains_key(&r.name) {
@@ -85,8 +91,14 @@ fn calc_rows(
     }
 
     for r in reads {
-        if r.read_start < variant.start_position as u32 && r.read_end > variant.end_position as u32
-        {
+        let overlaps = if variant.is_some() {
+            r.read_start < variant.unwrap().start_position as u32
+                && r.read_end > variant.unwrap().end_position as u32
+        } else {
+            true
+        };
+
+        if overlaps {
             let mut row: u16 = 0;
 
             if read_names.contains_key(&r.name) {
@@ -141,7 +153,7 @@ pub fn get_static_reads(
     from: u64,
     to: u64,
     max_read_depth: u32,
-    variant: &Variant,
+    variant: Option<&Variant>,
 ) -> Result<(
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
@@ -149,5 +161,5 @@ pub fn get_static_reads(
 )> {
     let alignments = read_indexed_bam(path, chrom.clone(), from, to)?;
     let (msm, m) = make_nucleobases(fasta_path, chrom, alignments, from, to)?;
-    Ok(calc_rows(msm, m, max_read_depth, &variant))
+    Ok(calc_rows(msm, m, max_read_depth, variant))
 }

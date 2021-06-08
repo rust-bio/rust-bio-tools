@@ -325,7 +325,7 @@ pub(crate) fn make_table_report(
                     if pos < 75 {
                         let (content, max_rows) = create_report_data(
                             fasta_path,
-                            var.clone(),
+                            Some(var.clone()),
                             bam_path,
                             chrom.clone(),
                             0,
@@ -337,7 +337,7 @@ pub(crate) fn make_table_report(
                     } else if pos + 75 >= fasta_length as i64 {
                         let (content, max_rows) = create_report_data(
                             fasta_path,
-                            var.clone(),
+                            Some(var.clone()),
                             bam_path,
                             chrom.clone(),
                             pos as u64 - 75,
@@ -349,7 +349,7 @@ pub(crate) fn make_table_report(
                     } else {
                         let (content, max_rows) = create_report_data(
                             fasta_path,
-                            var.clone(),
+                            Some(var.clone()),
                             bam_path,
                             chrom.clone(),
                             pos as u64 - 75,
@@ -490,9 +490,9 @@ pub(crate) fn read_tag_entries(
     Ok(())
 }
 
-fn create_report_data(
+pub(crate) fn create_report_data(
     fasta_path: &Path,
-    variant: Variant,
+    variant: Option<Variant>,
     bam_path: &Path,
     chrom: String,
     from: u64,
@@ -513,7 +513,7 @@ fn create_report_data(
         from,
         to,
         max_read_depth,
-        &variant,
+        variant.as_ref(),
     )?;
 
     for b in bases {
@@ -533,7 +533,7 @@ fn create_report_data(
 
 /// Inserts the json containing the genome data into the vega specs.
 /// It also changes keys and values of the json data for the vega plot to look better and compresses the json with jsonm.
-fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Result<String> {
+pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Result<String> {
     let json_string = include_str!("vegaSpecs.json");
 
     let mut vega_specs: Value = serde_json::from_str(&json_string)?;

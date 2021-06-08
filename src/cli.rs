@@ -215,6 +215,32 @@ pub(crate) enum Command {
         output_path: String,
     },
 
+    /// Creates a html file with a vega visualization of the given bam region
+    /// Example:
+    /// rbt plot-bam input.bam 2:132424-132924
+    #[structopt(author = "Felix Wiegand <felix.wiegand@tu-dortmund.de>")]
+    PlotBam {
+        /// BAM file to be visualized.
+        #[structopt()]
+        bam_path: String,
+
+        /// Path to the reference fasta file.
+        #[structopt(long, short = "r", default_value = "100")]
+        reference: String,
+
+        /// Chromosome and region for the visualization. Example: 2:132424-132924
+        #[structopt()]
+        region: String,
+
+        /// Set the maximum lines of reads that will be shown in the alignment plots. Default value is 500.
+        #[structopt(long, short = "d", default_value = "500")]
+        max_read_depth: u32,
+
+        /// Relative output path for the html file. Default value is the current directory.
+        #[structopt(default_value = ".")]
+        output_path: String,
+    },
+
     /// Creates report from a given VCF file including a visual plot
     /// for every variant with the given BAM and FASTA file.
     /// The VCF file has to be annotated with VEP, using the options --hgvs and --hgvsg.
@@ -246,7 +272,7 @@ pub(crate) enum Command {
         #[structopt(long, short = "c", default_value = "1000")]
         cells: u32,
 
-        /// Set the maximum number of cells in the oncoprint per page. Lowering max-cells should improve the performance of the plots in the browser. Default value is 1000.
+        /// Set the maximum lines of reads that will be shown in the alignment plots. Default value is 500.
         #[structopt(long, short = "d", default_value = "500")]
         max_read_depth: u32,
 

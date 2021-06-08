@@ -113,6 +113,24 @@ fn main() -> Result<()> {
                 pin_until.as_deref(),
             )?
         }
+        PlotBam {
+            bam_path,
+            reference,
+            region,
+            max_read_depth,
+            output_path,
+        } => {
+            if !Path::new(&output_path).exists() {
+                fs::create_dir_all(Path::new(&output_path))?;
+            }
+            bam::plot::plot_bam::plot_bam(
+                &bam_path,
+                &reference,
+                &region,
+                max_read_depth,
+                &output_path,
+            )?
+        }
         VcfReport {
             fasta,
             vcfs,

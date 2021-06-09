@@ -39,7 +39,7 @@
         <li class="breadcrumb-item active" aria-current="page">region: {{ start }} - {{ end }}</li>
     </ol>
 </nav>
-<div id="plot">
+<div id="plot" style="overflow-y: auto">
 </div>
 <script>
     var specs = {{ specs | safe }};
@@ -47,7 +47,14 @@
     console.log(decompressed);
     let unpacker = new jsonm.Unpacker();
     unpacker.setMaxDictSize(100000);
-    vegaEmbed('#plot', unpacker.unpack(JSON.parse(decompressed)));
+    specs = unpacker.unpack(JSON.parse(decompressed));
+    specs["width"] = $(window).width() - 100;
+    vegaEmbed('#plot', specs);
+
+    $( window ).resize(function() {
+        specs["width"] = $(window).width() - 100;
+        vegaEmbed('#plot', specs);
+    })
 </script>
 </body>
 </html>

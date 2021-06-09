@@ -34,8 +34,6 @@ pub(crate) fn plot_bam(
     )?;
     let visualization = manipulate_json(content, start, end, max_rows)?;
 
-    dbg!(&visualization);
-
     let mut templates = Tera::default();
     templates.add_raw_template("bam_plot.html.tera", include_str!("bam_plot.html.tera"))?;
     let mut context = Context::new();

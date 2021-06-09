@@ -43,7 +43,7 @@ pub(crate) fn plot_bam(
     context.insert("time", &local.format("%a %b %e %T %Y").to_string());
     context.insert("version", &env!("CARGO_PKG_VERSION"));
     context.insert("specs", &visualization);
-    context.insert("bam", &bam_path.to_string());
+    context.insert("bam", &Path::new(bam_path).iter().last().unwrap().to_str().unwrap());
     context.insert("chrom", &chrom);
     context.insert("start", &start);
     context.insert("end", &end);

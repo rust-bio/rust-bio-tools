@@ -526,7 +526,9 @@ pub(crate) fn create_report_data(
         data.push(mat);
     }
 
-    data.push(json!(variant));
+    if variant.is_some() {
+        data.push(json!(variant));
+    }
 
     Ok((Json::from_str(&json!(data).to_string()).unwrap(), max_rows))
 }
@@ -545,7 +547,7 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -
     for (i, _) in v.iter().enumerate() {
         let k = v[i]["marker_type"].clone().as_str().unwrap().to_owned();
 
-        if k == "A" || k == "T" || k == "G" || k == "C" || k == "U" {
+        if k == "A" || k == "T" || k == "G" || k == "C" || k == "U" || k == "N" {
             values["values"][i]["base"] = values["values"][i]["marker_type"].clone();
         } else if k == "Deletion"
             || k == "Match"

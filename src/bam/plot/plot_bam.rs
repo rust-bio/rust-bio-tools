@@ -41,14 +41,7 @@ pub(crate) fn plot_bam(
 
     let bams = bam_paths
         .iter()
-        .map(|b| {
-            Path::new(b)
-                .iter()
-                .last()
-                .unwrap()
-                .to_str()
-                .unwrap()
-        })
+        .map(|b| Path::new(b).iter().last().unwrap().to_str().unwrap())
         .collect_vec();
 
     let mut templates = Tera::default();

@@ -10,7 +10,7 @@ use std::str::FromStr;
 use tera::{Context, Tera};
 
 pub(crate) fn plot_bam(
-    bam_path: &str,
+    bam_paths: &Vec<String>,
     fasta_path: &str,
     region: &str,
     max_read_depth: u32,
@@ -22,17 +22,34 @@ pub(crate) fn plot_bam(
     assert_eq!(2, span.len());
     let start = u64::from_str(span[0])?;
     let end = u64::from_str(span[1])?;
+    let mut plots = Vec::new();
 
-    let (content, max_rows) = create_report_data(
-        Path::new(fasta_path),
-        None,
-        Path::new(bam_path),
-        chrom.to_owned(),
-        start,
-        end,
-        max_read_depth,
-    )?;
-    let visualization = manipulate_json(content, start, end, max_rows)?;
+    for bam_path in bam_paths {
+        let (content, max_rows) = create_report_data(
+            Path::new(fasta_path),
+            None,
+            Path::new(bam_path),
+            chrom.to_owned(),
+            start,
+            end,
+            max_read_depth,
+        )?;
+        let visualization = manipulate_json(content, start, end, max_rows)?;
+
+        plots.push(visualization);
+    }
+
+    let bams = bam_paths
+        .iter()
+        .map(|b| {
+            Path::new(b)
+                .iter()
+                .last()
+                .unwrap()
+                .to_str()
+                .unwrap()
+        })
+        .collect_vec();
 
     let mut templates = Tera::default();
     templates.add_raw_template("bam_plot.html.tera", include_str!("bam_plot.html.tera"))?;
@@ -40,11 +57,8 @@ pub(crate) fn plot_bam(
     let local: DateTime<Local> = Local::now();
     context.insert("time", &local.format("%a %b %e %T %Y").to_string());
     context.insert("version", &env!("CARGO_PKG_VERSION"));
-    context.insert("specs", &visualization);
-    context.insert(
-        "bam",
-        &Path::new(bam_path).iter().last().unwrap().to_str().unwrap(),
-    );
+    context.insert("plots", &plots);
+    context.insert("bams", &bams);
     context.insert("chrom", &chrom);
     context.insert("start", &start);
     context.insert("end", &end);

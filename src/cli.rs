@@ -217,19 +217,19 @@ pub(crate) enum Command {
 
     /// Creates a html file with a vega visualization of the given bam region
     /// Example:
-    /// rbt plot-bam input.bam 2:132424-132924
+    /// rbt plot-bam -b input.bam -g 2:132424-132924 -r input.fa
     #[structopt(author = "Felix Wiegand <felix.wiegand@tu-dortmund.de>")]
     PlotBam {
         /// BAM file to be visualized.
-        #[structopt()]
-        bam_path: String,
+        #[structopt(long, short = "b")]
+        bam_path: Vec<String>,
 
         /// Path to the reference fasta file.
         #[structopt(long, short = "r", default_value = "100")]
         reference: String,
 
         /// Chromosome and region for the visualization. Example: 2:132424-132924
-        #[structopt()]
+        #[structopt(long, short = "g")]
         region: String,
 
         /// Set the maximum lines of reads that will be shown in the alignment plots. Default value is 500.

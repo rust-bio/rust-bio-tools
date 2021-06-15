@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>BAM Plot for {{ bam }}</title>
+    <title>rbt bam report</title>
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
     <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
@@ -34,27 +34,50 @@
 </nav>
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item active">file: {{ bam }}</li>
         <li class="breadcrumb-item active">chrom: {{ chrom|safe }}</li>
         <li class="breadcrumb-item active" aria-current="page">region: {{ start }} - {{ end }}</li>
     </ol>
 </nav>
-<div id="plot" style="overflow-y: auto">
+<div class="row">
+    <div class="dropdown">
+        <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            BAM File
+        </a>
+
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+            {% for bam in bams %}
+            <a class="dropdown-item" id="dropdown_{{loop.index}}" onclick="show_plot(plot_{{loop.index}}, '#dropdown_{{loop.index}}')">{{ bam }}</a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<div>
+    <div id="plot" style="overflow-y: auto;"></div>
 </div>
 <script>
-    var specs = {{ specs | safe }};
-    let decompressed = LZString.decompressFromUTF16(specs);
-    console.log(decompressed);
-    let unpacker = new jsonm.Unpacker();
-    unpacker.setMaxDictSize(100000);
-    specs = unpacker.unpack(JSON.parse(decompressed));
-    specs["width"] = $(window).width() - 100;
-    vegaEmbed('#plot', specs);
+    {% for plot in plots %}let plot_{{loop.index}} = {{ plot | safe }};
+    {% endfor %}
 
-    $( window ).resize(function() {
-        specs["width"] = $(window).width() - 100;
-        vegaEmbed('#plot', specs);
+    let current_plot;
+
+    function show_plot(specs, dropdown_id) {
+        let decompressed = LZString.decompressFromUTF16(specs);
+        let unpacker = new jsonm.Unpacker();
+        unpacker.setMaxDictSize(100000);
+        let unpacked_specs = unpacker.unpack(JSON.parse(decompressed));
+        unpacked_specs["width"] = $(window).width() - 100;
+        vegaEmbed('#plot', unpacked_specs);
+        current_plot = unpacked_specs;
+        $(".dropdown-item").removeClass("active");
+        $(dropdown_id).addClass("active");
+    }
+
+    $(window).resize(function() {
+        current_plot["width"] = $(window).width() - 100;
+        vegaEmbed('#plot', current_plot);
     })
+
+    $(document).ready(show_plot(plot_1, "#dropdown_1"));
 </script>
 </body>
 </html>

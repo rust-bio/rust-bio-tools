@@ -38,46 +38,37 @@
         <li class="breadcrumb-item active" aria-current="page">region: {{ start }} - {{ end }}</li>
     </ol>
 </nav>
-<div class="row">
-    <div class="dropdown">
-        <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            BAM File
-        </a>
-
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-            {% for bam in bams %}
-            <a class="dropdown-item" id="dropdown_{{loop.index}}" onclick="show_plot(plot_{{loop.index}}, '#dropdown_{{loop.index}}')">{{ bam }}</a>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-<div>
-    <div id="plot" style="overflow-y: auto;"></div>
-</div>
+{% for plot in plots %}<div class="row mt-1 justify-content-center">
+    <div id="plot_{{loop.index}}" style="overflow-y: auto; height: 350px;"></div>
+</div>{% endfor %}
 <script>
-    {% for plot in plots %}let plot_{{loop.index}} = {{ plot | safe }};
-    {% endfor %}
+    let plots = [{% for plot in plots %}{{ plot | safe }}{% if not loop.last %},{% endif %}{% endfor %}];
+    let bams = [{% for bam in bams %}"{{ bam }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    let i = 1;
 
-    let current_plot;
+    let decompressed_plots = [];
 
-    function show_plot(specs, dropdown_id) {
-        let decompressed = LZString.decompressFromUTF16(specs);
+    for (plot of plots) {
+        let decompressed = LZString.decompressFromUTF16(plot);
         let unpacker = new jsonm.Unpacker();
         unpacker.setMaxDictSize(100000);
         let unpacked_specs = unpacker.unpack(JSON.parse(decompressed));
         unpacked_specs["width"] = $(window).width() - 100;
-        vegaEmbed('#plot', unpacked_specs);
-        current_plot = unpacked_specs;
-        $(".dropdown-item").removeClass("active");
-        $(dropdown_id).addClass("active");
+        unpacked_specs["title"] = bams[i - 1];
+        decompressed_plots.push(unpacked_specs);
+        let plot_id = `#plot_${i}`;
+        vegaEmbed(plot_id, unpacked_specs);
+        i++;
     }
 
     $(window).resize(function() {
-        current_plot["width"] = $(window).width() - 100;
-        vegaEmbed('#plot', current_plot);
+        let j = 1;
+        for (plot of decompressed_plots) {
+            let plot_id = `#plot_${j}`;
+            plot["width"] = $(window).width() - 100;
+            vegaEmbed(plot_id, plot);
+        }
     })
-
-    $(document).ready(show_plot(plot_1, "#dropdown_1"));
 </script>
 </body>
 </html>

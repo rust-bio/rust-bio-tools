@@ -10,15 +10,15 @@ use std::str::FromStr;
 use tera::{Context, Tera};
 
 pub(crate) fn plot_bam(
-    bam_paths: &Vec<String>,
+    bam_paths: &[String],
     fasta_path: &str,
     region: &str,
     max_read_depth: u32,
     output_path: &str,
 ) -> Result<()> {
-    let splitted_region = region.split(":").collect_vec();
+    let splitted_region = region.split(':').collect_vec();
     let chrom = splitted_region[0];
-    let span = splitted_region[1].split("-").collect_vec();
+    let span = splitted_region[1].split('-').collect_vec();
     assert_eq!(2, span.len());
     let start = u64::from_str(span[0])?;
     let end = u64::from_str(span[1])?;

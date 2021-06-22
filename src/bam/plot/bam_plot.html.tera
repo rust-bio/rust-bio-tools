@@ -33,12 +33,24 @@
     </div>
 </nav>
 <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item active">chrom: {{ chrom|safe }}</li>
-        <li class="breadcrumb-item active" aria-current="page">region: {{ start }} - {{ end }}</li>
-    </ol>
+    <ul class="breadcrumb">
+        <li class="breadcrumb-item active" style="padding-top: 8px;">chrom: {{ chrom|safe }}</li>
+        <li class="breadcrumb-item active" style="padding-top: 8px;" aria-current="page">region: {{ start }} - {{ end }}</li>
+        <button class="btn btn-secondary dropdown-toggle ml-auto" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Samples
+        </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="overflow-y: auto; max-height: 200px; z-index: 1001;">
+                {% for bam in bams %}<div class="dropdown-item">
+                <input class="form-check-input" type="checkbox" checked="checked" data-toggle="collapse" data-target="#collapse_{{loop.index}}" value="" id="defaultCheck{{ loop.index }}">
+                <label class="form-check-label" for="defaultCheck{{ loop.index }}">
+                    {{ bam }}
+                </label>
+            </div>{% endfor %}
+        </div>
+    </ul>
 </nav>
-{% for plot in plots %}<div class="row justify-content-center" style="margin-top: 25px;">
+
+{% for plot in plots %}<div id="collapse_{{loop.index}}" class="row justify-content-center collapse show" style="margin-top: 25px;">
     <div id="plot_{{loop.index}}" style="overflow-y: auto; height: calc(50vh - 50px);"></div>
 </div>{% endfor %}
 <script>

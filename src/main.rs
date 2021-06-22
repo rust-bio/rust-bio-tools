@@ -118,14 +118,7 @@ fn main() -> Result<()> {
             reference,
             region,
             max_read_depth,
-        } => {
-            bam::plot::plot_bam::plot_bam(
-                &bam_path,
-                &reference,
-                &region,
-                max_read_depth,
-            )?
-        }
+        } => bam::plot::plot_bam::plot_bam(&bam_path, &reference, &region, max_read_depth)?,
         VcfReport {
             fasta,
             vcfs,

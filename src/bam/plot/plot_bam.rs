@@ -3,11 +3,11 @@ use crate::bcf::report::table_report::create_report_table::manipulate_json;
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use itertools::Itertools;
+use std::io;
 use std::io::Write;
 use std::path::Path;
 use std::str::FromStr;
 use tera::{Context, Tera};
-use std::io;
 
 pub(crate) fn plot_bam(
     bam_paths: &[String],

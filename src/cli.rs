@@ -217,7 +217,7 @@ pub(crate) enum Command {
 
     /// Creates a html file with a vega visualization of the given bam region
     /// Example:
-    /// rbt plot-bam -b input.bam -g 2:132424-132924 -r input.fa
+    /// rbt plot-bam -b input.bam -g 2:132424-132924 -r input.fa > plot.html
     #[structopt(author = "Felix Wiegand <felix.wiegand@tu-dortmund.de>")]
     PlotBam {
         /// BAM file to be visualized.
@@ -235,10 +235,6 @@ pub(crate) enum Command {
         /// Set the maximum lines of reads that will be shown in the alignment plots. Default value is 500.
         #[structopt(long, short = "d", default_value = "500")]
         max_read_depth: u32,
-
-        /// Relative output path for the html file. Default value is the current directory.
-        #[structopt(default_value = ".")]
-        output_path: String,
     },
 
     /// Creates report from a given VCF file including a visual plot

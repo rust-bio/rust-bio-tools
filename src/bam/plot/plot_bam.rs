@@ -3,18 +3,17 @@ use crate::bcf::report::table_report::create_report_table::manipulate_json;
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use itertools::Itertools;
-use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::str::FromStr;
 use tera::{Context, Tera};
+use std::io;
 
 pub(crate) fn plot_bam(
     bam_paths: &[String],
     fasta_path: &str,
     region: &str,
     max_read_depth: u32,
-    output_path: &str,
 ) -> Result<()> {
     let splitted_region = region.split(':').collect_vec();
     let chrom = splitted_region[0];
@@ -57,9 +56,7 @@ pub(crate) fn plot_bam(
     context.insert("end", &end);
 
     let html = templates.render("bam_plot.html.tera", &context)?;
-    let filepath = Path::new(output_path).join("plot.html");
-    let mut file = File::create(filepath)?;
-    file.write_all(html.as_bytes())?;
+    io::stdout().write_all(html.as_bytes())?;
 
     Ok(())
 }

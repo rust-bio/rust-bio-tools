@@ -38,8 +38,8 @@
         <li class="breadcrumb-item active" aria-current="page">region: {{ start }} - {{ end }}</li>
     </ol>
 </nav>
-{% for plot in plots %}<div class="row mt-1 justify-content-center">
-    <div id="plot_{{loop.index}}" style="overflow-y: auto; height: 350px;"></div>
+{% for plot in plots %}<div class="row justify-content-center" style="margin-top: 25px;">
+    <div id="plot_{{loop.index}}" style="overflow-y: auto; height: calc(50vh - 50px);"></div>
 </div>{% endfor %}
 <script>
     let plots = [{% for plot in plots %}{{ plot | safe }}{% if not loop.last %},{% endif %}{% endfor %}];

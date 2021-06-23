@@ -122,11 +122,11 @@ fn calc_rows(
             .collect();
         reads_wr = reads_wr
             .into_iter()
-            .filter(|b| random_rows.contains(&&(b.row as u32)))
+            .filter(|b| random_rows.contains(&(b.row as u32)))
             .collect();
         matches_wr = matches_wr
             .into_iter()
-            .filter(|b| random_rows.contains(&&(b.row as u32)))
+            .filter(|b| random_rows.contains(&(b.row as u32)))
             .collect();
         max_row = max_read_depth as usize;
     }
@@ -149,5 +149,5 @@ pub fn get_static_reads(
 )> {
     let alignments = read_indexed_bam(path, chrom.clone(), from, to)?;
     let (msm, m) = make_nucleobases(fasta_path, chrom, alignments, from, to)?;
-    Ok(calc_rows(msm, m, max_read_depth, &variant))
+    Ok(calc_rows(msm, m, max_read_depth, variant))
 }

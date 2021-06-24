@@ -1,5 +1,6 @@
 use crate::bcf::report::table_report::fasta_reader::{get_fasta_lengths, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
+use crate::common::Region;
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 use chrono::{DateTime, Local};
@@ -206,9 +207,9 @@ pub(crate) fn make_table_report(
                             .get(&field.to_owned())
                             .context({
                                 format!(
-                                "No field named {} found. Please only use VEP-annotated VCF-files.",
-                                field
-                            )
+                                    "No field named {} found. Please only use VEP-annotated VCF-files.",
+                                    field
+                                )
                             })
                             .unwrap()],
                     )
@@ -222,7 +223,7 @@ pub(crate) fn make_table_report(
                     warn!("Warning! Found allele without SYMBOL or Gene field in record at {}:{}. Using HGVSg instead.", &chrom, variant.pos());
                     get_field("HGVSg")?
                 } else {
-                    warn!("Warning! Found allele without SYMBOL, Gene or HGVSg field in record at {}:{}. This record will be skipped!",  &chrom, variant.pos());
+                    warn!("Warning! Found allele without SYMBOL, Gene or HGVSg field in record at {}:{}. This record will be skipped!", &chrom, variant.pos());
                     continue;
                 };
                 genes.push(gene.to_owned());
@@ -327,9 +328,11 @@ pub(crate) fn make_table_report(
                             fasta_path,
                             Some(var.clone()),
                             bam_path,
-                            chrom.clone(),
-                            0,
-                            end_position as u64 + 75,
+                            &Region {
+                                target: chrom.clone(),
+                                start: 0,
+                                end: end_position as u64 + 75,
+                            },
                             max_read_depth,
                         )?;
                         visualization =
@@ -339,9 +342,11 @@ pub(crate) fn make_table_report(
                             fasta_path,
                             Some(var.clone()),
                             bam_path,
-                            chrom.clone(),
-                            pos as u64 - 75,
-                            fasta_length - 1,
+                            &Region {
+                                target: chrom.clone(),
+                                start: pos as u64 - 75,
+                                end: fasta_length - 1,
+                            },
                             max_read_depth,
                         )?;
                         visualization =
@@ -351,9 +356,11 @@ pub(crate) fn make_table_report(
                             fasta_path,
                             Some(var.clone()),
                             bam_path,
-                            chrom.clone(),
-                            pos as u64 - 75,
-                            end_position as u64 + 75,
+                            &Region {
+                                target: chrom.clone(),
+                                start: pos as u64 - 75,
+                                end: end_position as u64 + 75,
+                            },
                             max_read_depth,
                         )?;
                         visualization = manipulate_json(
@@ -490,18 +497,16 @@ pub(crate) fn read_tag_entries(
     Ok(())
 }
 
-pub(crate) fn create_report_data(
-    fasta_path: &Path,
+pub(crate) fn create_report_data<P: AsRef<Path>>(
+    fasta_path: P,
     variant: Option<Variant>,
-    bam_path: &Path,
-    chrom: String,
-    from: u64,
-    to: u64,
+    bam_path: P,
+    region: &Region,
     max_read_depth: u32,
 ) -> Result<(Json, usize)> {
     let mut data = Vec::new();
 
-    for f in read_fasta(fasta_path, chrom.clone(), from, to, true)? {
+    for f in read_fasta(&fasta_path, region, true)? {
         let nucleobase = json!(f);
         data.push(nucleobase);
     }
@@ -509,9 +514,7 @@ pub(crate) fn create_report_data(
     let (bases, matches, max_rows) = get_static_reads(
         bam_path,
         fasta_path,
-        chrom,
-        from,
-        to,
+        region,
         max_read_depth,
         variant.as_ref(),
     )?;

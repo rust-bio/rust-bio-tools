@@ -1,3 +1,4 @@
+use crate::common::Region;
 use anyhow::Context;
 use anyhow::Result;
 use bio::io::fasta;
@@ -5,11 +6,9 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::path::Path;
 
-pub fn read_fasta(
-    path: &Path,
-    chrom: String,
-    start: u64,
-    stop: u64,
+pub fn read_fasta<P: AsRef<Path>>(
+    path: P,
+    region: &Region,
     compensate_0_basing: bool,
 ) -> Result<Vec<Nucleobase>> {
     let mut reader = fasta::IndexedReader::from_file(&path).unwrap();
@@ -18,11 +17,11 @@ pub fn read_fasta(
 
     let mut seq: Vec<u8> = Vec::new();
 
-    reader.fetch(&chrom, start, stop)?;
+    reader.fetch(&region.target, region.start, region.end)?;
     reader.read(&mut seq)?;
 
     let mut fasta = Vec::new();
-    let mut ind = start;
+    let mut ind = region.start;
     if compensate_0_basing {
         ind += 1;
     }

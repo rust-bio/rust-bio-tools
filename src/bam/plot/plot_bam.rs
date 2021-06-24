@@ -1,38 +1,26 @@
 use crate::bcf::report::table_report::create_report_table::create_report_data;
 use crate::bcf::report::table_report::create_report_table::manipulate_json;
+use crate::common::Region;
 use anyhow::Result;
 use chrono::{DateTime, Local};
 use itertools::Itertools;
 use std::io;
 use std::io::Write;
 use std::path::Path;
-use std::str::FromStr;
 use tera::{Context, Tera};
 
-pub(crate) fn plot_bam(
-    bam_paths: &[String],
-    fasta_path: &str,
-    region: &str,
+pub(crate) fn plot_bam<P: AsRef<Path>>(
+    bam_paths: &[P],
+    fasta_path: P,
+    region: &Region,
     max_read_depth: u32,
 ) -> Result<()> {
-    let splitted_region = region.split(':').collect_vec();
-    let chrom = splitted_region[0];
-    let span = splitted_region[1].split('-').collect_vec();
-    assert_eq!(2, span.len());
-    let start = u64::from_str(span[0])?;
-    let end = u64::from_str(span[1])?;
     let mut plots = Vec::new();
 
+    let Region { target, start, end } = region.clone();
     for bam_path in bam_paths {
-        let (content, max_rows) = create_report_data(
-            Path::new(fasta_path),
-            None,
-            Path::new(bam_path),
-            chrom.to_owned(),
-            start,
-            end,
-            max_read_depth,
-        )?;
+        let (content, max_rows) =
+            create_report_data(&fasta_path, None, bam_path, region, max_read_depth)?;
         let visualization = manipulate_json(content, start, end, max_rows)?;
 
         plots.push(visualization);
@@ -40,7 +28,7 @@ pub(crate) fn plot_bam(
 
     let bams = bam_paths
         .iter()
-        .map(|b| Path::new(b).iter().last().unwrap().to_str().unwrap())
+        .map(|b| b.as_ref().iter().last().unwrap().to_str().unwrap())
         .collect_vec();
 
     let mut templates = Tera::default();
@@ -51,7 +39,7 @@ pub(crate) fn plot_bam(
     context.insert("version", &env!("CARGO_PKG_VERSION"));
     context.insert("plots", &plots);
     context.insert("bams", &bams);
-    context.insert("chrom", &chrom);
+    context.insert("chrom", &target);
     context.insert("start", &start);
     context.insert("end", &end);
 

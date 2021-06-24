@@ -1,3 +1,4 @@
+use crate::common::Region;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -221,18 +222,18 @@ pub(crate) enum Command {
     #[structopt(author = "Felix Wiegand <felix.wiegand@tu-dortmund.de>")]
     PlotBam {
         /// BAM file to be visualized.
-        #[structopt(long, short = "b")]
-        bam_path: Vec<String>,
+        #[structopt(long, short = "b", parse(from_os_str))]
+        bam_path: Vec<PathBuf>,
 
         /// Path to the reference fasta file.
-        #[structopt(long, short = "r", default_value = "100")]
-        reference: String,
+        #[structopt(long, short = "r", parse(from_os_str))]
+        reference: PathBuf,
 
         /// Chromosome and region for the visualization. Example: 2:132424-132924
         #[structopt(long, short = "g")]
-        region: String,
+        region: Region,
 
-        /// Set the maximum lines of reads that will be shown in the alignment plots. Default value is 500.
+        /// Set the maximum number of reads that will be shown in the alignment plots. Default value is 500.
         #[structopt(long, short = "d", default_value = "500")]
         max_read_depth: u32,
     },

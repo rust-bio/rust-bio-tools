@@ -2,6 +2,7 @@ extern crate rust_htslib;
 
 use self::rust_htslib::bam::FetchDefinition;
 use crate::bcf::report::table_report::fasta_reader::read_fasta;
+use crate::common::Region;
 use anyhow::Result;
 use rust_htslib::bam::record::CigarStringView;
 use rust_htslib::{bam, bam::Read};
@@ -73,8 +74,10 @@ pub fn decode_flags(code: u16) -> Vec<u16> {
     read_map
 }
 
-pub fn read_indexed_bam(path: &Path, chrom: String, from: u64, to: u64) -> Result<Vec<Alignment>> {
+pub fn read_indexed_bam<P: AsRef<Path>>(path: P, region: &Region) -> Result<Vec<Alignment>> {
     let mut bam = bam::IndexedReader::from_path(&path)?;
+    let chrom = &region.target;
+    let (from, to) = (region.start, region.end);
     let tid = bam.header().tid(chrom.as_bytes()).unwrap() as i32;
 
     let mut alignments: Vec<Alignment> = Vec::new();
@@ -133,17 +136,16 @@ fn make_alignment(record: &bam::Record) -> Alignment {
     }
 }
 
-pub fn make_nucleobases(
-    fasta_path: &Path,
-    chrom: String,
+pub fn make_nucleobases<P: AsRef<Path>>(
+    fasta_path: P,
+    region: &Region,
     snippets: Vec<Alignment>,
-    from: u64,
-    to: u64,
 ) -> Result<(Vec<AlignmentNucleobase>, Vec<AlignmentMatch>)> {
     let mut bases: Vec<AlignmentNucleobase> = Vec::new();
     let mut matches: Vec<AlignmentMatch> = Vec::new();
 
-    let ref_bases = read_fasta(fasta_path, chrom, from, to, false)?;
+    let ref_bases = read_fasta(fasta_path, region, false)?;
+    let (from, to) = (region.start, region.end);
 
     for snippet in snippets {
         let mut cigar_offset: i64 = 0;

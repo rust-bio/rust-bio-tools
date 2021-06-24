@@ -1,4 +1,4 @@
-use anyhow::anyhow;
+use anyhow::Context;
 use approx::relative_eq;
 use bio::stats::probs::{LogProb, PHREDProb};
 use bio_types::sequence::SequenceRead;
@@ -91,12 +91,8 @@ impl FromStr for Region {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (target, range) = s
-            .split_once(':')
-            .ok_or(anyhow!("No ':' in region string"))?;
-        let (start, end) = range
-            .split_once('-')
-            .ok_or(anyhow!("No '-' in region string"))?;
+        let (target, range) = s.split_once(':').context("No ':' in region string")?;
+        let (start, end) = range.split_once('-').context("No '-' in region string")?;
         let start = start.parse::<u64>()?;
         let end = end.parse::<u64>()?;
         Ok(Region {

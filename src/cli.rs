@@ -225,14 +225,14 @@ pub(crate) enum Command {
         bam_path: Vec<String>,
 
         /// Path to the reference fasta file.
-        #[structopt(long, short = "r", default_value = "100")]
+        #[structopt(long, short = "r")]
         reference: String,
 
         /// Chromosome and region for the visualization. Example: 2:132424-132924
         #[structopt(long, short = "g")]
         region: String,
 
-        /// Set the maximum lines of reads that will be shown in the alignment plots. Default value is 500.
+        /// Set the maximum rows that will be shown in the alignment plots.
         #[structopt(long, short = "d", default_value = "500")]
         max_read_depth: u32,
     },

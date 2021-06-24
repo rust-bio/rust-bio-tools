@@ -233,7 +233,7 @@ pub(crate) enum Command {
         #[structopt(long, short = "g")]
         region: Region,
 
-        /// Set the maximum number of reads that will be shown in the alignment plots. Default value is 500.
+        /// Set the maximum rows that will be shown in the alignment plots.
         #[structopt(long, short = "d", default_value = "500")]
         max_read_depth: u32,
     },

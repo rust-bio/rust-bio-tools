@@ -51,7 +51,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         for i in 0..seq_len {
             let likelihoods = ALLELES
                 .iter()
-                .map(|a| Self::overall_allele_likelihood(&self, a, i))
+                .map(|a| Self::overall_allele_likelihood(self, a, i))
                 .collect_vec(); //This will be calculated every iteration
             Self::build_consensus_sequence(
                 likelihoods,
@@ -173,8 +173,8 @@ impl<'a> CalcOverlappingConsensus<'a> {
 impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
     fn overall_allele_likelihood(&self, allele: &u8, pos: usize) -> LogProb {
         let mut lh = LogProb::ln_one();
-        let rec1_pos = self.map_read_pos(pos, &self.r1_vec());
-        let rec2_pos = self.map_read_pos(pos, &self.r2_vec());
+        let rec1_pos = self.map_read_pos(pos, self.r1_vec());
+        let rec2_pos = self.map_read_pos(pos, self.r2_vec());
         for (rec1, rec2) in self.recs1().iter().zip(self.recs2()) {
             if let Some(pos) = rec1_pos {
                 lh += Self::allele_likelihood_in_rec(
@@ -189,7 +189,7 @@ impl<'a> CalcConsensus<'a, bam::Record> for CalcOverlappingConsensus<'a> {
                 lh += Self::allele_likelihood_in_rec(
                     allele,
                     &rec2.seq().as_bytes(),
-                    &rec2.qual(),
+                    rec2.qual(),
                     pos,
                     0,
                 );
@@ -245,7 +245,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             // given the bases at this position, weighted with their quality values
             let likelihoods = ALLELES
                 .iter()
-                .map(|a| Self::overall_allele_likelihood(&self, a, i))
+                .map(|a| Self::overall_allele_likelihood(self, a, i))
                 .collect_vec(); //Check this. See below
             Self::build_consensus_sequence(
                 likelihoods,

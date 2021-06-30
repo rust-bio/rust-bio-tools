@@ -288,8 +288,8 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                             seqids.append(&mut r2_seqids.clone());
                             fq_se_writer.write_record(
                                 &CalcOverlappingConsensus::new(
-                                    &r1_recs,
-                                    &r2_recs,
+                                    r1_recs,
+                                    r2_recs,
                                     &r1_alignment,
                                     &r2_alignment,
                                     &seqids,
@@ -306,8 +306,8 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                                 fq1_writer.write_record(
                                     &CalcNonOverlappingConsensus::new(
-                                        &r1_recs,
-                                        &r1_seqids,
+                                        r1_recs,
+                                        r1_seqids,
                                         uuid,
                                         verbose_read_names,
                                     )
@@ -316,8 +316,8 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                                 )?;
                                 fq2_writer.write_record(
                                     &CalcNonOverlappingConsensus::new(
-                                        &r2_recs,
-                                        &r2_seqids,
+                                        r2_recs,
+                                        r2_seqids,
                                         uuid,
                                         verbose_read_names,
                                     )
@@ -336,8 +336,8 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                         fq_se_writer.write_record(
                             &CalcNonOverlappingConsensus::new(
-                                &recs,
-                                &seqids,
+                                recs,
+                                seqids,
                                 uuid,
                                 verbose_read_names,
                             )

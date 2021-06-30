@@ -549,37 +549,37 @@ pub fn oncoprint(
 
                 let page_data: Vec<_> = gene_data
                     .iter()
-                    .filter(|entry| sorted_alterations.contains(&&&entry.alteration))
+                    .filter(|entry| sorted_alterations.contains(&&entry.alteration))
                     .sorted()
                     .collect();
 
                 let impact_page_data: Vec<_> = final_impact
                     .iter()
-                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .filter(|entry| sorted_alterations.contains(&&entry.record.key))
                     .sorted()
                     .collect();
 
                 let ev_page_data: Vec<_> = final_ev
                     .iter()
-                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .filter(|entry| sorted_alterations.contains(&&entry.record.key))
                     .sorted()
                     .collect();
 
                 let consequence_page_data: Vec<_> = final_consequence
                     .iter()
-                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .filter(|entry| sorted_alterations.contains(&&entry.record.key))
                     .sorted()
                     .collect();
 
                 let clin_sig_page_data: Vec<_> = final_clin_sig
                     .iter()
-                    .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                    .filter(|entry| sorted_alterations.contains(&&entry.record.key))
                     .sorted()
                     .collect();
 
                 let af_page_data: Vec<_> = allel_frequency_data
                     .iter()
-                    .filter(|entry| sorted_alterations.contains(&&&entry.key))
+                    .filter(|entry| sorted_alterations.contains(&&entry.key))
                     .collect();
 
                 let mut info_page_data = HashMap::new();
@@ -588,7 +588,7 @@ pub fn oncoprint(
                         info_page_data.insert(
                             tag,
                             data.into_iter()
-                                .filter(|entry| sorted_alterations.contains(&&&entry.record.key))
+                                .filter(|entry| sorted_alterations.contains(&&entry.record.key))
                                 .collect_vec(),
                         );
                     }
@@ -600,7 +600,7 @@ pub fn oncoprint(
                     .collect();
 
                 let samples: Vec<_> = page_data.iter().map(|r| r.sample.clone()).collect();
-                let unique_samples: Vec<_> = samples.iter().unique().collect();
+                let unique_samples = samples.iter().unique().count();
 
                 let mut specs = gene_specs.clone();
 
@@ -680,7 +680,7 @@ pub fn oncoprint(
                 .to_string();
                 context.insert("oncoprint", &oncoprint);
                 context.insert("gene", &gene);
-                context.insert("samples", &unique_samples.len());
+                context.insert("samples", &unique_samples);
                 context.insert("current_page", &page);
                 context.insert("pages", &(pages + 1));
                 context.insert("order", &serde_json::to_string(&json!(order))?);
@@ -862,7 +862,7 @@ pub fn oncoprint(
                 .collect();
 
             let samples: Vec<_> = page_data.iter().map(|r| r.sample.clone()).collect();
-            let unique_samples: Vec<_> = samples.iter().unique().collect();
+            let unique_samples = samples.iter().unique().count();
 
             let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json"))?;
 
@@ -944,7 +944,7 @@ pub fn oncoprint(
             context.insert("current_page", &page);
             context.insert("pages", &(pages + 1));
             context.insert("order", &serde_json::to_string(&json!(order))?);
-            context.insert("samples", &unique_samples.len());
+            context.insert("samples", &unique_samples);
             let local: DateTime<Local> = Local::now();
             context.insert("time", &local.format("%a %b %e %T %Y").to_string());
             context.insert("version", &env!("CARGO_PKG_VERSION"));
@@ -1179,7 +1179,7 @@ fn order_by_impact(impacts: Vec<&Counter>) -> HashMap<String, Vec<Impact>> {
     }
 
     for v in order_tuples.values_mut() {
-        v.sort_by(|(i1, a), (i2, b)| b.cmp(&a).then(i2.cmp(&i1)))
+        v.sort_by(|(i1, a), (i2, b)| b.cmp(a).then(i2.cmp(i1)))
     }
 
     for (k, v) in order_tuples {
@@ -1201,7 +1201,7 @@ fn order_by_clin_sig(clin_sigs: Vec<&Counter>) -> HashMap<String, Vec<ClinSig>> 
     }
 
     for v in order_tuples.values_mut() {
-        v.sort_by(|(c1, a), (c2, b)| b.cmp(&a).then(c2.cmp(&c1)));
+        v.sort_by(|(c1, a), (c2, b)| b.cmp(a).then(c2.cmp(c1)));
     }
 
     for (k, v) in order_tuples {

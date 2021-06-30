@@ -536,7 +536,7 @@ fn create_report_data(
 fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Result<String> {
     let json_string = include_str!("vegaSpecs.json");
 
-    let mut vega_specs: Value = serde_json::from_str(&json_string)?;
+    let mut vega_specs: Value = serde_json::from_str(json_string)?;
     let values: Value = serde_json::from_str(&data.to_string())?;
     let mut values = json!({"values": values, "name": "fasta"});
 

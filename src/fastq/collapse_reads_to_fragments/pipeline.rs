@@ -417,7 +417,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
         let insert_sizes = ((self.insert_size - 2 * self.std_dev)
             ..(self.insert_size + 2 * self.std_dev))
             .filter_map(|insert_size| {
-                median_hamming_distance(insert_size, &f_recs, &r_recs)
+                median_hamming_distance(insert_size, f_recs, r_recs)
                     .filter(|&median_distance| median_distance < HAMMING_THRESHOLD)
                     .map(|_| insert_size)
             });
@@ -425,11 +425,11 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
             .map(|insert_size| {
                 let overlap = (f_recs[0].seq().len() + r_recs[0].seq().len()) - insert_size;
                 let (consensus_record, lh_isize) = CalcOverlappingConsensus::new(
-                    &f_recs,
-                    &r_recs,
+                    f_recs,
+                    r_recs,
                     overlap,
-                    &outer_seqids,
-                    &uuid,
+                    outer_seqids,
+                    uuid,
                     self.verbose_read_names,
                 )
                 .calc_consensus();
@@ -457,10 +457,10 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
     ) -> NonOverlappingConsensus {
         //Calculate non-overlapping consensus records and shared lh
         let (f_consensus_rec, f_lh) =
-            CalcNonOverlappingConsensus::new(&f_recs, &outer_seqids, uuid, self.verbose_read_names)
+            CalcNonOverlappingConsensus::new(f_recs, outer_seqids, uuid, self.verbose_read_names)
                 .calc_consensus();
         let (r_consensus_rec, r_lh) =
-            CalcNonOverlappingConsensus::new(&r_recs, &outer_seqids, uuid, self.verbose_read_names)
+            CalcNonOverlappingConsensus::new(r_recs, outer_seqids, uuid, self.verbose_read_names)
                 .calc_consensus();
         let overall_lh_isize = f_lh + r_lh;
         //Determine insert size with highest probability for non-overlapping records based on expected insert size

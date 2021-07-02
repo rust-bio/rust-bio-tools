@@ -27,9 +27,8 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
 
         // assert that all reads have the same length here
-        assert_eq!(
+        assert!(
             Self::validate_read_lengths(self.recs()),
-            true,
             "Read length of FASTQ records {:?} differ. Cannot compute consensus sequence.",
             self.seqids()
         );
@@ -49,7 +48,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             // given the bases at this position, weighted with their quality values
             let likelihoods = ALLELES
                 .iter()
-                .map(|a| Self::overall_allele_likelihood(&self, a, i))
+                .map(|a| Self::overall_allele_likelihood(self, a, i))
                 .collect_vec(); //Check this. See below
             Self::build_consensus_sequence(
                 likelihoods,
@@ -128,16 +127,14 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
 
         // assert that all reads have the same length here
-        assert_eq!(
+        assert!(
             Self::validate_read_lengths(self.recs1()),
-            true,
             "Read length of FASTQ forward records {:?} differ. Cannot compute consensus sequence.",
             self.seqids()
         );
 
-        assert_eq!(
+        assert!(
             Self::validate_read_lengths(self.recs2()),
-            true,
             "Read length of FASTQ reverse records {:?} differ. Cannot compute consensus sequence.",
             self.seqids()
         );
@@ -146,7 +143,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         for i in 0..seq_len {
             let likelihoods = ALLELES
                 .iter()
-                .map(|a| Self::overall_allele_likelihood(&self, a, i))
+                .map(|a| Self::overall_allele_likelihood(self, a, i))
                 .collect_vec(); //This will be calculated every iteration
             Self::build_consensus_sequence(
                 likelihoods,

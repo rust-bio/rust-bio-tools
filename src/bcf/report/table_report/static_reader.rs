@@ -135,11 +135,11 @@ fn calc_rows(
             .collect();
         reads_wr = reads_wr
             .into_iter()
-            .filter(|b| random_rows.contains(&&(b.row as u32)))
+            .filter(|b| random_rows.contains(&(b.row as u32)))
             .collect();
         matches_wr = matches_wr
             .into_iter()
-            .filter(|b| random_rows.contains(&&(b.row as u32)))
+            .filter(|b| random_rows.contains(&(b.row as u32)))
             .collect();
         max_row = max_read_depth as usize;
     }

@@ -64,6 +64,7 @@ This should format, check and lint your code when committing.
 
 ## Authors
 
-* Johannes Köster (https://koesterlab.github.io)
-* Felix Mölder
-* Henning Timm
+* [Johannes Köster](https://github.com/johanneskoester) (https://koesterlab.github.io)
+* [Felix Mölder](https://github.com/FelixMoelder)
+* [Henning Timm](https://github.com/HenningTimm)
+* [Felix Wiegand](https://github.com/fxwiegand)

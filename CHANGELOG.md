@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.23.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.22.0...v0.23.0) (2021-07-07)
+
+
+### Features
+
+* New subcommand for plotting bam files ([#156](https://www.github.com/rust-bio/rust-bio-tools/issues/156)) ([707ef77](https://www.github.com/rust-bio/rust-bio-tools/commit/707ef772e08eb951ef631f54748bcf372994fb21))
+
 ## [0.22.0] - 2021-06-08
 ### Changed
 - Revised `rbt collapse-reads-to-fragments bam`, CIGAR strings will now considered when merging reads  (@FelixMoelder).

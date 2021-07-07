@@ -48,6 +48,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      
+      - uses: Swatinem/rust-cache@v1.3.0
+
       - name: Install system dependencies
         run: |
           sudo apt-get install --yes libgsl0-dev
@@ -56,12 +64,6 @@ jobs:
         run: |
           export PATH="/usr/share/miniconda/bin:$PATH"
           conda create -c bioconda -c conda-forge -n dependencies starcode bcftools
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
 
       - name: Run cargo test
         run: |

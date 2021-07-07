@@ -1,8 +1,10 @@
+use anyhow::Context;
 use approx::relative_eq;
 use bio::stats::probs::{LogProb, PHREDProb};
 use bio_types::sequence::SequenceRead;
 use ordered_float::NotNaN;
 use std::cmp;
+use std::str::FromStr;
 
 const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
 const ALLELES: &[u8] = b"ACGT";
@@ -76,4 +78,27 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;
     fn seqids(&self) -> &'a [usize];
     fn uuid(&self) -> &'a str;
+}
+
+#[derive(Debug, Clone)]
+pub struct Region {
+    pub(crate) target: String,
+    pub(crate) start: u64,
+    pub(crate) end: u64,
+}
+
+impl FromStr for Region {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let (target, range) = s.split_once(':').context("No ':' in region string")?;
+        let (start, end) = range.split_once('-').context("No '-' in region string")?;
+        let start = start.parse::<u64>()?;
+        let end = end.parse::<u64>()?;
+        Ok(Region {
+            target: target.into(),
+            start,
+            end,
+        })
+    }
 }

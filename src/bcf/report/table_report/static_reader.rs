@@ -2,6 +2,7 @@ use crate::bcf::report::table_report::alignment_reader::{
     make_nucleobases, read_indexed_bam, AlignmentMatch, AlignmentNucleobase,
 };
 use crate::bcf::report::table_report::create_report_table::VariantType;
+use crate::common::Region;
 use anyhow::Result;
 use rand::rngs::StdRng;
 use rand::seq::IteratorRandom;
@@ -39,7 +40,7 @@ fn calc_rows(
     reads: Vec<AlignmentNucleobase>,
     matches: Vec<AlignmentMatch>,
     max_read_depth: u32,
-    variant: &Variant,
+    variant: Option<&Variant>,
 ) -> (
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
@@ -55,8 +56,14 @@ fn calc_rows(
     let mut max_row = 0;
 
     for r in matches {
-        if r.read_start < variant.start_position as u32 && r.read_end > variant.end_position as u32
-        {
+        let overlaps = if variant.is_some() {
+            r.read_start < variant.unwrap().start_position as u32
+                && r.read_end > variant.unwrap().end_position as u32
+        } else {
+            true
+        };
+
+        if overlaps {
             let mut row: u16 = 0;
 
             if read_names.contains_key(&r.name) {
@@ -85,8 +92,14 @@ fn calc_rows(
     }
 
     for r in reads {
-        if r.read_start < variant.start_position as u32 && r.read_end > variant.end_position as u32
-        {
+        let overlaps = if variant.is_some() {
+            r.read_start < variant.unwrap().start_position as u32
+                && r.read_end > variant.unwrap().end_position as u32
+        } else {
+            true
+        };
+
+        if overlaps {
             let mut row: u16 = 0;
 
             if read_names.contains_key(&r.name) {
@@ -134,20 +147,18 @@ fn calc_rows(
     (reads_wr, matches_wr, max_row)
 }
 
-pub fn get_static_reads(
-    path: &Path,
-    fasta_path: &Path,
-    chrom: String,
-    from: u64,
-    to: u64,
+pub fn get_static_reads<P: AsRef<Path>>(
+    path: P,
+    fasta_path: P,
+    region: &Region,
     max_read_depth: u32,
-    variant: &Variant,
+    variant: Option<&Variant>,
 ) -> Result<(
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
     usize,
 )> {
-    let alignments = read_indexed_bam(path, chrom.clone(), from, to)?;
-    let (msm, m) = make_nucleobases(fasta_path, chrom, alignments, from, to)?;
+    let alignments = read_indexed_bam(path, region)?;
+    let (msm, m) = make_nucleobases(fasta_path, region, alignments)?;
     Ok(calc_rows(msm, m, max_read_depth, variant))
 }

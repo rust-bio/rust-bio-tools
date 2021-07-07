@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>rbt bam report</title>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js" integrity="sha512-qoCTmFwBtCPvFhA+WAqatSOrghwpDhFHxwAGh+cppWonXbHA09nG1z5zi4/NGnp8dUhXiVrzA6EnKgJA+fyrpw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://unpkg.com/jsonm@1.0.10/build/jsonm.js"></script>
+    <!-- CSS only -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+
+<body style="text-align: center;">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">rbt report</a>
+    <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools/blob/master/CHANGELOG.md">{{ version }}</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/rust-bio/rust-bio-tools">github</a>
+            </li>
+        </ul>
+        <span class="navbar-text">
+            created {{ time }}
+        </span>
+    </div>
+</nav>
+<nav aria-label="breadcrumb">
+    <ul class="breadcrumb">
+        <li class="breadcrumb-item active" style="padding-top: 8px;">chrom: {{ chrom|safe }}</li>
+        <li class="breadcrumb-item active" style="padding-top: 8px;" aria-current="page">region: {{ start }} - {{ end }}</li>
+        <button class="btn btn-secondary dropdown-toggle ml-auto" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Samples
+        </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="overflow-y: auto; max-height: 200px; z-index: 1001;">
+                {% for bam in bams %}<div class="dropdown-item">
+                <input class="form-check-input" type="checkbox" checked="checked" data-toggle="collapse" data-target="#collapse_{{loop.index}}" value="" id="defaultCheck{{ loop.index }}">
+                <label class="form-check-label" for="defaultCheck{{ loop.index }}">
+                    {{ bam }}
+                </label>
+            </div>{% endfor %}
+        </div>
+    </ul>
+</nav>
+
+{% for plot in plots %}<div id="collapse_{{loop.index}}" class="row justify-content-center collapse show" style="margin-top: 25px;">
+    <div id="plot_{{loop.index}}" style="overflow-y: auto; height: calc(50vh - 50px);"></div>
+</div>{% endfor %}
+<script>
+    let plots = [{% for plot in plots %}{{ plot | safe }}{% if not loop.last %},{% endif %}{% endfor %}];
+    let bams = [{% for bam in bams %}"{{ bam }}"{% if not loop.last %},{% endif %}{% endfor %}];
+    let i = 1;
+
+    let decompressed_plots = [];
+
+    for (plot of plots) {
+        let decompressed = LZString.decompressFromUTF16(plot);
+        let unpacker = new jsonm.Unpacker();
+        unpacker.setMaxDictSize(100000);
+        let unpacked_specs = unpacker.unpack(JSON.parse(decompressed));
+        unpacked_specs["width"] = $(window).width() - 100;
+        unpacked_specs["title"] = bams[i - 1];
+        decompressed_plots.push(unpacked_specs);
+        let plot_id = `#plot_${i}`;
+        vegaEmbed(plot_id, unpacked_specs);
+        i++;
+    }
+
+    $(window).resize(function() {
+        let j = 1;
+        for (plot of decompressed_plots) {
+            let plot_id = `#plot_${j}`;
+            plot["width"] = $(window).width() - 100;
+            vegaEmbed(plot_id, plot);
+        }
+    })
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 use crate::bcf::report::table_report::fasta_reader::{get_fasta_lengths, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
+use crate::common::Region;
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 use chrono::{DateTime, Local};
@@ -206,9 +207,9 @@ pub(crate) fn make_table_report(
                             .get(&field.to_owned())
                             .context({
                                 format!(
-                                "No field named {} found. Please only use VEP-annotated VCF-files.",
-                                field
-                            )
+                                    "No field named {} found. Please only use VEP-annotated VCF-files.",
+                                    field
+                                )
                             })
                             .unwrap()],
                     )
@@ -222,7 +223,7 @@ pub(crate) fn make_table_report(
                     warn!("Warning! Found allele without SYMBOL or Gene field in record at {}:{}. Using HGVSg instead.", &chrom, variant.pos());
                     get_field("HGVSg")?
                 } else {
-                    warn!("Warning! Found allele without SYMBOL, Gene or HGVSg field in record at {}:{}. This record will be skipped!",  &chrom, variant.pos());
+                    warn!("Warning! Found allele without SYMBOL, Gene or HGVSg field in record at {}:{}. This record will be skipped!", &chrom, variant.pos());
                     continue;
                 };
                 genes.push(gene.to_owned());
@@ -325,11 +326,13 @@ pub(crate) fn make_table_report(
                     if pos < 75 {
                         let (content, max_rows) = create_report_data(
                             fasta_path,
-                            var.clone(),
+                            Some(var.clone()),
                             bam_path,
-                            chrom.clone(),
-                            0,
-                            end_position as u64 + 75,
+                            &Region {
+                                target: chrom.clone(),
+                                start: 0,
+                                end: end_position as u64 + 75,
+                            },
                             max_read_depth,
                         )?;
                         visualization =
@@ -337,11 +340,13 @@ pub(crate) fn make_table_report(
                     } else if pos + 75 >= fasta_length as i64 {
                         let (content, max_rows) = create_report_data(
                             fasta_path,
-                            var.clone(),
+                            Some(var.clone()),
                             bam_path,
-                            chrom.clone(),
-                            pos as u64 - 75,
-                            fasta_length - 1,
+                            &Region {
+                                target: chrom.clone(),
+                                start: pos as u64 - 75,
+                                end: fasta_length - 1,
+                            },
                             max_read_depth,
                         )?;
                         visualization =
@@ -349,11 +354,13 @@ pub(crate) fn make_table_report(
                     } else {
                         let (content, max_rows) = create_report_data(
                             fasta_path,
-                            var.clone(),
+                            Some(var.clone()),
                             bam_path,
-                            chrom.clone(),
-                            pos as u64 - 75,
-                            end_position as u64 + 75,
+                            &Region {
+                                target: chrom.clone(),
+                                start: pos as u64 - 75,
+                                end: end_position as u64 + 75,
+                            },
                             max_read_depth,
                         )?;
                         visualization = manipulate_json(
@@ -490,18 +497,16 @@ pub(crate) fn read_tag_entries(
     Ok(())
 }
 
-fn create_report_data(
-    fasta_path: &Path,
-    variant: Variant,
-    bam_path: &Path,
-    chrom: String,
-    from: u64,
-    to: u64,
+pub(crate) fn create_report_data<P: AsRef<Path>>(
+    fasta_path: P,
+    variant: Option<Variant>,
+    bam_path: P,
+    region: &Region,
     max_read_depth: u32,
 ) -> Result<(Json, usize)> {
     let mut data = Vec::new();
 
-    for f in read_fasta(fasta_path, chrom.clone(), from, to, true)? {
+    for f in read_fasta(&fasta_path, region, true)? {
         let nucleobase = json!(f);
         data.push(nucleobase);
     }
@@ -509,11 +514,9 @@ fn create_report_data(
     let (bases, matches, max_rows) = get_static_reads(
         bam_path,
         fasta_path,
-        chrom,
-        from,
-        to,
+        region,
         max_read_depth,
-        &variant,
+        variant.as_ref(),
     )?;
 
     for b in bases {
@@ -526,14 +529,16 @@ fn create_report_data(
         data.push(mat);
     }
 
-    data.push(json!(variant));
+    if variant.is_some() {
+        data.push(json!(variant));
+    }
 
     Ok((Json::from_str(&json!(data).to_string()).unwrap(), max_rows))
 }
 
 /// Inserts the json containing the genome data into the vega specs.
 /// It also changes keys and values of the json data for the vega plot to look better and compresses the json with jsonm.
-fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Result<String> {
+pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Result<String> {
     let json_string = include_str!("vegaSpecs.json");
 
     let mut vega_specs: Value = serde_json::from_str(json_string)?;
@@ -545,7 +550,7 @@ fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Result<St
     for (i, _) in v.iter().enumerate() {
         let k = v[i]["marker_type"].clone().as_str().unwrap().to_owned();
 
-        if k == "A" || k == "T" || k == "G" || k == "C" || k == "U" {
+        if k == "A" || k == "T" || k == "G" || k == "C" || k == "U" || k == "N" {
             values["values"][i]["base"] = values["values"][i]["marker_type"].clone();
         } else if k == "Deletion"
             || k == "Match"

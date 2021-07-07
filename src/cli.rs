@@ -1,3 +1,4 @@
+use crate::common::Region;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -215,6 +216,28 @@ pub(crate) enum Command {
         output_path: String,
     },
 
+    /// Creates a html file with a vega visualization of the given bam region
+    /// Example:
+    /// rbt plot-bam -b input.bam -g 2:132424-132924 -r input.fa > plot.html
+    #[structopt(author = "Felix Wiegand <felix.wiegand@tu-dortmund.de>")]
+    PlotBam {
+        /// BAM file to be visualized.
+        #[structopt(long, short = "b", parse(from_os_str))]
+        bam_path: Vec<PathBuf>,
+
+        /// Path to the reference fasta file.
+        #[structopt(long, short = "r", parse(from_os_str))]
+        reference: PathBuf,
+
+        /// Chromosome and region for the visualization. Example: 2:132424-132924
+        #[structopt(long, short = "g")]
+        region: Region,
+
+        /// Set the maximum rows that will be shown in the alignment plots.
+        #[structopt(long, short = "d", default_value = "500")]
+        max_read_depth: u32,
+    },
+
     /// Creates report from a given VCF file including a visual plot
     /// for every variant with the given BAM and FASTA file.
     /// The VCF file has to be annotated with VEP, using the options --hgvs and --hgvsg.
@@ -246,7 +269,7 @@ pub(crate) enum Command {
         #[structopt(long, short = "c", default_value = "1000")]
         cells: u32,
 
-        /// Set the maximum number of cells in the oncoprint per page. Lowering max-cells should improve the performance of the plots in the browser. Default value is 1000.
+        /// Set the maximum lines of reads that will be shown in the alignment plots. Default value is 500.
         #[structopt(long, short = "d", default_value = "500")]
         max_read_depth: u32,
 

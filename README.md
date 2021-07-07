@@ -19,6 +19,7 @@ Rust-Bio-Tools provides a command `rbt`, which currently supports the following 
 * a tool to generate interactive HTML based reports that offer multiple plots visualizing the provided genomics data in VCF and BAM format (`rbt vcf-report`)
 * a tool to generate an interactive HTML based report from a csv file including visualizations (`rbt csv-report`)
 * a tool for splitting VCF/BCF files into N equal chunks, including BND support (`rbt vcf-split`)
+* a tool to generate visualizations for a specific region of one or multiple BAM files with a given reference contained in a single HTML file (`rbt plot-bam`)
 
 Further functionality is added as it is needed by the authors. Check out the [Contributing](#Contributing) section if you want contribute anything yourself.
 For a list of changes, take a look at the [CHANGELOG](CHANGELOG.md).
@@ -63,6 +64,7 @@ This should format, check and lint your code when committing.
 
 ## Authors
 
-* Johannes Köster (https://koesterlab.github.io)
-* Felix Mölder
-* Henning Timm
+* [Johannes Köster](https://github.com/johanneskoester) (https://koesterlab.github.io)
+* [Felix Mölder](https://github.com/FelixMoelder)
+* [Henning Timm](https://github.com/HenningTimm)
+* [Felix Wiegand](https://github.com/fxwiegand)

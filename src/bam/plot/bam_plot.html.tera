@@ -51,7 +51,7 @@
 </nav>
 
 {% for plot in plots %}<div id="collapse_{{loop.index}}" class="row justify-content-center collapse show" style="margin-top: 25px;">
-    <div id="plot_{{loop.index}}" style="overflow-y: auto; height: calc(50vh - 50px);"></div>
+    <div id="plot_{{loop.index}}" style="overflow-y: auto; height: {% if bam.len() > 1 %}calc(50vh - 50px){% else %}calc(100vh - 50px){% endif %};"></div>
 </div>{% endfor %}
 <script>
     let plots = [{% for plot in plots %}{{ plot | safe }}{% if not loop.last %},{% endif %}{% endfor %}];

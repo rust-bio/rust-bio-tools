@@ -2,6 +2,7 @@ use crate::common::Region;
 use anyhow::Context;
 use anyhow::Result;
 use bio::io::fasta;
+use itertools::Itertools;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::Path;
@@ -26,7 +27,8 @@ pub fn read_fasta<P: AsRef<Path>>(
         ind += 1;
     }
     for a in seq {
-        let base = char::from(a).to_uppercase().collect(); // TODO: Plot lowercase bases (masking repeats) with lower opacity
+        // TODO: Plot lowercase bases (masking repeats) with lower opacity
+        let base = char::from(a).to_uppercase().collect_vec().pop().unwrap();
         let b = Nucleobase {
             start_position: ind as f64 - 0.5,
             end_position: ind as f64 + 0.5,

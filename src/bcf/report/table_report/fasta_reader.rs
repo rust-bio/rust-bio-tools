@@ -27,13 +27,14 @@ pub fn read_fasta<P: AsRef<Path>>(
         ind += 1;
     }
     for a in seq {
-        // TODO: Plot lowercase bases (masking repeats) with lower opacity
-        let base = char::from(a).to_uppercase().collect_vec().pop().unwrap();
+        let base = char::from(a);
+        let marker = base.to_uppercase().collect_vec().pop().unwrap();
         let b = Nucleobase {
             start_position: ind as f64 - 0.5,
             end_position: ind as f64 + 0.5,
-            marker_type: base,
+            marker_type: marker,
             row: 0,
+            repeat: base.is_lowercase(),
         };
         fasta.push(b);
         ind += 1;
@@ -57,6 +58,7 @@ pub struct Nucleobase {
     end_position: f64,
     marker_type: char,
     row: u8,
+    repeat: bool,
 }
 
 impl Nucleobase {

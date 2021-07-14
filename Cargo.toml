@@ -40,9 +40,7 @@ regex = "1.3"
 tera = "1"
 jsonm = "0.1.4"
 chrono = "0.4"
-# xlsxwriter and libxlsxwriter-sys pinned hard until https://github.com/informationsea/xlsxwriter-rs/issues/21 is resolved
-xlsxwriter = "=0.3.3"
-libxlsxwriter-sys = "=1.0.2"
+xlsxwriter = {version = "0.3.5", features= ["use-openssl-md5", "no-md5"]}
 lazy_static = "1.4"
 anyhow = "1"
 thiserror = "1"

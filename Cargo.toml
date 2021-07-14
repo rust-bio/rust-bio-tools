@@ -1,6 +1,6 @@
 [package]
 name = "rust-bio-tools"
-version = "0.23.0"
+version = "0.23.1"
 authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>", "Erik Clarke <ecl@pennmedicine.upenn.edu>"]
 description = "A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio."
 license-file = "LICENSE.md"

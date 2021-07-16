@@ -3,14 +3,17 @@ $(document).ready(function() {
     $('.loading').hide();
     $(function () {
         $('[data-toggle="tooltip"]').tooltip()
-    })
+    });
+    $(function () {
+    $('[data-toggle="popover"]').popover()
+    });
     $('#table').bootstrapTable( 'resetView' , {height: window.innerHeight - 200} );
     $('.modal').on('shown.bs.modal', function () {
         window.dispatchEvent(new Event('resize'));
     });
     var decompressed = JSON.parse(LZString.decompressFromUTF16(data));
 
-    {% if formatter %}var format = {{ formatter }}{% endif %}
+    var format = {% if formatter %}{{ formatter }}{% else %}[];{% endif %}
 
     var he = $( window ).height() - 150;
 
@@ -31,7 +34,11 @@ $(document).ready(function() {
     for (const r of decompressed) {
         var i = 0;
         row = {};
-        for (const el of r) {
+        for (const element of r) {
+            var el = element;
+            if (element.length > 30 && format[columns[i]] == undefined) {
+                el = `${element.substring(0,30)}<a tabindex="0" role="button" href="#" data-toggle="popover" data-trigger="focus" data-html='true' data-content='<div style="overflow: auto; max-height: 30vh; max-width: 25vw;">${element}</div>'>...</a>`;
+            }
             if (num[i]) {
                 row[columns[i]] = el + "<button type=\"button\" class=\"btn btn-primary btn-sm\" data-val=\"" + el + "\" data-col=\"" + columns[i] + "\"><svg xmlns=\"http:\/\/www.w3.org\/2000\/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-bar-chart-fill\" viewBox=\"0 0 16 16\">\r\n  <path d=\"M1 11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-3zm5-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm5-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V2z\"\/>\r\n<\/svg><\/button>";
             } else {

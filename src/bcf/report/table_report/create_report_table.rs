@@ -337,7 +337,7 @@ pub(crate) fn make_table_report(
                         )?;
                         visualization =
                             manipulate_json(content, 0, end_position as u64 + 75, max_rows)?;
-                    } else if pos + 75 >= fasta_length as i64 {
+                    } else if end_position as i64 + 75 >= fasta_length as i64 {
                         let (content, max_rows) = create_report_data(
                             fasta_path,
                             Some(var.clone()),

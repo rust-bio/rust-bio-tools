@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.24.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.23.0...v0.24.0) (2021-07-16)
+
+
+### Features
+
+* Add ellipsis to csv report ([#166](https://www.github.com/rust-bio/rust-bio-tools/issues/166)) ([08ccad5](https://www.github.com/rust-bio/rust-bio-tools/commit/08ccad5491feca51f0b5c33da3380d92dca10683))
+* Mark repeats in reference with lower opacity ([#163](https://www.github.com/rust-bio/rust-bio-tools/issues/163)) ([07235cf](https://www.github.com/rust-bio/rust-bio-tools/commit/07235cfec2bfe8553c735c2ab06d0813a8dbdfc2))
+
+
+### Bug Fixes
+
+* Missing lowercase reference bases in reports ([#160](https://www.github.com/rust-bio/rust-bio-tools/issues/160)) ([a661da1](https://www.github.com/rust-bio/rust-bio-tools/commit/a661da1448f1977a08e9b69f512a76bfb2337d7e))
+
 ## [0.23.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.22.0...v0.23.0) (2021-07-07)
 
 

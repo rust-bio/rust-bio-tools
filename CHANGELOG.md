@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.24.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.24.0...v0.24.1) (2021-07-16)
+
+
+### Bug Fixes
+
+* Adjust FASTA read interval ([#167](https://www.github.com/rust-bio/rust-bio-tools/issues/167)) ([eccb3f6](https://www.github.com/rust-bio/rust-bio-tools/commit/eccb3f65491b1eef508359bfb08e4a6aea714451))
+
 ## [0.24.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.23.0...v0.24.0) (2021-07-16)
 
 

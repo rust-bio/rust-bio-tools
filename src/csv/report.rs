@@ -67,9 +67,8 @@ pub(crate) fn csv_report(
     for title in &titles {
         let is_num = match (numeric.get(title), non_numeric.get(title)) {
             (Some(num), Some(no_num)) => num > no_num,
-            (None, Some(_)) => false,
             (Some(_), None) => true,
-            _ => unreachable!(),
+            _ => false,
         };
         is_numeric.insert(title.to_owned(), is_num);
     }
@@ -147,7 +146,7 @@ pub(crate) fn csv_report(
 
     wb.close()?;
 
-    let pages = if table.len() % rows_per_page == 0 {
+    let pages = if table.len() % rows_per_page == 0 && table.len() > 0 {
         (table.len() / rows_per_page) - 1
     } else {
         table.len() / rows_per_page
@@ -338,46 +337,79 @@ pub(crate) fn csv_report(
     let mut file = fs::File::create(file_path)?;
     file.write_all(js.as_bytes())?;
 
-    for (i, current_table) in table.chunks(rows_per_page).enumerate() {
-        let page = i + 1;
-
+    if table.is_empty() {
         let mut templates = Tera::default();
         templates.add_raw_template("csv_report.html.tera", include_str!("csv_report.html.tera"))?;
         templates.add_raw_template("data.js.tera", include_str!("data.js.tera"))?;
         let mut context = Context::new();
-        context.insert("table", &current_table);
+        context.insert("table", &table);
         context.insert("titles", &titles);
-        context.insert("current_page", &page);
-        context.insert("pages", &(pages + 1));
+        context.insert("current_page", &1);
+        context.insert("pages", &1);
         let local: DateTime<Local> = Local::now();
         context.insert("time", &local.format("%a %b %e %T %Y").to_string());
         context.insert("version", &env!("CARGO_PKG_VERSION"));
         context.insert("is_reasonable", &reasonable_plot);
 
-        let mut data = Vec::new();
-        for row in current_table {
-            let mut r = Vec::new();
-            for title in &titles {
-                r.push(row.get(*title).unwrap())
-            }
-            data.push(r);
-        }
+        let data: Vec<Vec<&str>> = Vec::new();
 
         context.insert(
             "data",
             &json!(compress_to_utf16(&json!(data).to_string())).to_string(),
         );
 
-        let html = templates.render("csv_report.html.tera", &context)?;
         let js = templates.render("data.js.tera", &context)?;
-
-        let file_path = output_path.to_owned() + "/indexes/index" + &page.to_string() + ".html";
-        let mut file = fs::File::create(file_path)?;
-        file.write_all(html.as_bytes())?;
-
-        let js_file_path = output_path.to_owned() + "/data/index" + &page.to_string() + ".js";
+        let js_file_path = output_path.to_owned() + "/data/index1.js";
         let mut js_file = fs::File::create(js_file_path)?;
         js_file.write_all(js.as_bytes())?;
+
+        let html = templates.render("csv_report.html.tera", &context)?;
+        let file_path = output_path.to_owned() + "/indexes/index1.html";
+        let mut file = fs::File::create(file_path)?;
+        file.write_all(html.as_bytes())?;
+    } else {
+        for (i, current_table) in table.chunks(rows_per_page).enumerate() {
+            let page = i + 1;
+
+            let mut templates = Tera::default();
+            templates
+                .add_raw_template("csv_report.html.tera", include_str!("csv_report.html.tera"))?;
+            templates.add_raw_template("data.js.tera", include_str!("data.js.tera"))?;
+            let mut context = Context::new();
+            context.insert("table", &current_table);
+            context.insert("titles", &titles);
+            context.insert("current_page", &page);
+            context.insert("pages", &(pages + 1));
+            let local: DateTime<Local> = Local::now();
+            context.insert("time", &local.format("%a %b %e %T %Y").to_string());
+            context.insert("version", &env!("CARGO_PKG_VERSION"));
+            context.insert("is_reasonable", &reasonable_plot);
+
+            let mut data = Vec::new();
+            for row in current_table {
+                let mut r = Vec::new();
+                for title in &titles {
+                    r.push(row.get(*title).unwrap())
+                }
+                data.push(r);
+            }
+
+            context.insert(
+                "data",
+                &json!(compress_to_utf16(&json!(data).to_string())).to_string(),
+            );
+
+            let html = templates.render("csv_report.html.tera", &context)?;
+            let js = templates.render("data.js.tera", &context)?;
+
+            let file_path = output_path.to_owned() + "/indexes/index" + &page.to_string() + ".html";
+            let mut file = fs::File::create(file_path)?;
+            file.write_all(html.as_bytes())?;
+
+            let js_file_path = output_path.to_owned() + "/data/index" + &page.to_string() + ".js";
+            let mut js_file = fs::File::create(js_file_path)?;
+            js_file.write_all(js.as_bytes())?;
+        }
     }
     Ok(())
 }

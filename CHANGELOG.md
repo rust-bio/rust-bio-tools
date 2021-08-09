@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.25.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.24.1...v0.25.0) (2021-08-09)
+
+
+### Features
+
+* add linkout for COSV entries to rbt vcf-report. ([224a076](https://www.github.com/rust-bio/rust-bio-tools/commit/224a0767835ead9c50ad3f0ab5c17f26aa8e9276))
+
 ### [0.24.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.24.0...v0.24.1) (2021-07-16)
 
 

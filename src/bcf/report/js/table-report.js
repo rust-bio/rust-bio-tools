@@ -97,6 +97,9 @@ $(document).ready(function () {
                             } else if (val.startsWith("COSN")) {
                                 let num = val.replace( /^\D+/g, '');
                                 result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + num + "'>" + val + "</a>";
+                            } else if (val.startsWith("COSV")) {
+                                let num = val.replace( /^\D+/g, '');
+                                result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/search?q=" + num + "'>" + val + "</a>";
                             } else {
                                 result = result + val;
                             }

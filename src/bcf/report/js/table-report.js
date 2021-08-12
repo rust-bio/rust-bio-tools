@@ -98,8 +98,7 @@ $(document).ready(function () {
                                 let num = val.replace( /^\D+/g, '');
                                 result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/ncv/overview?id=" + num + "'>" + val + "</a>";
                             } else if (val.startsWith("COSV")) {
-                                let num = val.replace( /^\D+/g, '');
-                                result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/search?q=" + num + "'>" + val + "</a>";
+                                result = result + "<a href='https://cancer.sanger.ac.uk/cosmic/search?q=" + val + "'>" + val + "</a>";
                             } else {
                                 result = result + val;
                             }

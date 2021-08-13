@@ -801,6 +801,7 @@
                 "title":"impact"
               }
             },
+            "tooltip": {"field": "value"},
             "color":{
               "field":"value",
               "type":"nominal",
@@ -847,6 +848,7 @@
                 "title":"consequence"
               }
             },
+            "tooltip": {"field": "value"},
             "color":{
               "field":"value",
               "type":"nominal",
@@ -959,6 +961,7 @@
                 "title":"clinical significance"
               }
             },
+            "tooltip": {"field": "value"},
             "color":{
               "field":"value",
               "type":"nominal",
@@ -1056,6 +1059,7 @@
                 "title":"existing variations"
               }
             },
+            "tooltip": {"field": "value"},
             "color":{
               "field":"value",
               "type":"nominal",

@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.26.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.25.0...v0.26.0) (2021-08-13)
+
+
+### Features
+
+* Add tooltip for vcf-report bar plots ([#173](https://www.github.com/rust-bio/rust-bio-tools/issues/173)) ([fb91211](https://www.github.com/rust-bio/rust-bio-tools/commit/fb912112ba6ca1ccdfa5bc6be4fd741e46dd958b))
+
 ## [0.25.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.24.1...v0.25.0) (2021-08-09)
 
 

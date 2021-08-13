@@ -82,12 +82,12 @@
             </div>
         </div>
 
+        <script src="../js/bootstrap.bundle.min.js"></script>
         <script src="../js/jquery.min.js"></script>
         <script src="../js/jsonm.min.js"></script>
         <script src="../js/vega.min.js"></script>
         <script src="../js/vega-lite.min.js"></script>
         <script src="../js/vega-embed.min.js"></script>
-        <script src="../js/bootstrap.bundle.min.js"></script>
         <script src="../js/lz-string.min.js"></script>
         <script src="plot{{ current_page }}.js"></script>
         <script src="../js/report.js"></script>

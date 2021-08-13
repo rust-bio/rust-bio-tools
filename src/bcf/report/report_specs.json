@@ -833,6 +833,7 @@
               },
               "value":1
             },
+            "tooltip": {"field": "value"},
             "color":{
               "field":"value",
               "type":"nominal",
@@ -896,6 +897,7 @@
               },
               "value":1
             },
+            "tooltip": {"field": "value"},
             "color":{
               "field":"value",
               "type":"nominal",
@@ -1025,6 +1027,7 @@
               },
               "value":1
             },
+            "tooltip": {"field": "value"},
             "color":{
               "field":"value",
               "type":"nominal",
@@ -1156,6 +1159,7 @@
               },
               "value":1
             },
+            "tooltip": {"field": "value"},
             "color":{
               "field":"value",
               "type":"nominal",

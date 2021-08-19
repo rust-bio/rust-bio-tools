@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.26.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.26.0...v0.26.1) (2021-08-19)
+
+
+### Bug Fixes
+
+* Fix handling of softclips in cigars
+* Respect target CPU compat via rocksdb ^0.17 ([#175](https://www.github.com/rust-bio/rust-bio-tools/issues/175)) ([b2428f5](https://www.github.com/rust-bio/rust-bio-tools/commit/b2428f517a3ecd4a85596676f0adfc49ec24d268))
+
 ## [0.26.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.25.0...v0.26.0) (2021-08-13)
 
 

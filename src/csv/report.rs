@@ -146,7 +146,7 @@ pub(crate) fn csv_report(
 
     wb.close()?;
 
-    let pages = if table.len() % rows_per_page == 0 && table.len() > 0 {
+    let pages = if table.len() % rows_per_page == 0 && !table.is_empty() {
         (table.len() / rows_per_page) - 1
     } else {
         table.len() / rows_per_page

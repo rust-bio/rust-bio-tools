@@ -56,9 +56,9 @@ fn calc_rows(
     let mut max_row = 0;
 
     for r in matches {
-        let overlaps = if variant.is_some() {
-            r.read_start < variant.unwrap().start_position as u32
-                && r.read_end > variant.unwrap().end_position as u32
+        let overlaps = if let Some(variant_entry) = variant {
+            r.read_start < variant_entry.start_position as u32
+                && r.read_end > variant_entry.end_position as u32
         } else {
             true
         };
@@ -92,9 +92,9 @@ fn calc_rows(
     }
 
     for r in reads {
-        let overlaps = if variant.is_some() {
-            r.read_start < variant.unwrap().start_position as u32
-                && r.read_end > variant.unwrap().end_position as u32
+        let overlaps = if let Some(variant_entry) = variant {
+            r.read_start < variant_entry.start_position as u32
+                && r.read_end > variant_entry.end_position as u32
         } else {
             true
         };

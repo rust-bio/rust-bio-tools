@@ -117,8 +117,6 @@ pub fn oncoprint(
                 .collect_vec();
             let alt_alleles = &alleles[1..];
             let ref_allele = alleles[0].to_owned();
-            let dup = [ref_allele.clone(), ref_allele.clone()].concat();
-            let rev = ref_allele.clone().into_iter().rev().collect_vec();
 
             let mut info_map = HashMap::new();
             if plot_info.is_some() {
@@ -139,7 +137,7 @@ pub fn oncoprint(
                 for alt_allele in alt_alleles {
                     let variant = if alt_allele == b"<BND>" {
                         "BND"
-                    } else if alt_allele == b"<DUP>" || alt_allele == &dup {
+                    } else if alt_allele == b"<DUP>" {
                         "DUP"
                     } else if alt_allele == b"<DEL>"
                         || alt_allele.len() == 1 && ref_allele.len() > 1
@@ -151,7 +149,7 @@ pub fn oncoprint(
                         "INS"
                     } else if alt_allele.len() == 1 && ref_allele.len() == 1 {
                         "SNV"
-                    } else if alt_allele == b"<INV>" || alt_allele == &rev {
+                    } else if alt_allele == b"<INV>" {
                         "INV"
                     } else if alt_allele.len() == ref_allele.len() {
                         "MNV"

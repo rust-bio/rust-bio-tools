@@ -49,17 +49,33 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let read_orientations_opt = self.build_read_orientation_string();
         let mut consensus_lh = LogProb::ln_one();
         for i in 0..seq_len {
-            let likelihoods = ALLELES
-                .iter()
-                .map(|a| Self::overall_allele_likelihood(self, a, i))
-                .collect_vec(); //This will be calculated every iteration
-            Self::build_consensus_sequence(
-                likelihoods,
-                &mut consensus_lh,
-                &mut consensus_seq,
-                &mut consensus_qual,
-                33.0,
-            );
+            match (
+                self.recs1().len() == 1,
+                self.map_read_pos(i, self.r1_vec()),
+                self.map_read_pos(i, self.r2_vec()),
+            ) {
+                (true, Some(base_pos), None) => {
+                    consensus_seq.push(self.recs1()[0].seq().as_bytes()[base_pos]);
+                    consensus_qual.push(self.recs1()[0].qual()[base_pos] + 33);
+                }
+                (true, None, Some(base_pos)) => {
+                    consensus_seq.push(self.recs2()[0].seq().as_bytes()[base_pos]);
+                    consensus_qual.push(self.recs2()[0].qual()[base_pos] + 33);
+                }
+                _ => {
+                    let likelihoods = ALLELES
+                        .iter()
+                        .map(|a| Self::overall_allele_likelihood(self, a, i))
+                        .collect_vec();
+                    Self::build_consensus_sequence(
+                        likelihoods,
+                        &mut consensus_lh,
+                        &mut consensus_seq,
+                        &mut consensus_qual,
+                        33.0,
+                    );
+                }
+            };
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
         let name = match self.verbose_read_names {

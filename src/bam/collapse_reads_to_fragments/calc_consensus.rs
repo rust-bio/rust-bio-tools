@@ -55,12 +55,16 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 self.map_read_pos(i, self.r2_vec()),
             ) {
                 (true, Some(base_pos), None) => {
-                    consensus_seq.push(self.recs1()[0].seq().as_bytes()[base_pos]);
+                    let base = self.recs1()[0].seq().as_bytes()[base_pos];
+                    consensus_seq.push(base);
                     consensus_qual.push(self.recs1()[0].qual()[base_pos] + 33);
+                    consensus_lh += Self::overall_allele_likelihood(self, &base, i);
                 }
                 (true, None, Some(base_pos)) => {
-                    consensus_seq.push(self.recs2()[0].seq().as_bytes()[base_pos]);
+                    let base = self.recs2()[0].seq().as_bytes()[base_pos];
+                    consensus_seq.push(base);
                     consensus_qual.push(self.recs2()[0].qual()[base_pos] + 33);
+                    consensus_lh += Self::overall_allele_likelihood(self, &base, i);
                 }
                 _ => {
                     let likelihoods = ALLELES

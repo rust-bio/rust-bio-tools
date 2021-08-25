@@ -65,13 +65,13 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
             // Assume the maximal quality, if the likelihood is infinite
             let truncated_quality: f64;
             if (*PHREDProb::from(qual)).is_infinite() {
-                truncated_quality = 41.0;
+                truncated_quality = 93.0;
             } else {
                 truncated_quality = *PHREDProb::from(qual);
             }
             // Truncate quality values to PHRED+33 range
             consensus_qual
-                .push(cmp::min(41 + offset as u64, (truncated_quality + offset) as u64) as u8);
+                .push(cmp::min(93 + offset as u64, (truncated_quality + offset) as u64) as u8);
         }
     }
 

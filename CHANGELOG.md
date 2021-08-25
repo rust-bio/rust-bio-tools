@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 * increase base quality scale  ([#179](https://www.github.com/rust-bio/rust-bio-tools/issues/179)) ([aba3a49](https://www.github.com/rust-bio/rust-bio-tools/commit/aba3a49c016f88e3688172e5e0bd387a5c30eeb9))
 
+
+### Bug Fixes
+
+* remove custom classification of duplicates and inversions from vcf-report
+
 ### [0.26.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.26.0...v0.26.1) (2021-08-19)
 
 

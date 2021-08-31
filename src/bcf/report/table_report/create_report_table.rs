@@ -57,7 +57,7 @@ pub(crate) fn make_table_report(
     js_files: Vec<String>,
 ) -> Result<()> {
     // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
-    let mut reports = HashMap::new();
+    // let mut reports = HashMap::new();
     let mut ann_indices = HashMap::new();
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     let header = vcf.header().clone();
@@ -195,7 +195,8 @@ pub(crate) fn make_table_report(
 
         let mut annotations = Vec::new();
 
-        let mut genes = Vec::new();
+        let mut alterations = Vec::new();
+        let mut hgvsgs = Vec::new();
 
         if let Some(ann) = variant.info(b"ANN").string()? {
             for entry in ann.iter() {
@@ -215,18 +216,19 @@ pub(crate) fn make_table_report(
                     )
                 };
 
-                let gene = if !get_field("SYMBOL")?.is_empty() {
-                    get_field("SYMBOL")?
-                } else if !get_field("Gene")?.is_empty() {
-                    get_field("Gene")?
+                let alteration = if !get_field("HGVSp")?.is_empty() {
+                    get_field("HGVSp")?
                 } else if !get_field("HGVSg")?.is_empty() {
-                    warn!("Warning! Found allele without SYMBOL or Gene field in record at {}:{}. Using HGVSg instead.", &chrom, variant.pos());
                     get_field("HGVSg")?
                 } else {
-                    warn!("Warning! Found allele without SYMBOL, Gene or HGVSg field in record at {}:{}. This record will be skipped!", &chrom, variant.pos());
                     continue;
                 };
-                genes.push(gene.to_owned());
+
+                if !get_field("HGVSg")?.is_empty() {
+                    hgvsgs.push(get_field("HGVSg")?);
+                }
+
+                alterations.push(alteration);
 
                 let mut ann_strings = Vec::new();
                 for f in fields {
@@ -237,8 +239,12 @@ pub(crate) fn make_table_report(
             }
         }
 
-        genes.sort_unstable();
-        genes.dedup();
+        hgvsgs.sort_unstable();
+        hgvsgs.dedup();
+
+        assert!(hgvsgs.len() <= 1);
+        let hgvsg = hgvsgs.pop().context(format!("Found variant {} at position {} without HGVsg field. Please only use VEP-annotated VCF-files.", &id, &pos)).unwrap();
+        dbg!(hgvsg);
 
         if !alleles.is_empty() {
             let ref_vec = alleles[0].to_owned();
@@ -246,7 +252,7 @@ pub(crate) fn make_table_report(
 
             let len: u8 = ref_allele.len() as u8;
 
-            for allel in alleles.iter().skip(1) {
+            for (allel_index, allel) in alleles.iter().skip(1).enumerate() {
                 let alt = allel.as_slice();
                 let var_string = String::from("Variant");
                 let var_type: VariantType;
@@ -374,7 +380,7 @@ pub(crate) fn make_table_report(
                     visualizations.insert(sample.to_owned(), visualization.to_string());
                 }
 
-                let r = Report {
+                let report_data = Report {
                     id: id.clone(),
                     name: chrom.clone(),
                     position: pos + 1,
@@ -389,27 +395,19 @@ pub(crate) fn make_table_report(
                     vis: visualizations,
                 };
 
-                for g in &genes {
-                    let reps = reports.entry((*g).to_owned()).or_insert_with(Vec::new);
-                    reps.push(r.clone());
-                }
-            }
-        }
-
-        for gene in genes {
-            if last_gene_index.get(&gene).unwrap() <= &(record_index as u32) {
+                let variant_id = format!("var_{}_{}", &record_index, &allel_index);
                 let detail_path = output_path.to_owned() + "/details/" + &sample;
                 let local: DateTime<Local> = Local::now();
 
-                let report_data = reports.remove(&gene).unwrap();
                 let mut templates = Tera::default();
                 templates.add_raw_template(
                     "table_report.html.tera",
                     include_str!("report_table.html.tera"),
                 )?;
                 let mut context = Context::new();
-                context.insert("variants", &report_data);
-                context.insert("gene", &gene);
+                context.insert("variant", &report_data);
+                context.insert("hgvsg", &hgvsg);
+                context.insert("variant_id", &variant_id);
                 context.insert("description", &ann_field_description);
                 context.insert("sample", &sample);
                 context.insert("js_imports", &js_files);
@@ -417,16 +415,16 @@ pub(crate) fn make_table_report(
                 context.insert("version", &env!("CARGO_PKG_VERSION"));
 
                 let html = templates.render("table_report.html.tera", &context)?;
-                let filepath = detail_path.clone() + "/" + &gene + ".html";
+                let filepath = detail_path.clone() + "/" + &variant_id + ".html";
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
 
                 let mut templates = Tera::default();
                 templates.add_raw_template("plot.js.tera", include_str!("plot.js.tera"))?;
 
-                let plot_path = detail_path.clone() + "/plots/" + &gene + ".js";
+                let plot_path = detail_path.clone() + "/plots/" + &variant_id + ".js";
                 let mut plot_context = Context::new();
-                plot_context.insert("variants", &report_data);
+                plot_context.insert("variant", &report_data);
                 let plot_html = templates.render("plot.js.tera", &plot_context)?;
                 let mut plot_file = File::create(plot_path)?;
                 plot_file.write_all(plot_html.as_bytes())?;

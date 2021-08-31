@@ -1,5 +1,5 @@
 // customize column_values to display the attributes of your choice to the sidebar
-let column_values = ['id', 'position', 'reference', 'alternatives', 'type'];
+let column_values = ['contig', 'id', 'position', 'reference', 'alternatives', 'type'];
 // customize which parts of the annotation field to display at the sidebar
 let ann_values = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]
 
@@ -70,6 +70,12 @@ $(document).ready(function () {
         $.each($(this).data(), function(i, v) {
             if (i !== 'index' && !i.includes("ann") && column_values.includes(i)) {
                 $('#sidebar').append('<tr><th class="thead-dark">' + i + '</th><td>' + v + '</td></tr>');
+            } else if (i === "format") {
+                $.each(v, function (k, val) {
+                    $.each(val, function (l, m) {
+                        $('#sidebar').append('<tr><th class="thead-dark">' + l + ':' + k + '</th><td>' + m + '</td></tr>');
+                    })
+                })
             }
         });
         $("#ann-sidebar").empty();

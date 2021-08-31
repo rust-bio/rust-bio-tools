@@ -6,7 +6,6 @@ use anyhow::Result;
 use chrono::{DateTime, Local};
 use itertools::Itertools;
 use jsonm::packer::{PackOptions, Packer};
-use log::warn;
 use lz_str::compress_to_utf16;
 use rust_htslib::bcf::header::{HeaderView, TagType};
 use rust_htslib::bcf::{HeaderRecord, Read, Record};
@@ -74,19 +73,6 @@ pub(crate) fn make_table_report(
     }
 
     let reference_lengths = get_fasta_lengths(fasta_path)?;
-
-    let last_gene_index = get_gene_ending(
-        vcf_path,
-        *ann_indices
-            .get(&String::from("SYMBOL"))
-            .expect("No field named SYMBOL found. Please only use VEP-annotated VCF-files."),
-        *ann_indices
-            .get(&String::from("Gene"))
-            .expect("No field named Gene found. Please only use VEP-annotated VCF-files."),
-        *ann_indices
-            .get(&String::from("HGVSg"))
-            .expect("No field named HGVSg found. Please only use VEP-annotated VCF-files."),
-    )?;
 
     for (record_index, v) in vcf.records().enumerate() {
         let mut variant = v.unwrap();
@@ -576,31 +562,4 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -
     let packed_specs = packer.pack(&vega_specs, &options)?;
 
     Ok(json!(compress_to_utf16(&packed_specs.to_string())).to_string())
-}
-
-fn get_gene_ending(
-    vcf_path: &Path,
-    symbol_index: usize,
-    gene_index: usize,
-    hgvsg_index: usize,
-) -> Result<HashMap<String, u32>> {
-    let mut endings = HashMap::new();
-    let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path)?;
-    for (record_index, v) in vcf.records().enumerate() {
-        let variant = v?;
-        if let Some(ann) = variant.info(b"ANN").string()? {
-            for entry in ann.iter() {
-                let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
-                let mut gene = std::str::from_utf8(fields[symbol_index])?;
-                if gene.is_empty() {
-                    gene = std::str::from_utf8(fields[gene_index])?;
-                }
-                if gene.is_empty() {
-                    gene = std::str::from_utf8(fields[hgvsg_index])?;
-                }
-                endings.insert(gene.to_owned(), record_index as u32);
-            }
-        }
-    }
-    Ok(endings)
 }

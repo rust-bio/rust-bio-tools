@@ -13,7 +13,8 @@ pub fn read_fasta<P: AsRef<Path>>(
     compensate_0_basing: bool,
 ) -> Result<Vec<Nucleobase>> {
     let mut reader = fasta::IndexedReader::from_file(&path).unwrap();
-    let index = fasta::Index::with_fasta_file(&path).context("error reading input FASTA")?;
+    let index =
+        fasta::Index::with_fasta_file(&path).context("error reading index file of input FASTA")?;
     let _sequences = index.sequences();
 
     let mut seq: Vec<u8> = Vec::new();

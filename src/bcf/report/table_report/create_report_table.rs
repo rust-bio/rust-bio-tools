@@ -229,8 +229,8 @@ pub(crate) fn make_table_report(
         hgvsgs.dedup();
 
         assert!(hgvsgs.len() <= 1);
-        let hgvsg = hgvsgs.pop().context(format!("Found variant {} at position {} without HGVsg field. Please only use VEP-annotated VCF-files.", &id, &pos)).unwrap();
-        dbg!(hgvsg);
+        let hgvsg = hgvsgs.pop().context(format!("Found variant {} at position {} without HGVsg field. Please only use VEP-annotated VCF-files.", &id, &pos))?;
+        dbg!(hgvsg.as_bytes());
 
         if !alleles.is_empty() {
             let ref_vec = alleles[0].to_owned();
@@ -392,7 +392,7 @@ pub(crate) fn make_table_report(
                 )?;
                 let mut context = Context::new();
                 context.insert("variant", &report_data);
-                context.insert("hgvsg", &hgvsg);
+                context.insert("hgvsg", &"hgvsg");
                 context.insert("variant_id", &variant_id);
                 context.insert("description", &ann_field_description);
                 context.insert("sample", &sample);
@@ -401,7 +401,7 @@ pub(crate) fn make_table_report(
                 context.insert("version", &env!("CARGO_PKG_VERSION"));
 
                 let html = templates.render("table_report.html.tera", &context)?;
-                let filepath = detail_path.clone() + "/" + &variant_id + ".html";
+                let filepath = detail_path.clone() + "/" + &hgvsg + ".html";
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
 

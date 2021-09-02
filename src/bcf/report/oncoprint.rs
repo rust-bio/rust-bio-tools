@@ -212,6 +212,7 @@ pub fn oncoprint(
                                     protein_alteration.to_owned()
                                 },
                                 variant: variant.to_owned(),
+                                dna_alt: dna_alteration.to_owned()
                             },
                             canonical,
                             &pos,
@@ -1029,6 +1030,7 @@ struct SecondStageRecord {
     sample: String,
     alteration: String,
     variant: String,
+    dna_alt: String,
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]

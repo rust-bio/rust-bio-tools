@@ -100,7 +100,8 @@
                   "empty":"none",
                   "on":"mouseover",
                   "fields":[
-                    "sample"
+                    "sample",
+                    "alteration"
                   ]
                 }
               },
@@ -181,7 +182,8 @@
                   "empty":"none",
                   "on":"mouseover",
                   "fields":[
-                    "sample"
+                    "sample",
+                    "alteration"
                   ]
                 }
               },
@@ -261,7 +263,8 @@
                   "empty":"none",
                   "on":"mouseover",
                   "fields":[
-                    "sample"
+                    "sample",
+                    "alteration"
                   ]
                 }
               },
@@ -341,7 +344,8 @@
                   "empty":"none",
                   "on":"mouseover",
                   "fields":[
-                    "sample"
+                    "sample",
+                    "alteration"
                   ]
                 }
               },
@@ -421,7 +425,8 @@
                   "empty":"none",
                   "on":"mouseover",
                   "fields":[
-                    "sample"
+                    "sample",
+                    "alteration"
                   ]
                 }
               },
@@ -501,7 +506,8 @@
                   "empty":"none",
                   "on":"mouseover",
                   "fields":[
-                    "sample"
+                    "sample",
+                    "alteration"
                   ]
                 }
               },
@@ -581,7 +587,8 @@
                   "empty":"none",
                   "on":"mouseover",
                   "fields":[
-                    "sample"
+                    "sample",
+                    "alteration"
                   ]
                 }
               },
@@ -661,7 +668,8 @@
                   "empty":"none",
                   "on":"mouseover",
                   "fields":[
-                    "sample"
+                    "sample",
+                    "alteration"
                   ]
                 }
               },

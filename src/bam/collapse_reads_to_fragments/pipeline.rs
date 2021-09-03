@@ -81,7 +81,7 @@ impl<W: io::Write> CallConsensusRead<W> {
             let duplicate_id_option = match record.aux(b"DI") {
                 Ok(Aux::U8(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U16(duplicate_id)) => Some(duplicate_id as u32),
-                Ok(Aux::U32(duplicate_id)) => Some(duplicate_id as u32),
+                Ok(Aux::U32(duplicate_id)) => Some(duplicate_id),
                 Err(_) => None,
                 _ => unreachable!("Invalid type for tag 'DI'"),
             };

@@ -237,7 +237,7 @@ pub(crate) fn make_table_report(
 
             let len: u8 = ref_allele.len() as u8;
 
-            for  allel in alleles.iter().skip(1) {
+            for allel in alleles.iter().skip(1) {
                 let alt = allel.as_slice();
                 let var_string = String::from("Variant");
                 let var_type: VariantType;

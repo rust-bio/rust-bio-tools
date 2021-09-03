@@ -230,7 +230,7 @@ pub(crate) fn make_table_report(
 
         assert!(hgvsgs.len() <= 1);
         let hgvsg = hgvsgs.pop().context(format!("Found variant {} at position {} without HGVsg field. Please only use VEP-annotated VCF-files.", &id, &pos))?;
-        dbg!(hgvsg.as_bytes());
+        dbg!(&hgvsg.as_bytes());
 
         if !alleles.is_empty() {
             let ref_vec = alleles[0].to_owned();
@@ -382,7 +382,9 @@ pub(crate) fn make_table_report(
                 };
 
                 let variant_id = format!("var_{}_{}", &record_index, &allel_index);
-                let detail_path = output_path.to_owned() + "/details/" + &sample;
+                let detail_path = Path::new(&output_path)
+                    .join(Path::new("details"))
+                    .join(Path::new(sample.as_str()));
                 let local: DateTime<Local> = Local::now();
 
                 let mut templates = Tera::default();
@@ -401,14 +403,17 @@ pub(crate) fn make_table_report(
                 context.insert("version", &env!("CARGO_PKG_VERSION"));
 
                 let html = templates.render("table_report.html.tera", &context)?;
-                let filepath = detail_path.clone() + "/" + &hgvsg + ".html";
+                let filepath = detail_path.join(Path::new(&format!("{}.html", hgvsg)));
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
 
                 let mut templates = Tera::default();
                 templates.add_raw_template("plot.js.tera", include_str!("plot.js.tera"))?;
 
-                let plot_path = detail_path.clone() + "/plots/" + &variant_id + ".js";
+                let plot_path = detail_path
+                    .join(Path::new("plots"))
+                    .join(Path::new(&format!("{}.js", variant_id.as_str())));
+
                 let mut plot_context = Context::new();
                 plot_context.insert("variant", &report_data);
                 let plot_html = templates.render("plot.js.tera", &plot_context)?;

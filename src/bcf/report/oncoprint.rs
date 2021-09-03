@@ -212,7 +212,7 @@ pub fn oncoprint(
                                     protein_alteration.to_owned()
                                 },
                                 variant: variant.to_owned(),
-                                dna_alt: dna_alteration.to_owned()
+                                dna_alt: dna_alteration.to_owned(),
                             },
                             canonical,
                             &pos,

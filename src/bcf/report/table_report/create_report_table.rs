@@ -403,7 +403,7 @@ pub(crate) fn make_table_report(
                 context.insert("version", &env!("CARGO_PKG_VERSION"));
 
                 let html = templates.render("table_report.html.tera", &context)?;
-                let filepath = detail_path.join(Path::new(&format!("{}.html", hgvsg)));
+                let filepath = detail_path.join(Path::new(&hgvsg).with_extension(".html"));
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
 
@@ -412,7 +412,7 @@ pub(crate) fn make_table_report(
 
                 let plot_path = detail_path
                     .join(Path::new("plots"))
-                    .join(Path::new(&format!("{}.js", variant_id.as_str())));
+                    .join(Path::new(variant_id.as_str()).with_extension(".js"));
 
                 let mut plot_context = Context::new();
                 plot_context.insert("variant", &report_data);

@@ -19,7 +19,7 @@ pub fn calculate_baf() -> Result<()> {
     let mut header = bcf::Header::from_template(reader.header());
     header.push_record(b"##FORMAT=<ID=BAF,Number=A,Type=Float,Description=\"b-allele frequency\">");
 
-    let mut writer = bcf::Writer::from_stdout(&header, false, Format::BCF)?;
+    let mut writer = bcf::Writer::from_stdout(&header, false, Format::Bcf)?;
 
     for record in reader.records() {
         let mut record = record?;

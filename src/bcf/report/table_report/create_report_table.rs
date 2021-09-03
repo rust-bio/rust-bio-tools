@@ -74,7 +74,7 @@ pub(crate) fn make_table_report(
 
     let reference_lengths = get_fasta_lengths(fasta_path)?;
 
-    for (record_index, v) in vcf.records().enumerate() {
+    for v in vcf.records() {
         let mut variant = v.unwrap();
 
         let n = header.rid2name(variant.rid().unwrap()).unwrap().to_owned();
@@ -229,8 +229,7 @@ pub(crate) fn make_table_report(
         hgvsgs.dedup();
 
         assert!(hgvsgs.len() <= 1);
-        let hgvsg = hgvsgs.pop().context(format!("Found variant {} at position {} without HGVsg field. Please only use VEP-annotated VCF-files.", &id, &pos))?;
-        dbg!(&hgvsg.as_bytes());
+        let hgvsg: String = hgvsgs.pop().context(format!("Found variant {} at position {} without HGVsg field. Please only use VEP-annotated VCF-files.", &id, &pos))?.chars().collect();
 
         if !alleles.is_empty() {
             let ref_vec = alleles[0].to_owned();
@@ -238,7 +237,7 @@ pub(crate) fn make_table_report(
 
             let len: u8 = ref_allele.len() as u8;
 
-            for (allel_index, allel) in alleles.iter().skip(1).enumerate() {
+            for  allel in alleles.iter().skip(1) {
                 let alt = allel.as_slice();
                 let var_string = String::from("Variant");
                 let var_type: VariantType;
@@ -381,7 +380,7 @@ pub(crate) fn make_table_report(
                     vis: visualizations,
                 };
 
-                let variant_id = format!("var_{}_{}", &record_index, &allel_index);
+                let escaped_hgvsg = escape_hgvsg(&hgvsg);
                 let detail_path = Path::new(&output_path)
                     .join(Path::new("details"))
                     .join(Path::new(sample.as_str()));
@@ -394,8 +393,8 @@ pub(crate) fn make_table_report(
                 )?;
                 let mut context = Context::new();
                 context.insert("variant", &report_data);
-                context.insert("hgvsg", &"hgvsg");
-                context.insert("variant_id", &variant_id);
+                context.insert("hgvsg", &hgvsg);
+                context.insert("escaped_hgvsg", &escaped_hgvsg);
                 context.insert("description", &ann_field_description);
                 context.insert("sample", &sample);
                 context.insert("js_imports", &js_files);
@@ -403,7 +402,7 @@ pub(crate) fn make_table_report(
                 context.insert("version", &env!("CARGO_PKG_VERSION"));
 
                 let html = templates.render("table_report.html.tera", &context)?;
-                let filepath = detail_path.join(Path::new(&hgvsg).with_extension("html"));
+                let filepath = detail_path.join(Path::new(&escaped_hgvsg).with_extension("html"));
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
 
@@ -412,7 +411,7 @@ pub(crate) fn make_table_report(
 
                 let plot_path = detail_path
                     .join(Path::new("plots"))
-                    .join(Path::new(variant_id.as_str()).with_extension("js"));
+                    .join(Path::new(&escaped_hgvsg).with_extension("js"));
 
                 let mut plot_context = Context::new();
                 plot_context.insert("variant", &report_data);
@@ -423,6 +422,10 @@ pub(crate) fn make_table_report(
         }
     }
     Ok(())
+}
+
+fn escape_hgvsg(hgvsg: &str) -> String {
+    hgvsg.replace(".", "_").replace(">", "_").replace(":", "_")
 }
 
 pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>> {

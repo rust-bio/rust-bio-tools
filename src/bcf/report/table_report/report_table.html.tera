@@ -17,7 +17,7 @@
 <script src="../../js/vega-lite.min.js"></script>
 <script src="../../js/vega-embed.min.js"></script>
 <script src="../../js/lz-string.min.js"></script>
-<script src="plots/{{ variant_id }}.js"></script>
+<script src="plots/{{ escaped_hgvsg }}.js"></script>
 <script src="../../js/table-report.js"></script>
 {% for file in js_imports %}
     <script src="../../js/{{ file }}"></script>

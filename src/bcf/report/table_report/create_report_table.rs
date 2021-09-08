@@ -189,7 +189,7 @@ pub(crate) fn make_table_report(
                 let fields = entry.split(|c| *c == b'|').collect_vec();
 
                 let get_field = |field: &str| {
-                    std::str::from_utf8(
+                    let field: String = std::str::from_utf8(
                         fields[*ann_indices
                             .get(&field.to_owned())
                             .context({
@@ -199,19 +199,20 @@ pub(crate) fn make_table_report(
                                 )
                             })
                             .unwrap()],
-                    )
+                    ).unwrap().chars().collect();
+                    field
                 };
 
-                let alteration = if !get_field("HGVSp")?.is_empty() {
-                    get_field("HGVSp")?
-                } else if !get_field("HGVSg")?.is_empty() {
-                    get_field("HGVSg")?
+                let alteration = if !get_field("HGVSp").is_empty() {
+                    get_field("HGVSp")
+                } else if !get_field("HGVSg").is_empty() {
+                    get_field("HGVSg")
                 } else {
                     continue;
                 };
 
-                if !get_field("HGVSg")?.is_empty() {
-                    hgvsgs.push(get_field("HGVSg")?);
+                if !get_field("HGVSg").is_empty() {
+                    hgvsgs.push(get_field("HGVSg"));
                 }
 
                 alterations.push(alteration);
@@ -229,7 +230,7 @@ pub(crate) fn make_table_report(
         hgvsgs.dedup();
 
         assert!(hgvsgs.len() <= 1);
-        let hgvsg: String = hgvsgs.pop().context(format!("Found variant {} at position {} without HGVsg field. Please only use VEP-annotated VCF-files.", &id, &pos))?.chars().collect();
+        let hgvsg: String = hgvsgs.pop().context(format!("Found variant {} at position {} without HGVsg field. Please only use VEP-annotated VCF-files.", &id, &pos))?.to_owned();
 
         if !alleles.is_empty() {
             let ref_vec = alleles[0].to_owned();

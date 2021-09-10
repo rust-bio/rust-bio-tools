@@ -39,7 +39,8 @@ pub fn simulate_reads<P: AsRef<Path>>(
     let mut bam_writer = bam::Writer::from_path(output_bam, &header, bam::Format::BAM)?;
     for result in bam_reader.records() {
         let mut record = result?;
-        if (record.cigar().end_pos() < (end as i64))
+        if (record.pos() > start as i64)
+            && (record.cigar().end_pos() < (end as i64))
             && (record.mtid() == record.tid())
             && (record.mpos() >= (start as i64))
             && (record.mpos() < (end as i64))
@@ -59,6 +60,8 @@ pub fn simulate_reads<P: AsRef<Path>>(
             artifical_record.set_tid(0);
             artifical_record.set_mtid(0);
             artifical_record.set_mpos(record.mpos() - start as i64);
+            artifical_record.set_flags(record.flags());
+            artifical_record.set_insert_size(record.insert_size());
             bam_writer.write(&artifical_record)?;
         }
     }
@@ -72,7 +75,7 @@ fn build_sequence(
     offset: usize,
 ) -> Result<Vec<u8>> {
     let mut artificial_seq = Vec::new();
-    let record_seq = record.seq();
+    let record_seq = record.seq().as_bytes();
     let mut record_pos = 0;
     let mut ref_pos = record.pos() as usize - offset;
     //Create random seq for leading softclips
@@ -80,13 +83,13 @@ fn build_sequence(
         match cigar.char() {
             'S' => {
                 add_random_bases(cigar.len() as u64, &mut artificial_seq)?;
-                //Add random Sequence of length cigar.len()
+                record_pos += cigar.len() as usize;
             }
             'M' => {
                 (0..cigar.len()).for_each(|_| {
                     let ref_base = artificial_reference.get(ref_pos).unwrap();
-                    if record_seq.encoded_base(record_pos) == *reference.get(ref_pos).unwrap() {
-                        artificial_seq.push(*artificial_reference.get(ref_pos).unwrap());
+                    if record_seq.get(record_pos).unwrap() == reference.get(ref_pos).unwrap() {
+                        artificial_seq.push(*ref_base);
                     } else {
                         add_random_base(&mut artificial_seq, ref_base);
                     }

@@ -39,7 +39,7 @@ pub fn simulate_reads<P: AsRef<Path>>(
     let mut bam_writer = bam::Writer::from_path(output_bam, &header, bam::Format::BAM)?;
     for result in bam_reader.records() {
         let mut record = result?;
-        if (record.pos() > start as i64)
+        if (record.pos() >= start as i64)
             && (record.cigar().end_pos() < (end as i64))
             && (!record.is_unmapped())
             && (!record.is_mate_unmapped())

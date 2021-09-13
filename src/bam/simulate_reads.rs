@@ -41,33 +41,42 @@ pub fn simulate_reads<P: AsRef<Path>>(
         let mut record = result?;
         if (record.pos() > start as i64)
             && (record.cigar().end_pos() < (end as i64))
+            && (!record.is_unmapped())
+            && (!record.is_mate_unmapped())
             && (record.mtid() == record.tid())
             && (record.mpos() >= (start as i64))
             && (record.mpos() < (end as i64))
         {
             record.cache_cigar();
             //Check if mate record end within region
-            let artifical_seq =
+            let artificial_seq =
                 build_sequence(&reference, &artificial_reference, &record, start as usize)?;
-            let mut artifical_record = bam::record::Record::new();
-            artifical_record.set(
-                record.qname(),
-                Some(&record.cigar()),
-                &artifical_seq,
-                record.qual(),
-            );
-            artifical_record.set_pos(record.pos() - start as i64);
-            artifical_record.set_tid(0);
-            artifical_record.set_mtid(0);
-            artifical_record.set_mpos(record.mpos() - start as i64);
-            artifical_record.set_flags(record.flags());
-            artifical_record.set_insert_size(record.insert_size());
-            bam_writer.write(&artifical_record)?;
+            let artificial_record = build_record(&record, &artificial_seq, start as i64)?;
+            bam_writer.write(&artificial_record)?;
         }
     }
     Ok(())
 }
 
+fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Result<bam::Record> {
+    let mut artificial_record = bam::record::Record::new();
+    if let Some(mate_cigar) = record.aux(b"MC") {
+        artificial_record.push_aux(b"MC", &mate_cigar);
+    }
+    artificial_record.set(
+        record.qname(),
+        Some(&record.cigar()),
+        artificial_seq,
+        record.qual(),
+    );
+    artificial_record.set_pos(record.pos() - offset);
+    artificial_record.set_tid(0);
+    artificial_record.set_mtid(0);
+    artificial_record.set_mpos(record.mpos() - offset);
+    artificial_record.set_flags(record.flags());
+    artificial_record.set_insert_size(record.insert_size());
+    Ok(artificial_record)
+}
 fn build_sequence(
     reference: &[u8],
     artificial_reference: &[u8],

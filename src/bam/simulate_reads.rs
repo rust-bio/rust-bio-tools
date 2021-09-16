@@ -16,7 +16,7 @@ pub fn simulate_reads<P: AsRef<Path>>(
     end: u64,
 ) -> Result<()> {
     let mut fasta_reader = fasta::IndexedReader::from_file(&input_ref)?;
-    fasta_reader.fetch(&chr, start, end)?;
+    fasta_reader.fetch(&chr, start - 1, end)?;
     let mut reference = Vec::new();
     fasta_reader.read(&mut reference)?;
 
@@ -28,7 +28,7 @@ pub fn simulate_reads<P: AsRef<Path>>(
     fa_writer.write(&ref_id, None, &artificial_reference)?;
 
     let mut bam_reader = bam::IndexedReader::from_path(bam)?;
-    bam_reader.fetch((chr.as_bytes(), start, end))?;
+    bam_reader.fetch((chr.as_bytes(), start - 1, end))?;
 
     let mut header = bam::Header::new();
     header.push_record(
@@ -39,19 +39,27 @@ pub fn simulate_reads<P: AsRef<Path>>(
     let mut bam_writer = bam::Writer::from_path(output_bam, &header, bam::Format::BAM)?;
     for result in bam_reader.records() {
         let mut record = result?;
-        if (record.pos() >= start as i64)
-            && (record.cigar().end_pos() < (end as i64))
-            && (!record.is_unmapped())
-            && (!record.is_mate_unmapped())
+        if (record.cigar().end_pos() <= (end as i64))
             && (record.mtid() == record.tid())
-            && (record.mpos() >= (start as i64))
-            && (record.mpos() < (end as i64))
+            && (record.mpos() + 1 >= (start as i64))
+            && (record.mpos() + 1 < (end as i64))
+        //TODO Check if mate is fully in interval
         {
             record.cache_cigar();
             //Check if mate record end within region
-            let artificial_seq =
-                build_sequence(&reference, &artificial_reference, &record, start as usize)?;
-            let artificial_record = build_record(&record, &artificial_seq, start as i64)?;
+            let artificial_seq = if record.is_unmapped() {
+                let mut seq = Vec::new();
+                add_random_bases(record.seq_len() as u64, &mut seq)?;
+                seq
+            } else {
+                build_sequence(
+                    &reference,
+                    &artificial_reference,
+                    &record,
+                    (start - 1) as usize,
+                )?
+            };
+            let artificial_record = build_record(&record, &artificial_seq, (start - 1) as i64)?;
             bam_writer.write(&artificial_record)?;
         }
     }
@@ -75,6 +83,7 @@ fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Res
     artificial_record.set_mpos(record.mpos() - offset);
     artificial_record.set_flags(record.flags());
     artificial_record.set_insert_size(record.insert_size());
+    artificial_record.set_mapq(record.mapq());
     Ok(artificial_record)
 }
 fn build_sequence(

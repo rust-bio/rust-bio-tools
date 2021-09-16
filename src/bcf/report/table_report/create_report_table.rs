@@ -6,6 +6,7 @@ use anyhow::Result;
 use chrono::{DateTime, Local};
 use itertools::Itertools;
 use jsonm::packer::{PackOptions, Packer};
+use log::warn;
 use lz_str::compress_to_utf16;
 use rust_htslib::bcf::header::{HeaderView, TagType};
 use rust_htslib::bcf::{HeaderRecord, Read, Record};
@@ -199,7 +200,7 @@ pub(crate) fn make_table_report(
                                 )
                             })
                             .unwrap()],
-                    ).unwrap().chars().collect();
+                    ).unwrap().to_string();
                     field
                 };
 
@@ -211,8 +212,14 @@ pub(crate) fn make_table_report(
                     continue;
                 };
 
+                let allele = if !get_field("Allele").is_empty() {
+                    get_field("Allele")
+                } else {
+                    continue;
+                };
+
                 if !get_field("HGVSg").is_empty() {
-                    hgvsgs.push(get_field("HGVSg"));
+                    hgvsgs.push((allele, get_field("HGVSg")));
                 }
 
                 alterations.push(alteration);
@@ -225,12 +232,6 @@ pub(crate) fn make_table_report(
                 annotations.push(ann_strings);
             }
         }
-
-        hgvsgs.sort_unstable();
-        hgvsgs.dedup();
-
-        assert!(hgvsgs.len() <= 1);
-        let hgvsg: String = hgvsgs.pop().context(format!("Found variant {} at position {} without HGVsg field. Please only use VEP-annotated VCF-files.", &id, &pos))?.to_owned();
 
         if !alleles.is_empty() {
             let ref_vec = alleles[0].to_owned();
@@ -245,6 +246,16 @@ pub(crate) fn make_table_report(
                 let alternatives: Option<String>;
                 let end_position: f64;
                 let plot_start_position;
+
+                let hgvsg: String = if alleles.len() > 2 {
+                    hgvsgs.iter().find(|(a, _)| *a == std::str::from_utf8(allel).unwrap()).context(format!("Found variant {} at position {} without HGVSg field for every given allele.", &id, &pos))?.0.to_owned()
+                } else {
+                    let mut unique_hgsvgs = hgvsgs.iter().map(|(_, b)| b).unique().collect_vec();
+                    if unique_hgsvgs.len() > 1 {
+                        warn!("Found variant {} at position {} with multiple HGVSg values and only one alternative allele.", &id, &pos);
+                    }
+                    unique_hgsvgs.pop().context(format!("Found variant {} at position {} with no HGVSg value.", &id, &pos))?.to_owned()
+                };
 
                 match alt {
                     b"<DEL>" => {

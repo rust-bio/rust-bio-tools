@@ -41,8 +41,8 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="../../indexes/index1.html">Oncoprint</a></li>
-        <li class="breadcrumb-item" aria-current="page">group: {{ sample }}</li>
-        <!-- <li class="breadcrumb-item active" aria-current="page">feature: </li> -->
+        <li class="breadcrumb-item active" aria-current="page">group: {{ sample }}</li>
+        <li class="breadcrumb-item active" aria-current="page">{{ hgvsg }}</li>
     </ol>
 </nav>
 <div class="container-fluid ">

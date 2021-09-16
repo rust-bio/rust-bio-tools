@@ -254,7 +254,13 @@ pub(crate) fn make_table_report(
                     if unique_hgsvgs.len() > 1 {
                         warn!("Found variant {} at position {} with multiple HGVSg values and only one alternative allele.", &id, &pos);
                     }
-                    unique_hgsvgs.pop().context(format!("Found variant {} at position {} with no HGVSg value.", &id, &pos))?.to_owned()
+                    unique_hgsvgs
+                        .pop()
+                        .context(format!(
+                            "Found variant {} at position {} with no HGVSg value.",
+                            &id, &pos
+                        ))?
+                        .to_owned()
                 };
 
                 match alt {

@@ -3,6 +3,7 @@ use anyhow::Result;
 use bio::io::fastq;
 use derive_new::new;
 use rust_htslib::bam;
+use rust_htslib::bam::record::Aux;
 use rust_htslib::bam::Read;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -32,8 +33,8 @@ pub enum RecordId {
 
 #[derive(Hash, PartialEq, Eq, Clone)]
 pub enum GroupId {
-    Regular(i64),
-    Split(i64),
+    Regular(u32),
+    Split(u32),
 }
 
 impl<W: io::Write> CallConsensusRead<W> {
@@ -77,7 +78,13 @@ impl<W: io::Write> CallConsensusRead<W> {
                 continue;
             }
             record.cache_cigar();
-            let duplicate_id_option = record.aux(b"DI");
+            let duplicate_id_option = match record.aux(b"DI") {
+                Ok(Aux::U8(duplicate_id)) => Some(duplicate_id as u32),
+                Ok(Aux::U16(duplicate_id)) => Some(duplicate_id as u32),
+                Ok(Aux::U32(duplicate_id)) => Some(duplicate_id),
+                Err(_) => None,
+                _ => unreachable!("Invalid type for tag 'DI'"),
+            };
             let record_id = record.qname();
             //Check if record has duplicate ID
             match duplicate_id_option {
@@ -90,7 +97,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                             let record_end_pos = record.cigar_cached().unwrap().end_pos() - 1;
                             let group_id = match storage_entry {
                                 RecordStorage::PairedRecords { ref mut r2_rec, .. } => {
-                                    let group_id = duplicate_id.integer();
+                                    let group_id = duplicate_id;
                                     r2_rec.get_or_insert(IndexedRecord {
                                         rec: record,
                                         rec_id: i,
@@ -100,7 +107,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 // This arm is reached if a mate is mapped to another chromosome.
                                 // In that case a new duplicate and record ID is required
                                 RecordStorage::SingleRecord { .. } => {
-                                    let group_id = duplicate_id.integer();
+                                    let group_id = duplicate_id;
                                     duplicate_groups
                                         .entry(GroupId::Split(group_id))
                                         .or_insert_with(Vec::new)
@@ -125,7 +132,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                         //Case: Left record or record w/o mate
                         None => {
                             duplicate_groups
-                                .entry(GroupId::Regular(duplicate_id.integer()))
+                                .entry(GroupId::Regular(duplicate_id))
                                 .or_insert_with(Vec::new)
                                 .push(RecordId::Regular(record_id.to_owned()));
                             if !record.is_paired() {
@@ -133,7 +140,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 group_end_idx
                                     .entry(record.cigar_cached().unwrap().end_pos() - 1)
                                     .or_insert_with(HashSet::new)
-                                    .insert(GroupId::Regular(duplicate_id.integer()));
+                                    .insert(GroupId::Regular(duplicate_id));
                                 record_storage.insert(
                                     RecordId::Regular(record_id.to_owned()),
                                     RecordStorage::SingleRecord {

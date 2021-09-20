@@ -181,12 +181,12 @@ fn test_vcf_report() {
 
     let files2 = vec![
         (
-            "tests/test-vcf-report/details/a/KRAS.html",
-            "tests/expected/report/details/a/KRAS.html",
+            "tests/test-vcf-report/details/a/ENST00000557334_5_c_35G_A.html",
+            "tests/expected/report/details/a/ENST00000557334_5_c_35G_A.html",
         ),
         (
-            "tests/test-vcf-report/details/b/KRAS.html",
-            "tests/expected/report/details/b/KRAS.html",
+            "tests/test-vcf-report/details/b/ENST00000557334_5_c_35G_A.html",
+            "tests/expected/report/details/b/ENST00000557334_5_c_35G_A.html",
         ),
     ];
 

@@ -70,7 +70,7 @@ pub fn match_variants<P: AsRef<Path>>(matchbcf: P, max_dist: u32, max_len_diff: 
         alternative allele separately). For indels, matching is fuzzy: distance of centres <= {}, difference of \
         lengths <= {}\">", max_dist, max_len_diff).as_bytes()
     );
-    let mut outbcf = bcf::Writer::from_path(&"-", &header, false, Format::BCF)?;
+    let mut outbcf = bcf::Writer::from_path(&"-", &header, false, Format::Bcf)?;
     let index = VarIndex::new(bcf::Reader::from_path(matchbcf)?, max_dist as u64)?;
 
     let mut rec = inbcf.empty_record();

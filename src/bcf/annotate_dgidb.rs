@@ -123,7 +123,7 @@ fn modify_vcf_entries<P: AsRef<Path>>(
     let mut reader = bcf::Reader::from_path(vcf_path)?;
     let mut header = bcf::header::Header::from_template(reader.header());
     header.push_record(format!("##INFO=<ID={},Number=.,Type=String,Description=\"Combination of gene, drug, interaction types extracted from dgiDB. Each combination is pipe-seperated annotated as GENE|DRUG|TYPE\">", field_name).as_bytes());
-    let mut writer = bcf::Writer::from_stdout(&header, true, Format::BCF)?;
+    let mut writer = bcf::Writer::from_stdout(&header, true, Format::Bcf)?;
     match gene_drug_interactions_opt {
         None => {
             for result in reader.records() {

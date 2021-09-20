@@ -333,7 +333,7 @@ pub(crate) fn make_table_report(
                     let fasta_length = *reference_lengths.get(&chrom).unwrap();
                     let visualization: String;
                     if pos < 75 {
-                        let (content, max_rows) = create_report_data(
+                        let content = create_report_data(
                             fasta_path,
                             Some(var.clone()),
                             bam_path,
@@ -345,9 +345,9 @@ pub(crate) fn make_table_report(
                             max_read_depth,
                         )?;
                         visualization =
-                            manipulate_json(content, 0, end_position as u64 + 75, max_rows)?;
+                            manipulate_json(content, 0, end_position as u64 + 75)?;
                     } else if end_position as i64 + 75 >= fasta_length as i64 {
-                        let (content, max_rows) = create_report_data(
+                        let content = create_report_data(
                             fasta_path,
                             Some(var.clone()),
                             bam_path,
@@ -359,9 +359,9 @@ pub(crate) fn make_table_report(
                             max_read_depth,
                         )?;
                         visualization =
-                            manipulate_json(content, pos as u64 - 75, fasta_length - 1, max_rows)?;
+                            manipulate_json(content, pos as u64 - 75, fasta_length - 1)?;
                     } else {
-                        let (content, max_rows) = create_report_data(
+                        let content = create_report_data(
                             fasta_path,
                             Some(var.clone()),
                             bam_path,
@@ -376,7 +376,6 @@ pub(crate) fn make_table_report(
                             content,
                             pos as u64 - 75,
                             end_position as u64 + 75,
-                            max_rows,
                         )?;
                     }
 
@@ -513,7 +512,7 @@ pub(crate) fn create_report_data<P: AsRef<Path>>(
     bam_path: P,
     region: &Region,
     max_read_depth: u32,
-) -> Result<(Json, usize)> {
+) -> Result<Json> {
     let mut data = Vec::new();
 
     for f in read_fasta(&fasta_path, region, true)? {
@@ -521,7 +520,7 @@ pub(crate) fn create_report_data<P: AsRef<Path>>(
         data.push(nucleobase);
     }
 
-    let (bases, matches, max_rows) = get_static_reads(
+    let (bases, matches) = get_static_reads(
         bam_path,
         fasta_path,
         region,
@@ -543,12 +542,12 @@ pub(crate) fn create_report_data<P: AsRef<Path>>(
         data.push(json!(variant));
     }
 
-    Ok((Json::from_str(&json!(data).to_string()).unwrap(), max_rows))
+    Ok(Json::from_str(&json!(data).to_string()).unwrap())
 }
 
 /// Inserts the json containing the genome data into the vega specs.
 /// It also changes keys and values of the json data for the vega plot to look better and compresses the json with jsonm.
-pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Result<String> {
+pub(crate) fn manipulate_json(data: Json, from: u64, to: u64) -> Result<String> {
     let json_string = include_str!("vegaSpecs.json");
 
     let mut vega_specs: Value = serde_json::from_str(json_string)?;
@@ -557,8 +556,14 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -
 
     let v = values["values"].as_array().unwrap().clone();
 
+    let mut row = 0;
+
     for (i, _) in v.iter().enumerate() {
         let k = v[i]["marker_type"].clone().as_str().unwrap().to_owned();
+        let r = v[i]["row"].clone().as_i64().unwrap();
+        if r > row {
+            row = r;
+        }
 
         if k == "A" || k == "T" || k == "G" || k == "C" || k == "U" || k == "N" {
             values["values"][i]["base"] = values["values"][i]["marker_type"].clone();
@@ -576,7 +581,7 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -
     }
 
     vega_specs["width"] = json!(700);
-    vega_specs["height"] = json!(core::cmp::max(500, max_rows * 6));
+    vega_specs["height"] = json!(core::cmp::max(10*row + 60, 203));
     let domain = json!([from, to]);
 
     vega_specs["scales"][0]["domain"] = domain;

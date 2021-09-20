@@ -81,8 +81,8 @@
                                     data-id="{{ variant.id }}"
                                     data-position="{{ variant.position }}"
                                     data-type="{{ variant.var_type }}"
-                                    data-reference="{{ variant.reference }}"
-                                    data-alternatives="{{ variant.alternatives | safe }}"
+                                    data-ref="{{ variant.reference }}"
+                                    data-alt="{{ variant.alternatives | safe }}"
                                     {% if variant.json_format %}data-format="{{ variant.json_format | escape  }}"{% endif %}
                                     {% if variant.json_info %}data-info="{{ variant.json_info | escape  }}"{% endif %}
                                     {% for k,v in variant.vis %}data-vis-sample{{ loop.index }}="{{ k }}"{% endfor %}

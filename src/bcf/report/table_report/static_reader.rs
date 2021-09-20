@@ -44,7 +44,6 @@ fn calc_rows(
 ) -> (
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
-    usize,
 ) {
     let mut row_ends = vec![0; 10000];
 
@@ -141,10 +140,9 @@ fn calc_rows(
             .into_iter()
             .filter(|b| random_rows.contains(&(b.row as u32)))
             .collect();
-        max_row = max_read_depth as usize;
     }
 
-    (reads_wr, matches_wr, max_row)
+    (reads_wr, matches_wr)
 }
 
 pub fn get_static_reads<P: AsRef<Path>>(
@@ -156,7 +154,6 @@ pub fn get_static_reads<P: AsRef<Path>>(
 ) -> Result<(
     Vec<StaticAlignmentNucleobase>,
     Vec<StaticAlignmentMatch>,
-    usize,
 )> {
     let alignments = read_indexed_bam(path, region)?;
     let (msm, m) = make_nucleobases(fasta_path, region, alignments)?;

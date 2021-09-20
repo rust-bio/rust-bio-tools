@@ -344,8 +344,7 @@ pub(crate) fn make_table_report(
                             },
                             max_read_depth,
                         )?;
-                        visualization =
-                            manipulate_json(content, 0, end_position as u64 + 75)?;
+                        visualization = manipulate_json(content, 0, end_position as u64 + 75)?;
                     } else if end_position as i64 + 75 >= fasta_length as i64 {
                         let content = create_report_data(
                             fasta_path,
@@ -372,11 +371,8 @@ pub(crate) fn make_table_report(
                             },
                             max_read_depth,
                         )?;
-                        visualization = manipulate_json(
-                            content,
-                            pos as u64 - 75,
-                            end_position as u64 + 75,
-                        )?;
+                        visualization =
+                            manipulate_json(content, pos as u64 - 75, end_position as u64 + 75)?;
                     }
 
                     visualizations.insert(sample.to_owned(), visualization.to_string());
@@ -581,7 +577,7 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64) -> Result<String> 
     }
 
     vega_specs["width"] = json!(700);
-    vega_specs["height"] = json!(core::cmp::max(10*row + 60, 203));
+    vega_specs["height"] = json!(core::cmp::max(10 * row + 60, 203));
     let domain = json!([from, to]);
 
     vega_specs["scales"][0]["domain"] = domain;

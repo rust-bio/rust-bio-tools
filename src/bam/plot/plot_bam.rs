@@ -19,8 +19,7 @@ pub(crate) fn plot_bam<P: AsRef<Path>>(
 
     let Region { target, start, end } = region.clone();
     for bam_path in bam_paths {
-        let content=
-            create_report_data(&fasta_path, None, bam_path, region, max_read_depth)?;
+        let content = create_report_data(&fasta_path, None, bam_path, region, max_read_depth)?;
         let visualization = manipulate_json(content, start, end)?;
 
         plots.push(visualization);

@@ -41,10 +41,7 @@ fn calc_rows(
     matches: Vec<AlignmentMatch>,
     max_read_depth: u32,
     variant: Option<&Variant>,
-) -> (
-    Vec<StaticAlignmentNucleobase>,
-    Vec<StaticAlignmentMatch>,
-) {
+) -> (Vec<StaticAlignmentNucleobase>, Vec<StaticAlignmentMatch>) {
     let mut row_ends = vec![0; 10000];
 
     let mut read_names: BTreeMap<String, u16> = BTreeMap::new();
@@ -151,10 +148,7 @@ pub fn get_static_reads<P: AsRef<Path>>(
     region: &Region,
     max_read_depth: u32,
     variant: Option<&Variant>,
-) -> Result<(
-    Vec<StaticAlignmentNucleobase>,
-    Vec<StaticAlignmentMatch>,
-)> {
+) -> Result<(Vec<StaticAlignmentNucleobase>, Vec<StaticAlignmentMatch>)> {
     let alignments = read_indexed_bam(path, region)?;
     let (msm, m) = make_nucleobases(fasta_path, region, alignments)?;
     Ok(calc_rows(msm, m, max_read_depth, variant))

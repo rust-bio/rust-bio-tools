@@ -39,7 +39,7 @@ pub fn simulate_reads<P: AsRef<Path>>(
             .push_tag(b"SN", &ref_id)
             .push_tag(b"LN", &(end - start)),
     );
-    let mut bam_writer = bam::Writer::from_path(output_bam, &header, bam::Format::BAM)?;
+    let mut bam_writer = bam::Writer::from_path(output_bam, &header, bam::Format::Bam)?;
     for result in bam_reader.records() {
         let mut record = result?;
         if (record.pos() >= (start - 1) as i64)
@@ -74,8 +74,8 @@ pub fn simulate_reads<P: AsRef<Path>>(
 
 fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Result<bam::Record> {
     let mut artificial_record = bam::record::Record::new();
-    if let Some(mate_cigar) = record.aux(b"MC") {
-        artificial_record.push_aux(b"MC", &mate_cigar);
+    if let Ok(mate_cigar) = record.aux(b"MC") {
+        artificial_record.push_aux(b"MC", mate_cigar)?;
     }
     artificial_record.set(
         record.qname(),

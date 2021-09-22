@@ -351,9 +351,9 @@ pub(crate) enum Command {
         output_ref: PathBuf,
         #[structopt(help = "chromosome name")]
         chr: String,
-        #[structopt(help = "0-based start position")]
+        #[structopt(help = "1-based start position")]
         start: u64,
-        #[structopt(help = "0-based exclusive end position")]
+        #[structopt(help = "1-based exclusive end position")]
         end: u64,
     },
 

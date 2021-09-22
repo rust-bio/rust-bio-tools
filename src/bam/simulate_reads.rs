@@ -104,10 +104,9 @@ fn build_sequence(
     let mut artificial_seq = Vec::new();
     let record_seq = record.seq().as_bytes();
     let mut record_pos = 0;
-    dbg!(record.pos());
-    dbg!(offset);
     let mut ref_pos = record.pos() as usize - offset;
     //Create random seq for leading softclips
+    let mut ref_base = artificial_reference.get(ref_pos).unwrap();
     for cigar in record.cigar_cached().unwrap().iter() {
         match cigar.char() {
             'S' => {
@@ -116,7 +115,7 @@ fn build_sequence(
             }
             'M' => {
                 (0..cigar.len()).for_each(|_| {
-                    let ref_base = artificial_reference.get(ref_pos).unwrap();
+                    ref_base = artificial_reference.get(ref_pos).unwrap();
                     if record_seq.get(record_pos).unwrap() == reference.get(ref_pos).unwrap() {
                         artificial_seq.push(*ref_base);
                     } else {
@@ -138,7 +137,7 @@ fn build_sequence(
             }
             'X' => {
                 (0..cigar.len()).for_each(|_| {
-                    let ref_base = artificial_reference.get(ref_pos).unwrap();
+                    ref_base = artificial_reference.get(ref_pos).unwrap();
                     let mut reduced_alphabet = alphabet.to_vec();
                     reduced_alphabet.retain(|x| x != ref_base);
                     add_random_bases(1, &mut artificial_seq, rng, &reduced_alphabet).unwrap();

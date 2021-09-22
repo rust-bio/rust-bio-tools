@@ -57,7 +57,7 @@ pub(crate) fn make_table_report(
     js_files: Vec<String>,
 ) -> Result<()> {
     // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
-    let mut reports = HashMap::new();
+    // let mut reports = HashMap::new();
     let mut ann_indices = HashMap::new();
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     let header = vcf.header().clone();
@@ -75,20 +75,7 @@ pub(crate) fn make_table_report(
 
     let reference_lengths = get_fasta_lengths(fasta_path)?;
 
-    let last_gene_index = get_gene_ending(
-        vcf_path,
-        *ann_indices
-            .get(&String::from("SYMBOL"))
-            .expect("No field named SYMBOL found. Please only use VEP-annotated VCF-files."),
-        *ann_indices
-            .get(&String::from("Gene"))
-            .expect("No field named Gene found. Please only use VEP-annotated VCF-files."),
-        *ann_indices
-            .get(&String::from("HGVSg"))
-            .expect("No field named HGVSg found. Please only use VEP-annotated VCF-files."),
-    )?;
-
-    for (record_index, v) in vcf.records().enumerate() {
+    for v in vcf.records() {
         let mut variant = v.unwrap();
 
         let n = header.rid2name(variant.rid().unwrap()).unwrap().to_owned();
@@ -195,14 +182,15 @@ pub(crate) fn make_table_report(
 
         let mut annotations = Vec::new();
 
-        let mut genes = Vec::new();
+        let mut alterations = Vec::new();
+        let mut hgvsgs = Vec::new();
 
         if let Some(ann) = variant.info(b"ANN").string()? {
             for entry in ann.iter() {
                 let fields = entry.split(|c| *c == b'|').collect_vec();
 
                 let get_field = |field: &str| {
-                    std::str::from_utf8(
+                    let field: String = std::str::from_utf8(
                         fields[*ann_indices
                             .get(&field.to_owned())
                             .context({
@@ -212,21 +200,29 @@ pub(crate) fn make_table_report(
                                 )
                             })
                             .unwrap()],
-                    )
+                    ).unwrap().to_string();
+                    field
                 };
 
-                let gene = if !get_field("SYMBOL")?.is_empty() {
-                    get_field("SYMBOL")?
-                } else if !get_field("Gene")?.is_empty() {
-                    get_field("Gene")?
-                } else if !get_field("HGVSg")?.is_empty() {
-                    warn!("Warning! Found allele without SYMBOL or Gene field in record at {}:{}. Using HGVSg instead.", &chrom, variant.pos());
-                    get_field("HGVSg")?
+                let alteration = if !get_field("HGVSp").is_empty() {
+                    get_field("HGVSp")
+                } else if !get_field("HGVSg").is_empty() {
+                    get_field("HGVSg")
                 } else {
-                    warn!("Warning! Found allele without SYMBOL, Gene or HGVSg field in record at {}:{}. This record will be skipped!", &chrom, variant.pos());
                     continue;
                 };
-                genes.push(gene.to_owned());
+
+                let allele = if !get_field("Allele").is_empty() {
+                    get_field("Allele")
+                } else {
+                    continue;
+                };
+
+                if !get_field("HGVSg").is_empty() {
+                    hgvsgs.push((allele, get_field("HGVSg")));
+                }
+
+                alterations.push(alteration);
 
                 let mut ann_strings = Vec::new();
                 for f in fields {
@@ -236,9 +232,6 @@ pub(crate) fn make_table_report(
                 annotations.push(ann_strings);
             }
         }
-
-        genes.sort_unstable();
-        genes.dedup();
 
         if !alleles.is_empty() {
             let ref_vec = alleles[0].to_owned();
@@ -253,6 +246,22 @@ pub(crate) fn make_table_report(
                 let alternatives: Option<String>;
                 let end_position: f64;
                 let plot_start_position;
+
+                let hgvsg: String = if alleles.len() > 2 {
+                    hgvsgs.iter().find(|(a, _)| *a == std::str::from_utf8(allel).unwrap()).context(format!("Found variant {} at position {} without HGVSg field for every given allele.", &id, &pos))?.0.to_owned()
+                } else {
+                    let mut unique_hgsvgs = hgvsgs.iter().map(|(_, b)| b).unique().collect_vec();
+                    if unique_hgsvgs.len() > 1 {
+                        warn!("Found variant {} at position {} with multiple HGVSg values and only one alternative allele.", &id, &pos);
+                    }
+                    unique_hgsvgs
+                        .pop()
+                        .context(format!(
+                            "Found variant {} at position {} with no HGVSg value.",
+                            &id, &pos
+                        ))?
+                        .to_owned()
+                };
 
                 match alt {
                     b"<DEL>" => {
@@ -324,7 +333,7 @@ pub(crate) fn make_table_report(
                     let fasta_length = *reference_lengths.get(&chrom).unwrap();
                     let visualization: String;
                     if pos < 75 {
-                        let (content, max_rows) = create_report_data(
+                        let content = create_report_data(
                             fasta_path,
                             Some(var.clone()),
                             bam_path,
@@ -335,10 +344,9 @@ pub(crate) fn make_table_report(
                             },
                             max_read_depth,
                         )?;
-                        visualization =
-                            manipulate_json(content, 0, end_position as u64 + 75, max_rows)?;
+                        visualization = manipulate_json(content, 0, end_position as u64 + 75)?;
                     } else if end_position as i64 + 75 >= fasta_length as i64 {
-                        let (content, max_rows) = create_report_data(
+                        let content = create_report_data(
                             fasta_path,
                             Some(var.clone()),
                             bam_path,
@@ -350,9 +358,9 @@ pub(crate) fn make_table_report(
                             max_read_depth,
                         )?;
                         visualization =
-                            manipulate_json(content, pos as u64 - 75, fasta_length - 1, max_rows)?;
+                            manipulate_json(content, pos as u64 - 75, fasta_length - 1)?;
                     } else {
-                        let (content, max_rows) = create_report_data(
+                        let content = create_report_data(
                             fasta_path,
                             Some(var.clone()),
                             bam_path,
@@ -363,18 +371,14 @@ pub(crate) fn make_table_report(
                             },
                             max_read_depth,
                         )?;
-                        visualization = manipulate_json(
-                            content,
-                            pos as u64 - 75,
-                            end_position as u64 + 75,
-                            max_rows,
-                        )?;
+                        visualization =
+                            manipulate_json(content, pos as u64 - 75, end_position as u64 + 75)?;
                     }
 
                     visualizations.insert(sample.to_owned(), visualization.to_string());
                 }
 
-                let r = Report {
+                let report_data = Report {
                     id: id.clone(),
                     name: chrom.clone(),
                     position: pos + 1,
@@ -389,27 +393,21 @@ pub(crate) fn make_table_report(
                     vis: visualizations,
                 };
 
-                for g in &genes {
-                    let reps = reports.entry((*g).to_owned()).or_insert_with(Vec::new);
-                    reps.push(r.clone());
-                }
-            }
-        }
-
-        for gene in genes {
-            if last_gene_index.get(&gene).unwrap() <= &(record_index as u32) {
-                let detail_path = output_path.to_owned() + "/details/" + &sample;
+                let escaped_hgvsg = escape_hgvsg(&hgvsg);
+                let detail_path = Path::new(&output_path)
+                    .join(Path::new("details"))
+                    .join(Path::new(sample.as_str()));
                 let local: DateTime<Local> = Local::now();
 
-                let report_data = reports.remove(&gene).unwrap();
                 let mut templates = Tera::default();
                 templates.add_raw_template(
                     "table_report.html.tera",
                     include_str!("report_table.html.tera"),
                 )?;
                 let mut context = Context::new();
-                context.insert("variants", &report_data);
-                context.insert("gene", &gene);
+                context.insert("variant", &report_data);
+                context.insert("hgvsg", &hgvsg);
+                context.insert("escaped_hgvsg", &escaped_hgvsg);
                 context.insert("description", &ann_field_description);
                 context.insert("sample", &sample);
                 context.insert("js_imports", &js_files);
@@ -417,16 +415,19 @@ pub(crate) fn make_table_report(
                 context.insert("version", &env!("CARGO_PKG_VERSION"));
 
                 let html = templates.render("table_report.html.tera", &context)?;
-                let filepath = detail_path.clone() + "/" + &gene + ".html";
+                let filepath = detail_path.join(Path::new(&escaped_hgvsg).with_extension("html"));
                 let mut file = File::create(filepath)?;
                 file.write_all(html.as_bytes())?;
 
                 let mut templates = Tera::default();
                 templates.add_raw_template("plot.js.tera", include_str!("plot.js.tera"))?;
 
-                let plot_path = detail_path.clone() + "/plots/" + &gene + ".js";
+                let plot_path = detail_path
+                    .join(Path::new("plots"))
+                    .join(Path::new(&escaped_hgvsg).with_extension("js"));
+
                 let mut plot_context = Context::new();
-                plot_context.insert("variants", &report_data);
+                plot_context.insert("variant", &report_data);
                 let plot_html = templates.render("plot.js.tera", &plot_context)?;
                 let mut plot_file = File::create(plot_path)?;
                 plot_file.write_all(plot_html.as_bytes())?;
@@ -434,6 +435,10 @@ pub(crate) fn make_table_report(
         }
     }
     Ok(())
+}
+
+fn escape_hgvsg(hgvsg: &str) -> String {
+    hgvsg.replace(".", "_").replace(">", "_").replace(":", "_")
 }
 
 pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>> {
@@ -503,7 +508,7 @@ pub(crate) fn create_report_data<P: AsRef<Path>>(
     bam_path: P,
     region: &Region,
     max_read_depth: u32,
-) -> Result<(Json, usize)> {
+) -> Result<Json> {
     let mut data = Vec::new();
 
     for f in read_fasta(&fasta_path, region, true)? {
@@ -511,7 +516,7 @@ pub(crate) fn create_report_data<P: AsRef<Path>>(
         data.push(nucleobase);
     }
 
-    let (bases, matches, max_rows) = get_static_reads(
+    let (bases, matches) = get_static_reads(
         bam_path,
         fasta_path,
         region,
@@ -533,12 +538,12 @@ pub(crate) fn create_report_data<P: AsRef<Path>>(
         data.push(json!(variant));
     }
 
-    Ok((Json::from_str(&json!(data).to_string()).unwrap(), max_rows))
+    Ok(Json::from_str(&json!(data).to_string()).unwrap())
 }
 
 /// Inserts the json containing the genome data into the vega specs.
 /// It also changes keys and values of the json data for the vega plot to look better and compresses the json with jsonm.
-pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -> Result<String> {
+pub(crate) fn manipulate_json(data: Json, from: u64, to: u64) -> Result<String> {
     let json_string = include_str!("vegaSpecs.json");
 
     let mut vega_specs: Value = serde_json::from_str(json_string)?;
@@ -547,8 +552,14 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -
 
     let v = values["values"].as_array().unwrap().clone();
 
+    let mut row = 0;
+
     for (i, _) in v.iter().enumerate() {
         let k = v[i]["marker_type"].clone().as_str().unwrap().to_owned();
+        let r = v[i]["row"].clone().as_i64().unwrap();
+        if r > row {
+            row = r;
+        }
 
         if k == "A" || k == "T" || k == "G" || k == "C" || k == "U" || k == "N" {
             values["values"][i]["base"] = values["values"][i]["marker_type"].clone();
@@ -566,7 +577,7 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -
     }
 
     vega_specs["width"] = json!(700);
-    vega_specs["height"] = json!(core::cmp::max(500, max_rows * 6));
+    vega_specs["height"] = json!(core::cmp::max(10 * row + 60, 203));
     let domain = json!([from, to]);
 
     vega_specs["scales"][0]["domain"] = domain;
@@ -578,31 +589,4 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64, max_rows: usize) -
     let packed_specs = packer.pack(&vega_specs, &options)?;
 
     Ok(json!(compress_to_utf16(&packed_specs.to_string())).to_string())
-}
-
-fn get_gene_ending(
-    vcf_path: &Path,
-    symbol_index: usize,
-    gene_index: usize,
-    hgvsg_index: usize,
-) -> Result<HashMap<String, u32>> {
-    let mut endings = HashMap::new();
-    let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path)?;
-    for (record_index, v) in vcf.records().enumerate() {
-        let variant = v?;
-        if let Some(ann) = variant.info(b"ANN").string()? {
-            for entry in ann.iter() {
-                let fields: Vec<_> = entry.split(|c| *c == b'|').collect();
-                let mut gene = std::str::from_utf8(fields[symbol_index])?;
-                if gene.is_empty() {
-                    gene = std::str::from_utf8(fields[gene_index])?;
-                }
-                if gene.is_empty() {
-                    gene = std::str::from_utf8(fields[hgvsg_index])?;
-                }
-                endings.insert(gene.to_owned(), record_index as u32);
-            }
-        }
-    }
-    Ok(endings)
 }

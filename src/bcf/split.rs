@@ -19,7 +19,7 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
     let mut i = 0;
     for (chunk, out_path) in output_bcfs.iter().enumerate() {
         let chunk = chunk as u64;
-        let mut writer = bcf::Writer::from_path(out_path, &header, false, bcf::Format::BCF)?;
+        let mut writer = bcf::Writer::from_path(out_path, &header, false, bcf::Format::Bcf)?;
         let mut written = 0;
         let write_err = || {
             format!(

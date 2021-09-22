@@ -1,6 +1,6 @@
 [package]
 name = "rust-bio-tools"
-version = "0.27.0"
+version = "0.28.0"
 authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>", "Erik Clarke <ecl@pennmedicine.upenn.edu>"]
 description = "A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio."
 license-file = "LICENSE.md"
@@ -16,7 +16,7 @@ indicatif = "0.11"
 itertools = "0.9"
 log = "0.4.6"
 fern = "0.5.7"
-rust-htslib = "0.36"
+rust-htslib = "0.38"
 csv = "1.0.2"
 rustc-serialize = "0.3"
 newtype_derive = "0.1"

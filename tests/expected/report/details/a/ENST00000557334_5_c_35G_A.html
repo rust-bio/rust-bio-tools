@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>KRAS</title>
+    <title>ENST00000557334.5:c.35G>A</title>
     <meta charset="UTF-8">
     <link rel="stylesheet" type="text/css" href="../../css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="../../css/bootstrap-table.min.css">
@@ -17,7 +17,7 @@
 <script src="../../js/vega-lite.min.js"></script>
 <script src="../../js/vega-embed.min.js"></script>
 <script src="../../js/lz-string.min.js"></script>
-<script src="plots/KRAS.js"></script>
+<script src="plots/ENST00000557334_5_c_35G_A.js"></script>
 <script src="../../js/table-report.js"></script>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -37,15 +37,23 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="../../indexes/index1.html">Oncoprint</a></li>
-        <li class="breadcrumb-item"><a href="../../genes/KRAS1.html">gene: KRAS</a></li>
-        <li class="breadcrumb-item active" aria-current="page">group: b</li>
+        <li class="breadcrumb-item active" aria-current="page">group: a</li>
+        <li class="breadcrumb-item active" aria-current="page">ENST00000557334.5:c.35G>A</li>
     </ol>
 </nav>
 <div class="container-fluid ">
         <div class="row">
-            <div class="col-8">
+            <div class="col-5"  style="overflow: auto; height: calc(100vh - 204px); margin-top: 59px;">
+                <table id="sidebar" class="table table-hover table-sm">
+                </table>
+                <table id="ann-sidebar" class="table-sm" data-widht="100" data-toggle="table">
+                </table>
+                <div id="custom-sidebar">
+                </div>
+            </div>
+            <div class="col-7">
                 <div class="row">
-                    <div class="col-12">
+                    <div class="col-12" style="display: none">
                         <table id="table" class="table-bordered" data-toggle="table" data-height="305" data-search="true" data-pagination="true">
                             <thead>
                             <tr>
@@ -58,17 +66,17 @@
                             </tr>
                             </thead>
                             <tbody>
-                            
                             <tr
                                     class="variant-row"
-                                    id="variant1"
-                                    data-idx="1"
+                                    id="variant0"
+                                    data-idx="0"
                                     data-name="chr1"
+                                    data-contig="chr1"
                                     data-id="."
                                     data-position="15"
                                     data-type="Variant"
-                                    data-reference="C"
-                                    data-alternatives="T"
+                                    data-ref="C"
+                                    data-alt="T"
                                     
                                     
                                     data-vis-sample1="tumor"
@@ -459,21 +467,18 @@
                                 <td>T</td>
                                 
                             </tr>
-                            
                             </tbody>
                         </table>
 
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-12" style="overflow: auto; height: calc(100vh - 450px);">
-                    
-                        
+                    <div class="col-12" style="overflow: auto; height: calc(100vh - 150px);">
                         <nav>
                             <ul class="nav nav-tabs" id="sampleTabs" role="tablist">
                                 
                                 <li class="nav-item">
-                                    <a class="nav-link active" id="tumor-tab" data-toggle="tab" href="#vistumor" role="tab" aria-controls="vistumor" aria-selected="true">b:tumor</a>
+                                    <a class="nav-link active" id="tumor-tab" data-toggle="tab" href="#vistumor" role="tab" aria-controls="vistumor" aria-selected="true">a:tumor</a>
                                 </li>
                                 
                             </ul>
@@ -485,8 +490,7 @@
                         </div>
                         
                         </div>
-                        
-                    
+
                         <div id="loader-wrapper" class="d-flex justify-content-center text-primary" style="padding-top: 40px;">
                             <div class="spinner-border" role="status">
                                 <span class="sr-only">Loading...</span>
@@ -495,16 +499,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-4"  style="overflow: auto; height: calc(100vh - 204px); margin-top: 59px;">
-                <table id="sidebar" class="table table-hover table-sm">
-                </table>
-                <table id="ann-sidebar" class="table-sm" data-widht="100" data-toggle="table">
-                </table>
-                <div id="custom-sidebar">
-                </div>
-            </div>
         </div>
     </div>
-<script>$(document).ready(function () { $('#variant1').trigger('click');});</script>
+<script>$(document).ready(function () { $('#variant0').trigger('click');});</script>
 </body>
 </html>

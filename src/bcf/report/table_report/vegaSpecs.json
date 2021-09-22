@@ -436,7 +436,6 @@
       "scale": "x",
       "orient": "top",
       "grid": false,
-      "title": "Position",
       "titlePadding": 20,
       "labelFlush": true,
       "labelOverlap": true,

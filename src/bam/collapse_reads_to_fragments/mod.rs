@@ -41,7 +41,7 @@ pub fn call_consensus_reads_from_paths<P: AsRef<Path>>(
     let bam_skipped_writer = bam::Writer::from_path(
         bam_skipped_out,
         &Header::from_template(bam_reader.header()),
-        Format::BAM,
+        Format::Bam,
     )?;
     CallConsensusRead::new(
         bam_reader,

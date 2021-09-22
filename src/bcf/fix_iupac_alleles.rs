@@ -8,7 +8,7 @@ pub fn fix_iupac_alleles() -> Result<()> {
     let mut outbcf = bcf::Writer::from_stdout(
         &bcf::Header::from_template(inbcf.header()),
         false,
-        Format::BCF,
+        Format::Bcf,
     )?;
     let valid_alphabet = n_alphabet();
 

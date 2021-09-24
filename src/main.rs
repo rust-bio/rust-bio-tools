@@ -269,8 +269,9 @@ fn main() -> Result<()> {
             chr,
             start,
             end,
+            pairs,
         } => bam::simulate_reads::simulate_reads(
-            bam, input_ref, output_bam, output_ref, chr, start, end,
+            bam, input_ref, output_bam, output_ref, chr, start, end, pairs,
         )?,
         SequenceStats { fastq } => sequences_stats::stats(fastq)?,
     }

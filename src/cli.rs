@@ -355,6 +355,12 @@ pub(crate) enum Command {
         start: u64,
         #[structopt(help = "1-based exclusive end position")]
         end: u64,
+        #[structopt(
+            long,
+            short = "p",
+            help = "Only simulates reads whos mates are both in defined range."
+        )]
+        pairs: bool,
     },
 
     /// Tool to compute stats on sequence file (from STDIN), output is in YAML with fields:

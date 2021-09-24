@@ -15,6 +15,7 @@ pub fn simulate_reads<P: AsRef<Path>>(
     chr: String,
     start: u64,
     end: u64,
+    pairs: bool,
 ) -> Result<()> {
     let mut fasta_reader = fasta::IndexedReader::from_file(&input_ref)?;
     fasta_reader.fetch(&chr, start - 1, end - 1)?;
@@ -40,14 +41,16 @@ pub fn simulate_reads<P: AsRef<Path>>(
             .push_tag(b"LN", &(end - start)),
     );
     let mut bam_writer = bam::Writer::from_path(output_bam, &header, bam::Format::Bam)?;
+    let mate_in_range = |record: &bam::Record| -> bool {
+        (record.mtid() == record.tid())
+            && (record.mpos() + 1 >= (start as i64))
+            && (record.mpos() + 1 < (end as i64))
+    };
     for result in bam_reader.records() {
         let mut record = result?;
         if (record.pos() >= (start - 1) as i64)
             && (record.cigar().end_pos() < (end - 1) as i64)
-            && (record.mtid() == record.tid())
-            && (record.mpos() + 1 >= (start as i64))
-            && (record.mpos() + 1 < (end as i64))
-        //TODO Check if mate is fully in interval
+            && (!pairs || mate_in_range(&record))
         {
             record.cache_cigar();
             //Check if mate record end within region

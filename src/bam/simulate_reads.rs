@@ -28,6 +28,7 @@ pub fn simulate_reads<P: AsRef<Path>>(
     //Build artificial reference
     let mut artificial_reference = Vec::new();
     add_random_bases(end - start, &mut artificial_reference, &mut rng, &alphabet)?;
+    let mut altered_bases = init_altered_bases(&reference, &artificial_reference)?;
     let mut fa_writer = fasta::Writer::to_file(output_ref)?;
     let ref_id = Uuid::new_v4().to_hyphenated().to_string();
     fa_writer.write(&ref_id, None, &artificial_reference)?;
@@ -47,7 +48,6 @@ pub fn simulate_reads<P: AsRef<Path>>(
             && (record.mpos() + 1 >= (start as i64))
             && (record.mpos() + 1 < (end as i64))
     };
-    let mut mutated_bases = HashMap::new();
     for result in bam_reader.records() {
         let mut record = result?;
         if (record.pos() >= (start - 1) as i64)
@@ -62,9 +62,7 @@ pub fn simulate_reads<P: AsRef<Path>>(
                 seq
             } else {
                 build_sequence(
-                    &reference,
-                    &artificial_reference,
-                    &mut mutated_bases,
+                    &mut altered_bases,
                     &record,
                     (start - 1) as usize,
                     &mut rng,
@@ -76,6 +74,24 @@ pub fn simulate_reads<P: AsRef<Path>>(
         }
     }
     Ok(())
+}
+
+fn init_altered_bases(
+    original_ref: &[u8],
+    artificial_reference: &[u8],
+) -> Result<HashMap<usize, HashMap<u8, u8>>> {
+    let mut altered_bases = HashMap::new();
+    for (i, (artifical_base, original_base)) in artificial_reference
+        .iter()
+        .zip(original_ref.iter())
+        .enumerate()
+    {
+        altered_bases
+            .entry(i)
+            .or_insert_with(HashMap::new)
+            .insert(*original_base, *artifical_base);
+    }
+    Ok(altered_bases)
 }
 
 fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Result<bam::Record> {
@@ -100,9 +116,7 @@ fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Res
 }
 
 fn build_sequence(
-    reference: &[u8],
-    artificial_reference: &[u8],
-    altered_bases: &mut HashMap<usize, u8>,
+    altered_bases: &mut HashMap<usize, HashMap<u8, u8>>,
     record: &bam::Record,
     offset: usize,
     rng: &mut ThreadRng,
@@ -113,27 +127,26 @@ fn build_sequence(
     let mut record_pos = 0;
     let mut ref_pos = record.pos() as usize - offset;
     //Create random seq for leading softclips
-    let mut ref_base = None;
     for cigar in record.cigar_cached().unwrap().iter() {
         match cigar.char() {
             'S' => {
                 add_random_bases(cigar.len() as u64, &mut artificial_seq, rng, alphabet)?;
                 record_pos += cigar.len() as usize;
             }
-            'M' => {
+            'M' | 'X' | '=' => {
                 (0..cigar.len()).for_each(|_| {
-                    ref_base = artificial_reference.get(ref_pos);
-                    if record_seq.get(record_pos).unwrap() == reference.get(ref_pos).unwrap() {
-                        artificial_seq.push(*ref_base.unwrap());
-                    } else {
-                        let altered_base = altered_bases.entry(ref_pos).or_insert_with(|| {
-                            let mut reduced_alphabet = alphabet.to_vec();
-                            reduced_alphabet.retain(|x| x != ref_base.unwrap());
-                            let idx = rng.gen_range(0, 3);
+                    let mut reduced_alphabet = alphabet.to_vec();
+                    let base_mappings = altered_bases.get(&ref_pos).unwrap().clone();
+                    let altered_base = *altered_bases
+                        .get_mut(&ref_pos)
+                        .unwrap()
+                        .entry(*record_seq.get(record_pos).unwrap())
+                        .or_insert_with(|| {
+                            reduced_alphabet.retain(|x| !base_mappings.values().any(|y| x == y));
+                            let idx = rng.gen_range(0, reduced_alphabet.len());
                             reduced_alphabet[idx]
                         });
-                        artificial_seq.push(*altered_base);
-                    }
+                    artificial_seq.push(altered_base);
                     ref_pos += 1;
                     record_pos += 1;
                 });
@@ -145,28 +158,6 @@ fn build_sequence(
             }
             'D' | 'N' => {
                 ref_pos += cigar.len() as usize;
-            }
-            'X' => {
-                (0..cigar.len()).for_each(|_| {
-                    ref_base = artificial_reference.get(ref_pos);
-                    let altered_base = altered_bases.entry(ref_pos).or_insert_with(|| {
-                        let mut reduced_alphabet = alphabet.to_vec();
-                        reduced_alphabet.retain(|x| x != ref_base.unwrap());
-                        let idx = rng.gen_range(0, 3);
-                        reduced_alphabet[idx]
-                    });
-                    artificial_seq.push(*altered_base);
-                    ref_pos += 1;
-                });
-                record_pos += cigar.len() as usize;
-            }
-            '=' => {
-                (0..cigar.len()).for_each(|_| {
-                    let ref_base = artificial_reference.get(ref_pos).unwrap();
-                    artificial_seq.push(*ref_base);
-                    ref_pos += 1;
-                });
-                record_pos += cigar.len() as usize;
             }
             _ => {}
         }

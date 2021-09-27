@@ -4,6 +4,7 @@ use rand::prelude::ThreadRng;
 use rand::Rng;
 use rust_htslib::bam;
 use rust_htslib::bam::Read;
+use std::collections::HashMap;
 use std::path::Path;
 use uuid::Uuid;
 
@@ -46,6 +47,7 @@ pub fn simulate_reads<P: AsRef<Path>>(
             && (record.mpos() + 1 >= (start as i64))
             && (record.mpos() + 1 < (end as i64))
     };
+    let mut mutated_bases = HashMap::new();
     for result in bam_reader.records() {
         let mut record = result?;
         if (record.pos() >= (start - 1) as i64)
@@ -62,6 +64,7 @@ pub fn simulate_reads<P: AsRef<Path>>(
                 build_sequence(
                     &reference,
                     &artificial_reference,
+                    &mut mutated_bases,
                     &record,
                     (start - 1) as usize,
                     &mut rng,
@@ -99,6 +102,7 @@ fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Res
 fn build_sequence(
     reference: &[u8],
     artificial_reference: &[u8],
+    altered_bases: &mut HashMap<usize, u8>,
     record: &bam::Record,
     offset: usize,
     rng: &mut ThreadRng,
@@ -109,7 +113,7 @@ fn build_sequence(
     let mut record_pos = 0;
     let mut ref_pos = record.pos() as usize - offset;
     //Create random seq for leading softclips
-    let mut ref_base = artificial_reference.get(ref_pos).unwrap();
+    let mut ref_base = None;
     for cigar in record.cigar_cached().unwrap().iter() {
         match cigar.char() {
             'S' => {
@@ -118,13 +122,17 @@ fn build_sequence(
             }
             'M' => {
                 (0..cigar.len()).for_each(|_| {
-                    ref_base = artificial_reference.get(ref_pos).unwrap();
+                    ref_base = artificial_reference.get(ref_pos);
                     if record_seq.get(record_pos).unwrap() == reference.get(ref_pos).unwrap() {
-                        artificial_seq.push(*ref_base);
+                        artificial_seq.push(*ref_base.unwrap());
                     } else {
-                        let mut reduced_alphabet = alphabet.to_vec();
-                        reduced_alphabet.retain(|x| x != ref_base);
-                        add_random_bases(1, &mut artificial_seq, rng, &reduced_alphabet).unwrap();
+                        let altered_base = altered_bases.entry(ref_pos).or_insert_with(|| {
+                            let mut reduced_alphabet = alphabet.to_vec();
+                            reduced_alphabet.retain(|x| x != ref_base.unwrap());
+                            let idx = rng.gen_range(0, 3);
+                            reduced_alphabet[idx]
+                        });
+                        artificial_seq.push(*altered_base);
                     }
                     ref_pos += 1;
                     record_pos += 1;
@@ -140,10 +148,14 @@ fn build_sequence(
             }
             'X' => {
                 (0..cigar.len()).for_each(|_| {
-                    ref_base = artificial_reference.get(ref_pos).unwrap();
-                    let mut reduced_alphabet = alphabet.to_vec();
-                    reduced_alphabet.retain(|x| x != ref_base);
-                    add_random_bases(1, &mut artificial_seq, rng, &reduced_alphabet).unwrap();
+                    ref_base = artificial_reference.get(ref_pos);
+                    let altered_base = altered_bases.entry(ref_pos).or_insert_with(|| {
+                        let mut reduced_alphabet = alphabet.to_vec();
+                        reduced_alphabet.retain(|x| x != ref_base.unwrap());
+                        let idx = rng.gen_range(0, 3);
+                        reduced_alphabet[idx]
+                    });
+                    artificial_seq.push(*altered_base);
                     ref_pos += 1;
                 });
                 record_pos += cigar.len() as usize;

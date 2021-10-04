@@ -360,7 +360,7 @@ pub(crate) enum Command {
             short = "p",
             help = "Only simulates reads whos mates are both in defined range."
         )]
-        pairs: bool,
+        keep_only_pairs: bool,
     },
 
     /// Tool to compute stats on sequence file (from STDIN), output is in YAML with fields:

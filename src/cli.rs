@@ -335,6 +335,34 @@ pub(crate) enum Command {
         cmd: CollapseReadsToFragmentsSubcommand,
     },
 
+    /// Tool to build artifical reads from real BAM files with identical properties.
+    #[structopt(author = "Felix Mölder <felix.moelder@uni-due.de>")]
+    BamAnonymize {
+        #[structopt(parse(from_os_str), help = "Input BAM file")]
+        bam: PathBuf,
+        #[structopt(parse(from_os_str), help = "Input reference as fasta file")]
+        input_ref: PathBuf,
+        #[structopt(parse(from_os_str), help = "Output BAM file with artificial reads")]
+        output_bam: PathBuf,
+        #[structopt(
+            parse(from_os_str),
+            help = "Output fasta file with artificial reference"
+        )]
+        output_ref: PathBuf,
+        #[structopt(help = "chromosome name")]
+        chr: String,
+        #[structopt(help = "1-based start position")]
+        start: u64,
+        #[structopt(help = "1-based exclusive end position")]
+        end: u64,
+        #[structopt(
+            long,
+            short = "p",
+            help = "Only simulates reads whos mates are both in defined range."
+        )]
+        keep_only_pairs: bool,
+    },
+
     /// Tool to compute stats on sequence file (from STDIN), output is in YAML with fields:
     /// - min: length of shortest sequence
     /// - max: length of longest sequence

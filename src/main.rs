@@ -261,6 +261,24 @@ fn main() -> Result<()> {
                 verbose_read_names,
             )?,
         },
+        BamAnonymize {
+            bam,
+            input_ref,
+            output_bam,
+            output_ref,
+            chr,
+            start,
+            end,
+            keep_only_pairs,
+        } => bam::anonymize_reads::anonymize_reads(
+            bam,
+            input_ref,
+            output_bam,
+            output_ref,
+            chr,
+            start - 1..end - 1,
+            keep_only_pairs,
+        )?,
         SequenceStats { fastq } => sequences_stats::stats(fastq)?,
     }
     Ok(())

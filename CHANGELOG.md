@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.29.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.28.0...v0.29.0) (2021-10-04)
+
+
+### Features
+
+* anonymize bam files ([#181](https://www.github.com/rust-bio/rust-bio-tools/issues/181)) ([22b884f](https://www.github.com/rust-bio/rust-bio-tools/commit/22b884fdf5cc8e617ad5c1657c85bff3429c128e))
+
 ## [0.28.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.27.0...v0.28.0) (2021-09-20)
 
 

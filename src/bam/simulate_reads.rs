@@ -1,10 +1,11 @@
 use anyhow::Result;
 use bio::io::fasta;
-use rand::prelude::ThreadRng;
-use rand::Rng;
+use rand::prelude::{SliceRandom, ThreadRng};
+use rand::seq::IteratorRandom;
 use rust_htslib::bam;
 use rust_htslib::bam::Read;
 use std::collections::HashMap;
+use std::ops::Range;
 use std::path::Path;
 use uuid::Uuid;
 
@@ -14,12 +15,13 @@ pub fn simulate_reads<P: AsRef<Path>>(
     output_bam: P,
     output_ref: P,
     chr: String,
-    start: u64,
-    end: u64,
-    pairs: bool,
+    interval: Range<u64>,
+    keep_only_pairs: bool,
 ) -> Result<()> {
+    let start = interval.start;
+    let end = interval.end;
     let mut fasta_reader = fasta::IndexedReader::from_file(&input_ref)?;
-    fasta_reader.fetch(&chr, start - 1, end - 1)?;
+    fasta_reader.fetch(&chr, start, end)?;
     let mut reference = Vec::new();
     fasta_reader.read(&mut reference)?;
     let mut rng = rand::thread_rng();
@@ -34,7 +36,7 @@ pub fn simulate_reads<P: AsRef<Path>>(
     fa_writer.write(&ref_id, None, &artificial_reference)?;
 
     let mut bam_reader = bam::IndexedReader::from_path(bam)?;
-    bam_reader.fetch((chr.as_bytes(), start - 1, end))?;
+    bam_reader.fetch((chr.as_bytes(), start, end + 1))?;
 
     let mut header = bam::Header::new();
     header.push_record(
@@ -45,14 +47,14 @@ pub fn simulate_reads<P: AsRef<Path>>(
     let mut bam_writer = bam::Writer::from_path(output_bam, &header, bam::Format::Bam)?;
     let mate_in_range = |record: &bam::Record| -> bool {
         (record.mtid() == record.tid())
-            && (record.mpos() + 1 >= (start as i64))
-            && (record.mpos() + 1 < (end as i64))
+            && (record.mpos() >= (start as i64))
+            && (record.mpos() < (end as i64))
     };
     for result in bam_reader.records() {
         let mut record = result?;
-        if (record.pos() >= (start - 1) as i64)
-            && (record.cigar().end_pos() < (end - 1) as i64)
-            && (!pairs || mate_in_range(&record))
+        if (record.pos() >= start as i64)
+            && (record.cigar().end_pos() < end as i64)
+            && (!keep_only_pairs || mate_in_range(&record))
         {
             record.cache_cigar();
             //Check if mate record end within region
@@ -64,12 +66,12 @@ pub fn simulate_reads<P: AsRef<Path>>(
                 build_sequence(
                     &mut altered_bases,
                     &record,
-                    (start - 1) as usize,
+                    start as usize,
                     &mut rng,
                     &alphabet,
                 )?
             };
-            let artificial_record = build_record(&record, &artificial_seq, (start - 1) as i64)?;
+            let artificial_record = build_record(&record, &artificial_seq, start as i64)?;
             bam_writer.write(&artificial_record)?;
         }
     }
@@ -135,16 +137,17 @@ fn build_sequence(
             }
             'M' | 'X' | '=' => {
                 (0..cigar.len()).for_each(|_| {
-                    let mut reduced_alphabet = alphabet.to_vec();
                     let base_mappings = altered_bases.get(&ref_pos).unwrap().clone();
                     let altered_base = *altered_bases
                         .get_mut(&ref_pos)
                         .unwrap()
                         .entry(*record_seq.get(record_pos).unwrap())
                         .or_insert_with(|| {
-                            reduced_alphabet.retain(|x| !base_mappings.values().any(|y| x == y));
-                            let idx = rng.gen_range(0, reduced_alphabet.len());
-                            reduced_alphabet[idx]
+                            *alphabet
+                                .iter()
+                                .filter(|&x| !base_mappings.values().any(|y| x == y))
+                                .choose(rng)
+                                .unwrap()
                         });
                     artificial_seq.push(altered_base);
                     ref_pos += 1;
@@ -172,10 +175,6 @@ fn add_random_bases(
     rng: &mut ThreadRng,
     alphabet: &[u8],
 ) -> Result<()> {
-    let alphabet_size = alphabet.len();
-    (0..length).for_each(|_| {
-        let idx = rng.gen_range(0, alphabet_size);
-        seq.push(alphabet[idx])
-    });
+    (0..length).for_each(|_| seq.push(*alphabet.choose(rng).unwrap()));
     Ok(())
 }

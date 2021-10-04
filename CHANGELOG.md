@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Features
 
-* simulate reads from real bam files ([#181](https://www.github.com/rust-bio/rust-bio-tools/issues/181)) ([22b884f](https://www.github.com/rust-bio/rust-bio-tools/commit/22b884fdf5cc8e617ad5c1657c85bff3429c128e))
+* anonymize bam files ([#181](https://www.github.com/rust-bio/rust-bio-tools/issues/181)) ([22b884f](https://www.github.com/rust-bio/rust-bio-tools/commit/22b884fdf5cc8e617ad5c1657c85bff3429c128e))
 
 ## [0.28.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.27.0...v0.28.0) (2021-09-20)
 

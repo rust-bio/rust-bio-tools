@@ -9,7 +9,7 @@ use std::ops::Range;
 use std::path::Path;
 use uuid::Uuid;
 
-pub fn simulate_reads<P: AsRef<Path>>(
+pub fn anonymize_reads<P: AsRef<Path>>(
     bam: P,
     input_ref: P,
     output_bam: P,

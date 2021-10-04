@@ -261,7 +261,7 @@ fn main() -> Result<()> {
                 verbose_read_names,
             )?,
         },
-        SimulateReads {
+        BamAnonymize {
             bam,
             input_ref,
             output_bam,
@@ -270,7 +270,7 @@ fn main() -> Result<()> {
             start,
             end,
             keep_only_pairs,
-        } => bam::simulate_reads::simulate_reads(
+        } => bam::anonymize_reads::anonymize_reads(
             bam,
             input_ref,
             output_bam,

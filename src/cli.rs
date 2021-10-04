@@ -337,7 +337,7 @@ pub(crate) enum Command {
 
     /// Tool to build artifical reads from real BAM files with identical properties.
     #[structopt(author = "Felix Mölder <felix.moelder@uni-due.de>")]
-    SimulateReads {
+    BamAnonymize {
         #[structopt(parse(from_os_str), help = "Input BAM file")]
         bam: PathBuf,
         #[structopt(parse(from_os_str), help = "Input reference as fasta file")]

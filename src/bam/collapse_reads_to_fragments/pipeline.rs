@@ -79,6 +79,7 @@ impl<W: io::Write> CallConsensusRead<W> {
             }
             record.cache_cigar();
             let duplicate_id_option = match record.aux(b"DI") {
+                Ok(Aux::I8(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U8(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U16(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U32(duplicate_id)) => Some(duplicate_id),

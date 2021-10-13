@@ -216,13 +216,15 @@ pub(crate) enum Command {
         output_path: String,
     },
 
-    /// Creates a html file with a vega visualization of the given bam region
-    /// Example:
-    /// rbt plot-bam -b input.bam -g 2:132424-132924 -r input.fa > plot.html
+    #[structopt(verbatim_doc_comment)]
+    /// Creates a html file with a vega visualization of the given bam region that is then written to stdout.
+    ///
+    /// EXAMPLE:
+    ///     rbt plot-bam -b input.bam -g 2:132424-132924 -r input.fa > plot.html
     #[structopt(author = "Felix Wiegand <felix.wiegand@tu-dortmund.de>")]
     PlotBam {
         /// BAM file to be visualized.
-        #[structopt(long, short = "b", parse(from_os_str))]
+        #[structopt(long, short = "b", required = true, parse(from_os_str))]
         bam_path: Vec<PathBuf>,
 
         /// Path to the reference fasta file.

@@ -34,6 +34,7 @@ pub struct Alignment {
     mate_pos: i64,
     tid: i32,
     mate_tid: i32,
+    mapq: u8,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -46,6 +47,8 @@ pub struct AlignmentNucleobase {
     pub name: String,
     pub read_start: u32,
     pub read_end: u32,
+    pub mapq: u8,
+    pub cigar: String,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -57,6 +60,8 @@ pub struct AlignmentMatch {
     pub name: String,
     pub read_start: u32,
     pub read_end: u32,
+    pub mapq: u8,
+    pub cigar: String,
 }
 
 pub fn decode_flags(code: u16) -> Vec<u16> {
@@ -133,6 +138,7 @@ fn make_alignment(record: &bam::Record) -> Alignment {
         mate_pos,
         tid,
         mate_tid: mtid,
+        mapq: record.mapq(),
     }
 }
 
@@ -169,6 +175,8 @@ pub fn make_nucleobases<P: AsRef<Path>>(
                 name: temp_snippet.name.clone(),
                 read_start: temp_snippet.pos as u32,
                 read_end: (temp_snippet.mate_pos + 100) as u32,
+                mapq: snippet.mapq,
+                cigar: snippet.cigar.to_string(),
             };
 
             matches.push(pairing);
@@ -268,6 +276,8 @@ pub fn make_nucleobases<P: AsRef<Path>>(
                         name: snip.name,
                         read_start: rs as u32,
                         read_end: re as u32,
+                        mapq: snippet.mapq,
+                        cigar: snippet.cigar.to_string(),
                     };
 
                     if from as f64 <= (base.start_position + 0.5)
@@ -311,6 +321,8 @@ pub fn make_nucleobases<P: AsRef<Path>>(
                             name,
                             read_start: read_start as u32,
                             read_end: read_end as u32,
+                            mapq: snippet.mapq,
+                            cigar: snippet.cigar.to_string(),
                         };
 
                         read_offset += 1;
@@ -436,6 +448,8 @@ fn make_markers(
             name: name.clone(),
             read_start: read_start as u32,
             read_end: read_end as u32,
+            mapq: snip.mapq,
+            cigar: snip.cigar.to_string(),
         });
     }
 
@@ -448,6 +462,8 @@ fn make_markers(
         name,
         read_start: read_start as u32,
         read_end: read_end as u32,
+        mapq: snip.mapq,
+        cigar: snip.cigar.to_string(),
     };
     (mtch, base)
 }
@@ -480,5 +496,7 @@ fn end_mismatch_detection(snip: Alignment, match_start: i64, match_count: i64) -
         name: n,
         read_start: rs as u32,
         read_end: re as u32,
+        mapq: snip.mapq,
+        cigar: snip.cigar.to_string(),
     }
 }

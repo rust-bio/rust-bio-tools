@@ -189,6 +189,44 @@
   ],
   "marks": [
     {
+      "name": "mapq_markers",
+      "type": "group",
+      "clip": true,
+      "style": [
+        "rule"
+      ],
+      "interactive": true,
+      "from": {
+        "data": "alignments"
+      },
+      "encode": {
+        "update": {
+          "stroke": {
+            "field": "mapq",
+            "scale": "color2"
+          },
+          "opacity": {"value": 0.8},
+          "x": {
+            "scale": "x",
+            "field": "start_position"
+          },
+          "x2": {
+            "scale": "x",
+            "field": "end_position"
+          },
+          "y": {
+            "scale": "y",
+            "field": "row",
+            "band": 0.5
+          },
+          "strokeWidth": {
+            "scale": "stroke2",
+            "field": "marker_type"
+          }
+        }
+      }
+    },
+    {
       "name": "marks",
       "type": "group",
       "clip": true,
@@ -372,6 +410,34 @@
       ]
     },
     {
+      "name": "stroke2",
+      "type": "ordinal",
+      "domain": [
+        "A",
+        "C",
+        "G",
+        "T",
+        "N",
+        "Variant",
+        "Insertion",
+        "Deletion",
+        "Match",
+        "Pairing"
+      ],
+      "range": [
+        6.5,
+        6.5,
+        6.5,
+        6.5,
+        6.5,
+        6.5,
+        9,
+        6.5,
+        6.5,
+        2.5
+      ]
+    },
+    {
       "name": "opac",
       "type": "ordinal",
       "domain": [
@@ -379,6 +445,12 @@
         false
       ],
       "range": [0.4, 0.9]
+    },
+    {
+      "name": "color2",
+      "type": "threshold",
+      "domain": [11, 21, 31, 41, 51, 60],
+      "range": ["#FF0303", "d13838", "c74c4c", "bd5e5e", "a66565", "9e7070", "#BBBBBB"]
     },
     {
       "name": "color",
@@ -460,6 +532,11 @@
           }
         }
       }
+    },
+    {
+      "symbolType": "stroke",
+      "title": "MAPQ",
+      "stroke": "color2"
     }
   ],
   "config": {}

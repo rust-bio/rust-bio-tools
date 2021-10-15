@@ -549,5 +549,16 @@
       "stroke": "color2"
     }
   ],
-  "config": {}
+  "config": {
+    "legend": {
+      "layout": {
+        "right": {
+          "anchor": "start",
+          "direction": "horizontal",
+          "center": false,
+          "margin": 10
+        }
+      }
+    }
+  }
 }

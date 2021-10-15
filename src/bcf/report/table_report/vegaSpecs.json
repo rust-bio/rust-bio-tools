@@ -29,10 +29,20 @@
     {
       "name": "alignments",
       "source": "fasta",
-      "transform": [{
-        "type": "filter",
-        "expr": "datum.row >= 0"
-      }
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.row >= 0"
+        }, {
+          "type": "formula",
+          "as": "start_border",
+          "expr": "datum.start_position - 0.2"
+        },
+        {
+          "type": "formula",
+          "as": "end_border",
+          "expr": "datum.end_position + 0.2"
+        }
       ]
     }
   ],
@@ -208,11 +218,11 @@
           "opacity": {"value": 0.8},
           "x": {
             "scale": "x",
-            "field": "start_position"
+            "field": "start_border"
           },
           "x2": {
             "scale": "x",
-            "field": "end_position"
+            "field": "end_border"
           },
           "y": {
             "scale": "y",

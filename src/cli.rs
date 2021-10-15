@@ -221,7 +221,7 @@ pub(crate) enum Command {
     ///
     /// EXAMPLE:
     ///     rbt plot-bam -b input.bam -g 2:132424-132924 -r input.fa > plot.html
-    #[structopt(author = "Felix Wiegand <felix.wiegand@tu-dortmund.de>")]
+    #[structopt(author = "Felix Wiegand <felix.wiegand@tu-dortmund.de>", usage= "rbt plot-bam [OPTIONS] --bam-path <bam-path>... --reference <reference> --region <region> > plot.html")]
     PlotBam {
         /// BAM file to be visualized.
         #[structopt(long, short = "b", required = true, parse(from_os_str))]

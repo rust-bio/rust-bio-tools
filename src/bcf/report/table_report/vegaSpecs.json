@@ -544,7 +544,9 @@
       }
     },
     {
-      "symbolType": "stroke",
+      "type": "gradient",
+      "gradientLength": 154,
+      "symbolSize": 20,
       "title": "MAPQ",
       "stroke": "color2"
     }

@@ -521,7 +521,7 @@
       "name": "color2",
       "type": "threshold",
       "domain": [11, 21, 31, 41, 51, 60],
-      "range": ["#FF0303", "d13838", "c74c4c", "bd5e5e", "a66565", "9e7070", "#BBBBBB"]
+      "range": ["#c10000", "#cd1313", "#d32a2a", "#c65555", "#be7c7c", "#ba9e9e", "#BBBBBB"]
     },
     {
       "name": "color",

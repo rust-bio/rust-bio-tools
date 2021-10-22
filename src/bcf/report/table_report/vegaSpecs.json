@@ -519,9 +519,9 @@
     },
     {
       "name": "color2",
-      "type": "threshold",
-      "domain": [11, 21, 31, 41, 51, 60],
-      "range": ["#c10000", "#cd1313", "#d32a2a", "#c65555", "#be7c7c", "#ba9e9e", "#BBBBBB"]
+      "type": "bin-ordinal",
+      "domain": [0, 10, 20, 30, 40, 50, 60, 70],
+      "range": ["#c10000", "#c62200", "#cb4600", "#d06c00", "#d59300", "#dabc00", "#BBBBBB"]
     },
     {
       "name": "color",

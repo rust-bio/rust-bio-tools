@@ -215,7 +215,7 @@
             "field": "mapq",
             "scale": "color2"
           },
-          "opacity": {"value": 0.8},
+          "opacity": {"value": 1},
           "x": {
             "scale": "x",
             "field": "start_border"

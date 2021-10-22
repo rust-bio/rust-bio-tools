@@ -29,10 +29,36 @@
     {
       "name": "alignments",
       "source": "fasta",
-      "transform": [{
-        "type": "filter",
-        "expr": "datum.row >= 0"
-      }
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.row >= 0"
+        }, {
+          "type": "filter",
+          "expr": "datum.marker_type != \"Pairing\""
+        },{
+          "type": "formula",
+          "as": "start_border",
+          "expr": "datum.start_position - 0.2"
+        },
+        {
+          "type": "formula",
+          "as": "end_border",
+          "expr": "datum.end_position + 0.2"
+        }
+      ]
+    },
+    {
+      "name": "pairings",
+      "source": "fasta",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.row >= 0"
+        }, {
+          "type": "filter",
+          "expr": "datum.marker_type == \"Pairing\""
+        }
       ]
     }
   ],
@@ -189,6 +215,89 @@
   ],
   "marks": [
     {
+      "name": "pairing_markers",
+      "type": "group",
+      "clip": true,
+      "style": [
+        "rule"
+      ],
+      "interactive": true,
+      "from": {
+        "data": "pairings"
+      },
+      "encode": {
+        "update": {
+          "stroke": {
+            "scale": "color",
+            "field": "marker_type"
+          },
+          "opacity": {"scale": "opac", "field": "repeat"},
+          "tooltip": {
+            "signal": "{\"type\": datum[\"typ\"], \"base\": datum[\"base\"], \"variant type\": datum[\"var_type\"],\"test\": datum[\"test\"], \"inserted base(s)\": datum[\"inserts\"], \"reference\": datum[\"reference\"], \"alternatives\": datum[\"alternatives\"], \"name\": datum[\"name\"], \"flag 1\": (datum[\"flags\"] || {})[\"1\"], \"flag 2\": (datum[\"flags\"] || {})[\"2\"], \"flag 4\": (datum[\"flags\"] || {})[\"4\"], \"flag 8\": (datum[\"flags\"] || {})[\"8\"], \"flag 16\": (datum[\"flags\"] || {})[\"16\"], \"flag 32\": (datum[\"flags\"] || {})[\"32\"], \"flag 64\": (datum[\"flags\"] || {})[\"64\"], \"flag 128\": (datum[\"flags\"] || {})[\"128\"], \"flag 256\": (datum[\"flags\"] || {})[\"256\"], \"flag 512\": (datum[\"flags\"] || {})[\"512\"], \"flag 1024\": (datum[\"flags\"] || {})[\"1024\"], \"flag 2048\": (datum[\"flags\"] || {})[\"2048\"]}"
+          },
+          "x": {
+            "scale": "x",
+            "field": "start_position"
+          },
+          "x2": {
+            "scale": "x",
+            "field": "end_position"
+          },
+          "y": {
+            "scale": "y",
+            "field": "row",
+            "band": 0.5
+          },
+          "zindex": {
+            "scale": "z",
+            "field": "marker_type"
+          },
+          "strokeWidth": {
+            "scale": "stroke",
+            "field": "marker_type"
+          }
+        }
+      }
+    },
+    {
+      "name": "mapq_markers",
+      "type": "group",
+      "clip": true,
+      "style": [
+        "rule"
+      ],
+      "interactive": true,
+      "from": {
+        "data": "alignments"
+      },
+      "encode": {
+        "update": {
+          "stroke": {
+            "field": "mapq",
+            "scale": "color2"
+          },
+          "opacity": {"value": 1},
+          "x": {
+            "scale": "x",
+            "field": "start_border"
+          },
+          "x2": {
+            "scale": "x",
+            "field": "end_border"
+          },
+          "y": {
+            "scale": "y",
+            "field": "row",
+            "band": 0.5
+          },
+          "strokeWidth": {
+            "scale": "stroke2",
+            "field": "marker_type"
+          }
+        }
+      }
+    },
+    {
       "name": "marks",
       "type": "group",
       "clip": true,
@@ -207,7 +316,7 @@
           },
           "opacity": {"scale": "opac", "field": "repeat"},
           "tooltip": {
-            "signal": "{\"type\": datum[\"typ\"], \"base\": datum[\"base\"], \"variant type\": datum[\"var_type\"],\"test\": datum[\"test\"], \"inserted base(s)\": datum[\"inserts\"], \"reference\": datum[\"reference\"], \"alternatives\": datum[\"alternatives\"], \"name\": datum[\"name\"], \"flag 1\": (datum[\"flags\"] || {})[\"1\"], \"flag 2\": (datum[\"flags\"] || {})[\"2\"], \"flag 4\": (datum[\"flags\"] || {})[\"4\"], \"flag 8\": (datum[\"flags\"] || {})[\"8\"], \"flag 16\": (datum[\"flags\"] || {})[\"16\"], \"flag 32\": (datum[\"flags\"] || {})[\"32\"], \"flag 64\": (datum[\"flags\"] || {})[\"64\"], \"flag 128\": (datum[\"flags\"] || {})[\"128\"], \"flag 256\": (datum[\"flags\"] || {})[\"256\"], \"flag 512\": (datum[\"flags\"] || {})[\"512\"], \"flag 1024\": (datum[\"flags\"] || {})[\"1024\"], \"flag 2048\": (datum[\"flags\"] || {})[\"2048\"]}"
+            "signal": "{\"type\": datum[\"typ\"], \"base\": datum[\"base\"], \"variant type\": datum[\"var_type\"],\"test\": datum[\"test\"], \"inserted base(s)\": datum[\"inserts\"], \"reference\": datum[\"reference\"], \"alternatives\": datum[\"alternatives\"], \"name\": datum[\"name\"], \"mapq\": datum[\"mapq\"], \"cigar\": datum[\"cigar\"], \"flag 1\": (datum[\"flags\"] || {})[\"1\"], \"flag 2\": (datum[\"flags\"] || {})[\"2\"], \"flag 4\": (datum[\"flags\"] || {})[\"4\"], \"flag 8\": (datum[\"flags\"] || {})[\"8\"], \"flag 16\": (datum[\"flags\"] || {})[\"16\"], \"flag 32\": (datum[\"flags\"] || {})[\"32\"], \"flag 64\": (datum[\"flags\"] || {})[\"64\"], \"flag 128\": (datum[\"flags\"] || {})[\"128\"], \"flag 256\": (datum[\"flags\"] || {})[\"256\"], \"flag 512\": (datum[\"flags\"] || {})[\"512\"], \"flag 1024\": (datum[\"flags\"] || {})[\"1024\"], \"flag 2048\": (datum[\"flags\"] || {})[\"2048\"]}"
           },
           "x": {
             "scale": "x",
@@ -372,6 +481,34 @@
       ]
     },
     {
+      "name": "stroke2",
+      "type": "ordinal",
+      "domain": [
+        "A",
+        "C",
+        "G",
+        "T",
+        "N",
+        "Variant",
+        "Insertion",
+        "Deletion",
+        "Match",
+        "Pairing"
+      ],
+      "range": [
+        6.5,
+        6.5,
+        6.5,
+        6.5,
+        6.5,
+        6.5,
+        9,
+        6.5,
+        6.5,
+        0
+      ]
+    },
+    {
       "name": "opac",
       "type": "ordinal",
       "domain": [
@@ -379,6 +516,12 @@
         false
       ],
       "range": [0.4, 0.9]
+    },
+    {
+      "name": "color2",
+      "type": "threshold",
+      "domain": [11, 21, 31, 41, 51, 60],
+      "range": ["#c10000", "#cd1313", "#d32a2a", "#c65555", "#be7c7c", "#ba9e9e", "#BBBBBB"]
     },
     {
       "name": "color",
@@ -460,7 +603,25 @@
           }
         }
       }
+    },
+    {
+      "type": "gradient",
+      "gradientLength": 154,
+      "symbolSize": 20,
+      "title": "MAPQ",
+      "stroke": "color2"
     }
   ],
-  "config": {}
+  "config": {
+    "legend": {
+      "layout": {
+        "right": {
+          "anchor": "start",
+          "direction": "horizontal",
+          "center": false,
+          "margin": 10
+        }
+      }
+    }
+  }
 }

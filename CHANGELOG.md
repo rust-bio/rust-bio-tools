@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Features
 
-* Various read plot updates for vcf-report and plot-bam ([#187](https://www.github.com/rust-bio/rust-bio-tools/issues/187)) ([8739ef1](https://www.github.com/rust-bio/rust-bio-tools/commit/8739ef18acc8c357522c4619c294298c4f32091f))
+* Various alignment plot and CLI updates for vcf-report and plot-bam ([#187](https://www.github.com/rust-bio/rust-bio-tools/issues/187)) ([8739ef1](https://www.github.com/rust-bio/rust-bio-tools/commit/8739ef18acc8c357522c4619c294298c4f32091f))
 
 ## [0.29.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.28.0...v0.29.0) (2021-10-04)
 

@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.30.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.30.0...v0.30.1) (2021-10-22)
+
+
+### Bug Fixes
+
+* Refine MAPQ color scheme and scale type ([#189](https://www.github.com/rust-bio/rust-bio-tools/issues/189)) ([6f47c68](https://www.github.com/rust-bio/rust-bio-tools/commit/6f47c685716e50501b13ae7d2ec9a23c8973f67b))
+
 ## [0.30.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.29.0...v0.30.0) (2021-10-22)
 
 

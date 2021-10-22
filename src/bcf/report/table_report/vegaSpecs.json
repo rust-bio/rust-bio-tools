@@ -34,6 +34,9 @@
           "type": "filter",
           "expr": "datum.row >= 0"
         }, {
+          "type": "filter",
+          "expr": "datum.marker_type != \"Pairing\""
+        },{
           "type": "formula",
           "as": "start_border",
           "expr": "datum.start_position - 0.2"
@@ -42,6 +45,19 @@
           "type": "formula",
           "as": "end_border",
           "expr": "datum.end_position + 0.2"
+        }
+      ]
+    },
+    {
+      "name": "pairings",
+      "source": "fasta",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "datum.row >= 0"
+        }, {
+          "type": "filter",
+          "expr": "datum.marker_type == \"Pairing\""
         }
       ]
     }
@@ -198,6 +214,51 @@
     }
   ],
   "marks": [
+    {
+      "name": "pairing_markers",
+      "type": "group",
+      "clip": true,
+      "style": [
+        "rule"
+      ],
+      "interactive": true,
+      "from": {
+        "data": "pairings"
+      },
+      "encode": {
+        "update": {
+          "stroke": {
+            "scale": "color",
+            "field": "marker_type"
+          },
+          "opacity": {"scale": "opac", "field": "repeat"},
+          "tooltip": {
+            "signal": "{\"type\": datum[\"typ\"], \"base\": datum[\"base\"], \"variant type\": datum[\"var_type\"],\"test\": datum[\"test\"], \"inserted base(s)\": datum[\"inserts\"], \"reference\": datum[\"reference\"], \"alternatives\": datum[\"alternatives\"], \"name\": datum[\"name\"], \"flag 1\": (datum[\"flags\"] || {})[\"1\"], \"flag 2\": (datum[\"flags\"] || {})[\"2\"], \"flag 4\": (datum[\"flags\"] || {})[\"4\"], \"flag 8\": (datum[\"flags\"] || {})[\"8\"], \"flag 16\": (datum[\"flags\"] || {})[\"16\"], \"flag 32\": (datum[\"flags\"] || {})[\"32\"], \"flag 64\": (datum[\"flags\"] || {})[\"64\"], \"flag 128\": (datum[\"flags\"] || {})[\"128\"], \"flag 256\": (datum[\"flags\"] || {})[\"256\"], \"flag 512\": (datum[\"flags\"] || {})[\"512\"], \"flag 1024\": (datum[\"flags\"] || {})[\"1024\"], \"flag 2048\": (datum[\"flags\"] || {})[\"2048\"]}"
+          },
+          "x": {
+            "scale": "x",
+            "field": "start_position"
+          },
+          "x2": {
+            "scale": "x",
+            "field": "end_position"
+          },
+          "y": {
+            "scale": "y",
+            "field": "row",
+            "band": 0.5
+          },
+          "zindex": {
+            "scale": "z",
+            "field": "marker_type"
+          },
+          "strokeWidth": {
+            "scale": "stroke",
+            "field": "marker_type"
+          }
+        }
+      }
+    },
     {
       "name": "mapq_markers",
       "type": "group",
@@ -444,7 +505,7 @@
         9,
         6.5,
         6.5,
-        2
+        0
       ]
     },
     {

@@ -80,6 +80,7 @@ impl<W: io::Write> CallConsensusRead<W> {
             record.cache_cigar();
             let duplicate_id_option = match record.aux(b"DI") {
                 Ok(Aux::I8(duplicate_id)) => Some(duplicate_id as u32),
+                Ok(Aux::I16(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U8(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U16(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U32(duplicate_id)) => Some(duplicate_id),
@@ -95,7 +96,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                         //Case: Right record
                         Some(storage_entry) => {
                             //For right record save end position and duplicate group ID
-                            let record_end_pos = record.cigar_cached().unwrap().end_pos() - 1;
+                            let record_end_pos = record.pos() + record.seq_len() as i64 - 1;
                             let group_id = match storage_entry {
                                 RecordStorage::PairedRecords { ref mut r2_rec, .. } => {
                                     let group_id = duplicate_id;
@@ -138,8 +139,9 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 .push(RecordId::Regular(record_id.to_owned()));
                             if !record.is_paired() {
                                 //If right or single record save end position and duplicate group ID
+                                let record_end_pos = record.pos() + record.seq_len() as i64 - 1;
                                 group_end_idx
-                                    .entry(record.cigar_cached().unwrap().end_pos() - 1)
+                                    .entry(record_end_pos)
                                     .or_insert_with(HashSet::new)
                                     .insert(GroupId::Regular(duplicate_id));
                                 record_storage.insert(
@@ -280,6 +282,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
             record_storage,
             bam_skipped_writer,
         )?;
+
         for cigar_group in cigar_groups.values() {
             match cigar_group {
                 CigarGroup::PairedRecords {

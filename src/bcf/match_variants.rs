@@ -104,10 +104,8 @@ pub fn match_variants<P: AsRef<Path>>(matchbcf: P, max_dist: u32, max_len_diff: 
                 .collect_vec();
 
             rec.push_info_integer(b"MATCHING", &matching)?;
-            outbcf.write(&rec)?;
-        } else {
-            outbcf.write(&rec)?;
         }
+        outbcf.write(&rec)?;
 
         if (i) % 1000 == 0 {
             info!("{} variants written.", i);

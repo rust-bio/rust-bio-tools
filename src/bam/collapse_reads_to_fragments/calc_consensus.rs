@@ -318,7 +318,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             StrandObservation::Forward => consensus_strand.push(b'+'),
             StrandObservation::Reverse => consensus_strand.push(b'-'),
             StrandObservation::Both => consensus_strand.push(b'*'),
-            StrandObservation::None => unreachable!(),
+            StrandObservation::None => consensus_strand.push(b'.'),
         }
     }
 }

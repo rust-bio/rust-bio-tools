@@ -83,21 +83,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
         let name = if self.read_ids.is_some() {
-            format!(
-                "{}_consensus-read-from:{}",
-                self.uuid(),
-                self.seqids()
-                    .iter()
-                    .map(|i| String::from_utf8(
-                        self.read_ids
-                            .as_ref()
-                            .map(|x| x.get(i).unwrap())
-                            .unwrap()
-                            .to_vec()
-                    )
-                    .unwrap())
-                    .join(",")
-            )
+            Self::build_verbose_read_name(self.uuid(), self.seqids(), self.read_ids)
         } else {
             format!(
                 "{}_consensus-read-from:{}_reads",
@@ -288,21 +274,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
         let name = if self.read_ids.is_some() {
-            format!(
-                "{}_consensus-read-from:{}",
-                self.uuid(),
-                self.seqids()
-                    .iter()
-                    .map(|i| String::from_utf8(
-                        self.read_ids
-                            .as_ref()
-                            .map(|x| x.get(i).unwrap())
-                            .unwrap()
-                            .to_vec()
-                    )
-                    .unwrap())
-                    .join(",")
-            )
+            Self::build_verbose_read_name(self.uuid(), self.seqids(), self.read_ids)
         } else {
             format!(
                 "{}_consensus-read-from:{}_reads",

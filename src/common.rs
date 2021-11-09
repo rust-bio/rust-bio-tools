@@ -2,8 +2,10 @@ use anyhow::Context;
 use approx::relative_eq;
 use bio::stats::probs::{LogProb, PHREDProb};
 use bio_types::sequence::SequenceRead;
+use itertools::Itertools;
 use ordered_float::NotNaN;
 use std::cmp;
+use std::collections::HashMap;
 use std::str::FromStr;
 
 const PROB_CONFUSION: LogProb = LogProb(-1.0986122886681098); // (1 / 3).ln()
@@ -73,6 +75,27 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
             consensus_qual
                 .push(cmp::min(93 + offset as u64, (truncated_quality + offset) as u64) as u8);
         }
+    }
+    fn build_verbose_read_name(
+        uuid: &str,
+        seq_ids: &[usize],
+        read_ids: &Option<HashMap<usize, Vec<u8>>>,
+    ) -> String {
+        format!(
+            "{}_consensus-read-from:{}",
+            uuid,
+            seq_ids
+                .iter()
+                .map(|i| String::from_utf8(
+                    read_ids
+                        .as_ref()
+                        .map(|x| x.get(i).unwrap())
+                        .unwrap()
+                        .to_vec()
+                )
+                .unwrap())
+                .join(",")
+        )
     }
 
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;

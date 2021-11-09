@@ -43,6 +43,11 @@ impl<W: io::Write> CallConsensusRead<W> {
         let mut duplicate_groups: HashMap<GroupId, RecordIDs> = HashMap::new();
         let mut record_storage: HashMap<RecordId, RecordStorage> = HashMap::new();
         let mut current_chrom = None;
+        let mut read_ids: Option<HashMap<usize, Vec<u8>>> = if self.verbose_read_names {
+            Some(HashMap::new())
+        } else {
+            None
+        };
         for (i, result) in self.bam_reader.records().enumerate() {
             let mut record = result?;
             if !record.is_unmapped() {
@@ -61,7 +66,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                     &mut self.fq2_writer,
                     &mut self.fq_se_writer,
                     &mut self.bam_skipped_writer,
-                    self.verbose_read_names,
+                    &mut read_ids,
                 )?;
                 if record_pos.is_some() {
                     group_end_idx = group_end_idx.split_off(&record.pos());
@@ -80,6 +85,7 @@ impl<W: io::Write> CallConsensusRead<W> {
             record.cache_cigar();
             let duplicate_id_option = match record.aux(b"DI") {
                 Ok(Aux::I8(duplicate_id)) => Some(duplicate_id as u32),
+                Ok(Aux::I16(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U8(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U16(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U32(duplicate_id)) => Some(duplicate_id),
@@ -87,6 +93,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                 _ => unreachable!("Invalid type for tag 'DI'"),
             };
             let record_id = record.qname();
+            read_ids.as_mut().map(|x| x.insert(i, record_id.to_vec()));
             //Check if record has duplicate ID
             match duplicate_id_option {
                 //Case: duplicate ID exists
@@ -95,7 +102,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                         //Case: Right record
                         Some(storage_entry) => {
                             //For right record save end position and duplicate group ID
-                            let record_end_pos = record.cigar_cached().unwrap().end_pos() - 1;
+                            let record_end_pos = record.pos() + record.seq_len() as i64 - 1;
                             let group_id = match storage_entry {
                                 RecordStorage::PairedRecords { ref mut r2_rec, .. } => {
                                     let group_id = duplicate_id;
@@ -138,8 +145,9 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 .push(RecordId::Regular(record_id.to_owned()));
                             if !record.is_paired() {
                                 //If right or single record save end position and duplicate group ID
+                                let record_end_pos = record.pos() + record.seq_len() as i64 - 1;
                                 group_end_idx
-                                    .entry(record.cigar_cached().unwrap().end_pos() - 1)
+                                    .entry(record_end_pos)
                                     .or_insert_with(HashSet::new)
                                     .insert(GroupId::Regular(duplicate_id));
                                 record_storage.insert(
@@ -217,7 +225,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                                 &r2_alignment,
                                                 &[rec_id, i],
                                                 uuid,
-                                                self.verbose_read_names,
+                                                &mut read_ids,
                                             )
                                             .calc_consensus()
                                             .0,
@@ -244,7 +252,7 @@ impl<W: io::Write> CallConsensusRead<W> {
             &mut self.fq2_writer,
             &mut self.fq_se_writer,
             &mut self.bam_skipped_writer,
-            self.verbose_read_names,
+            &mut read_ids,
         )?;
         Ok(())
     }
@@ -260,7 +268,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     fq2_writer: &'a mut fastq::Writer<W>,
     fq_se_writer: &'a mut fastq::Writer<W>,
     bam_skipped_writer: &'a mut bam::Writer,
-    verbose_read_names: bool,
+    read_ids: &'a mut Option<HashMap<usize, Vec<u8>>>,
 ) -> Result<()> {
     let group_ids: HashSet<GroupId> = group_end_idx
         .range(
@@ -280,6 +288,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
             record_storage,
             bam_skipped_writer,
         )?;
+
         for cigar_group in cigar_groups.values() {
             match cigar_group {
                 CigarGroup::PairedRecords {
@@ -302,7 +311,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                                     &r2_alignment,
                                     &seqids,
                                     uuid,
-                                    verbose_read_names,
+                                    read_ids,
                                 )
                                 .calc_consensus()
                                 .0,
@@ -314,20 +323,14 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                                 fq1_writer.write_record(
                                     &CalcNonOverlappingConsensus::new(
-                                        r1_recs,
-                                        r1_seqids,
-                                        uuid,
-                                        verbose_read_names,
+                                        r1_recs, r1_seqids, uuid, read_ids,
                                     )
                                     .calc_consensus()
                                     .0,
                                 )?;
                                 fq2_writer.write_record(
                                     &CalcNonOverlappingConsensus::new(
-                                        r2_recs,
-                                        r2_seqids,
-                                        uuid,
-                                        verbose_read_names,
+                                        r2_recs, r2_seqids, uuid, read_ids,
                                     )
                                     .calc_consensus()
                                     .0,
@@ -343,14 +346,9 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                     Ordering::Greater => {
                         let uuid = &Uuid::new_v4().to_hyphenated().to_string();
                         fq_se_writer.write_record(
-                            &CalcNonOverlappingConsensus::new(
-                                recs,
-                                seqids,
-                                uuid,
-                                verbose_read_names,
-                            )
-                            .calc_consensus()
-                            .0,
+                            &CalcNonOverlappingConsensus::new(recs, seqids, uuid, read_ids)
+                                .calc_consensus()
+                                .0,
                         )?;
                     }
                     _ => {

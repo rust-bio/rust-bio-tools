@@ -37,7 +37,7 @@ pub struct CalcOverlappingConsensus<'a> {
     r2_vec: &'a [bool],
     seqids: &'a [usize],
     uuid: &'a str,
-    verbose_read_names: bool,
+    read_ids: &'a mut Option<HashMap<usize, Vec<u8>>>,
 }
 
 impl<'a> CalcOverlappingConsensus<'a> {
@@ -82,17 +82,14 @@ impl<'a> CalcOverlappingConsensus<'a> {
             };
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
-        let name = match self.verbose_read_names {
-            true => format!(
-                "{}_consensus-read-from:{}",
-                self.uuid(),
-                self.seqids().iter().map(|i| format!("{}", i)).join(",")
-            ),
-            false => format!(
+        let name = if self.read_ids.is_some() {
+            Self::build_verbose_read_name(self.uuid(), self.seqids(), self.read_ids)
+        } else {
+            format!(
                 "{}_consensus-read-from:{}_reads",
                 self.uuid(),
                 self.seqids().len(),
-            ),
+            )
         };
         if let Some(mut read_orientations) = read_orientations_opt {
             consensus_strand.append(&mut read_orientations)
@@ -232,7 +229,7 @@ pub struct CalcNonOverlappingConsensus<'a> {
     recs: &'a [bam::Record],
     seqids: &'a [usize],
     uuid: &'a str,
-    verbose_read_names: bool,
+    read_ids: &'a mut Option<HashMap<usize, Vec<u8>>>,
 }
 
 impl<'a> CalcNonOverlappingConsensus<'a> {
@@ -276,17 +273,14 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             );
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
-        let name = match self.verbose_read_names {
-            true => format!(
-                "{}_consensus-read-from:{}",
-                self.uuid(),
-                self.seqids().iter().map(|i| format!("{}", i)).join(",")
-            ),
-            false => format!(
+        let name = if self.read_ids.is_some() {
+            Self::build_verbose_read_name(self.uuid(), self.seqids(), self.read_ids)
+        } else {
+            format!(
                 "{}_consensus-read-from:{}_reads",
                 self.uuid(),
                 self.seqids().len(),
-            ),
+            )
         };
         let consensus_rec = fastq::Record::with_attrs(
             &name,
@@ -318,7 +312,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             StrandObservation::Forward => consensus_strand.push(b'+'),
             StrandObservation::Reverse => consensus_strand.push(b'-'),
             StrandObservation::Both => consensus_strand.push(b'*'),
-            StrandObservation::None => unreachable!(),
+            StrandObservation::None => consensus_strand.push(b'.'),
         }
     }
 }

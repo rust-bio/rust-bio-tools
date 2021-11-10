@@ -31,8 +31,7 @@ pub fn read_fasta<P: AsRef<Path>>(
         let base = char::from(a);
         let marker = base.to_uppercase().collect_vec().pop().unwrap();
         let b = Nucleobase {
-            start_position: ind as f64 - 0.5,
-            end_position: ind as f64 + 0.5,
+            position: ind,
             marker_type: marker,
             row: 0,
             repeat: base.is_lowercase(),
@@ -55,8 +54,7 @@ pub fn get_fasta_lengths(path: &Path) -> Result<HashMap<String, u64>> {
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub struct Nucleobase {
-    start_position: f64,
-    end_position: f64,
+    position: u64,
     marker_type: char,
     row: u8,
     repeat: bool,

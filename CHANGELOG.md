@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.30.2](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.30.1...v0.30.2) (2021-11-09)
+
+
+### Bug Fixes
+
+* various fixes for consensus calling ([#191](https://www.github.com/rust-bio/rust-bio-tools/issues/191)) ([997d920](https://www.github.com/rust-bio/rust-bio-tools/commit/997d92087542f60de7818a4315266141d180b7ef))
+
 ### [0.30.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.30.0...v0.30.1) (2021-10-22)
 
 

@@ -270,8 +270,8 @@ pub fn make_nucleobases<P: AsRef<Path>>(
                     let base = AlignmentNucleobase {
                         marker_type: m,
                         bases: b,
-                        start_position: p as f64 + 0.5,
-                        end_position: p as f64 + 1.5,
+                        start_position: p as f64 + 0.7,
+                        end_position: p as f64 + 1.3,
                         flags: snip.flags,
                         name: snip.name,
                         read_start: rs as u32,

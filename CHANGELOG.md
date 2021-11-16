@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.31.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.30.2...v0.31.0) (2021-11-16)
+
+
+### Features
+
+* rbt plot-bam: show position of reference base in tooltip ([#196](https://www.github.com/rust-bio/rust-bio-tools/issues/196)) ([3711c09](https://www.github.com/rust-bio/rust-bio-tools/commit/3711c0963b1fb95a341449aba8fe259b9faafcea))
+
+
+### Bug Fixes
+
+* rbt plot-bam: Disconnect neighboring insertion markers ([#197](https://www.github.com/rust-bio/rust-bio-tools/issues/197)) ([d322e6a](https://www.github.com/rust-bio/rust-bio-tools/commit/d322e6a9a64b870fe60b9ba21c4ec1b8e6c6c67a))
+
 ### [0.30.2](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.30.1...v0.30.2) (2021-11-09)
 
 

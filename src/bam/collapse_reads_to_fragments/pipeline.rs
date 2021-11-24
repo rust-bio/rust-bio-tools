@@ -37,9 +37,68 @@ pub enum GroupId {
     Split(u32),
 }
 
+#[derive(new, Debug)]
+pub struct GroupEndIndex {
+    #[new(default)]
+    group_pos: HashMap<GroupId, Position>,
+    #[new(default)]
+    group_end_idx: BTreeMap<Position, GroupIDs>,
+}
+
+impl GroupEndIndex {
+    ///Inserts a new group id at given position
+    ///If position is already saved for the group id the group-end-index will be updated
+    pub fn insert(&mut self, group_id: GroupId, end_pos: i64) -> Result<()> {
+        let update_end_pos = match self.group_pos.get(&group_id) {
+            Some(&current_end_pos) => match current_end_pos < end_pos {
+                true => {
+                    self.group_end_idx
+                        .get_mut(&current_end_pos)
+                        .map(|group_ids| group_ids.remove(&group_id));
+                    true
+                }
+                false => false,
+            },
+            None => true,
+        };
+        if update_end_pos {
+            self.group_pos.insert(group_id.clone(), end_pos);
+            self.group_end_idx
+                .entry(end_pos)
+                .or_insert_with(HashSet::new)
+                .insert(group_id);
+        }
+        Ok(())
+    }
+
+    pub fn cut_lower_group_ids(&mut self, current_pos: Option<i64>) -> Result<Vec<GroupId>> {
+        let group_ids: Vec<GroupId> = self
+            .group_end_idx
+            .range(
+                ..current_pos.unwrap_or(
+                    self.group_end_idx
+                        .iter()
+                        .next_back()
+                        .map_or(0, |(entry, _)| *entry)
+                        + 1,
+                ),
+            )
+            .flat_map(|(_, group_ids)| group_ids.clone())
+            .collect();
+        group_ids.iter().for_each(|group_id| {
+            self.group_pos.remove(group_id);
+        });
+        match current_pos {
+            Some(pos) => self.group_end_idx = self.group_end_idx.split_off(&pos),
+            None => self.group_end_idx.clear(),
+        }
+        Ok(group_ids)
+    }
+}
+
 impl<W: io::Write> CallConsensusRead<W> {
     pub fn call_consensus_reads(&mut self) -> Result<()> {
-        let mut group_end_idx: BTreeMap<Position, GroupIDs> = BTreeMap::new();
+        let mut group_end_idx = GroupEndIndex::new();
         let mut duplicate_groups: HashMap<GroupId, RecordIDs> = HashMap::new();
         let mut record_storage: HashMap<RecordId, RecordStorage> = HashMap::new();
         let mut current_chrom = None;
@@ -68,11 +127,6 @@ impl<W: io::Write> CallConsensusRead<W> {
                     &mut self.bam_skipped_writer,
                     &mut read_ids,
                 )?;
-                if record_pos.is_some() {
-                    group_end_idx = group_end_idx.split_off(&record.pos());
-                } else {
-                    group_end_idx.clear();
-                }
             }
             if record.is_unmapped() || record.is_mate_unmapped() {
                 self.bam_skipped_writer.write(&record)?;
@@ -100,9 +154,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                 //Case: duplicate ID exists
                 Some(duplicate_id) => {
                     let regular_id = RecordId::Regular(record_name.to_owned());
-                    let record_end_pos = record.cigar_cached().unwrap().end_pos()
-                        + record.cigar().trailing_softclips()
-                        - 1;
+                    let record_end_pos = record.cigar_cached().unwrap().end_pos() - 1;
                     match record_storage.get_mut(&regular_id) {
                         //Case: Right record
                         Some(storage_entry) => {
@@ -160,10 +212,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 }
                             };
                             if let Some(group_id) = group_id_opt {
-                                group_end_idx
-                                    .entry(record_end_pos)
-                                    .or_insert_with(HashSet::new)
-                                    .insert(group_id);
+                                group_end_idx.insert(group_id, record_end_pos)?;
                             } else {
                                 record_storage.remove(&regular_id);
                             };
@@ -181,9 +230,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                                         .push(RecordId::Regular(record_name.to_owned()));
 
                                     group_end_idx
-                                        .entry(record_end_pos)
-                                        .or_insert_with(HashSet::new)
-                                        .insert(GroupId::Regular(duplicate_id));
+                                        .insert(GroupId::Regular(duplicate_id), record_end_pos)?;
                                     record_storage.insert(
                                         RecordId::Regular(record_name.to_owned()),
                                         RecordStorage::SingleRecord {
@@ -295,7 +342,7 @@ impl<W: io::Write> CallConsensusRead<W> {
 
 #[allow(clippy::too_many_arguments)]
 pub fn calc_consensus_complete_groups<'a, W: io::Write>(
-    group_end_idx: &mut BTreeMap<Position, GroupIDs>,
+    group_end_idx: &mut GroupEndIndex,
     duplicate_groups: &mut HashMap<GroupId, RecordIDs>,
     end_pos: Option<i64>,
     record_storage: &mut HashMap<RecordId, RecordStorage>,
@@ -305,25 +352,13 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     bam_skipped_writer: &'a mut bam::Writer,
     read_ids: &'a mut Option<HashMap<usize, Vec<u8>>>,
 ) -> Result<()> {
-    let group_ids: HashSet<GroupId> = group_end_idx
-        .range(
-            ..end_pos.unwrap_or(
-                group_end_idx
-                    .iter()
-                    .next_back()
-                    .map_or(0, |(entry, _)| *entry)
-                    + 1,
-            ),
-        )
-        .flat_map(|(_, group_ids)| group_ids.clone())
-        .collect();
+    let group_ids = group_end_idx.cut_lower_group_ids(end_pos)?;
     for group_id in group_ids {
         let cigar_groups = group_reads_by_cigar(
             duplicate_groups.remove(&group_id).unwrap(),
             record_storage,
             bam_skipped_writer,
         )?;
-
         for cigar_group in cigar_groups.values() {
             match cigar_group {
                 CigarGroup::PairedRecords {

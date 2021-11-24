@@ -25,13 +25,13 @@ type Position = i64;
 type GroupIDs = HashSet<GroupId>;
 type RecordIDs = Vec<RecordId>;
 
-#[derive(Hash, PartialEq, Eq)]
+#[derive(Hash, PartialEq, Eq, Debug)]
 pub enum RecordId {
     Regular(Vec<u8>),
     Split(Vec<u8>),
 }
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub enum GroupId {
     Regular(u32),
     Split(u32),
@@ -86,42 +86,106 @@ impl<W: io::Write> CallConsensusRead<W> {
             let duplicate_id_option = match record.aux(b"DI") {
                 Ok(Aux::I8(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::I16(duplicate_id)) => Some(duplicate_id as u32),
+                Ok(Aux::I32(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U8(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U16(duplicate_id)) => Some(duplicate_id as u32),
                 Ok(Aux::U32(duplicate_id)) => Some(duplicate_id),
                 Err(_) => None,
                 _ => unreachable!("Invalid type for tag 'DI'"),
             };
-            let record_id = record.qname();
-            read_ids.as_mut().map(|x| x.insert(i, record_id.to_vec()));
+            let record_name = record.qname();
+            read_ids.as_mut().map(|x| x.insert(i, record_name.to_vec()));
             //Check if record has duplicate ID
             match duplicate_id_option {
                 //Case: duplicate ID exists
                 Some(duplicate_id) => {
-                    match record_storage.get_mut(&RecordId::Regular(record_id.to_owned())) {
+                    let regular_id = RecordId::Regular(record_name.to_owned());
+                    let record_end_pos = record.cigar_cached().unwrap().end_pos()
+                        + record.cigar().trailing_softclips()
+                        - 1;
+                    match record_storage.get_mut(&regular_id) {
                         //Case: Right record
                         Some(storage_entry) => {
                             //For right record save end position and duplicate group ID
-                            let record_end_pos = record.pos() + record.seq_len() as i64 - 1;
-                            let group_id = match storage_entry {
-                                RecordStorage::PairedRecords { ref mut r2_rec, .. } => {
-                                    let group_id = duplicate_id;
-                                    r2_rec.get_or_insert(IndexedRecord {
-                                        rec: record,
-                                        rec_id: i,
-                                    });
-                                    GroupId::Regular(group_id)
+                            let group_id_opt = match storage_entry {
+                                RecordStorage::PairedRecords {
+                                    r1_rec,
+                                    ref mut r2_rec,
+                                } => {
+                                    let group_id = if cigar_has_softclips(r1_rec)
+                                        || cigar_has_softclips(&record)
+                                    {
+                                        self.bam_skipped_writer.write(r1_rec)?;
+                                        self.bam_skipped_writer.write(&record)?;
+                                        None
+                                    } else {
+                                        duplicate_groups
+                                            .entry(GroupId::Regular(duplicate_id))
+                                            .or_insert_with(Vec::new)
+                                            .push(RecordId::Regular(record_name.to_owned()));
+                                        r2_rec.get_or_insert(IndexedRecord {
+                                            rec: record,
+                                            rec_id: i,
+                                        });
+                                        Some(GroupId::Regular(duplicate_id))
+                                    };
+                                    group_id
                                 }
                                 // This arm is reached if a mate is mapped to another chromosome.
                                 // In that case a new duplicate and record ID is required
-                                RecordStorage::SingleRecord { .. } => {
-                                    let group_id = duplicate_id;
+                                RecordStorage::SingleRecord { rec } => {
+                                    let group_id = if cigar_has_softclips(rec)
+                                        || cigar_has_softclips(&record)
+                                    {
+                                        self.bam_skipped_writer.write(rec)?;
+                                        self.bam_skipped_writer.write(&record)?;
+                                        None
+                                    } else {
+                                        duplicate_groups
+                                            .entry(GroupId::Split(duplicate_id))
+                                            .or_insert_with(Vec::new)
+                                            .push(RecordId::Split(record_name.to_owned()));
+                                        record_storage.insert(
+                                            RecordId::Split(record_name.to_owned()),
+                                            RecordStorage::SingleRecord {
+                                                rec: IndexedRecord {
+                                                    rec: record,
+                                                    rec_id: i,
+                                                },
+                                            },
+                                        );
+                                        Some(GroupId::Split(duplicate_id))
+                                    };
+                                    group_id
+                                }
+                            };
+                            if let Some(group_id) = group_id_opt {
+                                group_end_idx
+                                    .entry(record_end_pos)
+                                    .or_insert_with(HashSet::new)
+                                    .insert(group_id);
+                            } else {
+                                record_storage.remove(&regular_id);
+                            };
+                        }
+                        //Case: Left record or record w/o mate
+                        None => {
+                            if !record.is_paired() {
+                                //If right or single record save end position and duplicate group ID
+                                if cigar_has_softclips(&record) {
+                                    self.bam_skipped_writer.write(&record)?;
+                                } else {
                                     duplicate_groups
-                                        .entry(GroupId::Split(group_id))
+                                        .entry(GroupId::Regular(duplicate_id))
                                         .or_insert_with(Vec::new)
-                                        .push(RecordId::Split(record_id.to_owned()));
+                                        .push(RecordId::Regular(record_name.to_owned()));
+
+                                    group_end_idx
+                                        .entry(record_end_pos)
+                                        .or_insert_with(HashSet::new)
+                                        .insert(GroupId::Regular(duplicate_id));
                                     record_storage.insert(
-                                        RecordId::Split(record_id.to_owned()),
+                                        RecordId::Regular(record_name.to_owned()),
                                         RecordStorage::SingleRecord {
                                             rec: IndexedRecord {
                                                 rec: record,
@@ -129,39 +193,10 @@ impl<W: io::Write> CallConsensusRead<W> {
                                             },
                                         },
                                     );
-                                    GroupId::Split(group_id)
                                 }
-                            };
-                            group_end_idx
-                                .entry(record_end_pos)
-                                .or_insert_with(HashSet::new)
-                                .insert(group_id);
-                        }
-                        //Case: Left record or record w/o mate
-                        None => {
-                            duplicate_groups
-                                .entry(GroupId::Regular(duplicate_id))
-                                .or_insert_with(Vec::new)
-                                .push(RecordId::Regular(record_id.to_owned()));
-                            if !record.is_paired() {
-                                //If right or single record save end position and duplicate group ID
-                                let record_end_pos = record.pos() + record.seq_len() as i64 - 1;
-                                group_end_idx
-                                    .entry(record_end_pos)
-                                    .or_insert_with(HashSet::new)
-                                    .insert(GroupId::Regular(duplicate_id));
-                                record_storage.insert(
-                                    RecordId::Regular(record_id.to_owned()),
-                                    RecordStorage::SingleRecord {
-                                        rec: IndexedRecord {
-                                            rec: record,
-                                            rec_id: i,
-                                        },
-                                    },
-                                );
                             } else {
                                 record_storage.insert(
-                                    RecordId::Regular(record_id.to_owned()),
+                                    RecordId::Regular(record_name.to_owned()),
                                     RecordStorage::PairedRecords {
                                         r1_rec: IndexedRecord {
                                             rec: record,
@@ -179,14 +214,14 @@ impl<W: io::Write> CallConsensusRead<W> {
                 //If record is right mate consensus is calculated
                 //Else record is added to hashMap
                 None => {
-                    match record_storage.get_mut(&RecordId::Regular(record_id.to_owned())) {
+                    match record_storage.get_mut(&RecordId::Regular(record_name.to_owned())) {
                         //Case: Left record
                         None => {
                             if !record.is_paired() || record.tid() != record.mtid() {
                                 self.bam_skipped_writer.write(&record)?;
                             } else {
                                 record_storage.insert(
-                                    RecordId::Regular(record_id.to_owned()),
+                                    RecordId::Regular(record_name.to_owned()),
                                     RecordStorage::PairedRecords {
                                         r1_rec: IndexedRecord {
                                             rec: record,
@@ -200,7 +235,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                         //Case: Left record already stored
                         Some(_record_pair) => {
                             let (rec_id, l_rec) = match record_storage
-                                .remove(&RecordId::Regular(record_id.to_owned()))
+                                .remove(&RecordId::Regular(record_name.to_owned()))
                                 .unwrap()
                             {
                                 RecordStorage::PairedRecords { r1_rec, .. } => {

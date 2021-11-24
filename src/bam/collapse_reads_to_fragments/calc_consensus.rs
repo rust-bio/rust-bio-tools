@@ -6,6 +6,7 @@ use bio_types::sequence::SequenceReadPairOrientation;
 use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
+use rust_htslib::bam::record::Aux;
 use std::collections::{HashMap, HashSet};
 use std::ops::BitOrAssign;
 
@@ -94,12 +95,15 @@ impl<'a> CalcOverlappingConsensus<'a> {
         if let Some(mut read_orientations) = read_orientations_opt {
             consensus_strand.append(&mut read_orientations)
         }
-        let consensus_rec = fastq::Record::with_attrs(
-            &name,
-            Some(&String::from_utf8(consensus_strand).unwrap()),
-            &consensus_seq,
-            &consensus_qual,
-        );
+        let umi = match self.recs1()[0].aux(b"RX") {
+            Ok(Aux::String(value)) => {
+                format!(" RX:Z:{}", value)
+            }
+            _ => String::from(""),
+        };
+        let description = format!("{}{}", String::from_utf8(consensus_strand).unwrap(), umi);
+        let consensus_rec =
+            fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)
     }
 
@@ -280,12 +284,15 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 self.seqids().len(),
             )
         };
-        let consensus_rec = fastq::Record::with_attrs(
-            &name,
-            Some(&String::from_utf8(consensus_strand).unwrap()),
-            &consensus_seq,
-            &consensus_qual,
-        );
+        let umi = match self.recs()[0].aux(b"RX") {
+            Ok(Aux::String(value)) => {
+                format!(" RX:Z:{}", value)
+            }
+            _ => String::from(""),
+        };
+        let description = format!("{}{}", String::from_utf8(consensus_strand).unwrap(), umi);
+        let consensus_rec =
+            fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)
     }
     pub fn recs(&self) -> &[bam::Record] {

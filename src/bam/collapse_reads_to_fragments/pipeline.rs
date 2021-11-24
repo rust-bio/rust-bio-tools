@@ -354,11 +354,8 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
 ) -> Result<()> {
     let group_ids = group_end_idx.cut_lower_group_ids(end_pos)?;
     for group_id in group_ids {
-        let cigar_groups = group_reads_by_cigar(
-            duplicate_groups.remove(&group_id).unwrap(),
-            record_storage,
-            bam_skipped_writer,
-        )?;
+        let cigar_groups =
+            group_reads_by_cigar(duplicate_groups.remove(&group_id).unwrap(), record_storage)?;
         for cigar_group in cigar_groups.values() {
             match cigar_group {
                 CigarGroup::PairedRecords {
@@ -434,7 +431,6 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
 fn group_reads_by_cigar(
     record_ids: Vec<RecordId>,
     record_storage: &mut HashMap<RecordId, RecordStorage>,
-    bam_skipped_writer: &mut bam::Writer,
 ) -> Result<HashMap<Cigar, CigarGroup>> {
     let mut cigar_groups: HashMap<Cigar, CigarGroup> = HashMap::new();
     for rec_id in record_ids {
@@ -445,67 +441,57 @@ fn group_reads_by_cigar(
                 let r2_rec_unwrapped = r2_rec.unwrap();
                 let r2_rec_id = r2_rec_unwrapped.rec_id;
                 let r2_rec_entry = r2_rec_unwrapped.into_rec();
-
-                if cigar_has_softclips(&r1_rec_entry) || cigar_has_softclips(&r2_rec_entry) {
-                    bam_skipped_writer.write(&r1_rec_entry)?;
-                    bam_skipped_writer.write(&r2_rec_entry)?;
-                } else {
-                    let cigar_tuple = Cigar::Tuple {
-                        r1_cigar: r1_rec_entry.raw_cigar().to_vec(),
-                        r2_cigar: r2_rec_entry.raw_cigar().to_vec(),
-                    };
-                    if !cigar_groups.contains_key(&cigar_tuple) {
-                        cigar_groups.insert(
-                            cigar_tuple.clone(),
-                            CigarGroup::PairedRecords {
-                                r1_recs: Vec::new(),
-                                r2_recs: Vec::new(),
-                                r1_seqids: Vec::new(),
-                                r2_seqids: Vec::new(),
-                            },
-                        );
+                let cigar_tuple = Cigar::Tuple {
+                    r1_cigar: r1_rec_entry.raw_cigar().to_vec(),
+                    r2_cigar: r2_rec_entry.raw_cigar().to_vec(),
+                };
+                if !cigar_groups.contains_key(&cigar_tuple) {
+                    cigar_groups.insert(
+                        cigar_tuple.clone(),
+                        CigarGroup::PairedRecords {
+                            r1_recs: Vec::new(),
+                            r2_recs: Vec::new(),
+                            r1_seqids: Vec::new(),
+                            r2_seqids: Vec::new(),
+                        },
+                    );
+                }
+                match cigar_groups.get_mut(&cigar_tuple) {
+                    Some(CigarGroup::PairedRecords {
+                        r1_recs,
+                        r2_recs,
+                        r1_seqids,
+                        r2_seqids,
+                    }) => {
+                        r1_recs.push(r1_rec_entry);
+                        r2_recs.push(r2_rec_entry);
+                        r1_seqids.push(r1_rec_id);
+                        r2_seqids.push(r2_rec_id);
                     }
-                    match cigar_groups.get_mut(&cigar_tuple) {
-                        Some(CigarGroup::PairedRecords {
-                            r1_recs,
-                            r2_recs,
-                            r1_seqids,
-                            r2_seqids,
-                        }) => {
-                            r1_recs.push(r1_rec_entry);
-                            r2_recs.push(r2_rec_entry);
-                            r1_seqids.push(r1_rec_id);
-                            r2_seqids.push(r2_rec_id);
-                        }
-                        _ => unreachable!(),
-                    }
+                    _ => unreachable!(),
                 }
             }
             RecordStorage::SingleRecord { rec } => {
                 let rec_id = rec.rec_id;
                 let rec_entry = rec.into_rec();
-                if cigar_has_softclips(&rec_entry) {
-                    bam_skipped_writer.write(&rec_entry)?;
-                } else {
-                    let cigar_single = Cigar::Single {
-                        cigar: rec_entry.raw_cigar().to_vec(),
-                    };
-                    if !cigar_groups.contains_key(&cigar_single) {
-                        cigar_groups.insert(
-                            cigar_single.clone(),
-                            CigarGroup::SingleRecords {
-                                recs: Vec::new(),
-                                seqids: Vec::new(),
-                            },
-                        );
+                let cigar_single = Cigar::Single {
+                    cigar: rec_entry.raw_cigar().to_vec(),
+                };
+                if !cigar_groups.contains_key(&cigar_single) {
+                    cigar_groups.insert(
+                        cigar_single.clone(),
+                        CigarGroup::SingleRecords {
+                            recs: Vec::new(),
+                            seqids: Vec::new(),
+                        },
+                    );
+                }
+                match cigar_groups.get_mut(&cigar_single) {
+                    Some(CigarGroup::SingleRecords { recs, seqids }) => {
+                        recs.push(rec_entry);
+                        seqids.push(rec_id);
                     }
-                    match cigar_groups.get_mut(&cigar_single) {
-                        Some(CigarGroup::SingleRecords { recs, seqids }) => {
-                            recs.push(rec_entry);
-                            seqids.push(rec_id);
-                        }
-                        _ => unreachable!(),
-                    }
+                    _ => unreachable!(),
                 }
             }
         };

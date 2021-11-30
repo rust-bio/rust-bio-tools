@@ -16,6 +16,7 @@ mod cli;
 pub mod common;
 pub mod csv;
 pub mod fastq;
+pub mod phylogeny;
 pub mod sequences_stats;
 
 fn main() -> Result<()> {
@@ -284,43 +285,12 @@ fn main() -> Result<()> {
             method,
             input,
             output,
-        } => {
-            let dm = bio_types::distancematrix::DistanceMatrix::from_file(&input)?;
-            let phylogeny = (match method {
-                cli::PhylogenyMethod::UPGMA => bio::phylogeny::upgma,
-                cli::PhylogenyMethod::NeighborJoining => bio::phylogeny::neighbor_joining,
-            })(&dm);
-            match output {
-                Some(path) => {
-                    let mut f = fs::File::create(path)?;
-                    f.write_all(phylogeny.to_string().as_bytes())?;
-                    f.write(b"\n")?;
-                }
-                None => {
-                    println!("{}", phylogeny.to_string());
-                }
-            }
-        }
+        } => phylogeny::phylogeny(input, method, output)?,
         RobinsonFoulds {
-            ref newick_1,
-            ref newick_2,
+            newick_1,
+            newick_2,
             output,
-        } => {
-            let dist = bio::phylogeny::robinson_foulds_distance(
-                &bio::io::newick::from_file(newick_1)?,
-                &bio::io::newick::from_file(newick_2)?,
-            );
-            match output {
-                Some(path) => {
-                    let mut f = fs::File::create(path)?;
-                    f.write_all(dist.to_string().as_bytes())?;
-                    f.write(b"\n")?;
-                }
-                None => {
-                    println!("{}", dist.to_string());
-                }
-            }
-        }
+        } => phylogeny::robinson_foulds_distance(&newick_1, &newick_2, output)?,
     }
     Ok(())
 }

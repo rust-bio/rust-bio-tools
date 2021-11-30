@@ -394,31 +394,31 @@ pub(crate) enum Command {
     /// Reconstruct a phylogenetic tree given a Phylip distance matrix input file.
     #[structopt(author = "Ragnar Groot Koerkamp <ragnar.grootkoerkamp@gmail.com>")]
     Phylogeny {
-        /// The reconstruction method to use. `UPGMA` and `NeighborJoining`.
-        #[structopt(long = "method")]
+        #[structopt(
+            long = "method",
+            help = "The reconstruction method to use. `UPGMA` or `NeighborJoining`"
+        )]
         method: PhylogenyMethod,
-
-        /// Path of Phylip distance matrix file.
-        #[structopt(parse(from_os_str))]
+        #[structopt(parse(from_os_str), help = "Input Phylip distance matrix file.")]
         input: PathBuf,
-
-        /// Path to store the phylogeny in Newick format, or stdout otherwise.
-        #[structopt(parse(from_os_str))]
+        #[structopt(
+            parse(from_os_str),
+            help = "Optional output Newick file. Stdout by default."
+        )]
         output: Option<PathBuf>,
     },
 
     /// Compute the Robinson-Foulds distance between two phylogenetic trees.
     #[structopt(author = "Ragnar Groot Koerkamp <ragnar.grootkoerkamp@gmail.com>")]
     RobinsonFoulds {
-        /// The path of the first phylogeny in Newick format.
-        #[structopt(parse(from_os_str))]
+        #[structopt(parse(from_os_str), help = "First input Newick file.")]
         newick_1: PathBuf,
-        /// The path of the second phylogeny in Newick format.
-        #[structopt(parse(from_os_str))]
+        #[structopt(parse(from_os_str), help = "Second input Newick file.")]
         newick_2: PathBuf,
-
-        /// The path to write the distance to, or stdout otherwise.
-        #[structopt(parse(from_os_str))]
+        #[structopt(
+            parse(from_os_str),
+            help = "Optional file to write distance to. Stdout by default."
+        )]
         output: Option<PathBuf>,
     },
 }

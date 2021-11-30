@@ -280,6 +280,47 @@ fn main() -> Result<()> {
             keep_only_pairs,
         )?,
         SequenceStats { fastq } => sequences_stats::stats(fastq)?,
+        Phylogeny {
+            method,
+            input,
+            output,
+        } => {
+            let dm = bio_types::distancematrix::DistanceMatrix::from_file(&input)?;
+            let phylogeny = (match method {
+                cli::PhylogenyMethod::UPGMA => bio::phylogeny::upgma,
+                cli::PhylogenyMethod::NeighborJoining => bio::phylogeny::neighbor_joining,
+            })(&dm);
+            match output {
+                Some(path) => {
+                    let mut f = fs::File::create(path)?;
+                    f.write_all(phylogeny.to_string().as_bytes())?;
+                    f.write(b"\n")?;
+                }
+                None => {
+                    println!("{}", phylogeny.to_string());
+                }
+            }
+        }
+        RobinsonFoulds {
+            ref newick_1,
+            ref newick_2,
+            output,
+        } => {
+            let dist = bio::phylogeny::robinson_foulds_distance(
+                &bio::io::newick::from_file(newick_1)?,
+                &bio::io::newick::from_file(newick_2)?,
+            );
+            match output {
+                Some(path) => {
+                    let mut f = fs::File::create(path)?;
+                    f.write_all(dist.to_string().as_bytes())?;
+                    f.write(b"\n")?;
+                }
+                None => {
+                    println!("{}", dist.to_string());
+                }
+            }
+        }
     }
     Ok(())
 }

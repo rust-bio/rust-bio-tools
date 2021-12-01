@@ -424,7 +424,7 @@ pub(crate) enum Command {
 }
 
 #[derive(EnumString)]
-pub(crate) enum PhylogenyMethod {
+pub enum PhylogenyMethod {
     UPGMA,
     NeighborJoining,
 }

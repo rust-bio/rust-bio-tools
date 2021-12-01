@@ -8,7 +8,7 @@
 //! ```
 
 use anyhow::Error;
-use std::fs::File;
+use std::{fs::File, io::Write};
 
 use crate::cli::PhylogenyMethod;
 
@@ -17,19 +17,20 @@ pub fn phylogeny(
     method: PhylogenyMethod,
     output: Option<std::path::PathBuf>,
 ) -> Result<(), Error> {
-    let dm = bio_types::distancematrix::DistanceMatrix::from_file(&input)?;
+    let dm = bio::io::phylip::from_file(&input)?;
     let phylogeny = (match method {
         PhylogenyMethod::UPGMA => bio::phylogeny::upgma,
         PhylogenyMethod::NeighborJoining => bio::phylogeny::neighbor_joining,
-    })(&dm);
+    })(dm);
+    let s = bio::io::newick::to_string(&phylogeny)?;
     Ok(match output {
         Some(path) => {
             let mut f = File::create(path)?;
-            f.write_all(phylogeny.to_string().as_bytes())?;
+            f.write_all(s.as_bytes())?;
             f.write(b"\n")?;
         }
         None => {
-            println!("{}", phylogeny.to_string());
+            println!("{}", s);
         }
     })
 }

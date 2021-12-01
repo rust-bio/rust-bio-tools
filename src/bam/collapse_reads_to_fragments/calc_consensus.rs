@@ -6,10 +6,21 @@ use bio_types::sequence::SequenceReadPairOrientation;
 use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
+use rust_htslib::bam::record::Aux;
 use std::collections::{HashMap, HashSet};
 use std::ops::BitOrAssign;
 
 const ALLELES: &[u8] = b"ACGT";
+
+pub fn get_umi_string(rec: &bam::record::Record) -> String {
+    let umi = match rec.aux(b"RX") {
+        Ok(Aux::String(value)) => {
+            format!(" RX:Z:{}", value)
+        }
+        _ => String::from(""),
+    };
+    umi
+}
 
 #[derive(Eq, PartialEq)]
 enum StrandObservation {
@@ -94,12 +105,10 @@ impl<'a> CalcOverlappingConsensus<'a> {
         if let Some(mut read_orientations) = read_orientations_opt {
             consensus_strand.append(&mut read_orientations)
         }
-        let consensus_rec = fastq::Record::with_attrs(
-            &name,
-            Some(&String::from_utf8(consensus_strand).unwrap()),
-            &consensus_seq,
-            &consensus_qual,
-        );
+        let umi = get_umi_string(&self.recs1()[0]);
+        let description = format!("{}{}", String::from_utf8(consensus_strand).unwrap(), umi);
+        let consensus_rec =
+            fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)
     }
 
@@ -141,9 +150,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
             StrandObservation::Forward => consensus_strand.push(b'+'),
             StrandObservation::Reverse => consensus_strand.push(b'-'),
             StrandObservation::Both => consensus_strand.push(b'*'),
-            StrandObservation::None => {
-                unreachable!()
-            }
+            StrandObservation::None => consensus_strand.push(b'.'),
         }
     }
     fn build_read_orientation_string(&self) -> Option<Vec<u8>> {
@@ -282,12 +289,10 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 self.seqids().len(),
             )
         };
-        let consensus_rec = fastq::Record::with_attrs(
-            &name,
-            Some(&String::from_utf8(consensus_strand).unwrap()),
-            &consensus_seq,
-            &consensus_qual,
-        );
+        let umi = get_umi_string(&self.recs()[0]);
+        let description = format!("{}{}", String::from_utf8(consensus_strand).unwrap(), umi);
+        let consensus_rec =
+            fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)
     }
     pub fn recs(&self) -> &[bam::Record] {

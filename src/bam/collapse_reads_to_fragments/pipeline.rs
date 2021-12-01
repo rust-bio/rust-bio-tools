@@ -434,67 +434,8 @@ fn group_reads_by_cigar(
 ) -> Result<HashMap<Cigar, CigarGroup>> {
     let mut cigar_groups: HashMap<Cigar, CigarGroup> = HashMap::new();
     for rec_id in record_ids {
-        match record_storage.remove(&rec_id).unwrap() {
-            RecordStorage::PairedRecords { r1_rec, r2_rec } => {
-                let r1_rec_id = r1_rec.rec_id;
-                let r1_rec_entry = r1_rec.into_rec();
-                let r2_rec_unwrapped = r2_rec.unwrap();
-                let r2_rec_id = r2_rec_unwrapped.rec_id;
-                let r2_rec_entry = r2_rec_unwrapped.into_rec();
-                let cigar_tuple = Cigar::Tuple {
-                    r1_cigar: r1_rec_entry.raw_cigar().to_vec(),
-                    r2_cigar: r2_rec_entry.raw_cigar().to_vec(),
-                };
-                if !cigar_groups.contains_key(&cigar_tuple) {
-                    cigar_groups.insert(
-                        cigar_tuple.clone(),
-                        CigarGroup::PairedRecords {
-                            r1_recs: Vec::new(),
-                            r2_recs: Vec::new(),
-                            r1_seqids: Vec::new(),
-                            r2_seqids: Vec::new(),
-                        },
-                    );
-                }
-                match cigar_groups.get_mut(&cigar_tuple) {
-                    Some(CigarGroup::PairedRecords {
-                        r1_recs,
-                        r2_recs,
-                        r1_seqids,
-                        r2_seqids,
-                    }) => {
-                        r1_recs.push(r1_rec_entry);
-                        r2_recs.push(r2_rec_entry);
-                        r1_seqids.push(r1_rec_id);
-                        r2_seqids.push(r2_rec_id);
-                    }
-                    _ => unreachable!(),
-                }
-            }
-            RecordStorage::SingleRecord { rec } => {
-                let rec_id = rec.rec_id;
-                let rec_entry = rec.into_rec();
-                let cigar_single = Cigar::Single {
-                    cigar: rec_entry.raw_cigar().to_vec(),
-                };
-                if !cigar_groups.contains_key(&cigar_single) {
-                    cigar_groups.insert(
-                        cigar_single.clone(),
-                        CigarGroup::SingleRecords {
-                            recs: Vec::new(),
-                            seqids: Vec::new(),
-                        },
-                    );
-                }
-                match cigar_groups.get_mut(&cigar_single) {
-                    Some(CigarGroup::SingleRecords { recs, seqids }) => {
-                        recs.push(rec_entry);
-                        seqids.push(rec_id);
-                    }
-                    _ => unreachable!(),
-                }
-            }
-        };
+        let storage_entry = record_storage.remove(&rec_id).unwrap();
+        storage_entry.add_to_group(&mut cigar_groups)?;
     }
     Ok(cigar_groups)
 }
@@ -625,6 +566,7 @@ fn match_single_cigar(cigar: &Option<char>, first_vec: &mut Vec<bool>, second_ve
         Some(_) | None => {}
     };
 }
+
 pub enum RecordStorage {
     PairedRecords {
         r1_rec: IndexedRecord,
@@ -633,6 +575,79 @@ pub enum RecordStorage {
     SingleRecord {
         rec: IndexedRecord,
     },
+}
+
+impl RecordStorage {
+    fn add_to_group(self, cigar_groups: &mut HashMap<Cigar, CigarGroup>) -> Result<()> {
+        let (r1_rec_entry, r1_rec_id, r2_rec_entry, r2_rec_id, cigar_tuple) = match self {
+            RecordStorage::PairedRecords { r1_rec, r2_rec } => {
+                let r1_rec_id = r1_rec.rec_id;
+                let r1_rec_entry = r1_rec.into_rec();
+                let r2_rec_unwrapped = r2_rec.unwrap();
+                let r2_rec_id = r2_rec_unwrapped.rec_id;
+                let r2_rec_entry = r2_rec_unwrapped.into_rec();
+                let cigar_tuple = Cigar::Tuple {
+                    r1_cigar: r1_rec_entry.raw_cigar().to_vec(),
+                    r2_cigar: r2_rec_entry.raw_cigar().to_vec(),
+                };
+                if !cigar_groups.contains_key(&cigar_tuple) {
+                    cigar_groups.insert(
+                        cigar_tuple.clone(),
+                        CigarGroup::PairedRecords {
+                            r1_recs: Vec::new(),
+                            r2_recs: Vec::new(),
+                            r1_seqids: Vec::new(),
+                            r2_seqids: Vec::new(),
+                        },
+                    );
+                }
+                (
+                    r1_rec_entry,
+                    r1_rec_id,
+                    Some(r2_rec_entry),
+                    Some(r2_rec_id),
+                    cigar_tuple,
+                )
+            }
+            RecordStorage::SingleRecord { rec } => {
+                let rec_id = rec.rec_id;
+                let rec_entry = rec.into_rec();
+                let cigar_single = Cigar::Single {
+                    cigar: rec_entry.raw_cigar().to_vec(),
+                };
+                if !cigar_groups.contains_key(&cigar_single) {
+                    cigar_groups.insert(
+                        cigar_single.clone(),
+                        CigarGroup::SingleRecords {
+                            recs: Vec::new(),
+                            seqids: Vec::new(),
+                        },
+                    );
+                }
+                (rec_entry, rec_id, None, None, cigar_single)
+            }
+        };
+        match cigar_groups.get_mut(&cigar_tuple) {
+            Some(CigarGroup::PairedRecords {
+                r1_recs,
+                r2_recs,
+                r1_seqids,
+                r2_seqids,
+            }) => {
+                r1_recs.push(r1_rec_entry);
+                r2_recs.push(r2_rec_entry.unwrap());
+                r1_seqids.push(r1_rec_id);
+                r2_seqids.push(r2_rec_id.unwrap());
+            }
+            Some(CigarGroup::SingleRecords { recs, seqids }) => {
+                recs.push(r1_rec_entry);
+                seqids.push(r1_rec_id);
+            }
+            None => unreachable!(),
+        }
+
+        Ok(())
+    }
 }
 
 pub struct IndexedRecord {

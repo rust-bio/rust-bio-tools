@@ -12,6 +12,16 @@ use std::ops::BitOrAssign;
 
 const ALLELES: &[u8] = b"ACGT";
 
+pub fn get_umi_string(rec: &bam::record::Record) -> String {
+    let umi = match rec.aux(b"RX") {
+        Ok(Aux::String(value)) => {
+            format!(" RX:Z:{}", value)
+        }
+        _ => String::from(""),
+    };
+    umi
+}
+
 #[derive(Eq, PartialEq)]
 enum StrandObservation {
     None,
@@ -95,12 +105,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         if let Some(mut read_orientations) = read_orientations_opt {
             consensus_strand.append(&mut read_orientations)
         }
-        let umi = match self.recs1()[0].aux(b"RX") {
-            Ok(Aux::String(value)) => {
-                format!(" RX:Z:{}", value)
-            }
-            _ => String::from(""),
-        };
+        let umi = get_umi_string(&self.recs1()[0]);
         let description = format!("{}{}", String::from_utf8(consensus_strand).unwrap(), umi);
         let consensus_rec =
             fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);
@@ -284,12 +289,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 self.seqids().len(),
             )
         };
-        let umi = match self.recs()[0].aux(b"RX") {
-            Ok(Aux::String(value)) => {
-                format!(" RX:Z:{}", value)
-            }
-            _ => String::from(""),
-        };
+        let umi = get_umi_string(&self.recs()[0]);
         let description = format!("{}{}", String::from_utf8(consensus_strand).unwrap(), umi);
         let consensus_rec =
             fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);

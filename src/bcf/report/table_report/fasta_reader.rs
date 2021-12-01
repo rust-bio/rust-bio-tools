@@ -7,7 +7,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::path::Path;
 
-pub fn read_fasta<P: AsRef<Path>>(
+pub fn read_fasta<P: AsRef<Path> + std::fmt::Debug>(
     path: P,
     region: &Region,
     compensate_0_basing: bool,

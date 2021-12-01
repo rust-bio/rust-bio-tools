@@ -9,7 +9,7 @@ use std::ops::Range;
 use std::path::Path;
 use uuid::Uuid;
 
-pub fn anonymize_reads<P: AsRef<Path>>(
+pub fn anonymize_reads<P: AsRef<Path> + std::fmt::Debug>(
     bam: P,
     input_ref: P,
     output_bam: P,

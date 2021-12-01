@@ -9,7 +9,7 @@ use std::io::Write;
 use std::path::Path;
 use tera::{Context, Tera};
 
-pub(crate) fn plot_bam<P: AsRef<Path>>(
+pub(crate) fn plot_bam<P: AsRef<Path> + std::fmt::Debug>(
     bam_paths: &[P],
     fasta_path: P,
     region: &Region,

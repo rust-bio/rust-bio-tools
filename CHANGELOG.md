@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.32.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.31.0...v0.32.0) (2021-12-01)
+
+
+### Features
+
+* Update rust-bio ([#202](https://www.github.com/rust-bio/rust-bio-tools/issues/202)) ([707d0ca](https://www.github.com/rust-bio/rust-bio-tools/commit/707d0ca294c56f79c770a8d8f7ff530642868b39))
+
+
+### Bug Fixes
+
+* Fix read processing when building consensus reads ([#199](https://www.github.com/rust-bio/rust-bio-tools/issues/199)) ([3fdcb3f](https://www.github.com/rust-bio/rust-bio-tools/commit/3fdcb3ffd586db94e40c182e980110334280962f))
+
 ## [0.31.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.30.2...v0.31.0) (2021-11-16)
 
 

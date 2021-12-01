@@ -111,7 +111,7 @@ pub struct NonOverlappingConsensus {
     likelihood: LogProb,
 }
 
-pub trait CallConsensusReads<'a, R: io::Read + 'a, W: io::Write + 'a> {
+pub trait CallConsensusReads<'a, R: io::Read + io::BufRead + 'a, W: io::Write + 'a> {
     /// Cluster reads from fastq readers according to their sequence
     /// and UMI, then compute a consensus sequence.
     ///
@@ -312,7 +312,7 @@ pub struct CallNonOverlappingConsensusRead<'a, R: io::Read, W: io::Write> {
     verbose_read_names: bool,
 }
 
-impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
+impl<'a, R: io::Read + io::BufRead, W: io::Write> CallConsensusReads<'a, R, W>
     for CallNonOverlappingConsensusRead<'a, R, W>
 {
     fn write_records(
@@ -480,7 +480,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
     }
 }
 
-impl<'a, R: io::Read, W: io::Write> CallConsensusReads<'a, R, W>
+impl<'a, R: io::Read + io::BufRead, W: io::Write> CallConsensusReads<'a, R, W>
     for CallOverlappingConsensusRead<'a, R, W>
 {
     fn write_records(

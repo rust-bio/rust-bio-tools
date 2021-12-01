@@ -94,7 +94,7 @@ use std::path::Path;
 /// The type of the readers (writers) depends on the file ending.
 /// If the input file names end with '.gz' a gzipped reader (writer) is used.
 #[allow(clippy::too_many_arguments)]
-pub fn call_consensus_reads_from_paths<P: AsRef<Path>>(
+pub fn call_consensus_reads_from_paths<P: AsRef<Path> + std::fmt::Debug>(
     fq1: P,
     fq2: P,
     fq1_out: P,
@@ -121,7 +121,9 @@ pub fn call_consensus_reads_from_paths<P: AsRef<Path>>(
                 fq2_out.as_ref().display()
             );
 
-            fn reader<P: AsRef<Path>>(path: P) -> Result<fastq::Reader<Box<dyn std::io::Read>>> {
+            fn reader<P: AsRef<Path>>(
+                path: P,
+            ) -> Result<fastq::Reader<BufReader<Box<dyn std::io::Read>>>> {
                 let r: Box<dyn Read> = if path.as_ref().ends_with(".gz") {
                     Box::new(
                         fs::File::open(&path)

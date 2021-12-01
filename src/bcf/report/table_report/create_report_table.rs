@@ -502,7 +502,7 @@ pub(crate) fn read_tag_entries(
     Ok(())
 }
 
-pub(crate) fn create_report_data<P: AsRef<Path>>(
+pub(crate) fn create_report_data<P: AsRef<Path> + std::fmt::Debug>(
     fasta_path: P,
     variant: Option<Variant>,
     bam_path: P,

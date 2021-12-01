@@ -142,7 +142,7 @@ fn make_alignment(record: &bam::Record) -> Alignment {
     }
 }
 
-pub fn make_nucleobases<P: AsRef<Path>>(
+pub fn make_nucleobases<P: AsRef<Path> + std::fmt::Debug>(
     fasta_path: P,
     region: &Region,
     snippets: Vec<Alignment>,

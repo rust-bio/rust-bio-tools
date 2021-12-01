@@ -142,7 +142,7 @@ fn calc_rows(
     (reads_wr, matches_wr)
 }
 
-pub fn get_static_reads<P: AsRef<Path>>(
+pub fn get_static_reads<P: AsRef<Path> + std::fmt::Debug>(
     path: P,
     fasta_path: P,
     region: &Region,

@@ -29,7 +29,7 @@ For a list of changes, take a look at the [CHANGELOG](CHANGELOG.md).
 
 ### Requirements
 
-Rust-Bio-Tools depends on [GSL](https://www.gnu.org/software/gsl/) to be installed:
+Rust-Bio-Tools depends [rgsl](https://docs.rs/GSL/*/rgsl/) which needs [GSL](https://www.gnu.org/software/gsl/) to be installed:
 
 - Ubuntu: `sudo apt-get install libgsl-dev`
 - Arch: `sudo pacman -S gsl`

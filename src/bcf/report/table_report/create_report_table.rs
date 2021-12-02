@@ -62,7 +62,9 @@ pub(crate) fn make_table_report(
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     let header = vcf.header().clone();
     let header_records = header.header_records();
-    let ann_field_description: Vec<_> = get_ann_description(header_records).unwrap();
+    let ann_field_description: Vec<_> = get_ann_description(header_records)
+        .context("No annotations found. Please only use VEP-annotated VCF-files.")
+        .unwrap();
     let samples: Vec<_> = header
         .samples()
         .iter()

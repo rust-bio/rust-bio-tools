@@ -1085,6 +1085,9 @@
     "legend":{
       "orient": "bottom",
       "direction": "vertical"
+    },
+    "axisX": {
+      "orient": "top"
     }
   }
 }

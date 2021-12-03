@@ -1018,7 +1018,7 @@
           "data":{
             "name":"allele_frequency"
           },
-          "mark":"tick",
+          "mark":"rect",
           "width":100,
           "encoding":{
             "y":{
@@ -1027,14 +1027,14 @@
               "sort": {},
               "axis": null
             },
-            "x":{
+            "color":{
               "field":"allele_frequency",
               "type":"quantitative",
               "axis":{
                 "title":"allele frequency"
               }
             },
-            "color":{
+            "x":{
               "field":"sample",
               "type":"nominal",
               "title":"sample"

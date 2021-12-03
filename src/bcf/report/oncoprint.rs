@@ -63,9 +63,7 @@ pub fn oncoprint(
     for (sample, path) in sample_calls.iter().sorted() {
         let bcf_reader = bcf::Reader::from_path(path)?;
         let header_records = bcf_reader.header().header_records();
-        let ann_fields: Vec<_> = get_ann_description(header_records)
-            .context("No annotations found. Please only use VEP-annotated VCF-files.")
-            .unwrap();
+        let ann_fields: Vec<_> = get_ann_description(header_records)?;
         clin_sig_present.insert(
             sample.to_owned(),
             ann_fields.contains(&"CLIN_SIG".to_owned()),
@@ -96,9 +94,7 @@ pub fn oncoprint(
             sample_names.push(String::from_utf8(s.to_owned())?);
         }
         let header_records = header.header_records();
-        let ann_fields: Vec<_> = get_ann_description(header_records).unwrap_or_else(|| {
-            panic!("No ANN field found. Please only use VEP-annotated VCF-files.")
-        });
+        let ann_fields: Vec<_> = get_ann_description(header_records)?;
 
         for (i, field) in ann_fields.iter().enumerate() {
             ann_indices.insert(field, i);

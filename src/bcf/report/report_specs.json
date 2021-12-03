@@ -5,7 +5,7 @@
     "impact": {},
     "consequence": {},
     "clin_sig": {},
-    "allel_frequency": {},
+    "allele_frequency": {},
     "ev": {}
   },
   "autosize":{
@@ -1074,7 +1074,7 @@
         },
         {
           "data":{
-            "name":"allel_frequency"
+            "name":"allele_frequency"
           },
           "mark":"tick",
           "width":100,
@@ -1096,7 +1096,7 @@
               "axis": null
             },
             "x":{
-              "field":"allel_frequency",
+              "field":"allele_frequency",
               "type":"quantitative",
               "axis":{
                 "title":"allele frequency"
@@ -1115,7 +1115,7 @@
               "title":"sample"
             },
             "tooltip": [{
-              "field": "allel_frequency",
+              "field": "allele_frequency",
               "type": "quantitative"
             }]
           }

@@ -245,7 +245,7 @@ pub(crate) enum Command {
 
     /// Creates report from a given VCF file including a visual plot
     /// for every variant with the given BAM and FASTA file.
-    /// The VCF file has to be annotated with VEP, using the options --hgvs and --hgvsg.
+    /// The VCF file has to be annotated with VEP, using the options --hgvs, --hgvsg and --vcf_info_field ANN.
     ///
     /// Examples:
     /// With current directory as default ouput path:

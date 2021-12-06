@@ -1076,7 +1076,7 @@
           "data":{
             "name":"allele_frequency"
           },
-          "mark":"rect",
+          "mark":"tick",
           "width":100,
           "selection":{
             "highlight_af":{
@@ -1095,7 +1095,7 @@
               "sort": {},
               "axis": null
             },
-            "color":{
+            "x":{
               "field":"allele_frequency",
               "type":"quantitative",
               "axis":{
@@ -1109,7 +1109,7 @@
               },
               "value":1
             },
-            "x":{
+            "color":{
               "field":"sample",
               "type":"nominal",
               "title":"sample"

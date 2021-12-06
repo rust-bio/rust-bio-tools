@@ -14,6 +14,7 @@ use crate::bcf::report::table_report::create_report_table::read_tag_entries;
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 use chrono::{DateTime, Local};
+use core::cmp::max;
 use jsonm::packer::{PackOptions, Packer};
 use log::warn;
 use lz_str::compress_to_utf16;
@@ -622,6 +623,8 @@ pub fn oncoprint(
                 }
 
                 specs["datasets"] = values;
+                // Set allele frequency heatmap width according to number of samples
+                specs["vconcat"][1]["hconcat"][5]["width"] = json!(max(samples.len() * 20, 60));
                 if !cs_present_folded || remove_existing_variation {
                     let hconcat = specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
                     match (!cs_present_folded, remove_existing_variation) {

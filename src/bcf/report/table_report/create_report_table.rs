@@ -1,6 +1,7 @@
 use crate::bcf::report::table_report::fasta_reader::{get_fasta_lengths, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
 use crate::common::Region;
+use anyhow::anyhow;
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 use chrono::{DateTime, Local};
@@ -62,7 +63,7 @@ pub(crate) fn make_table_report(
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     let header = vcf.header().clone();
     let header_records = header.header_records();
-    let ann_field_description: Vec<_> = get_ann_description(header_records).unwrap();
+    let ann_field_description: Vec<_> = get_ann_description(header_records)?;
     let samples: Vec<_> = header
         .samples()
         .iter()
@@ -441,7 +442,7 @@ fn escape_hgvsg(hgvsg: &str) -> String {
     hgvsg.replace(".", "_").replace(">", "_").replace(":", "_")
 }
 
-pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>> {
+pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Result<Vec<String>> {
     for rec in header_records {
         if let rust_htslib::bcf::HeaderRecord::Info { key: _, values } = rec {
             if values.get("ID").unwrap() == "ANN" {
@@ -457,11 +458,13 @@ pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<V
                     entry = entry.trim();
                     owned_fields.push(entry.to_owned());
                 }
-                return Some(owned_fields);
+                return Ok(owned_fields);
             }
         }
     }
-    None
+    Err(anyhow!(
+        "Could not find any annotations by VEP. Please only use VEP-annotated VCF-files."
+    ))
 }
 
 pub(crate) fn read_tag_entries(

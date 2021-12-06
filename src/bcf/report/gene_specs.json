@@ -1042,6 +1042,9 @@
             "tooltip": [{
               "field": "allele_frequency",
               "type": "quantitative"
+            },{
+              "field": "sample",
+              "type": "nominal"
             }]
           }
         },

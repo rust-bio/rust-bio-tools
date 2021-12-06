@@ -1215,15 +1215,11 @@ fn make_prefixes(
     rows_per_page: usize,
 ) -> HashMap<String, Vec<(&String, usize)>> {
     let mut prefix_map = HashMap::new();
-    let prefix_len = 3;
     for (i, partial_table) in genes.chunks(rows_per_page).enumerate() {
         let page = i + 1;
         for gene in partial_table {
-            if gene.len() >= prefix_len {
-                let prefix = gene.chars().take(prefix_len).collect::<String>();
-                let entry = prefix_map.entry(prefix).or_insert_with(Vec::new);
-                entry.push((gene.to_owned(), page));
-            }
+            let entry = prefix_map.entry(gene.to_string()).or_insert_with(Vec::new);
+            entry.push((gene.to_owned(), page));
         }
     }
     prefix_map

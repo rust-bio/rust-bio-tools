@@ -14,6 +14,7 @@ use crate::bcf::report::table_report::create_report_table::read_tag_entries;
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 use chrono::{DateTime, Local};
+use core::cmp::max;
 use jsonm::packer::{PackOptions, Packer};
 use log::warn;
 use lz_str::compress_to_utf16;
@@ -125,7 +126,7 @@ pub fn oncoprint(
                 }
             }
 
-            let allel_frequencies = record
+            let allele_frequencies = record
                 .format(b"AF")
                 .float()?
                 .iter()
@@ -335,11 +336,11 @@ pub fn oncoprint(
                         }
 
                         for (i, name) in sample_names.iter().enumerate() {
-                            for frequency in &allel_frequencies[i] {
+                            for frequency in &allele_frequencies[i] {
                                 let af = AlleleFrequency {
                                     sample: sample.to_owned() + ":" + name,
                                     key: gene.to_owned(),
-                                    allel_frequency: *frequency,
+                                    allele_frequency: *frequency,
                                 };
 
                                 af_data.push(af);
@@ -347,7 +348,7 @@ pub fn oncoprint(
                                 let gene_af = AlleleFrequency {
                                     sample: sample.to_owned() + ":" + name,
                                     key: alt.to_owned(),
-                                    allel_frequency: *frequency,
+                                    allele_frequency: *frequency,
                                 };
 
                                 let f =
@@ -505,7 +506,7 @@ pub fn oncoprint(
         let final_consequence: Vec<_> = consequence_data.iter().flatten().sorted().collect();
         let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
         let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().sorted().collect();
-        let allel_frequency_data = gene_af_data.get(&gene).unwrap();
+        let allele_frequency_data = gene_af_data.get(&gene).unwrap();
 
         let sorted_impacts = order_by_impact(final_impact.clone());
         let sorted_clin_sigs = order_by_clin_sig(final_clin_sig.clone());
@@ -576,7 +577,7 @@ pub fn oncoprint(
                     .sorted()
                     .collect();
 
-                let af_page_data: Vec<_> = allel_frequency_data
+                let af_page_data: Vec<_> = allele_frequency_data
                     .iter()
                     .filter(|entry| sorted_alterations.contains(&&entry.key))
                     .collect();
@@ -604,9 +605,9 @@ pub fn oncoprint(
                 let mut specs = gene_specs.clone();
 
                 let mut values = if cs_present_folded {
-                    json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data})
+                    json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allele_frequency": af_page_data})
                 } else {
-                    json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allel_frequency": af_page_data})
+                    json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allele_frequency": af_page_data})
                 };
 
                 if plot_info.is_some() {
@@ -622,6 +623,8 @@ pub fn oncoprint(
                 }
 
                 specs["datasets"] = values;
+                // Set allele frequency heatmap width according to number of samples
+                specs["vconcat"][1]["hconcat"][5]["width"] = json!(max(samples.len() * 20, 60));
                 if !cs_present_folded || remove_existing_variation {
                     let hconcat = specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
                     match (!cs_present_folded, remove_existing_variation) {
@@ -866,9 +869,9 @@ pub fn oncoprint(
             let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json"))?;
 
             let mut values = if cs_present_folded {
-                json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data})
+                json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allele_frequency": af_page_data})
             } else {
-                json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allel_frequency": af_page_data})
+                json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allele_frequency": af_page_data})
             };
 
             if plot_info.is_some() {
@@ -994,7 +997,7 @@ struct Record {
 struct AlleleFrequency {
     sample: String,
     key: String,
-    allel_frequency: f32,
+    allele_frequency: f32,
 }
 
 #[derive(new, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]

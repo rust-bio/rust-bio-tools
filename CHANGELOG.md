@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.33.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.33.0...v0.33.1) (2021-12-07)
+
+
+### Features
+
+* Improve gene search for vcf-report ([#209](https://www.github.com/rust-bio/rust-bio-tools/issues/209)) ([cbeaff5](https://www.github.com/rust-bio/rust-bio-tools/commit/cbeaff5a79bf19fb745fa0e15505d5c41a9a6dd5))
+
 ## [0.33.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.32.0...v0.33.0) (2021-12-06)
 
 

@@ -132,6 +132,7 @@ fn main() -> Result<()> {
             custom_js_files,
             tsv,
             threads,
+            annotation_field,
             output_path,
         } => {
             let mut sample_calls = HashMap::new();
@@ -202,6 +203,7 @@ fn main() -> Result<()> {
                     formats.clone(),
                     max_read_depth,
                     js_file_names.clone(),
+                    &annotation_field,
                 )
                 .unwrap_or_else(|e| {
                     panic!("Failed building table report for sample {}. {}", sample, e)
@@ -214,6 +216,7 @@ fn main() -> Result<()> {
                 cells,
                 tsv.as_deref(),
                 plot_info,
+                &annotation_field,
             )?
         }
         VcfSplit { input, output } => bcf::split::split(input, output.as_ref())?,

@@ -35,6 +35,7 @@ pub fn oncoprint(
     max_cells: u32,
     tsv_data_path: Option<&str>,
     plot_info: Option<Vec<String>>,
+    annotation_field: &str,
 ) -> Result<()> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
@@ -64,7 +65,7 @@ pub fn oncoprint(
     for (sample, path) in sample_calls.iter().sorted() {
         let bcf_reader = bcf::Reader::from_path(path)?;
         let header_records = bcf_reader.header().header_records();
-        let ann_fields: Vec<_> = get_ann_description(header_records)?;
+        let ann_fields: Vec<_> = get_ann_description(header_records, annotation_field)?;
         clin_sig_present.insert(
             sample.to_owned(),
             ann_fields.contains(&"CLIN_SIG".to_owned()),
@@ -95,7 +96,7 @@ pub fn oncoprint(
             sample_names.push(String::from_utf8(s.to_owned())?);
         }
         let header_records = header.header_records();
-        let ann_fields: Vec<_> = get_ann_description(header_records)?;
+        let ann_fields: Vec<_> = get_ann_description(header_records, annotation_field)?;
 
         for (i, field) in ann_fields.iter().enumerate() {
             ann_indices.insert(field, i);
@@ -129,7 +130,7 @@ pub fn oncoprint(
                 .map(|s| s.to_vec())
                 .collect_vec();
 
-            let ann = record.info(b"ANN").string()?;
+            let ann = record.info(annotation_field.as_bytes()).string()?;
             if let Some(ann) = ann {
                 for alt_allele in alt_alleles {
                     let variant = if alt_allele == b"<BND>" {

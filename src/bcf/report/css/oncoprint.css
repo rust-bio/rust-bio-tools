@@ -21,3 +21,9 @@ th, td {
 .active-row {
     background: whitesmoke !important;
 }
+
+#glasses {
+    position: absolute;
+    top: 68px;
+    right: 20px;
+}

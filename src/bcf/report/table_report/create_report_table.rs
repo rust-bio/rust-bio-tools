@@ -1,6 +1,7 @@
 use crate::bcf::report::table_report::fasta_reader::{get_fasta_lengths, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
 use crate::common::Region;
+use anyhow::anyhow;
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 use chrono::{DateTime, Local};
@@ -55,6 +56,7 @@ pub(crate) fn make_table_report(
     output_path: &str,
     max_read_depth: u32,
     js_files: Vec<String>,
+    annotation_field: &str,
 ) -> Result<()> {
     // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
     // let mut reports = HashMap::new();
@@ -62,7 +64,7 @@ pub(crate) fn make_table_report(
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     let header = vcf.header().clone();
     let header_records = header.header_records();
-    let ann_field_description: Vec<_> = get_ann_description(header_records).unwrap();
+    let ann_field_description: Vec<_> = get_ann_description(header_records, annotation_field)?;
     let samples: Vec<_> = header
         .samples()
         .iter()
@@ -185,7 +187,7 @@ pub(crate) fn make_table_report(
         let mut alterations = Vec::new();
         let mut hgvsgs = Vec::new();
 
-        if let Some(ann) = variant.info(b"ANN").string()? {
+        if let Some(ann) = variant.info(annotation_field.as_bytes()).string()? {
             for entry in ann.iter() {
                 let fields = entry.split(|c| *c == b'|').collect_vec();
 
@@ -441,10 +443,13 @@ fn escape_hgvsg(hgvsg: &str) -> String {
     hgvsg.replace(".", "_").replace(">", "_").replace(":", "_")
 }
 
-pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>> {
+pub(crate) fn get_ann_description(
+    header_records: Vec<HeaderRecord>,
+    annotation_field: &str,
+) -> Result<Vec<String>> {
     for rec in header_records {
         if let rust_htslib::bcf::HeaderRecord::Info { key: _, values } = rec {
-            if values.get("ID").unwrap() == "ANN" {
+            if values.get("ID").unwrap() == annotation_field {
                 let description = values.get("Description").unwrap();
                 let fields: Vec<_> = description.split('|').collect();
                 let mut owned_fields = Vec::new();
@@ -457,11 +462,13 @@ pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<V
                     entry = entry.trim();
                     owned_fields.push(entry.to_owned());
                 }
-                return Some(owned_fields);
+                return Ok(owned_fields);
             }
         }
     }
-    None
+    Err(anyhow!(
+        "Could not find any annotations by VEP. Please only use VEP-annotated VCF-files."
+    ))
 }
 
 pub(crate) fn read_tag_entries(

@@ -14,6 +14,7 @@ use crate::bcf::report::table_report::create_report_table::read_tag_entries;
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 use chrono::{DateTime, Local};
+use core::cmp::max;
 use jsonm::packer::{PackOptions, Packer};
 use log::warn;
 use lz_str::compress_to_utf16;
@@ -34,6 +35,7 @@ pub fn oncoprint(
     max_cells: u32,
     tsv_data_path: Option<&str>,
     plot_info: Option<Vec<String>>,
+    annotation_field: &str,
 ) -> Result<()> {
     let mut data = HashMap::new();
     let mut gene_data = HashMap::new();
@@ -63,9 +65,7 @@ pub fn oncoprint(
     for (sample, path) in sample_calls.iter().sorted() {
         let bcf_reader = bcf::Reader::from_path(path)?;
         let header_records = bcf_reader.header().header_records();
-        let ann_fields: Vec<_> = get_ann_description(header_records).unwrap_or_else(|| {
-            panic!("No ANN field found. Please only use VEP-annotated VCF-files.")
-        });
+        let ann_fields: Vec<_> = get_ann_description(header_records, annotation_field)?;
         clin_sig_present.insert(
             sample.to_owned(),
             ann_fields.contains(&"CLIN_SIG".to_owned()),
@@ -96,9 +96,7 @@ pub fn oncoprint(
             sample_names.push(String::from_utf8(s.to_owned())?);
         }
         let header_records = header.header_records();
-        let ann_fields: Vec<_> = get_ann_description(header_records).unwrap_or_else(|| {
-            panic!("No ANN field found. Please only use VEP-annotated VCF-files.")
-        });
+        let ann_fields: Vec<_> = get_ann_description(header_records, annotation_field)?;
 
         for (i, field) in ann_fields.iter().enumerate() {
             ann_indices.insert(field, i);
@@ -125,14 +123,14 @@ pub fn oncoprint(
                 }
             }
 
-            let allel_frequencies = record
+            let allele_frequencies = record
                 .format(b"AF")
                 .float()?
                 .iter()
                 .map(|s| s.to_vec())
                 .collect_vec();
 
-            let ann = record.info(b"ANN").string()?;
+            let ann = record.info(annotation_field.as_bytes()).string()?;
             if let Some(ann) = ann {
                 for alt_allele in alt_alleles {
                     let variant = if alt_allele == b"<BND>" {
@@ -335,11 +333,11 @@ pub fn oncoprint(
                         }
 
                         for (i, name) in sample_names.iter().enumerate() {
-                            for frequency in &allel_frequencies[i] {
+                            for frequency in &allele_frequencies[i] {
                                 let af = AlleleFrequency {
                                     sample: sample.to_owned() + ":" + name,
                                     key: gene.to_owned(),
-                                    allel_frequency: *frequency,
+                                    allele_frequency: *frequency,
                                 };
 
                                 af_data.push(af);
@@ -347,7 +345,7 @@ pub fn oncoprint(
                                 let gene_af = AlleleFrequency {
                                     sample: sample.to_owned() + ":" + name,
                                     key: alt.to_owned(),
-                                    allel_frequency: *frequency,
+                                    allele_frequency: *frequency,
                                 };
 
                                 let f =
@@ -505,7 +503,7 @@ pub fn oncoprint(
         let final_consequence: Vec<_> = consequence_data.iter().flatten().sorted().collect();
         let clin_sig_data = gene_clin_sig_data.get(&gene).unwrap();
         let final_clin_sig: Vec<_> = clin_sig_data.iter().flatten().sorted().collect();
-        let allel_frequency_data = gene_af_data.get(&gene).unwrap();
+        let allele_frequency_data = gene_af_data.get(&gene).unwrap();
 
         let sorted_impacts = order_by_impact(final_impact.clone());
         let sorted_clin_sigs = order_by_clin_sig(final_clin_sig.clone());
@@ -576,7 +574,7 @@ pub fn oncoprint(
                     .sorted()
                     .collect();
 
-                let af_page_data: Vec<_> = allel_frequency_data
+                let af_page_data: Vec<_> = allele_frequency_data
                     .iter()
                     .filter(|entry| sorted_alterations.contains(&&entry.key))
                     .collect();
@@ -604,9 +602,9 @@ pub fn oncoprint(
                 let mut specs = gene_specs.clone();
 
                 let mut values = if cs_present_folded {
-                    json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data})
+                    json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allele_frequency": af_page_data})
                 } else {
-                    json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allel_frequency": af_page_data})
+                    json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allele_frequency": af_page_data})
                 };
 
                 if plot_info.is_some() {
@@ -622,6 +620,8 @@ pub fn oncoprint(
                 }
 
                 specs["datasets"] = values;
+                // Set allele frequency heatmap width according to number of samples
+                specs["vconcat"][1]["hconcat"][5]["width"] = json!(max(samples.len() * 20, 60));
                 if !cs_present_folded || remove_existing_variation {
                     let hconcat = specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
                     match (!cs_present_folded, remove_existing_variation) {
@@ -866,9 +866,9 @@ pub fn oncoprint(
             let mut vl_specs: Value = serde_json::from_str(include_str!("report_specs.json"))?;
 
             let mut values = if cs_present_folded {
-                json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allel_frequency": af_page_data})
+                json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "clin_sig": clin_sig_page_data, "allele_frequency": af_page_data})
             } else {
-                json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allel_frequency": af_page_data})
+                json!({ "main": page_data, "impact": impact_page_data, "ev": ev_page_data, "consequence": consequence_page_data, "allele_frequency": af_page_data})
             };
 
             if plot_info.is_some() {
@@ -994,7 +994,7 @@ struct Record {
 struct AlleleFrequency {
     sample: String,
     key: String,
-    allel_frequency: f32,
+    allele_frequency: f32,
 }
 
 #[derive(new, Serialize, Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
@@ -1216,15 +1216,11 @@ fn make_prefixes(
     rows_per_page: usize,
 ) -> HashMap<String, Vec<(&String, usize)>> {
     let mut prefix_map = HashMap::new();
-    let prefix_len = 3;
     for (i, partial_table) in genes.chunks(rows_per_page).enumerate() {
         let page = i + 1;
         for gene in partial_table {
-            if gene.len() >= prefix_len {
-                let prefix = gene.chars().take(prefix_len).collect::<String>();
-                let entry = prefix_map.entry(prefix).or_insert_with(Vec::new);
-                entry.push((gene.to_owned(), page));
-            }
+            let entry = prefix_map.entry(gene.to_string()).or_insert_with(Vec::new);
+            entry.push((gene.to_owned(), page));
         }
     }
     prefix_map

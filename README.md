@@ -27,6 +27,14 @@ For a list of changes, take a look at the [CHANGELOG](CHANGELOG.md).
 
 ## Installation
 
+### Requirements
+
+Rust-Bio-Tools depends [rgsl](https://docs.rs/GSL/*/rgsl/) which needs [GSL](https://www.gnu.org/software/gsl/) to be installed:
+
+- Ubuntu: `sudo apt-get install libgsl-dev`
+- Arch: `sudo pacman -S gsl`
+- OSX: `brew install gsl` 
+
 ### Bioconda
 
 Rust-Bio-Tools is available via [Bioconda](https://bioconda.github.io).

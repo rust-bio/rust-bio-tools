@@ -25,6 +25,7 @@ pub fn embed_js(
             include_str!("js/bootstrap.bundle.min.js"),
         ),
         ("jquery.min.js", include_str!("js/jquery.min.js")),
+        ("popper.min.js", include_str!("js/popper.min.js")),
         ("lz-string.min.js", include_str!("js/lz-string.min.js")),
         (
             "bootstrap-table.min.js",

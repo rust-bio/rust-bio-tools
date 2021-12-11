@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.34.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.33.1...v0.34.0) (2021-12-11)
+
+### Features
+
+* Add --annotation-field option to vcf-report ([#211](https://github.com/rust-bio/rust-bio-tools/pull/211)) ([29719d5](https://github.com/rust-bio/rust-bio-tools/commit/29719d51f0169de39570c6715af5b45336691ebb))
+
+
+### Bug Fixes
+
+* add missing js-file to vcf-report ([#212](https://github.com/rust-bio/rust-bio-tools/pull/212)) ([55b3166](https://github.com/rust-bio/rust-bio-tools/commit/55b3166516b6f369577df74f8cc020fbe9629721))
+
 ## [0.33.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.33.0...v0.33.1) (2021-12-07)
 
 

@@ -44,7 +44,7 @@ vegaEmbed('#oncoprint', spec).then(function(result) {
     result.view.addEventListener('click', function(event, item) {
         if (item.datum.sample !== undefined  && item.datum.alteration !== undefined) {
             let loc = item.datum.dna_alt;
-            loc = loc.replace(".", "_").replace(">", "_").replace(":", "_");
+            loc = loc.replace(/\./g, "_").replace(/>/g, "_").replace(/:/g, "_");
             window.location.href = '../details/' + item.datum.sample + '/' + loc + '.html';
         }
     });
@@ -73,7 +73,7 @@ window.addEventListener('resize', function(event){
         result.view.addEventListener('click', function(event, item) {
             if (item.datum.sample !== undefined  && item.datum.alteration !== undefined) {
                 let loc = item.datum.dna_alt;
-                loc = loc.replace(".", "_").replace(">", "_").replace(":", "_");
+                loc = loc.replace(/\./g, "_").replace(/>/g, "_").replace(/:/g, "_");
                 window.location.href = '../details/' + item.datum.sample + '/' + loc + '.html';
             }
         });

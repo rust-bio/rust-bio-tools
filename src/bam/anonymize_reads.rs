@@ -110,10 +110,9 @@ fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Res
     );
     artificial_record.set_pos(record.pos() - offset);
     artificial_record.set_tid(0);
-    let original_tid = record.tid();
     let (mtid, mpos) = if record.mtid() == -1 {
         (-1, 0)
-    } else if record.mtid() == original_tid {
+    } else if record.mtid() == record.tid() {
         (0, record.mpos() - offset)
     } else {
         (1, record.mpos())

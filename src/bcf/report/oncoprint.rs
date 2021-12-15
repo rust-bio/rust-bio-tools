@@ -985,8 +985,6 @@ struct Record {
     sample: String,
     gene: String,
     #[new(default)]
-    dna_alteration: Vec<String>,
-    #[new(default)]
     variants: Vec<String>,
 }
 

@@ -98,8 +98,9 @@ fn init_altered_bases(
 
 fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Result<bam::Record> {
     let mut artificial_record = bam::record::Record::new();
-    if let Ok(mate_cigar) = record.aux(b"MC") {
-        artificial_record.push_aux(b"MC", mate_cigar)?;
+    for aux_result in record.aux_iter() {
+        let (tag, aux_field) = aux_result?;
+        artificial_record.push_aux(tag, aux_field)?;
     }
     artificial_record.set(
         record.qname(),
@@ -109,8 +110,16 @@ fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Res
     );
     artificial_record.set_pos(record.pos() - offset);
     artificial_record.set_tid(0);
-    artificial_record.set_mtid(0);
-    artificial_record.set_mpos(record.mpos() - offset);
+    let original_tid = record.tid();
+    let (mtid, mpos) = if record.mtid() == -1 {
+        (-1, 0)
+    } else if record.mtid() == original_tid {
+        (0, record.mpos() - offset)
+    } else {
+        (1, record.mpos())
+    };
+    artificial_record.set_mtid(mtid);
+    artificial_record.set_mpos(mpos);
     artificial_record.set_flags(record.flags());
     artificial_record.set_insert_size(record.insert_size());
     artificial_record.set_mapq(record.mapq());

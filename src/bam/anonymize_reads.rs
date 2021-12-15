@@ -98,30 +98,17 @@ fn init_altered_bases(
 
 fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Result<bam::Record> {
     let mut artificial_record = bam::record::Record::new();
-    for aux_result in record.aux_iter() {
-        let (tag, aux_field) = aux_result?;
-        artificial_record.push_aux(tag, aux_field)?;
-    }
     artificial_record.set(
         record.qname(),
         Some(&record.cigar()),
         artificial_seq,
         record.qual(),
     );
-    artificial_record.set_pos(record.pos() - offset);
-    artificial_record.set_tid(0);
-    let (mtid, mpos) = if record.mtid() == -1 {
-        (-1, 0)
-    } else if record.mtid() == record.tid() {
-        (0, record.mpos() - offset)
-    } else {
-        (1, record.mpos())
-    };
-    artificial_record.set_mtid(mtid);
-    artificial_record.set_mpos(mpos);
-    artificial_record.set_flags(record.flags());
-    artificial_record.set_insert_size(record.insert_size());
-    artificial_record.set_mapq(record.mapq());
+    set_mandatory_fields(&mut artificial_record, record, offset)?;
+    for aux_result in record.aux_iter() {
+        let (tag, aux_field) = aux_result?;
+        artificial_record.push_aux(tag, aux_field)?;
+    }
     Ok(artificial_record)
 }
 
@@ -175,6 +162,28 @@ fn build_sequence(
     }
 
     Ok(artificial_seq)
+}
+
+fn set_mandatory_fields(
+    target_rec: &mut bam::Record,
+    source_rec: &bam::Record,
+    offset: i64,
+) -> Result<()> {
+    target_rec.set_pos(source_rec.pos() - offset);
+    target_rec.set_tid(0);
+    let (mtid, mpos) = if source_rec.mtid() == -1 {
+        (-1, 0)
+    } else if source_rec.mtid() == source_rec.tid() {
+        (0, source_rec.mpos() - offset)
+    } else {
+        (1, source_rec.mpos())
+    };
+    target_rec.set_mtid(mtid);
+    target_rec.set_mpos(mpos);
+    target_rec.set_flags(source_rec.flags());
+    target_rec.set_insert_size(source_rec.insert_size());
+    target_rec.set_mapq(source_rec.mapq());
+    Ok(())
 }
 
 fn add_random_bases(

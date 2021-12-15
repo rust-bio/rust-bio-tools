@@ -250,19 +250,29 @@ pub(crate) fn make_table_report(
                 let plot_start_position;
 
                 let hgvsg: String = if alleles.len() > 2 {
-                    hgvsgs.iter().find(|(a, _)| *a == std::str::from_utf8(allel).unwrap()).context(format!("Found variant {} at position {} without HGVSg field for every given allele.", &id, &pos))?.0.to_owned()
+                    if let Some(hgvsg) = hgvsgs
+                        .iter()
+                        .find(|(a, _)| *a == std::str::from_utf8(allel).unwrap())
+                    {
+                        hgvsg.0.to_owned()
+                    } else {
+                        warn!("Found variant {} at position {}:{} without HGVSg field for every given allele.", &id, &chrom, &pos);
+                        continue;
+                    }
                 } else {
                     let mut unique_hgsvgs = hgvsgs.iter().map(|(_, b)| b).unique().collect_vec();
                     if unique_hgsvgs.len() > 1 {
-                        warn!("Found variant {} at position {} with multiple HGVSg values and only one alternative allele.", &id, &pos);
+                        warn!("Found variant {} at position {}:{} with multiple HGVSg values and only one alternative allele.", &id, &chrom, &pos);
                     }
-                    unique_hgsvgs
-                        .pop()
-                        .context(format!(
-                            "Found variant {} at position {} with no HGVSg value.",
-                            &id, &pos
-                        ))?
-                        .to_owned()
+                    if let Some(hgvsg) = unique_hgsvgs.pop() {
+                        hgvsg.to_owned()
+                    } else {
+                        warn!(
+                            "Found variant {} at position {}:{} with no HGVSg value.",
+                            &id, &chrom, &pos
+                        );
+                        continue;
+                    }
                 };
 
                 match alt {

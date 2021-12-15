@@ -174,6 +174,8 @@ pub fn oncoprint(
                             get_field("SYMBOL")?
                         } else if !get_field("Gene")?.is_empty() {
                             get_field("Gene")?
+                        } else if !get_field("Feature")?.is_empty() {
+                            get_field("Feature")?
                         } else if !get_field("HGVSg")?.is_empty() {
                             get_field("HGVSg")?
                         } else {

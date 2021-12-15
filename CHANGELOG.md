@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.36.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.35.0...v0.36.0) (2021-12-15)
+
+
+### Features
+
+* Use Feature before HGVSg for level 1 naming ([#224](https://www.github.com/rust-bio/rust-bio-tools/issues/224)) ([4377e42](https://www.github.com/rust-bio/rust-bio-tools/commit/4377e428e9bca2b806e666a8234da35e027fd523))
+* Warn instead of panic for missing HGVSg values in vcf-report ([#220](https://www.github.com/rust-bio/rust-bio-tools/issues/220)) ([5f16505](https://www.github.com/rust-bio/rust-bio-tools/commit/5f1650506fb502548e07d2756ff99557bb562580))
+
+
+### Bug Fixes
+
+* Fix possible broken link to third stage of vcf-report ([#221](https://www.github.com/rust-bio/rust-bio-tools/issues/221)) ([66299d2](https://www.github.com/rust-bio/rust-bio-tools/commit/66299d2e0e5ac96f67db8fcf4fef7834c2a2de05))
+
 ## [0.35.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.34.0...v0.35.0) (2021-12-14)
 
 

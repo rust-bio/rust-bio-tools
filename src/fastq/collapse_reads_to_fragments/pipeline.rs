@@ -63,7 +63,6 @@ fn isize_pmf(value: f64, mean: f64, sd: f64) -> LogProb {
 #[derive(Debug)]
 struct FastqStorage {
     db: DB,
-    storage_dir: std::path::PathBuf,
 }
 
 impl FastqStorage {
@@ -74,8 +73,7 @@ impl FastqStorage {
         // in turn deleting the tempdir
         let storage_dir = tempdir()?.path().join("db");
         Ok(FastqStorage {
-            db: DB::open_default(storage_dir.clone())?,
-            storage_dir,
+            db: DB::open_default(storage_dir)?,
         })
     }
 
@@ -351,11 +349,11 @@ impl<'a, R: io::Read + io::BufRead, W: io::Write> CallConsensusReads<'a, R, W>
     }
 
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {
-        &mut self.fq1_reader
+        self.fq1_reader
     }
 
     fn fq2_reader(&mut self) -> &mut fastq::Reader<R> {
-        &mut self.fq2_reader
+        self.fq2_reader
     }
 
     fn umi_len(&self) -> usize {
@@ -506,11 +504,11 @@ impl<'a, R: io::Read + io::BufRead, W: io::Write> CallConsensusReads<'a, R, W>
     }
 
     fn fq1_reader(&mut self) -> &mut fastq::Reader<R> {
-        &mut self.fq1_reader
+        self.fq1_reader
     }
 
     fn fq2_reader(&mut self) -> &mut fastq::Reader<R> {
-        &mut self.fq2_reader
+        self.fq2_reader
     }
 
     fn umi_len(&self) -> usize {

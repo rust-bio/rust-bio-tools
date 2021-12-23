@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.37.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.36.0...v0.37.0) (2021-12-19)
+
+
+### Features
+
+* anonymize bam - adapt mandatory and aux fields ([#219](https://www.github.com/rust-bio/rust-bio-tools/issues/219)) ([e6ffdea](https://www.github.com/rust-bio/rust-bio-tools/commit/e6ffdea140704e305d8b30213c57d76bf7841fc2))
+
 ## [0.36.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.35.0...v0.36.0) (2021-12-15)
 
 

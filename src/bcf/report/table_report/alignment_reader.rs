@@ -4,12 +4,12 @@ use self::rust_htslib::bam::FetchDefinition;
 use crate::bcf::report::table_report::fasta_reader::read_fasta;
 use crate::common::Region;
 use anyhow::Result;
+use itertools::Itertools;
 use rust_htslib::bam::record::CigarStringView;
 use rust_htslib::{bam, bam::Read};
 use serde::Serialize;
-use std::path::Path;
-use itertools::Itertools;
 use std::collections::HashMap;
+use std::path::Path;
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub enum Marker {
@@ -37,7 +37,7 @@ pub struct Alignment {
     tid: i32,
     mate_tid: i32,
     mapq: u8,
-    aux: HashMap<String, String>
+    aux: HashMap<String, String>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -52,7 +52,7 @@ pub struct AlignmentNucleobase {
     pub read_end: u32,
     pub mapq: u8,
     pub cigar: String,
-    aux: HashMap<String, String>
+    aux: HashMap<String, String>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -66,7 +66,7 @@ pub struct AlignmentMatch {
     pub read_end: u32,
     pub mapq: u8,
     pub cigar: String,
-    aux: HashMap<String, String>
+    aux: HashMap<String, String>,
 }
 
 pub fn decode_flags(code: u16) -> Vec<u16> {
@@ -120,7 +120,11 @@ fn make_alignment(record: &bam::Record) -> Alignment {
     //Länge
     let le = record.seq().len() as u16;
 
-    let aux: HashMap<String, String> = record.aux_iter().map(|r| r.unwrap()).map(|(r,v)| (String::from_utf8(r.to_owned()).unwrap(), aux_to_string(v))).collect();
+    let aux: HashMap<String, String> = record
+        .aux_iter()
+        .map(|r| r.unwrap())
+        .map(|(r, v)| (String::from_utf8(r.to_owned()).unwrap(), aux_to_string(v)))
+        .collect();
 
     let seq = record.seq().as_bytes();
     let sequenz = String::from_utf8(seq).unwrap();
@@ -184,7 +188,7 @@ pub fn make_nucleobases<P: AsRef<Path> + std::fmt::Debug>(
                 read_end: (temp_snippet.mate_pos + 100) as u32,
                 mapq: snippet.mapq,
                 cigar: snippet.cigar.to_string(),
-                aux: snippet.aux.clone()
+                aux: snippet.aux.clone(),
             };
 
             matches.push(pairing);

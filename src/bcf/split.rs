@@ -97,14 +97,13 @@ impl BreakendGroup {
             if mates.len() > 2 {
                 return Box::new(
                     (2..mates.len())
-                        .map(move |k| {
+                        .flat_map(move |k| {
                             if let BreakendGroup::Mates(mates) = self {
                                 mates.iter().cloned().combinations(k)
                             } else {
                                 unreachable!();
                             }
                         })
-                        .flatten()
                         .map(BreakendGroup::Mates),
                 );
             }

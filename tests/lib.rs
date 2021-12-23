@@ -43,11 +43,11 @@ fn compare_bam(result: &str, expected: &str) {
     let mut result_reader = bam::Reader::from_path(result).unwrap();
     let mut result_recs: Vec<bam::Record> =
         result_reader.records().filter_map(Result::ok).collect();
-    result_recs.sort_by_key(|x| x.seq().as_bytes().to_owned());
+    result_recs.sort_by_key(|x| x.seq().as_bytes());
     let mut expected_reader = bam::Reader::from_path(expected).unwrap();
     let mut expected_recs: Vec<bam::Record> =
         expected_reader.records().filter_map(Result::ok).collect();
-    expected_recs.sort_by_key(|x| x.seq().as_bytes().to_owned());
+    expected_recs.sort_by_key(|x| x.seq().as_bytes());
     for (result, expected) in result_recs.iter().zip(expected_recs.iter()) {
         assert_eq!(result.seq().as_bytes(), expected.seq().as_bytes());
         assert_eq!(result.qual(), expected.qual());
@@ -232,7 +232,7 @@ fn test_csv_report() {
 
     let result = "tests/test-csv-report/data/index1.js";
     let expected = "tests/expected/csv-report/data/index1.js";
-    test_output(&result, &expected);
+    test_output(result, expected);
 
     fs::remove_dir_all("tests/test-csv-report").unwrap();
 }

@@ -4,9 +4,11 @@ use self::rust_htslib::bam::FetchDefinition;
 use crate::bcf::report::table_report::fasta_reader::read_fasta;
 use crate::common::Region;
 use anyhow::Result;
+use itertools::Itertools;
 use rust_htslib::bam::record::CigarStringView;
 use rust_htslib::{bam, bam::Read};
 use serde::Serialize;
+use std::collections::HashMap;
 use std::path::Path;
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -35,6 +37,7 @@ pub struct Alignment {
     tid: i32,
     mate_tid: i32,
     mapq: u8,
+    aux: HashMap<String, String>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -49,6 +52,7 @@ pub struct AlignmentNucleobase {
     pub read_end: u32,
     pub mapq: u8,
     pub cigar: String,
+    aux: HashMap<String, String>,
 }
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
@@ -62,6 +66,7 @@ pub struct AlignmentMatch {
     pub read_end: u32,
     pub mapq: u8,
     pub cigar: String,
+    aux: HashMap<String, String>,
 }
 
 pub fn decode_flags(code: u16) -> Vec<u16> {
@@ -115,7 +120,12 @@ fn make_alignment(record: &bam::Record) -> Alignment {
     //Länge
     let le = record.seq().len() as u16;
 
-    //Sequenz
+    let aux: HashMap<String, String> = record
+        .aux_iter()
+        .map(|r| r.unwrap())
+        .map(|(r, v)| (String::from_utf8(r.to_owned()).unwrap(), aux_to_string(v)))
+        .collect();
+
     let seq = record.seq().as_bytes();
     let sequenz = String::from_utf8(seq).unwrap();
 
@@ -139,6 +149,7 @@ fn make_alignment(record: &bam::Record) -> Alignment {
         tid,
         mate_tid: mtid,
         mapq: record.mapq(),
+        aux,
     }
 }
 
@@ -177,6 +188,7 @@ pub fn make_nucleobases<P: AsRef<Path> + std::fmt::Debug>(
                 read_end: (temp_snippet.mate_pos + 100) as u32,
                 mapq: snippet.mapq,
                 cigar: snippet.cigar.to_string(),
+                aux: snippet.aux.clone(),
             };
 
             matches.push(pairing);
@@ -278,6 +290,7 @@ pub fn make_nucleobases<P: AsRef<Path> + std::fmt::Debug>(
                         read_end: re as u32,
                         mapq: snippet.mapq,
                         cigar: snippet.cigar.to_string(),
+                        aux: snippet.aux.clone(),
                     };
 
                     if from as f64 <= (base.start_position + 0.5)
@@ -323,6 +336,7 @@ pub fn make_nucleobases<P: AsRef<Path> + std::fmt::Debug>(
                             read_end: read_end as u32,
                             mapq: snippet.mapq,
                             cigar: snippet.cigar.to_string(),
+                            aux: snippet.aux.clone(),
                         };
 
                         read_offset += 1;
@@ -450,6 +464,7 @@ fn make_markers(
             read_end: read_end as u32,
             mapq: snip.mapq,
             cigar: snip.cigar.to_string(),
+            aux: snip.aux.clone(),
         });
     }
 
@@ -464,6 +479,7 @@ fn make_markers(
         read_end: read_end as u32,
         mapq: snip.mapq,
         cigar: snip.cigar.to_string(),
+        aux: snip.aux,
     };
     (mtch, base)
 }
@@ -498,5 +514,29 @@ fn end_mismatch_detection(snip: Alignment, match_start: i64, match_count: i64) -
         read_end: re as u32,
         mapq: snip.mapq,
         cigar: snip.cigar.to_string(),
+        aux: snip.aux,
+    }
+}
+
+fn aux_to_string(aux: rust_htslib::bam::record::Aux) -> String {
+    match aux {
+        rust_htslib::bam::record::Aux::Char(c) => String::from_utf8(vec![c]).unwrap(),
+        rust_htslib::bam::record::Aux::I8(i) => i.to_string(),
+        rust_htslib::bam::record::Aux::U8(i) => i.to_string(),
+        rust_htslib::bam::record::Aux::I16(i) => i.to_string(),
+        rust_htslib::bam::record::Aux::U16(i) => i.to_string(),
+        rust_htslib::bam::record::Aux::I32(i) => i.to_string(),
+        rust_htslib::bam::record::Aux::U32(i) => i.to_string(),
+        rust_htslib::bam::record::Aux::Float(i) => i.to_string(),
+        rust_htslib::bam::record::Aux::Double(i) => i.to_string(),
+        rust_htslib::bam::record::Aux::String(s) => s.to_owned(),
+        rust_htslib::bam::record::Aux::HexByteArray(i) => i.to_string(),
+        rust_htslib::bam::record::Aux::ArrayI8(a) => a.iter().join(","),
+        rust_htslib::bam::record::Aux::ArrayU8(a) => a.iter().join(","),
+        rust_htslib::bam::record::Aux::ArrayU16(a) => a.iter().join(","),
+        rust_htslib::bam::record::Aux::ArrayI16(a) => a.iter().join(","),
+        rust_htslib::bam::record::Aux::ArrayU32(a) => a.iter().join(","),
+        rust_htslib::bam::record::Aux::ArrayI32(a) => a.iter().join(","),
+        rust_htslib::bam::record::Aux::ArrayFloat(a) => a.iter().join(","),
     }
 }

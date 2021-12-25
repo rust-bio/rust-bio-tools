@@ -953,8 +953,8 @@ pub fn oncoprint(
             let html = templates.render("report.html.tera", &context)?;
             let js = templates.render("plots.js.tera", &context)?;
 
-            let index = format!("{}/index{}.html", index_path, page.to_string());
-            let js_index = format!("{}/plot{}.js", index_path, page.to_string());
+            let index = format!("{}/index{}.html", index_path, page);
+            let js_index = format!("{}/plot{}.js", index_path, page);
             let mut file = File::create(index)?;
             let mut js_file = File::create(js_index)?;
             file.write_all(html.as_bytes())?;
@@ -1046,15 +1046,13 @@ impl FromStr for Impact {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let impact;
         match s {
-            "HIGH" => impact = Impact::High,
-            "MODERATE" => impact = Impact::Moderate,
-            "MODIFIER" => impact = Impact::Modifier,
-            "LOW" => impact = Impact::Low,
-            _ => impact = Impact::Unknown,
+            "HIGH" => Ok(Impact::High),
+            "MODERATE" => Ok(Impact::Moderate),
+            "MODIFIER" => Ok(Impact::Modifier),
+            "LOW" => Ok(Impact::Low),
+            _ => Ok(Impact::Unknown),
         }
-        Ok(impact)
     }
 }
 
@@ -1082,28 +1080,26 @@ impl FromStr for ClinSig {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let clin_sig;
         match s {
-            "pathogenic" => clin_sig = ClinSig::Pathogenic,
-            "likely_pathogenic/pathogenic" => clin_sig = ClinSig::LikelyPathogenicPathogenic,
-            "likely_pathogenic" => clin_sig = ClinSig::LikelyPathogenic,
-            "risk_factor" => clin_sig = ClinSig::RiskFactor,
-            "drug_response" => clin_sig = ClinSig::DrugResponse,
-            "affects" => clin_sig = ClinSig::Affects,
-            "association" => clin_sig = ClinSig::Association,
-            "uncertain_significance" => clin_sig = ClinSig::UncertainSignificance,
+            "pathogenic" => Ok(ClinSig::Pathogenic),
+            "likely_pathogenic/pathogenic" => Ok(ClinSig::LikelyPathogenicPathogenic),
+            "likely_pathogenic" => Ok(ClinSig::LikelyPathogenic),
+            "risk_factor" => Ok(ClinSig::RiskFactor),
+            "drug_response" => Ok(ClinSig::DrugResponse),
+            "affects" => Ok(ClinSig::Affects),
+            "association" => Ok(ClinSig::Association),
+            "uncertain_significance" => Ok(ClinSig::UncertainSignificance),
             "conflicting_interpretations_of_pathogenicity" => {
-                clin_sig = ClinSig::ConflictingInterpretationsOfPathogenicity
+                Ok(ClinSig::ConflictingInterpretationsOfPathogenicity)
             }
-            "protective" => clin_sig = ClinSig::Protective,
-            "likely_benign" => clin_sig = ClinSig::LikelyBenign,
-            "benign/likely_benign" => clin_sig = ClinSig::BenignLikelyBenign,
-            "benign" => clin_sig = ClinSig::Benign,
-            "other" => clin_sig = ClinSig::Other,
-            "not_provided" => clin_sig = ClinSig::NotProvided,
-            _ => clin_sig = ClinSig::Unknown,
+            "protective" => Ok(ClinSig::Protective),
+            "likely_benign" => Ok(ClinSig::LikelyBenign),
+            "benign/likely_benign" => Ok(ClinSig::BenignLikelyBenign),
+            "benign" => Ok(ClinSig::Benign),
+            "other" => Ok(ClinSig::Other),
+            "not_provided" => Ok(ClinSig::NotProvided),
+            _ => Ok(ClinSig::Unknown),
         }
-        Ok(clin_sig)
     }
 }
 

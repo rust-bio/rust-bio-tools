@@ -150,7 +150,7 @@ pub trait CallConsensusReads<'a, R: io::Read + io::BufRead + 'a, W: io::Write + 
         // prepare spinner for user feedback
         let pb = indicatif::ProgressBar::new_spinner();
         pb.set_style(spinner_style.clone());
-        pb.set_prefix(&"[1/2] Clustering input reads by UMI using starcode.".to_string());
+        pb.set_prefix("[1/2] Clustering input reads by UMI using starcode.");
 
         loop {
             // update spinner
@@ -197,7 +197,7 @@ pub trait CallConsensusReads<'a, R: io::Read + io::BufRead + 'a, W: io::Write + 
         let mut j = 0;
         let pb = indicatif::ProgressBar::new_spinner();
         pb.set_style(spinner_style);
-        pb.set_prefix(&"[1/2] Clustering input reads by UMI using starcode.".to_string());
+        pb.set_prefix("[1/2] Clustering input reads by UMI using starcode.");
         // read clusters identified by the first starcode run
         // the first run clustered by UMI, hence all reads in
         // the clusters handled here had similar UMIs

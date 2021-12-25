@@ -450,7 +450,7 @@ pub(crate) fn make_table_report(
 }
 
 fn escape_hgvsg(hgvsg: &str) -> String {
-    hgvsg.replace(".", "_").replace(">", "_").replace(":", "_")
+    hgvsg.replace('.', "_").replace('>', "_").replace(':', "_")
 }
 
 pub(crate) fn get_ann_description(

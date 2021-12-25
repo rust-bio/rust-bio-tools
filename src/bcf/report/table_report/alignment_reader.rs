@@ -418,17 +418,15 @@ fn make_markers(
     match_start: i64,
     match_count: i64,
 ) -> (Option<AlignmentMatch>, AlignmentNucleobase) {
-    let marker: Marker;
-
-    match base {
+    let marker: Marker = match base {
         // Mismatch
-        'A' => marker = Marker::A,
-        'T' => marker = Marker::T,
-        'C' => marker = Marker::C,
-        'N' => marker = Marker::N,
-        'G' => marker = Marker::G,
-        _ => marker = Marker::Deletion,
-    }
+        'A' => Marker::A,
+        'T' => Marker::T,
+        'C' => Marker::C,
+        'N' => Marker::N,
+        'G' => Marker::G,
+        _ => Marker::Deletion,
+    };
 
     let position = snip.pos as i64 + read_offset;
     let flags = snip.flags;

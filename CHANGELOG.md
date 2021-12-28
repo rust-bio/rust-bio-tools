@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.38.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.37.0...v0.38.0) (2021-12-25)
+
+
+### Features
+
+* Add aux field to tooltip ([#226](https://www.github.com/rust-bio/rust-bio-tools/issues/226)) ([cfc8fe5](https://www.github.com/rust-bio/rust-bio-tools/commit/cfc8fe572fbc2e498d3d3cc0fe0de9e320b773d1))
+
+
+### Bug Fixes
+
+* Apply latest clippy lints ([#227](https://www.github.com/rust-bio/rust-bio-tools/issues/227)) ([d1a60cc](https://www.github.com/rust-bio/rust-bio-tools/commit/d1a60cc8876eb8ea2b6cffb21bdcee44a00d2dc4))
+
 ## [0.37.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.36.0...v0.37.0) (2021-12-19)
 
 

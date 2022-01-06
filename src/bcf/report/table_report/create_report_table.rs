@@ -256,20 +256,22 @@ pub(crate) fn make_table_report(
                     {
                         hgvsg.0.to_owned()
                     } else {
-                        warn!("Found variant {} at position {}:{} without HGVSg field for every given allele.", &id, &chrom, &pos);
+                        warn!("Found variant {} at position {}:{} without HGVSg field for every given allele.", &id, &chrom, &pos + 1);
                         continue;
                     }
                 } else {
                     let mut unique_hgsvgs = hgvsgs.iter().map(|(_, b)| b).unique().collect_vec();
                     if unique_hgsvgs.len() > 1 {
-                        warn!("Found variant {} at position {}:{} with multiple HGVSg values and only one alternative allele.", &id, &chrom, &pos);
+                        warn!("Found variant {} at position {}:{} with multiple HGVSg values and only one alternative allele.", &id, &chrom, &pos + 1);
                     }
                     if let Some(hgvsg) = unique_hgsvgs.pop() {
                         hgvsg.to_owned()
                     } else {
                         warn!(
                             "Found variant {} at position {}:{} with no HGVSg value.",
-                            &id, &chrom, &pos
+                            &id,
+                            &chrom,
+                            &pos + 1
                         );
                         continue;
                     }

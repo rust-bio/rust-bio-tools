@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.38.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.0...v0.38.1) (2022-01-06)
+
+
+### Bug Fixes
+
+* Report 1-based position in vcf-report log messages ([#231](https://www.github.com/rust-bio/rust-bio-tools/issues/231)) ([bcf6260](https://www.github.com/rust-bio/rust-bio-tools/commit/bcf62609b52578a30a21a42971e0001701941681))
+
 ## [0.38.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.37.0...v0.38.0) (2021-12-25)
 
 

@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.38.2](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.1...v0.38.2) (2022-01-14)
+
+
+### Bug Fixes
+
+* add popper in csv report ([#233](https://www.github.com/rust-bio/rust-bio-tools/issues/233)) ([a095755](https://www.github.com/rust-bio/rust-bio-tools/commit/a0957551e39928a510c7abd408378c274a3b5c33))
+
 ### [0.38.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.0...v0.38.1) (2022-01-06)
 
 

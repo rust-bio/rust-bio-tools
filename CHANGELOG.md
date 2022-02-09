@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.38.3](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.2...v0.38.3) (2022-02-09)
+
+
+### Bug Fixes
+
+* Fix vcf-report allele frequency heatmap width ([#236](https://www.github.com/rust-bio/rust-bio-tools/issues/236)) ([6f119d3](https://www.github.com/rust-bio/rust-bio-tools/commit/6f119d3bab34594029a846172e29623fb9ed71aa))
+* Fix vcf-report read plot height when using --max-read-depth ([#235](https://www.github.com/rust-bio/rust-bio-tools/issues/235)) ([4350a1a](https://www.github.com/rust-bio/rust-bio-tools/commit/4350a1a3887d7f22e16de8ed8944981d138982d6))
+
 ### [0.38.2](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.1...v0.38.2) (2022-01-14)
 
 

@@ -14,7 +14,7 @@ use rust_htslib::bcf::{HeaderRecord, Read, Record};
 use rustc_serialize::json::Json;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -571,14 +571,12 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64) -> Result<String> 
 
     let v = values["values"].as_array().unwrap().clone();
 
-    let mut row = 0;
+    let mut rows = HashSet::new();
 
     for (i, _) in v.iter().enumerate() {
         let k = v[i]["marker_type"].clone().as_str().unwrap().to_owned();
         let r = v[i]["row"].clone().as_i64().unwrap();
-        if r > row {
-            row = r;
-        }
+        rows.insert(r);
 
         if k == "A" || k == "T" || k == "G" || k == "C" || k == "U" || k == "N" {
             values["values"][i]["base"] = values["values"][i]["marker_type"].clone();
@@ -596,7 +594,7 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64) -> Result<String> 
     }
 
     vega_specs["width"] = json!(700);
-    vega_specs["height"] = json!(core::cmp::max(10 * row + 60, 203));
+    vega_specs["height"] = json!(core::cmp::max(10 * rows.len() + 60, 203));
     let domain = json!([from, to]);
 
     vega_specs["scales"][0]["domain"] = domain;

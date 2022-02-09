@@ -623,7 +623,7 @@ pub fn oncoprint(
 
                 specs["datasets"] = values;
                 // Set allele frequency heatmap width according to number of samples
-                specs["vconcat"][1]["hconcat"][5]["width"] = json!(max(samples.len() * 20, 60));
+                specs["vconcat"][1]["hconcat"][5]["width"] = json!(max(unique_samples * 20, 60));
                 if !cs_present_folded || remove_existing_variation {
                     let hconcat = specs["vconcat"][1]["hconcat"].as_array_mut().unwrap();
                     match (!cs_present_folded, remove_existing_variation) {

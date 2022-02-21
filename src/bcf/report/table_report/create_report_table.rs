@@ -419,6 +419,7 @@ pub(crate) fn make_table_report(
                     include_str!("report_table.html.tera"),
                 )?;
                 let mut context = Context::new();
+                context.insert("ann_description", &json!(ann_field_description).to_string());
                 context.insert("variant", &report_data);
                 context.insert("hgvsg", &hgvsg);
                 context.insert("escaped_hgvsg", &escaped_hgvsg);

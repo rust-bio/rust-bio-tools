@@ -141,6 +141,9 @@
             </div>
         </div>
     </div>
-<script>$(document).ready(function () { $('#variant0').trigger('click');});</script>
+<script>
+    $(document).ready(function () { $('#variant0').trigger('click');});
+    const ANN_DESCRIPTION = {{ ann_description }};
+</script>
 </body>
 </html>

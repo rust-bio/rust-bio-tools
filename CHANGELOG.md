@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.39.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.3...v0.39.0) (2022-02-21)
+
+
+### Features
+
+* Make annotation header available for customized reports ([#238](https://www.github.com/rust-bio/rust-bio-tools/issues/238)) ([e8fc664](https://www.github.com/rust-bio/rust-bio-tools/commit/e8fc664536ca6313a391dbb4ba955317e7ac50e6))
+
 ### [0.38.3](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.2...v0.38.3) (2022-02-09)
 
 

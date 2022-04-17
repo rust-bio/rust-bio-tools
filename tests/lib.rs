@@ -109,6 +109,18 @@ fn vcf_to_txt() {
 }
 
 #[test]
+fn vcf_to_txt_with_filter() {
+    assert!(Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-to-txt --genotypes --fmt S --info T X SOMATIC --with-filter < tests/test-with-filter.vcf > tests/variant-table-with-filter.txt")
+            .spawn().unwrap().wait().unwrap().success());
+    test_output(
+        "tests/variant-table-with-filter.txt",
+        "tests/expected/variant-table-with-filter.txt",
+    );
+}
+
+#[test]
 fn vcf_match() {
     assert!(Command::new("bash")
             .arg("-c")

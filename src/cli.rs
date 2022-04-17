@@ -110,6 +110,10 @@ pub(crate) enum Command {
         /// Display genotypes.
         #[structopt(long, short)]
         genotypes: bool,
+
+        /// Include FILTER field.
+        #[structopt(long)]
+        with_filter: bool,
     },
 
     /// Annotate for each variant in a VCF/BCF at STDIN whether it is contained in a

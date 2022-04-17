@@ -1,0 +1,6 @@
+VARIANT	VARIANT	VARIANT	VARIANT	VARIANT	VARIANT	VARIANT	VARIANT	VARIANT	S1	S1	S2	S2	S3	S3
+CHROM	POS	REF	ALT	QUAL	FILTER	T	X	SOMATIC	GT	S	GT	S	GT	S
+1	100	A	T			2		true	1/1	a	./1	bbbbbbb	.	ccccccccc
+1	200	A	T		PASS	2		true	1/1	a	./1	bbbbbbb	.	ccccccccc
+1	300	A	T		IL	2		true	1/1	a	./1	bbbbbbb	.	ccccccccc
+1	400	A	T		FA;IL	2		true	1/1	a	./1	bbbbbbb	.	ccccccccc

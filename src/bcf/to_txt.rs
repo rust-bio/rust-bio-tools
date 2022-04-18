@@ -198,7 +198,7 @@ pub fn to_txt(info_tags: &[&str], format_tags: &[&str], show_genotypes: bool) ->
 
                         match tag_type {
                             bcf::header::TagType::Flag => {
-                                panic!("Unable to find FORMAT \"{}\" in the input file!", name);
+                                panic!("Unable to find FORMAT \"{0}\" in the input file! Is \"{0}\" an INFO tag?", name);
                             }
                             bcf::header::TagType::Integer => {
                                 writer.write_field(

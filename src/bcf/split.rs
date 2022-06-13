@@ -36,6 +36,7 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
                     BreakendGroup::Event(id) => bnd_cache.entry(id).or_insert(chunk),
                     BreakendGroup::Mates(ids) => {
                         let mut ids = ids.clone();
+                        ids.push(rec.id());
                         ids.sort();
                         bnd_cache.entry(ids.concat()).or_insert(chunk)
                     }

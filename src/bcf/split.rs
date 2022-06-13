@@ -29,7 +29,7 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
     for (rec, i) in reader.records().zip(0..) {
         let rec = rec?;
 
-        let chunk = i / chunk_size;
+        let chunk = i / (chunk_size + 1);
         if rec.is_bnd() {
             if let Some(group) = BreakendGroup::from(&rec) {
                 let chunk = match group {

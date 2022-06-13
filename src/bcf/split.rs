@@ -28,13 +28,8 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
             )
         };
 
-        loop {
-            let mut rec = reader.empty_record();
-
-            if reader.read(&mut rec).is_none() {
-                // EOF
-                break;
-            }
+        for rec in reader.records() {
+            let rec = rec?;
 
             let towrite = if is_bnd(&rec) {
                 if let Some(group) = BreakendGroup::from(&rec) {

@@ -36,8 +36,8 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
                 break;
             }
 
-            let towrite = if is_bnd(&mut rec) {
-                if let Some(group) = BreakendGroup::from(&mut rec) {
+            let towrite = if is_bnd(&rec) {
+                if let Some(group) = BreakendGroup::from(&rec) {
                     if let Some(end) = info.end(&group) {
                         // BND is part of a group.
                         if i == end {
@@ -118,7 +118,7 @@ impl BreakendGroup {
         }
     }
 
-    fn from(rec: &mut bcf::Record) -> Option<Self> {
+    fn from(rec: &bcf::Record) -> Option<Self> {
         if let Some(event) = event(rec) {
             Some(BreakendGroup::Event(event))
         } else if let Some(mateids) = mateids(rec) {
@@ -192,13 +192,13 @@ impl BcfInfo {
     }
 }
 
-fn is_bnd(record: &mut bcf::Record) -> bool {
+fn is_bnd(record: &bcf::Record) -> bool {
     record.info(b"SVTYPE").string().map_or(false, |entries| {
         entries.map_or(false, |entries| entries[0] == b"BND")
     })
 }
 
-fn event(record: &mut bcf::Record) -> Option<Vec<u8>> {
+fn event(record: &bcf::Record) -> Option<Vec<u8>> {
     if let Ok(Some(event)) = record.info(b"EVENT").string() {
         Some(event[0].to_owned())
     } else {
@@ -206,7 +206,7 @@ fn event(record: &mut bcf::Record) -> Option<Vec<u8>> {
     }
 }
 
-fn mateids(record: &mut bcf::Record) -> Option<Vec<&[u8]>> {
+fn mateids(record: &bcf::Record) -> Option<Vec<&[u8]>> {
     match record.info(b"MATEID").string() {
         Ok(Some(s)) => Some(s.clone().into_iter().collect_vec()),
         _ => None,

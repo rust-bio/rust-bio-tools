@@ -29,10 +29,10 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
     for (rec, i) in reader.records().zip(0..) {
         let rec = rec?;
 
-        let chunk = i / (chunk_size + 1);
+        let mut chunk = i / (chunk_size + 1);
         if rec.is_bnd() {
             if let Some(group) = BreakendGroup::from(&rec) {
-                let chunk = match group {
+                let event_chunk = match group {
                     BreakendGroup::Event(id) => bnd_cache.entry(id).or_insert(chunk),
                     BreakendGroup::Mates(ids) => {
                         let mut ids = ids.clone();
@@ -41,13 +41,11 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
                         bnd_cache.entry(ids.concat()).or_insert(chunk)
                     }
                 };
-                let writer = &mut writers[*chunk as usize];
-                writer.write(&rec)?;
+                chunk = *event_chunk;
             }
-        } else {
-            let writer = &mut writers[chunk as usize];
-            writer.write(&rec)?;
-        }
+        };
+        let writer = &mut writers[chunk as usize];
+        writer.write(&rec)?;
     }
 
     Ok(())

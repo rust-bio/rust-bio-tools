@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.39.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.39.0...v0.39.1) (2022-06-14)
+
+
+### Bug Fixes
+
+* Handle empty sequences for bam-anonymize ([#241](https://www.github.com/rust-bio/rust-bio-tools/issues/241)) ([039ed92](https://www.github.com/rust-bio/rust-bio-tools/commit/039ed92665b094e8ebcbe42bf955496891d5d962))
+* Improved message if error occurred during FORMAT parsing in vcf-to-txt ([#243](https://www.github.com/rust-bio/rust-bio-tools/issues/243)) ([4231371](https://www.github.com/rust-bio/rust-bio-tools/commit/423137126bf904001ca871f195620ed47821af91))
+* vcfsplit BND record ordering ([#244](https://www.github.com/rust-bio/rust-bio-tools/issues/244)) ([9b7ae9a](https://www.github.com/rust-bio/rust-bio-tools/commit/9b7ae9a023ad84467131201d837bef3987306d2a))
+
 ## [0.39.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.3...v0.39.0) (2022-02-21)
 
 

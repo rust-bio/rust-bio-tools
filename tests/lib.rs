@@ -109,6 +109,21 @@ fn vcf_to_txt() {
 }
 
 #[test]
+// FIXME: can't work out how to use should_panic macro
+//#[should_panic]
+fn vcf_to_txt_input_info_as_format() {
+    assert!(String::from_utf8_lossy(
+        &Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-to-txt --fmt T < tests/test.vcf")
+            .output()
+            .unwrap()
+            .stderr
+    )
+    .contains("'Unable to find FORMAT \"T\" in the input file! Is \"T\" an INFO tag?'"));
+}
+
+#[test]
 fn vcf_match() {
     assert!(Command::new("bash")
             .arg("-c")

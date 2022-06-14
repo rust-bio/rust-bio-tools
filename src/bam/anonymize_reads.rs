@@ -58,7 +58,7 @@ pub fn anonymize_reads<P: AsRef<Path> + std::fmt::Debug>(
         {
             record.cache_cigar();
             //Check if mate record end within region
-            let artificial_seq = if record.is_unmapped() {
+            let artificial_seq = if record.is_unmapped() || record.seq_len() == 0 {
                 let mut seq = Vec::new();
                 add_random_bases(record.seq_len() as u64, &mut seq, &mut rng, &alphabet)?;
                 seq
@@ -172,7 +172,7 @@ fn set_mandatory_fields(
     target_rec.set_pos(source_rec.pos() - offset);
     target_rec.set_tid(0);
     let (mtid, mpos) = if source_rec.mtid() == -1 {
-        (-1, 0)
+        (-1, -1)
     } else if source_rec.mtid() == source_rec.tid() {
         (0, source_rec.mpos() - offset)
     } else {

@@ -59,8 +59,7 @@ impl BreakendGroup {
     fn from(rec: &bcf::Record) -> Option<Self> {
         if let Some(event) = rec.event() {
             Some(BreakendGroup::Event(event))
-        } else if let Some(mateids) = rec.mateids() {
-            let mut mates: Vec<_> = mateids;
+        } else if let Some(mut mates) = rec.mateids() {
             let id = rec.id();
             mates.push(id);
             mates.sort();

@@ -35,9 +35,7 @@ pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
                 let event_chunk = match group {
                     BreakendGroup::Event(id) => bnd_cache.entry(id).or_insert(chunk),
                     BreakendGroup::Mates(ids) => {
-                        let mut ids = ids.clone();
-                        ids.push(rec.id());
-                        ids.sort();
+                        let ids = ids.clone();
                         bnd_cache.entry(ids.concat()).or_insert(chunk)
                     }
                 };
@@ -76,10 +74,12 @@ impl BreakendGroup {
     }
 }
 
+type Id = Vec<u8>;
+
 trait BndRecord {
     fn is_bnd(&self) -> bool;
-    fn event(&self) -> Option<Vec<u8>>;
-    fn mateids(&self) -> Option<Vec<&[u8]>>;
+    fn event(&self) -> Option<Id>;
+    fn mateids(&self) -> Option<Vec<Id>>;
 }
 
 impl BndRecord for bcf::Record {
@@ -89,7 +89,7 @@ impl BndRecord for bcf::Record {
         })
     }
 
-    fn event(&self) -> Option<Vec<u8>> {
+    fn event(&self) -> Option<Id> {
         if let Ok(Some(event)) = self.info(b"EVENT").string() {
             Some(event[0].to_owned())
         } else {
@@ -97,9 +97,9 @@ impl BndRecord for bcf::Record {
         }
     }
 
-    fn mateids(&self) -> Option<Vec<&[u8]>> {
+    fn mateids(&self) -> Option<Vec<Id>> {
         match self.info(b"MATEID").string() {
-            Ok(Some(s)) => Some(s.clone().into_iter().collect_vec()),
+            Ok(Some(s)) => Some(s.clone().into_iter().map(|v| v.to_vec()).collect_vec()),
             _ => None,
         }
     }

@@ -382,3 +382,23 @@ fn test_vcf_split() {
         .unwrap()
         .success());
 }
+
+#[test]
+fn test_vcf_split_chain() {
+    assert!(Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt vcf-split tests/test-vcf-split-chain.vcf /tmp/vcf-split-chain1.bcf /tmp/vcf-split-chain2.bcf")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
+    test_output(
+        "/tmp/vcf-split-chain1.bcf",
+        "tests/expected/vcf-split-chain1.bcf",
+    );
+    test_output(
+        "/tmp/vcf-split-chain2.bcf",
+        "tests/expected/vcf-split-chain2.bcf",
+    );
+}

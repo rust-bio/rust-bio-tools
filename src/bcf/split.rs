@@ -60,10 +60,7 @@ impl BreakendGroup {
         if let Some(event) = rec.event() {
             Some(BreakendGroup::Event(event))
         } else if let Some(mateids) = rec.mateids() {
-            let mut mates: Vec<_> = mateids
-                .into_iter()
-                .map(|mateid| mateid.to_owned())
-                .collect();
+            let mut mates: Vec<_> = mateids;
             let id = rec.id();
             mates.push(id);
             mates.sort();

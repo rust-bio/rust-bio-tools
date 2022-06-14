@@ -120,6 +120,20 @@ fn vcf_to_txt_with_filter() {
     );
 }
 
+// FIXME: can't work out how to use should_panic macro
+//#[should_panic]
+fn vcf_to_txt_input_info_as_format() {
+    assert!(String::from_utf8_lossy(
+        &Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-to-txt --fmt T < tests/test.vcf")
+            .output()
+            .unwrap()
+            .stderr
+    )
+    .contains("'Unable to find FORMAT \"T\" in the input file! Is \"T\" an INFO tag?'"));
+}
+
 #[test]
 fn vcf_match() {
     assert!(Command::new("bash")
@@ -393,4 +407,24 @@ fn test_vcf_split() {
         .wait()
         .unwrap()
         .success());
+}
+
+#[test]
+fn test_vcf_split_chain() {
+    assert!(Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt vcf-split tests/test-vcf-split-chain.vcf /tmp/vcf-split-chain1.bcf /tmp/vcf-split-chain2.bcf")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
+    test_output(
+        "/tmp/vcf-split-chain1.bcf",
+        "tests/expected/vcf-split-chain1.bcf",
+    );
+    test_output(
+        "/tmp/vcf-split-chain2.bcf",
+        "tests/expected/vcf-split-chain2.bcf",
+    );
 }

@@ -226,7 +226,7 @@ pub fn to_txt(
 
                         match tag_type {
                             bcf::header::TagType::Flag => {
-                                panic!("there is no flag type for format");
+                                panic!("Unable to find FORMAT \"{0}\" in the input file! Is \"{0}\" an INFO tag?", name);
                             }
                             bcf::header::TagType::Integer => {
                                 writer.write_field(

@@ -109,6 +109,17 @@ fn vcf_to_txt() {
 }
 
 #[test]
+fn vcf_to_txt_with_filter() {
+    assert!(Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-to-txt --genotypes --fmt S --info T X SOMATIC --with-filter < tests/test-with-filter.vcf > tests/variant-table-with-filter.txt")
+            .spawn().unwrap().wait().unwrap().success());
+    test_output(
+        "tests/variant-table-with-filter.txt",
+        "tests/expected/variant-table-with-filter.txt",
+    );
+}
+
 // FIXME: can't work out how to use should_panic macro
 //#[should_panic]
 fn vcf_to_txt_input_info_as_format() {

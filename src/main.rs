@@ -54,10 +54,12 @@ fn main() -> Result<()> {
             info,
             format,
             genotypes,
+            with_filter,
         } => bcf::to_txt::to_txt(
             info.iter().map(|s| s as &str).collect_vec().as_slice(),
             format.iter().map(|s| s as &str).collect_vec().as_slice(),
             genotypes,
+            with_filter,
         )?,
         VcfMatch {
             vcf,

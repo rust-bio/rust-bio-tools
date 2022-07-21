@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.40.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.39.1...v0.40.0) (2022-07-21)
+
+
+### Features
+
+* Enable printing FILTER field for vcf-to-txt ([#242](https://www.github.com/rust-bio/rust-bio-tools/issues/242)) ([13bef65](https://www.github.com/rust-bio/rust-bio-tools/commit/13bef659588d9c7cfd81eaff459234c5659a99b8))
+
 ### [0.39.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.39.0...v0.39.1) (2022-06-14)
 
 

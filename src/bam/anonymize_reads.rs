@@ -23,6 +23,7 @@ pub fn anonymize_reads<P: AsRef<Path> + std::fmt::Debug>(
     let mut fasta_reader = fasta::IndexedReader::from_file(&input_ref)?;
     fasta_reader.fetch(&chr, start, end)?;
     let mut reference = Vec::new();
+    reference.resize((end - start) as usize, 0);
     fasta_reader.read(&mut reference)?;
     let mut rng = rand::thread_rng();
     let alphabet = [b'A', b'C', b'G', b'T'];

@@ -53,3 +53,11 @@ pub fn call_consensus_reads_from_paths<P: AsRef<Path>>(
     )
     .call_consensus_reads()
 }
+
+pub fn unmark_record(record: &mut bam::record::Record) -> Result<()> {
+    record.unset_duplicate();
+    let _ = record.remove_aux(b"PG");
+    let _ = record.remove_aux(b"DI");
+    let _ = record.remove_aux(b"DS");
+    Ok(())
+}

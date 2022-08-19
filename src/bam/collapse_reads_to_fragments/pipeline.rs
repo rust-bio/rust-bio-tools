@@ -1,4 +1,5 @@
 use super::calc_consensus::{CalcNonOverlappingConsensus, CalcOverlappingConsensus};
+use super::unmark_record;
 use anyhow::Result;
 use bio::io::fastq;
 use derive_new::new;
@@ -9,6 +10,7 @@ use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io;
 use std::ops::Deref;
+use std::ops::DerefMut;
 use uuid::Uuid;
 
 #[derive(new)]
@@ -129,6 +131,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                 )?;
             }
             if record.is_unmapped() || record.is_mate_unmapped() {
+                unmark_record(&mut record)?;
                 self.bam_skipped_writer.write(&record)?;
                 continue;
             }
@@ -161,13 +164,15 @@ impl<W: io::Write> CallConsensusRead<W> {
                             //For right record save end position and duplicate group ID
                             let group_id_opt = match storage_entry {
                                 RecordStorage::PairedRecords {
-                                    r1_rec,
+                                    ref mut r1_rec,
                                     ref mut r2_rec,
                                 } => {
                                     let group_id = if cigar_has_softclips(r1_rec)
                                         || cigar_has_softclips(&record)
                                     {
+                                        unmark_record(r1_rec)?;
                                         self.bam_skipped_writer.write(r1_rec)?;
+                                        unmark_record(&mut record)?;
                                         self.bam_skipped_writer.write(&record)?;
                                         None
                                     } else {
@@ -189,7 +194,9 @@ impl<W: io::Write> CallConsensusRead<W> {
                                     let group_id = if cigar_has_softclips(rec)
                                         || cigar_has_softclips(&record)
                                     {
+                                        unmark_record(rec)?;
                                         self.bam_skipped_writer.write(rec)?;
+                                        unmark_record(&mut record)?;
                                         self.bam_skipped_writer.write(&record)?;
                                         None
                                     } else {
@@ -222,6 +229,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                             if !record.is_paired() {
                                 //If right or single record save end position and duplicate group ID
                                 if cigar_has_softclips(&record) {
+                                    unmark_record(&mut record)?;
                                     self.bam_skipped_writer.write(&record)?;
                                 } else {
                                     duplicate_groups
@@ -265,6 +273,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                         //Case: Left record
                         None => {
                             if !record.is_paired() || record.tid() != record.mtid() {
+                                unmark_record(&mut record)?;
                                 self.bam_skipped_writer.write(&record)?;
                             } else {
                                 record_storage.insert(
@@ -281,7 +290,7 @@ impl<W: io::Write> CallConsensusRead<W> {
                         }
                         //Case: Left record already stored
                         Some(_record_pair) => {
-                            let (rec_id, l_rec) = match record_storage
+                            let (rec_id, mut l_rec) = match record_storage
                                 .remove(&RecordId::Regular(record_name.to_owned()))
                                 .unwrap()
                             {
@@ -291,7 +300,9 @@ impl<W: io::Write> CallConsensusRead<W> {
                                 RecordStorage::SingleRecord { .. } => unreachable!(),
                             };
                             if cigar_has_softclips(&l_rec) || cigar_has_softclips(&record) {
+                                unmark_record(&mut l_rec)?;
                                 self.bam_skipped_writer.write(&l_rec)?;
+                                unmark_record(&mut record)?;
                                 self.bam_skipped_writer.write(&record)?;
                             } else {
                                 let alignment_vectors = calc_read_alignments(&l_rec, &record);
@@ -314,7 +325,9 @@ impl<W: io::Write> CallConsensusRead<W> {
                                         )?;
                                     }
                                     None => {
+                                        unmark_record(&mut l_rec)?;
                                         self.bam_skipped_writer.write(&l_rec)?;
+                                        unmark_record(&mut record)?;
                                         self.bam_skipped_writer.write(&record)?;
                                     }
                                 };
@@ -403,8 +416,12 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                                     .0,
                                 )?;
                             } else {
-                                bam_skipped_writer.write(&r1_recs[0])?;
-                                bam_skipped_writer.write(&r2_recs[0])?;
+                                let mut r1_rec = r1_recs[0].clone();
+                                unmark_record(&mut r1_rec)?;
+                                bam_skipped_writer.write(&r1_rec)?;
+                                let mut r2_rec = r2_recs[0].clone();
+                                unmark_record(&mut r2_rec)?;
+                                bam_skipped_writer.write(&r2_rec)?;
                             }
                         }
                     };
@@ -419,7 +436,9 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                         )?;
                     }
                     _ => {
-                        bam_skipped_writer.write(&recs[0])?;
+                        let mut rec = recs[0].clone();
+                        unmark_record(&mut rec)?;
+                        bam_skipped_writer.write(&rec)?;
                     }
                 },
             }
@@ -665,6 +684,12 @@ impl Deref for IndexedRecord {
     type Target = bam::Record;
     fn deref(&self) -> &bam::Record {
         &self.rec
+    }
+}
+
+impl DerefMut for IndexedRecord {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.rec
     }
 }
 

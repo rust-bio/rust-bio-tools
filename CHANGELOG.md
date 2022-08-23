@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.41.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.40.0...v0.41.0) (2022-08-19)
+
+
+### Features
+
+* Remove duplicate marks from consensus records ([#247](https://www.github.com/rust-bio/rust-bio-tools/issues/247)) ([692eb04](https://www.github.com/rust-bio/rust-bio-tools/commit/692eb041683ac898277628b140da13e88ec40449))
+
 ## [0.40.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.39.1...v0.40.0) (2022-07-21)
 
 

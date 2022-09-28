@@ -1,33 +1,14 @@
 use anyhow::Result;
 use bio::io::fastq;
-use flate2::bufread::MultiGzDecoder;
 use handlebars::Handlebars;
 use regex::Regex;
 use std::collections::HashMap;
-use std::fs;
 use std::io;
-use std::io::{BufReader, Read};
-use std::path::{Path, PathBuf};
 
-fn reader<P: AsRef<Path>>(path: P) -> Result<fastq::Reader<BufReader<Box<dyn std::io::Read>>>> {
-    let r: Box<dyn Read> = if path.as_ref().extension().unwrap() == "gz" {
-        Box::new(
-            fs::File::open(&path)
-                .map(BufReader::new)
-                .map(MultiGzDecoder::new)?,
-        )
-    } else {
-        Box::new(fs::File::open(&path).map(BufReader::new)?)
-    };
-    Ok(fastq::Reader::new(r))
-}
-
-pub fn reformat_header(fastqs: Vec<PathBuf>, desc_regex: &str, desc_format: &str) -> Result<()> {
+pub fn reformat_header(desc_regex: &str, desc_format: &str) -> Result<()> {
     let regex = Regex::new(desc_regex)?;
     let capture_groups = parse_format_fields(desc_regex)?;
-    for fastq in fastqs {
-        process_fastq(&fastq, &regex, desc_format, &capture_groups)?;
-    }
+    process_fastq(&regex, desc_format, &capture_groups)?;
     Ok(())
 }
 
@@ -40,13 +21,8 @@ fn parse_format_fields(desc_regex: &str) -> Result<Vec<String>> {
     Ok(capture_fields)
 }
 
-fn process_fastq(
-    fastq_in: &PathBuf,
-    desc_regex: &Regex,
-    desc_format: &str,
-    capture_groups: &[String],
-) -> Result<()> {
-    let reader = reader(&fastq_in)?;
+fn process_fastq(desc_regex: &Regex, desc_format: &str, capture_groups: &[String]) -> Result<()> {
+    let reader = fastq::Reader::new(io::stdin());
     let mut writer = fastq::Writer::new(io::stdout());
     for result in reader.records() {
         let reg = Handlebars::new();

@@ -399,8 +399,6 @@ pub(crate) enum Command {
     },
     #[structopt(author = "Felix Mölder <felix.moelder@uni-due.de>")]
     ReformatFastqHeader {
-        #[structopt(parse(from_os_str), help = "fastq file(s) to be reformated")]
-        fastqs: Vec<PathBuf>,
         #[structopt(
             long = "desc-regex",
             short = "r",

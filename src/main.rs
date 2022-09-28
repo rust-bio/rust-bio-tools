@@ -286,10 +286,9 @@ fn main() -> Result<()> {
         )?,
         SequenceStats { fastq } => sequences_stats::stats(fastq)?,
         ReformatFastqHeader {
-            fastqs,
             desc_regex,
             desc_format,
-        } => fastq::reformat_fastq_header::reformat_header(fastqs, &desc_regex, &desc_format)?,
+        } => fastq::reformat_fastq_header::reformat_header(&desc_regex, &desc_format)?,
     }
     Ok(())
 }

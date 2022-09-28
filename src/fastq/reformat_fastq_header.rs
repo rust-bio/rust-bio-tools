@@ -1,25 +1,13 @@
 use anyhow::Result;
 use bio::io::fastq;
 use flate2::bufread::MultiGzDecoder;
-use flate2::write::GzEncoder;
-use flate2::Compression;
+use handlebars::Handlebars;
 use regex::Regex;
+use std::collections::HashMap;
 use std::fs;
-use std::io::{BufReader, BufWriter, Read, Write};
+use std::io;
+use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
-
-fn writer<P: AsRef<Path>>(path: P) -> Result<fastq::Writer<Box<dyn std::io::Write>>> {
-    let w: Box<dyn Write> = if path.as_ref().extension().unwrap() == "gz" {
-        Box::new(
-            fs::File::create(&path)
-                .map(BufWriter::new)
-                .map(|w| GzEncoder::new(w, Compression::default()))?,
-        )
-    } else {
-        Box::new(fs::File::create(&path).map(BufWriter::new)?)
-    };
-    Ok(fastq::Writer::new(w))
-}
 
 fn reader<P: AsRef<Path>>(path: P) -> Result<fastq::Reader<BufReader<Box<dyn std::io::Read>>>> {
     let r: Box<dyn Read> = if path.as_ref().extension().unwrap() == "gz" {
@@ -32,19 +20,6 @@ fn reader<P: AsRef<Path>>(path: P) -> Result<fastq::Reader<BufReader<Box<dyn std
         Box::new(fs::File::open(&path).map(BufReader::new)?)
     };
     Ok(fastq::Reader::new(r))
-}
-
-//TODO That is really bad for just adding a suffix to the file name
-fn build_fastq_out(fastq_in: &PathBuf) -> Result<PathBuf> {
-    let suffix = "reheadered.fastq.gz";
-    let mut fastq_out = if fastq_in.extension().unwrap() == "gz" {
-        fastq_in.to_str().unwrap().strip_suffix("fastq.gz").unwrap()
-    } else {
-        fastq_in.to_str().unwrap().strip_suffix("fastq").unwrap()
-    }
-    .to_owned();
-    fastq_out.push_str(suffix);
-    Ok(Path::new(&fastq_out).to_path_buf())
 }
 
 pub fn reformat_header(fastqs: Vec<PathBuf>, desc_regex: &str, desc_format: &str) -> Result<()> {
@@ -72,25 +47,31 @@ fn process_fastq(
     capture_groups: &[String],
 ) -> Result<()> {
     let reader = reader(&fastq_in)?;
-    let fastq_out = build_fastq_out(fastq_in)?;
-    let mut writer = writer(fastq_out)?;
+    let mut writer = fastq::Writer::new(io::stdout());
     for result in reader.records() {
+        let reg = Handlebars::new();
         let record = result?;
         let description_opt = record.desc();
-        let description_formatted = match description_opt {
+        let description_extended = match description_opt {
             Some(description) => {
-                let caps = desc_regex.captures(description).unwrap();
+                let mut description_extended = description.to_owned();
                 for caps in desc_regex.captures_iter(description) {
-                    dbg!(caps);
-                    //let desc_updated = format!(desc_format.to_string(), umi=caps.name("umi").unwrap());
+                    let mut field_replacements = HashMap::new();
+                    for field in capture_groups {
+                        field_replacements.insert(field, caps.name(field).unwrap().as_str());
+                    }
+                    let rendered_entry = reg.render_template(desc_format, &field_replacements)?;
+                    //TODO That's dirty
+                    description_extended.push(' ');
+                    description_extended.push_str(&rendered_entry);
                 }
-                None
+                Some(description_extended)
             }
             None => None,
         };
         let record_out = fastq::Record::with_attrs(
             record.id(),
-            description_formatted,
+            description_extended.as_deref(),
             record.seq(),
             record.qual(),
         );

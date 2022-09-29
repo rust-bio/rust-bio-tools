@@ -3,7 +3,7 @@ use bio::io::fastq;
 use bio::io::fastq::{FastqRead, Record};
 use bio::stats::probs::LogProb;
 use derive_new::new;
-use ordered_float::NotNaN;
+use ordered_float::NotNan;
 use rgsl::randist::gaussian::ugaussian_P;
 use rocksdb::DB;
 use std::io;
@@ -442,7 +442,7 @@ impl<'a, R: io::Read, W: io::Write> CallOverlappingConsensusRead<'a, R, W> {
                     likelihood,
                 }
             })
-            .max_by_key(|consensus| NotNaN::new(*consensus.likelihood).unwrap())
+            .max_by_key(|consensus| NotNan::new(*consensus.likelihood).unwrap())
             .unwrap()
     }
 

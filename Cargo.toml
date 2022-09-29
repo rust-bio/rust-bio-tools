@@ -29,7 +29,7 @@ serde_json = "1.0"
 uuid = { version = "0.7", features = ["v4"] }
 tempfile = "3.0"
 rocksdb = "0.19"
-ordered-float = "0.5"
+ordered-float = "3.1"
 flate2 = "1.0.5"
 streaming-stats =  "0.2.2"
 GSL = "1.1.0"

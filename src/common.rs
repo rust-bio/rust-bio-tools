@@ -3,7 +3,7 @@ use approx::relative_eq;
 use bio::stats::probs::{LogProb, PHREDProb};
 use bio_types::sequence::SequenceRead;
 use itertools::Itertools;
-use ordered_float::NotNaN;
+use ordered_float::NotNan;
 use std::cmp;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -56,7 +56,7 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
             let (max_posterior, allele_lh) = likelihoods
                 .iter()
                 .enumerate()
-                .max_by_key(|&(_, &lh)| NotNaN::new(*lh).unwrap())
+                .max_by_key(|&(_, &lh)| NotNan::new(*lh).unwrap())
                 .unwrap();
             *consensus_lh += *allele_lh;
             let marginal = LogProb::ln_sum_exp(&likelihoods);

@@ -14,9 +14,9 @@ pub fn reformat_header(desc_regex: &str, desc_format: &str) -> Result<()> {
 
 fn parse_format_fields(desc_regex: &str) -> Result<Vec<String>> {
     let re = Regex::new("<([A-Za-z]+)>")?;
-    let caps = re.captures(desc_regex).unwrap();
-    let capture_fields: Vec<String> = (1..caps.len())
-        .map(|i| caps.get(i).unwrap().as_str().to_string())
+    let capture_fields: Vec<String> = re
+        .captures_iter(desc_regex)
+        .map(|cap| cap.get(1).unwrap().as_str().to_string())
         .collect();
     Ok(capture_fields)
 }
@@ -37,8 +37,10 @@ fn process_fastq(desc_regex: &Regex, desc_format: &str, capture_groups: &[String
                         field_replacements.insert(field, caps.name(field).unwrap().as_str());
                     }
                     let rendered_entry = reg.render_template(desc_format, &field_replacements)?;
-                    description_updated = format!("{} {}", description_updated, rendered_entry);
+                    description_updated = format!("{}{} ", description_updated, rendered_entry);
                 }
+                //Remove trailing whitespace
+                description_updated.pop();
                 Some(description_updated)
             }
             None => None,

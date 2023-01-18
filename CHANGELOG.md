@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.42.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.41.0...v0.42.0) (2023-01-18)
+
+
+### Features
+
+* consensus reads - move record ids to description field ([#250](https://www.github.com/rust-bio/rust-bio-tools/issues/250)) ([f7d683b](https://www.github.com/rust-bio/rust-bio-tools/commit/f7d683b11964d9fb992827d59dd0d9a645c79cd5))
+
 ## [0.41.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.40.0...v0.41.0) (2022-08-19)
 
 

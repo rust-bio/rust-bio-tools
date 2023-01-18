@@ -93,20 +93,26 @@ impl<'a> CalcOverlappingConsensus<'a> {
             };
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
-        let name = if self.read_ids.is_some() {
-            Self::build_verbose_read_name(self.uuid(), self.seqids(), self.read_ids)
-        } else {
-            format!(
-                "{}_consensus-read-from:{}_reads",
-                self.uuid(),
-                self.seqids().len(),
-            )
-        };
+        let name = format!(
+            "{}_consensus-read-from:{}_reads",
+            self.uuid(),
+            self.seqids().len(),
+        );
         if let Some(mut read_orientations) = read_orientations_opt {
             consensus_strand.append(&mut read_orientations)
         }
         let umi = get_umi_string(&self.recs1()[0]);
-        let description = format!("{}{}", String::from_utf8(consensus_strand).unwrap(), umi);
+        let seq_ids = if self.read_ids.is_some() {
+            Self::collect_read_names(self.seqids(), self.read_ids)
+        } else {
+            format!("")
+        };
+        let description = format!(
+            "{}{}{}",
+            String::from_utf8(consensus_strand).unwrap(),
+            umi,
+            seq_ids
+        );
         let consensus_rec =
             fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)
@@ -280,17 +286,23 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             );
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
-        let name = if self.read_ids.is_some() {
-            Self::build_verbose_read_name(self.uuid(), self.seqids(), self.read_ids)
-        } else {
-            format!(
-                "{}_consensus-read-from:{}_reads",
-                self.uuid(),
-                self.seqids().len(),
-            )
-        };
+        let name = format!(
+            "{}_consensus-read-from:{}_reads",
+            self.uuid(),
+            self.seqids().len(),
+        );
         let umi = get_umi_string(&self.recs()[0]);
-        let description = format!("{}{}", String::from_utf8(consensus_strand).unwrap(), umi);
+        let seq_ids = if self.read_ids.is_some() {
+            Self::collect_read_names(self.seqids(), self.read_ids)
+        } else {
+            format!("")
+        };
+        let description = format!(
+            "{}{}{}",
+            String::from_utf8(consensus_strand).unwrap(),
+            umi,
+            seq_ids
+        );
         let consensus_rec =
             fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)

@@ -8,8 +8,8 @@
 ##INFO=<ID=T,Number=A,Type=Integer,Description="Text">
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description="SV type">
 ##INFO=<ID=SVLEN,Number=1,Type=Integer,Description="SV length">
-#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT
-1	100	a	A	G	.	.	T=2	S:GT
-1	200	.	A	AGG	.	.	.	S:GT
-2	540	.	GGAT	G	.	.	SVTYPE=DEL;SVLEN=3	S:GT
-3	6000	.	GGAT	G	.	.	SVTYPE=DEL;SVLEN=3	S:GT
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	S1
+1	100	a	A	G	.	.	T=2	S:GT	1:1
+1	200	.	A	AGG	.	.	.	S:GT	1:1
+2	540	.	GGAT	G	.	.	SVTYPE=DEL;SVLEN=3	S:GT	1:1
+3	6000	.	GGAT	G	.	.	SVTYPE=DEL;SVLEN=3	S:GT	1:1

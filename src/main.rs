@@ -256,14 +256,14 @@ fn main() -> Result<()> {
                 consensus_fq2,
                 consensus_fq_se,
                 skipped_bam,
-                verbose_read_names,
+                annotate_record_ids,
             } => bam::collapse_reads_to_fragments::call_consensus_reads_from_paths(
                 bam,
                 consensus_fq1,
                 consensus_fq2,
                 consensus_fq_se,
                 skipped_bam,
-                verbose_read_names,
+                annotate_record_ids,
             )?,
         },
         BamAnonymize {

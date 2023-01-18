@@ -75,14 +75,9 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
                 .push(cmp::min(93 + offset as u64, (truncated_quality + offset) as u64) as u8);
         }
     }
-    fn build_verbose_read_name(
-        uuid: &str,
-        seq_ids: &[usize],
-        read_ids: &Option<HashMap<usize, Vec<u8>>>,
-    ) -> String {
+    fn collect_read_names(seq_ids: &[usize], read_ids: &Option<HashMap<usize, Vec<u8>>>) -> String {
         format!(
-            "{}_consensus-read-from:{}",
-            uuid,
+            " ID:Z:{}",
             seq_ids
                 .iter()
                 .map(|i| String::from_utf8(

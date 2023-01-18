@@ -521,6 +521,6 @@ pub enum CollapseReadsToFragmentsSubcommand {
             long,
             help = "Add list of reads that were merged for each consensus read. Note that this can yield very long FASTQ name lines which cannot be handled by some tools."
         )]
-        verbose_read_names: bool,
+        annotate_record_ids: bool,
     },
 }

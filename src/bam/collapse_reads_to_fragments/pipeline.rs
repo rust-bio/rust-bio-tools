@@ -20,7 +20,7 @@ pub struct CallConsensusRead<W: io::Write> {
     fq2_writer: fastq::Writer<W>,
     fq_se_writer: fastq::Writer<W>,
     bam_skipped_writer: bam::Writer,
-    verbose_read_names: bool,
+    annotate_record_ids: bool,
 }
 
 type Position = i64;
@@ -104,7 +104,7 @@ impl<W: io::Write> CallConsensusRead<W> {
         let mut duplicate_groups: HashMap<GroupId, RecordIDs> = HashMap::new();
         let mut record_storage: HashMap<RecordId, RecordStorage> = HashMap::new();
         let mut current_chrom = None;
-        let mut read_ids: Option<HashMap<usize, Vec<u8>>> = if self.verbose_read_names {
+        let mut read_ids: Option<HashMap<usize, Vec<u8>>> = if self.annotate_record_ids {
             Some(HashMap::new())
         } else {
             None

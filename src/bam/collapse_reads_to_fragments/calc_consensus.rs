@@ -93,7 +93,6 @@ impl<'a> CalcOverlappingConsensus<'a> {
             };
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
-        //TODO remove build_verbose_read_name
         let name = format!(
             "{}_consensus-read-from:{}_reads",
             self.uuid(),

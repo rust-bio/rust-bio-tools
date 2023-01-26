@@ -78,7 +78,7 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
         seq_ids: &[usize],
         read_ids: &Option<HashMap<usize, Vec<u8>>>,
     ) -> Vec<u8> {
-        let bla = seq_ids
+        let ids = seq_ids
             .iter()
             .map(|i| {
                 read_ids
@@ -88,8 +88,8 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
                     .to_vec()
             })
             .collect::<Vec<_>>()
-            .join(&b' ');
-        [b"ID:Z:".to_vec(), bla].concat()
+            .join(&b',');
+        [b"ID:Z:".to_vec(), ids].concat()
     }
 
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;

@@ -36,7 +36,7 @@ fn main() -> Result<()> {
         FastqSplit { chunks } => {
             fastq::split::split(&chunks.iter().map(|p| p.to_str().unwrap()).collect_vec())?
         }
-        FastqFilter { ids } => fastq::filter::filter(&ids).unwrap(),
+        FastqFilter { ids } => fastq::filter::filter(ids).unwrap(),
         BamDepth {
             bam_path,
             max_read_length,
@@ -44,7 +44,7 @@ fn main() -> Result<()> {
             exclude_flags,
             min_mapq,
         } => bam::depth::depth(
-            &bam_path,
+            bam_path,
             max_read_length,
             include_flags,
             exclude_flags,
@@ -77,7 +77,7 @@ fn main() -> Result<()> {
         } => bcf::annotate_dgidb::annotate_dgidb(
             vcf,
             api_path,
-            &*field,
+            &field,
             datasources.as_deref(),
             genes_per_request,
         )?,

@@ -1,4 +1,5 @@
 use crate::common::CalcConsensus;
+use bio::alphabets::dna::revcomp;
 use bio::io::fastq;
 use bio::stats::probs::LogProb;
 use bio_types::sequence::SequenceRead;
@@ -93,6 +94,13 @@ impl<'a> CalcOverlappingConsensus<'a> {
             };
             self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
+        match self.recs1()[0].read_pair_orientation().as_ref() {
+            "R1R2" | "R2R1" => {
+                consensus_seq = revcomp(consensus_seq);
+                consensus_qual.reverse();
+            }
+            _ => {}
+        }
         let name = format!(
             "{}_consensus-read-from:{}_reads",
             self.uuid(),
@@ -107,6 +115,8 @@ impl<'a> CalcOverlappingConsensus<'a> {
         } else {
             format!("")
         };
+        dbg!(self.seqids());
+        dbg!(String::from_utf8(consensus_strand.clone()).unwrap());
         let description = format!(
             "{}{}{}",
             String::from_utf8(consensus_strand).unwrap(),
@@ -250,15 +260,6 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         let seq_len = self.recs()[0].seq().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
-        let mut consensus_strand = b"SI:Z:".to_vec();
-        let mut cigar_map = HashMap::new();
-        for record in self.recs() {
-            let cached_cigar = record.raw_cigar();
-            if !cigar_map.contains_key(cached_cigar) {
-                cigar_map.insert(cached_cigar, Vec::new());
-            }
-            cigar_map.get_mut(cached_cigar).unwrap().push(record);
-        }
 
         // Potential workflow for different read lengths
         // compute consensus of all reads with max len
@@ -284,8 +285,12 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
                 &mut consensus_qual,
                 33.0,
             );
-            self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
         }
+        if self.recs()[0].is_reverse() {
+            consensus_seq = revcomp(consensus_seq);
+            consensus_qual.reverse();
+        }
+
         let name = format!(
             "{}_consensus-read-from:{}_reads",
             self.uuid(),
@@ -297,40 +302,13 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         } else {
             format!("")
         };
-        let description = format!(
-            "{}{}{}",
-            String::from_utf8(consensus_strand).unwrap(),
-            umi,
-            seq_ids
-        );
+        let description = format!("{}{}", umi, seq_ids);
         let consensus_rec =
             fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);
         (consensus_rec, consensus_lh)
     }
     pub fn recs(&self) -> &[bam::Record] {
         self.recs
-    }
-    fn build_consensus_strand(
-        &self,
-        consensus_strand: &mut Vec<u8>,
-        ref_base: u8,
-        current_pos: usize,
-    ) {
-        let mut strand = StrandObservation::None;
-        self.recs().iter().for_each(|rec| {
-            if rec.base(current_pos) == ref_base {
-                match rec.is_reverse() {
-                    true => strand |= StrandObservation::Reverse,
-                    false => strand |= StrandObservation::Forward,
-                };
-            }
-        });
-        match strand {
-            StrandObservation::Forward => consensus_strand.push(b'+'),
-            StrandObservation::Reverse => consensus_strand.push(b'-'),
-            StrandObservation::Both => consensus_strand.push(b'*'),
-            StrandObservation::None => consensus_strand.push(b'.'),
-        }
     }
 }
 

@@ -181,7 +181,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         };
         if let Some(read_orientation) = read_orientation_opt {
             let mut tag = b"RO:Z:".to_vec();
-            tag.extend_from_slice(&read_orientation.to_vec());
+            tag.extend_from_slice(read_orientation.as_ref());
             Some(tag)
         } else {
             None

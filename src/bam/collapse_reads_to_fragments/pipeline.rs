@@ -517,7 +517,7 @@ fn calc_alignment_vectors(
     };
     let mut intersection_entry_passed = false;
     loop {
-        if r2_cigar == None {
+        if r2_cigar.is_none() {
             match r1_cigar {
                 None => break,
                 Some('M') | Some('X') | Some('=') | Some('D') | Some('N') => {
@@ -531,7 +531,7 @@ fn calc_alignment_vectors(
             if offset == 0 {
                 r2_cigar = r2_cigarstring.next();
             }
-        } else if r1_cigar == None {
+        } else if r1_cigar.is_none() {
             match_single_cigar(&r2_cigar, &mut r2_vec, &mut r1_vec);
             r2_cigar = r2_cigarstring.next();
         } else if r1_cigar != r2_cigar {
@@ -612,19 +612,14 @@ impl RecordStorage {
                     };
                     let pair_orientation =
                         r1_rec_entry.read_pair_orientation().as_ref().to_string();
-                    if !final_groups
-                        .contains_key(&(cigar_tuple.clone(), pair_orientation.to_string()))
-                    {
-                        final_groups.insert(
-                            (cigar_tuple.clone(), pair_orientation.to_string()),
-                            CigarGroup::PairedRecords {
-                                r1_recs: Vec::new(),
-                                r2_recs: Vec::new(),
-                                r1_seqids: Vec::new(),
-                                r2_seqids: Vec::new(),
-                            },
-                        );
-                    }
+                    final_groups
+                        .entry((cigar_tuple.clone(), pair_orientation.to_string()))
+                        .or_insert_with(|| CigarGroup::PairedRecords {
+                            r1_recs: Vec::new(),
+                            r2_recs: Vec::new(),
+                            r1_seqids: Vec::new(),
+                            r2_seqids: Vec::new(),
+                        });
                     (
                         r1_rec_entry,
                         r1_rec_id,
@@ -646,16 +641,12 @@ impl RecordStorage {
                         "forward"
                     }
                     .to_string();
-                    if !final_groups.contains_key(&(cigar_single.clone(), read_orientation.clone()))
-                    {
-                        final_groups.insert(
-                            (cigar_single.clone(), read_orientation.clone()),
-                            CigarGroup::SingleRecords {
-                                recs: Vec::new(),
-                                seqids: Vec::new(),
-                            },
-                        );
-                    }
+                    final_groups
+                        .entry((cigar_single.clone(), read_orientation.clone()))
+                        .or_insert_with(|| CigarGroup::SingleRecords {
+                            recs: Vec::new(),
+                            seqids: Vec::new(),
+                        });
                     (
                         rec_entry,
                         rec_id,

@@ -75,7 +75,10 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
                 .push(cmp::min(93 + offset as u64, (truncated_quality + offset) as u64) as u8);
         }
     }
-    fn collect_read_names(seq_ids: &[usize], read_ids: &Option<HashMap<usize, Vec<u8>>>) -> String {
+    fn collect_read_names(
+        seq_ids: &[usize],
+        read_ids: &Option<HashMap<usize, Vec<u8>>>,
+    ) -> Vec<u8> {
         format!(
             " ID:Z:{}",
             seq_ids
@@ -90,6 +93,8 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
                 .unwrap())
                 .join(",")
         )
+        .as_bytes()
+        .to_vec()
     }
 
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;

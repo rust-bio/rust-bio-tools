@@ -15,7 +15,7 @@ const ALLELES: &[u8] = b"ACGT";
 
 pub fn get_umi_string(rec: &bam::record::Record) -> Vec<u8> {
     let umi_tag = match rec.aux(b"RX") {
-        Ok(Aux::String(value)) => [b" RX:Z:", value.as_bytes()].concat(),
+        Ok(Aux::String(value)) => [b"RX:Z:", value.as_bytes()].concat(),
         _ => vec![],
     };
     umi_tag

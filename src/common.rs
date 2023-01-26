@@ -2,7 +2,6 @@ use anyhow::Context;
 use approx::relative_eq;
 use bio::stats::probs::{LogProb, PHREDProb};
 use bio_types::sequence::SequenceRead;
-use itertools::Itertools;
 use ordered_float::NotNaN;
 use std::cmp;
 use std::collections::HashMap;
@@ -79,22 +78,18 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
         seq_ids: &[usize],
         read_ids: &Option<HashMap<usize, Vec<u8>>>,
     ) -> Vec<u8> {
-        format!(
-            " ID:Z:{}",
-            seq_ids
-                .iter()
-                .map(|i| String::from_utf8(
-                    read_ids
-                        .as_ref()
-                        .map(|x| x.get(i).unwrap())
-                        .unwrap()
-                        .to_vec()
-                )
-                .unwrap())
-                .join(",")
-        )
-        .as_bytes()
-        .to_vec()
+        let bla = seq_ids
+            .iter()
+            .map(|i| {
+                read_ids
+                    .as_ref()
+                    .map(|x| x.get(i).unwrap())
+                    .unwrap()
+                    .to_vec()
+            })
+            .collect::<Vec<_>>()
+            .join(&b' ');
+        [b"ID:Z:".to_vec(), bla].concat()
     }
 
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;

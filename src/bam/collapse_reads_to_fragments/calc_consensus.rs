@@ -168,30 +168,23 @@ impl<'a> CalcOverlappingConsensus<'a> {
         }
     }
     fn build_read_orientation_string(&self) -> Option<Vec<u8>> {
-        let mut read_orientations_set: HashSet<_> = self
-            .recs1()
-            .iter()
-            .filter_map(|rec| match rec.read_pair_orientation() {
-                SequenceReadPairOrientation::F2F1 => Some(b"F2F1,"),
-                SequenceReadPairOrientation::F2R1 => Some(b"F2R1,"),
-                SequenceReadPairOrientation::F1F2 => Some(b"F1F2,"),
-                SequenceReadPairOrientation::R2F1 => Some(b"R2F1,"),
-                SequenceReadPairOrientation::F1R2 => Some(b"F1R2,"),
-                SequenceReadPairOrientation::R2R1 => Some(b"R2R1,"),
-                SequenceReadPairOrientation::R1F2 => Some(b"R1F2,"),
-                SequenceReadPairOrientation::R1R2 => Some(b"R1R2,"),
-                SequenceReadPairOrientation::None => None,
-            })
-            .collect();
-        let mut read_orientations_string = b" RO:Z:".to_vec();
-        read_orientations_set
-            .drain()
-            .for_each(|entry| read_orientations_string.extend_from_slice(entry));
-        match read_orientations_string.pop() {
-            Some(b',') => Some(read_orientations_string),
-            Some(b':') => None,
-            Some(_) => unreachable!(),
-            None => unreachable!(),
+        let read_orientation_opt = match self.recs1()[0].read_pair_orientation() {
+            SequenceReadPairOrientation::F2F1 => Some(b"F2F1"),
+            SequenceReadPairOrientation::F2R1 => Some(b"F2R1"),
+            SequenceReadPairOrientation::F1F2 => Some(b"F1F2"),
+            SequenceReadPairOrientation::R2F1 => Some(b"R2F1"),
+            SequenceReadPairOrientation::F1R2 => Some(b"F1R2"),
+            SequenceReadPairOrientation::R2R1 => Some(b"R2R1"),
+            SequenceReadPairOrientation::R1F2 => Some(b"R1F2"),
+            SequenceReadPairOrientation::R1R2 => Some(b"R1R2"),
+            SequenceReadPairOrientation::None => None,
+        };
+        if let Some(read_orientation) = read_orientation_opt {
+            let mut tag = b" RO:Z:".to_vec();
+            tag.extend_from_slice(&read_orientation.to_vec());
+            Some(tag)
+        } else {
+            None
         }
     }
     fn map_read_pos(&self, consensus_pos: usize, alignment_vec: &[bool]) -> Option<usize> {

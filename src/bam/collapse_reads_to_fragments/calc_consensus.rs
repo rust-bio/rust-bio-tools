@@ -111,7 +111,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let seq_ids = if self.read_ids.is_some() {
             Self::collect_read_names(self.seqids(), self.read_ids)
         } else {
-            b"".to_vec()
+            vec![]
         };
         let read_orientations_opt = self.get_read_orientation_tag();
         if let Some(read_orientations) = read_orientations_opt {

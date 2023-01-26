@@ -55,3 +55,12 @@ path = "src/main.rs"
 
 [features]
 default = ["GSL/v2"]
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+
+[profile.develop]
+codegen-units = 128
+inherits = "release"
+lto = false

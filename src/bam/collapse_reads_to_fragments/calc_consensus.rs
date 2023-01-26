@@ -8,7 +8,7 @@ use derive_new::new;
 use itertools::Itertools;
 use rust_htslib::bam;
 use rust_htslib::bam::record::Aux;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::ops::BitOrAssign;
 
 const ALLELES: &[u8] = b"ACGT";

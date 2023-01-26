@@ -115,8 +115,6 @@ impl<'a> CalcOverlappingConsensus<'a> {
         } else {
             format!("")
         };
-        dbg!(self.seqids());
-        dbg!(String::from_utf8(consensus_strand.clone()).unwrap());
         let description = format!(
             "{}{}{}",
             String::from_utf8(consensus_strand).unwrap(),

@@ -115,7 +115,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         };
         let read_orientations_opt = self.get_read_orientation_tag();
         if let Some(read_orientations) = read_orientations_opt {
-            tag_string = [tag_string, read_orientations, vec![b' '], umi, seq_ids].concat();
+            tag_string = [tag_string, read_orientations, umi, seq_ids].concat();
         } else {
             tag_string = [tag_string, umi, seq_ids].concat();
         }

@@ -15,7 +15,7 @@ const ALLELES: &[u8] = b"ACGT";
 
 pub fn get_umi_string(rec: &bam::record::Record) -> Vec<u8> {
     let umi_tag = match rec.aux(b"RX") {
-        Ok(Aux::String(value)) => [b"RX:Z:", value.as_bytes(), b" "].concat(),
+        Ok(Aux::String(value)) => [b"RX:Z:", value.as_bytes(), b"\t"].concat(),
         _ => vec![],
     };
     umi_tag
@@ -101,7 +101,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
         }
         let mut tag_string = Vec::new();
         if double_stranded {
-            tag_string = [consensus_strand, vec![b' ']].concat();
+            tag_string = [consensus_strand, vec![b'\t']].concat();
         }
         let name = format!(
             "{}_consensus-read-from:{}_reads",
@@ -164,14 +164,14 @@ impl<'a> CalcOverlappingConsensus<'a> {
     }
     fn get_read_orientation_tag(&self) -> Vec<u8> {
         let read_orientation_opt = match self.recs1()[0].read_pair_orientation() {
-            SequenceReadPairOrientation::F2F1 => Some(b"F2F1 "),
-            SequenceReadPairOrientation::F2R1 => Some(b"F2R1 "),
-            SequenceReadPairOrientation::F1F2 => Some(b"F1F2 "),
-            SequenceReadPairOrientation::R2F1 => Some(b"R2F1 "),
-            SequenceReadPairOrientation::F1R2 => Some(b"F1R2 "),
-            SequenceReadPairOrientation::R2R1 => Some(b"R2R1 "),
-            SequenceReadPairOrientation::R1F2 => Some(b"R1F2 "),
-            SequenceReadPairOrientation::R1R2 => Some(b"R1R2 "),
+            SequenceReadPairOrientation::F2F1 => Some(b"F2F1\t"),
+            SequenceReadPairOrientation::F2R1 => Some(b"F2R1\t"),
+            SequenceReadPairOrientation::F1F2 => Some(b"F1F2\t"),
+            SequenceReadPairOrientation::R2F1 => Some(b"R2F1\t"),
+            SequenceReadPairOrientation::F1R2 => Some(b"F1R2\t"),
+            SequenceReadPairOrientation::R2R1 => Some(b"R2R1\t"),
+            SequenceReadPairOrientation::R1F2 => Some(b"R1F2\t"),
+            SequenceReadPairOrientation::R1R2 => Some(b"R1R2\t"),
             SequenceReadPairOrientation::None => None,
         };
         if let Some(read_orientation) = read_orientation_opt {

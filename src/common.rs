@@ -89,7 +89,7 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
             })
             .collect::<Vec<_>>()
             .join(&b',');
-        [b" ID:Z:".to_vec(), ids].concat()
+        [b"ID:Z:".to_vec(), ids].concat()
     }
 
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;

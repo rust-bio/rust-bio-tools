@@ -15,7 +15,7 @@ const ALLELES: &[u8] = b"ACGT";
 
 pub fn get_umi_string(rec: &bam::record::Record) -> Vec<u8> {
     let umi_tag = match rec.aux(b"RX") {
-        Ok(Aux::String(value)) => [b"RX:Z:", value.as_bytes()].concat(),
+        Ok(Aux::String(value)) => [b"RX:Z:", value.as_bytes(), b" "].concat(),
         _ => vec![],
     };
     umi_tag
@@ -55,8 +55,10 @@ impl<'a> CalcOverlappingConsensus<'a> {
         let seq_len = self.r1_vec().len();
         let mut consensus_seq: Vec<u8> = Vec::with_capacity(seq_len);
         let mut consensus_qual: Vec<u8> = Vec::with_capacity(seq_len);
-        let mut consensus_strand = Vec::new();
+        let mut consensus_strand = b"SI:Z:".to_vec();
         let mut consensus_lh = LogProb::ln_one();
+        let double_stranded = ["R1F2", "F1R2", "R2F1", "F2R1"]
+            .contains(&self.recs1()[0].read_pair_orientation().as_ref());
         for i in 0..seq_len {
             match (
                 self.recs1().len() == 1,
@@ -89,18 +91,17 @@ impl<'a> CalcOverlappingConsensus<'a> {
                     );
                 }
             };
-            self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
+            if double_stranded {
+                self.build_consensus_strand(&mut consensus_strand, consensus_seq[i], i);
+            }
+        }
+        if ["R1R2", "R2R1"].contains(&self.recs1()[0].read_pair_orientation().as_ref()) {
+            consensus_seq = revcomp(consensus_seq);
+            consensus_qual.reverse();
         }
         let mut tag_string = Vec::new();
-        match self.recs1()[0].read_pair_orientation().as_ref() {
-            "R1R2" | "R2R1" => {
-                consensus_seq = revcomp(consensus_seq);
-                consensus_qual.reverse();
-            }
-            "R1F2" | "F1R2" | "R2F1" | "F2R1" => {
-                tag_string = [b"SI:Z:".to_vec(), consensus_strand, vec![b' ']].concat();
-            }
-            _ => {}
+        if double_stranded {
+            tag_string = [consensus_strand, vec![b' ']].concat();
         }
         let name = format!(
             "{}_consensus-read-from:{}_reads",
@@ -108,18 +109,12 @@ impl<'a> CalcOverlappingConsensus<'a> {
             self.seqids().len(),
         );
         let umi = get_umi_string(&self.recs1()[0]);
-        let seq_ids = if self.read_ids.is_some() {
-            Self::collect_read_names(self.seqids(), self.read_ids)
-        } else {
-            vec![]
+        let seq_ids = match self.read_ids {
+            Some(_) => Self::collect_read_names(self.seqids(), self.read_ids),
+            None => vec![],
         };
-        let read_orientations_opt = self.get_read_orientation_tag();
-        if let Some(read_orientations) = read_orientations_opt {
-            tag_string = [tag_string, [read_orientations, umi].join(&b' '), seq_ids].concat();
-        } else {
-            tag_string = [tag_string, umi, seq_ids].concat();
-        }
-
+        let ro_tag = self.get_read_orientation_tag();
+        tag_string = [tag_string, ro_tag, umi, seq_ids].concat();
         let description = String::from_utf8(tag_string).unwrap();
         let consensus_rec =
             fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);
@@ -167,24 +162,22 @@ impl<'a> CalcOverlappingConsensus<'a> {
             StrandObservation::None => consensus_strand.push(b'.'),
         }
     }
-    fn get_read_orientation_tag(&self) -> Option<Vec<u8>> {
+    fn get_read_orientation_tag(&self) -> Vec<u8> {
         let read_orientation_opt = match self.recs1()[0].read_pair_orientation() {
-            SequenceReadPairOrientation::F2F1 => Some(b"F2F1"),
-            SequenceReadPairOrientation::F2R1 => Some(b"F2R1"),
-            SequenceReadPairOrientation::F1F2 => Some(b"F1F2"),
-            SequenceReadPairOrientation::R2F1 => Some(b"R2F1"),
-            SequenceReadPairOrientation::F1R2 => Some(b"F1R2"),
-            SequenceReadPairOrientation::R2R1 => Some(b"R2R1"),
-            SequenceReadPairOrientation::R1F2 => Some(b"R1F2"),
-            SequenceReadPairOrientation::R1R2 => Some(b"R1R2"),
+            SequenceReadPairOrientation::F2F1 => Some(b"F2F1 "),
+            SequenceReadPairOrientation::F2R1 => Some(b"F2R1 "),
+            SequenceReadPairOrientation::F1F2 => Some(b"F1F2 "),
+            SequenceReadPairOrientation::R2F1 => Some(b"R2F1 "),
+            SequenceReadPairOrientation::F1R2 => Some(b"F1R2 "),
+            SequenceReadPairOrientation::R2R1 => Some(b"R2R1 "),
+            SequenceReadPairOrientation::R1F2 => Some(b"R1F2 "),
+            SequenceReadPairOrientation::R1R2 => Some(b"R1R2 "),
             SequenceReadPairOrientation::None => None,
         };
         if let Some(read_orientation) = read_orientation_opt {
-            let mut tag = b"RO:Z:".to_vec();
-            tag.extend_from_slice(read_orientation.as_ref());
-            Some(tag)
+            [b"RO:Z:", read_orientation.as_ref()].concat()
         } else {
-            None
+            vec![]
         }
     }
     fn map_read_pos(&self, consensus_pos: usize, alignment_vec: &[bool]) -> Option<usize> {
@@ -289,11 +282,11 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         );
 
         let umi = get_umi_string(&self.recs()[0]);
-        let mut tag_string = umi;
-        if self.read_ids.is_some() {
-            let seq_ids = Self::collect_read_names(self.seqids(), self.read_ids);
-            tag_string = [tag_string, seq_ids].concat();
+        let seq_ids = match self.read_ids {
+            Some(_) => Self::collect_read_names(self.seqids(), self.read_ids),
+            None => vec![],
         };
+        let tag_string = [umi, seq_ids].concat();
         let description = String::from_utf8(tag_string).unwrap();
         let consensus_rec =
             fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);

@@ -98,7 +98,7 @@ impl<'a> CalcOverlappingConsensus<'a> {
                 consensus_qual.reverse();
             }
             "R1F2" | "F1R2" | "R2F1" | "F2R1" => {
-                tag_string = [b"SI:Z:".to_vec(), consensus_strand].concat();
+                tag_string = [b"SI:Z:".to_vec(), consensus_strand, vec![b' ']].concat();
             }
             _ => {}
         }
@@ -115,9 +115,9 @@ impl<'a> CalcOverlappingConsensus<'a> {
         };
         let read_orientations_opt = self.get_read_orientation_tag();
         if let Some(read_orientations) = read_orientations_opt {
-            tag_string = [tag_string, read_orientations, umi, seq_ids].join(&b' ');
+            tag_string = [tag_string, [read_orientations, umi].join(&b' '), seq_ids].concat();
         } else {
-            tag_string = [tag_string, umi, seq_ids].join(&b' ');
+            tag_string = [tag_string, umi, seq_ids].concat();
         }
 
         let description = String::from_utf8(tag_string).unwrap();
@@ -292,7 +292,7 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
         let mut tag_string = umi;
         if self.read_ids.is_some() {
             let seq_ids = Self::collect_read_names(self.seqids(), self.read_ids);
-            tag_string = [tag_string, seq_ids].join(&b' ');
+            tag_string = [tag_string, seq_ids].concat();
         };
         let description = String::from_utf8(tag_string).unwrap();
         let consensus_rec =

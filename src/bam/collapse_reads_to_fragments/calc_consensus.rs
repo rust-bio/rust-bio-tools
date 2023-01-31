@@ -99,22 +99,25 @@ impl<'a> CalcOverlappingConsensus<'a> {
             consensus_seq = revcomp(consensus_seq);
             consensus_qual.reverse();
         }
-        let mut tag_string = Vec::new();
+        let mut tag_string = b"EF:i:1\t".to_vec();
         if double_stranded {
-            tag_string = [consensus_strand, vec![b'\t']].concat();
+            tag_string = [tag_string, consensus_strand, vec![b'\t']].concat();
         }
         let name = format!(
             "{}_consensus-read-from:{}_reads",
             self.uuid(),
             self.seqids().len(),
         );
-        let umi = get_umi_string(&self.recs1()[0]);
+        let umi_tag = get_umi_string(&self.recs1()[0]);
         let seq_ids = match self.read_ids {
             Some(_) => Self::collect_read_names(self.seqids(), self.read_ids),
             None => vec![],
         };
         let ro_tag = self.get_read_orientation_tag();
-        tag_string = [tag_string, ro_tag, umi, seq_ids].concat();
+        tag_string = [tag_string, ro_tag, umi_tag, seq_ids].concat();
+        if tag_string.ends_with(b"\t") {
+            tag_string.truncate(tag_string.len() - 1)
+        }
         let description = String::from_utf8(tag_string).unwrap();
         let consensus_rec =
             fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);
@@ -280,13 +283,15 @@ impl<'a> CalcNonOverlappingConsensus<'a> {
             self.uuid(),
             self.seqids().len(),
         );
-
-        let umi = get_umi_string(&self.recs()[0]);
+        let umi_tag = get_umi_string(&self.recs()[0]);
         let seq_ids = match self.read_ids {
             Some(_) => Self::collect_read_names(self.seqids(), self.read_ids),
             None => vec![],
         };
-        let tag_string = [umi, seq_ids].concat();
+        let mut tag_string = [umi_tag, seq_ids].concat();
+        if tag_string.ends_with(b"\t") {
+            tag_string.truncate(tag_string.len() - 1)
+        }
         let description = String::from_utf8(tag_string).unwrap();
         let consensus_rec =
             fastq::Record::with_attrs(&name, Some(&description), &consensus_seq, &consensus_qual);

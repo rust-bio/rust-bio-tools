@@ -401,20 +401,40 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                             // If reads do not overlap or CIGAR in overlapping region differs R1 and R2 are handled sepperatly
                             if r1_recs.len() > 1 {
                                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                                fq1_writer.write_record(
-                                    &CalcNonOverlappingConsensus::new(
-                                        r1_recs, r1_seqids, uuid, read_ids,
-                                    )
-                                    .calc_consensus()
-                                    .0,
-                                )?;
-                                fq2_writer.write_record(
-                                    &CalcNonOverlappingConsensus::new(
-                                        r2_recs, r2_seqids, uuid, read_ids,
-                                    )
-                                    .calc_consensus()
-                                    .0,
-                                )?;
+                                match r1_recs[0].is_first_in_template() {
+                                    true => {
+                                        fq1_writer.write_record(
+                                            &CalcNonOverlappingConsensus::new(
+                                                r1_recs, r1_seqids, uuid, read_ids,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                        fq2_writer.write_record(
+                                            &CalcNonOverlappingConsensus::new(
+                                                r2_recs, r2_seqids, uuid, read_ids,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                    }
+                                    false => {
+                                        fq1_writer.write_record(
+                                            &CalcNonOverlappingConsensus::new(
+                                                r2_recs, r2_seqids, uuid, read_ids,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                        fq2_writer.write_record(
+                                            &CalcNonOverlappingConsensus::new(
+                                                r1_recs, r1_seqids, uuid, read_ids,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                    }
+                                }
                             } else {
                                 let mut r1_rec = r1_recs[0].clone();
                                 unmark_record(&mut r1_rec)?;

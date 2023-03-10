@@ -368,7 +368,7 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     let group_ids = group_end_idx.cut_lower_group_ids(end_pos)?;
     for group_id in group_ids {
         let cigar_groups =
-            group_reads_by_cigar(duplicate_groups.remove(&group_id).unwrap(), record_storage)?;
+            group_reads(duplicate_groups.remove(&group_id).unwrap(), record_storage)?;
         for cigar_group in cigar_groups.values() {
             match cigar_group {
                 CigarGroup::PairedRecords {
@@ -401,20 +401,40 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
                             // If reads do not overlap or CIGAR in overlapping region differs R1 and R2 are handled sepperatly
                             if r1_recs.len() > 1 {
                                 let uuid = &Uuid::new_v4().to_hyphenated().to_string();
-                                fq1_writer.write_record(
-                                    &CalcNonOverlappingConsensus::new(
-                                        r1_recs, r1_seqids, uuid, read_ids,
-                                    )
-                                    .calc_consensus()
-                                    .0,
-                                )?;
-                                fq2_writer.write_record(
-                                    &CalcNonOverlappingConsensus::new(
-                                        r2_recs, r2_seqids, uuid, read_ids,
-                                    )
-                                    .calc_consensus()
-                                    .0,
-                                )?;
+                                match r1_recs[0].is_first_in_template() {
+                                    true => {
+                                        fq1_writer.write_record(
+                                            &CalcNonOverlappingConsensus::new(
+                                                r1_recs, r1_seqids, uuid, read_ids,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                        fq2_writer.write_record(
+                                            &CalcNonOverlappingConsensus::new(
+                                                r2_recs, r2_seqids, uuid, read_ids,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                    }
+                                    false => {
+                                        fq1_writer.write_record(
+                                            &CalcNonOverlappingConsensus::new(
+                                                r2_recs, r2_seqids, uuid, read_ids,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                        fq2_writer.write_record(
+                                            &CalcNonOverlappingConsensus::new(
+                                                r1_recs, r1_seqids, uuid, read_ids,
+                                            )
+                                            .calc_consensus()
+                                            .0,
+                                        )?;
+                                    }
+                                }
                             } else {
                                 let mut r1_rec = r1_recs[0].clone();
                                 unmark_record(&mut r1_rec)?;
@@ -447,18 +467,18 @@ pub fn calc_consensus_complete_groups<'a, W: io::Write>(
     Ok(())
 }
 
-fn group_reads_by_cigar(
+// Final groups for consensus reads are created based on record and read orientations
+fn group_reads(
     record_ids: Vec<RecordId>,
     record_storage: &mut HashMap<RecordId, RecordStorage>,
-) -> Result<HashMap<Cigar, CigarGroup>> {
-    let mut cigar_groups: HashMap<Cigar, CigarGroup> = HashMap::new();
+) -> Result<HashMap<(Cigar, String), CigarGroup>> {
+    let mut final_groups: HashMap<(Cigar, String), CigarGroup> = HashMap::new();
     for rec_id in record_ids {
         let storage_entry = record_storage.remove(&rec_id).unwrap();
-        storage_entry.add_to_group(&mut cigar_groups)?;
+        storage_entry.add_to_group(&mut final_groups)?;
     }
-    Ok(cigar_groups)
+    Ok(final_groups)
 }
-
 fn calc_read_alignments(
     r1_rec: &bam::Record,
     r2_rec: &bam::Record,
@@ -517,7 +537,7 @@ fn calc_alignment_vectors(
     };
     let mut intersection_entry_passed = false;
     loop {
-        if r2_cigar == None {
+        if r2_cigar.is_none() {
             match r1_cigar {
                 None => break,
                 Some('M') | Some('X') | Some('=') | Some('D') | Some('N') => {
@@ -531,7 +551,7 @@ fn calc_alignment_vectors(
             if offset == 0 {
                 r2_cigar = r2_cigarstring.next();
             }
-        } else if r1_cigar == None {
+        } else if r1_cigar.is_none() {
             match_single_cigar(&r2_cigar, &mut r2_vec, &mut r1_vec);
             r2_cigar = r2_cigarstring.next();
         } else if r1_cigar != r2_cigar {
@@ -597,56 +617,67 @@ pub enum RecordStorage {
 }
 
 impl RecordStorage {
-    fn add_to_group(self, cigar_groups: &mut HashMap<Cigar, CigarGroup>) -> Result<()> {
-        let (r1_rec_entry, r1_rec_id, r2_rec_entry, r2_rec_id, cigar_tuple) = match self {
-            RecordStorage::PairedRecords { r1_rec, r2_rec } => {
-                let r1_rec_id = r1_rec.rec_id;
-                let r1_rec_entry = r1_rec.into_rec();
-                let r2_rec_unwrapped = r2_rec.unwrap();
-                let r2_rec_id = r2_rec_unwrapped.rec_id;
-                let r2_rec_entry = r2_rec_unwrapped.into_rec();
-                let cigar_tuple = Cigar::Tuple {
-                    r1_cigar: r1_rec_entry.raw_cigar().to_vec(),
-                    r2_cigar: r2_rec_entry.raw_cigar().to_vec(),
-                };
-                if !cigar_groups.contains_key(&cigar_tuple) {
-                    cigar_groups.insert(
-                        cigar_tuple.clone(),
-                        CigarGroup::PairedRecords {
+    fn add_to_group(self, final_groups: &mut HashMap<(Cigar, String), CigarGroup>) -> Result<()> {
+        let (r1_rec_entry, r1_rec_id, r2_rec_entry, r2_rec_id, cigar_tuple, orientation) =
+            match self {
+                RecordStorage::PairedRecords { r1_rec, r2_rec } => {
+                    let r1_rec_id = r1_rec.rec_id;
+                    let r1_rec_entry = r1_rec.into_rec();
+                    let r2_rec_unwrapped = r2_rec.unwrap();
+                    let r2_rec_id = r2_rec_unwrapped.rec_id;
+                    let r2_rec_entry = r2_rec_unwrapped.into_rec();
+                    let cigar_tuple = Cigar::Tuple {
+                        r1_cigar: r1_rec_entry.raw_cigar().to_vec(),
+                        r2_cigar: r2_rec_entry.raw_cigar().to_vec(),
+                    };
+                    let pair_orientation =
+                        r1_rec_entry.read_pair_orientation().as_ref().to_string();
+                    final_groups
+                        .entry((cigar_tuple.clone(), pair_orientation.to_string()))
+                        .or_insert_with(|| CigarGroup::PairedRecords {
                             r1_recs: Vec::new(),
                             r2_recs: Vec::new(),
                             r1_seqids: Vec::new(),
                             r2_seqids: Vec::new(),
-                        },
-                    );
+                        });
+                    (
+                        r1_rec_entry,
+                        r1_rec_id,
+                        Some(r2_rec_entry),
+                        Some(r2_rec_id),
+                        cigar_tuple,
+                        pair_orientation,
+                    )
                 }
-                (
-                    r1_rec_entry,
-                    r1_rec_id,
-                    Some(r2_rec_entry),
-                    Some(r2_rec_id),
-                    cigar_tuple,
-                )
-            }
-            RecordStorage::SingleRecord { rec } => {
-                let rec_id = rec.rec_id;
-                let rec_entry = rec.into_rec();
-                let cigar_single = Cigar::Single {
-                    cigar: rec_entry.raw_cigar().to_vec(),
-                };
-                if !cigar_groups.contains_key(&cigar_single) {
-                    cigar_groups.insert(
-                        cigar_single.clone(),
-                        CigarGroup::SingleRecords {
+                RecordStorage::SingleRecord { rec } => {
+                    let rec_id = rec.rec_id;
+                    let rec_entry = rec.into_rec();
+                    let cigar_single = Cigar::Single {
+                        cigar: rec_entry.raw_cigar().to_vec(),
+                    };
+                    let read_orientation = if rec_entry.is_reverse() {
+                        "reverse"
+                    } else {
+                        "forward"
+                    }
+                    .to_string();
+                    final_groups
+                        .entry((cigar_single.clone(), read_orientation.clone()))
+                        .or_insert_with(|| CigarGroup::SingleRecords {
                             recs: Vec::new(),
                             seqids: Vec::new(),
-                        },
-                    );
+                        });
+                    (
+                        rec_entry,
+                        rec_id,
+                        None,
+                        None,
+                        cigar_single,
+                        read_orientation,
+                    )
                 }
-                (rec_entry, rec_id, None, None, cigar_single)
-            }
-        };
-        match cigar_groups.get_mut(&cigar_tuple) {
+            };
+        match final_groups.get_mut(&(cigar_tuple, orientation)) {
             Some(CigarGroup::PairedRecords {
                 r1_recs,
                 r2_recs,

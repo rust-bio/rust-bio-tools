@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.42.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.42.0...v0.42.1) (2023-07-24)
+
+
+### Bug Fixes
+
+* consensus reads: correct handling of read orientation ([#252](https://www.github.com/rust-bio/rust-bio-tools/issues/252)) ([9ca5f18](https://www.github.com/rust-bio/rust-bio-tools/commit/9ca5f1817dd1e6194adb8d1ed8a805725f48e161))
+
 ## [0.42.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.41.0...v0.42.0) (2023-01-18)
 
 

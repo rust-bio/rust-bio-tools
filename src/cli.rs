@@ -161,7 +161,7 @@ pub(crate) enum Command {
         #[structopt(
             long,
             short = "p",
-            default_value = "http://dgidb.org/api/v2/interactions.json?genes="
+            default_value = "https://dgidb.org/api/v2/interactions.json?genes="
         )]
         api_path: String,
 

@@ -16,7 +16,7 @@ indicatif = "0.11"
 itertools = "0.9"
 log = "0.4.6"
 fern = "0.5.7"
-rust-htslib = "0.38"
+rust-htslib = "0.46.0"
 csv = "1.0.2"
 rustc-serialize = "0.3"
 newtype_derive = "0.1"
@@ -32,7 +32,7 @@ rocksdb = "0.19"
 ordered-float = "0.5"
 flate2 = "1.0.5"
 streaming-stats =  "0.2.2"
-GSL = "1.1.0"
+GSL = "7.0.0"
 bio-types = ">=0.5.1"
 derive-new = "0.5"
 reqwest = "0.9"
@@ -54,7 +54,7 @@ path = "src/main.rs"
 
 
 [features]
-default = ["GSL/v2"]
+default = ["GSL/v2_1"]
 
 [profile.release]
 codegen-units = 1

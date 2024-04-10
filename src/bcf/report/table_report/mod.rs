@@ -20,6 +20,7 @@ pub fn table_report(
     format_strings: Option<Vec<String>>,
     max_read_depth: u32,
     js_files: Vec<String>,
+    annotation_field: &str,
 ) -> Result<()> {
     let detail_path = output_path.to_owned() + "/details/" + sample;
     fs::create_dir(Path::new(&detail_path)).context(WriteErr::CantCreateDir {
@@ -41,5 +42,6 @@ pub fn table_report(
         output_path,
         max_read_depth,
         js_files,
+        annotation_field,
     )
 }

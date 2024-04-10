@@ -43,11 +43,11 @@ fn compare_bam(result: &str, expected: &str) {
     let mut result_reader = bam::Reader::from_path(result).unwrap();
     let mut result_recs: Vec<bam::Record> =
         result_reader.records().filter_map(Result::ok).collect();
-    result_recs.sort_by_key(|x| x.seq().as_bytes().to_owned());
+    result_recs.sort_by_key(|x| x.seq().as_bytes());
     let mut expected_reader = bam::Reader::from_path(expected).unwrap();
     let mut expected_recs: Vec<bam::Record> =
         expected_reader.records().filter_map(Result::ok).collect();
-    expected_recs.sort_by_key(|x| x.seq().as_bytes().to_owned());
+    expected_recs.sort_by_key(|x| x.seq().as_bytes());
     for (result, expected) in result_recs.iter().zip(expected_recs.iter()) {
         assert_eq!(result.seq().as_bytes(), expected.seq().as_bytes());
         assert_eq!(result.qual(), expected.qual());
@@ -106,6 +106,32 @@ fn vcf_to_txt() {
         "tests/variant-table.txt",
         "tests/expected/variant-table.txt",
     );
+}
+
+#[test]
+fn vcf_to_txt_with_filter() {
+    assert!(Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-to-txt --genotypes --fmt S --info T X SOMATIC --with-filter < tests/test-with-filter.vcf > tests/variant-table-with-filter.txt")
+            .spawn().unwrap().wait().unwrap().success());
+    test_output(
+        "tests/variant-table-with-filter.txt",
+        "tests/expected/variant-table-with-filter.txt",
+    );
+}
+
+// FIXME: can't work out how to use should_panic macro
+//#[should_panic]
+fn vcf_to_txt_input_info_as_format() {
+    assert!(String::from_utf8_lossy(
+        &Command::new("bash")
+            .arg("-c")
+            .arg("target/debug/rbt vcf-to-txt --fmt T < tests/test.vcf")
+            .output()
+            .unwrap()
+            .stderr
+    )
+    .contains("'Unable to find FORMAT \"T\" in the input file! Is \"T\" an INFO tag?'"));
 }
 
 #[test]
@@ -208,7 +234,7 @@ fn test_vcf_report() {
         // This may fail on OS X due to the wrong sed being installed
         assert!(Command::new("bash")
             .arg("-c")
-            .arg("sed -i '35d;28d' ".to_owned() + result)
+            .arg("sed -i '36d;29d' ".to_owned() + result)
             .spawn()
             .unwrap()
             .wait()
@@ -232,7 +258,7 @@ fn test_csv_report() {
 
     let result = "tests/test-csv-report/data/index1.js";
     let expected = "tests/expected/csv-report/data/index1.js";
-    test_output(&result, &expected);
+    test_output(result, expected);
 
     fs::remove_dir_all("tests/test-csv-report").unwrap();
 }
@@ -381,4 +407,24 @@ fn test_vcf_split() {
         .wait()
         .unwrap()
         .success());
+}
+
+#[test]
+fn test_vcf_split_chain() {
+    assert!(Command::new("bash")
+        .arg("-c")
+        .arg("target/debug/rbt vcf-split tests/test-vcf-split-chain.vcf /tmp/vcf-split-chain1.bcf /tmp/vcf-split-chain2.bcf")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap()
+        .success());
+    test_output(
+        "/tmp/vcf-split-chain1.bcf",
+        "tests/expected/vcf-split-chain1.bcf",
+    );
+    test_output(
+        "/tmp/vcf-split-chain2.bcf",
+        "tests/expected/vcf-split-chain2.bcf",
+    );
 }

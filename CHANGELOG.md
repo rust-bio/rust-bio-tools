@@ -2,6 +2,160 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.42.2](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.42.1...v0.42.2) (2024-04-10)
+
+
+### Miscellaneous Chores
+
+* release 0.42.2 ([a1793ea](https://www.github.com/rust-bio/rust-bio-tools/commit/a1793ea7e7fe68d05e5d05c714213ad474581e70))
+
+### [0.42.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.42.0...v0.42.1) (2023-07-24)
+
+
+### Bug Fixes
+
+* consensus reads: correct handling of read orientation ([#252](https://www.github.com/rust-bio/rust-bio-tools/issues/252)) ([9ca5f18](https://www.github.com/rust-bio/rust-bio-tools/commit/9ca5f1817dd1e6194adb8d1ed8a805725f48e161))
+
+## [0.42.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.41.0...v0.42.0) (2023-01-18)
+
+
+### Features
+
+* consensus reads - move record ids to description field ([#250](https://www.github.com/rust-bio/rust-bio-tools/issues/250)) ([f7d683b](https://www.github.com/rust-bio/rust-bio-tools/commit/f7d683b11964d9fb992827d59dd0d9a645c79cd5))
+
+## [0.41.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.40.0...v0.41.0) (2022-08-19)
+
+
+### Features
+
+* Remove duplicate marks from consensus records ([#247](https://www.github.com/rust-bio/rust-bio-tools/issues/247)) ([692eb04](https://www.github.com/rust-bio/rust-bio-tools/commit/692eb041683ac898277628b140da13e88ec40449))
+
+## [0.40.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.39.1...v0.40.0) (2022-07-21)
+
+
+### Features
+
+* Enable printing FILTER field for vcf-to-txt ([#242](https://www.github.com/rust-bio/rust-bio-tools/issues/242)) ([13bef65](https://www.github.com/rust-bio/rust-bio-tools/commit/13bef659588d9c7cfd81eaff459234c5659a99b8))
+
+### [0.39.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.39.0...v0.39.1) (2022-06-14)
+
+
+### Bug Fixes
+
+* Handle empty sequences for bam-anonymize ([#241](https://www.github.com/rust-bio/rust-bio-tools/issues/241)) ([039ed92](https://www.github.com/rust-bio/rust-bio-tools/commit/039ed92665b094e8ebcbe42bf955496891d5d962))
+* Improved message if error occurred during FORMAT parsing in vcf-to-txt ([#243](https://www.github.com/rust-bio/rust-bio-tools/issues/243)) ([4231371](https://www.github.com/rust-bio/rust-bio-tools/commit/423137126bf904001ca871f195620ed47821af91))
+* vcfsplit BND record ordering ([#244](https://www.github.com/rust-bio/rust-bio-tools/issues/244)) ([9b7ae9a](https://www.github.com/rust-bio/rust-bio-tools/commit/9b7ae9a023ad84467131201d837bef3987306d2a))
+
+## [0.39.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.3...v0.39.0) (2022-02-21)
+
+
+### Features
+
+* Make annotation header available for customized reports ([#238](https://www.github.com/rust-bio/rust-bio-tools/issues/238)) ([e8fc664](https://www.github.com/rust-bio/rust-bio-tools/commit/e8fc664536ca6313a391dbb4ba955317e7ac50e6))
+
+### [0.38.3](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.2...v0.38.3) (2022-02-09)
+
+
+### Bug Fixes
+
+* Fix vcf-report allele frequency heatmap width ([#236](https://www.github.com/rust-bio/rust-bio-tools/issues/236)) ([6f119d3](https://www.github.com/rust-bio/rust-bio-tools/commit/6f119d3bab34594029a846172e29623fb9ed71aa))
+* Fix vcf-report read plot height when using --max-read-depth ([#235](https://www.github.com/rust-bio/rust-bio-tools/issues/235)) ([4350a1a](https://www.github.com/rust-bio/rust-bio-tools/commit/4350a1a3887d7f22e16de8ed8944981d138982d6))
+
+### [0.38.2](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.1...v0.38.2) (2022-01-14)
+
+
+### Bug Fixes
+
+* add popper in csv report ([#233](https://www.github.com/rust-bio/rust-bio-tools/issues/233)) ([a095755](https://www.github.com/rust-bio/rust-bio-tools/commit/a0957551e39928a510c7abd408378c274a3b5c33))
+
+### [0.38.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.38.0...v0.38.1) (2022-01-06)
+
+
+### Bug Fixes
+
+* Report 1-based position in vcf-report log messages ([#231](https://www.github.com/rust-bio/rust-bio-tools/issues/231)) ([bcf6260](https://www.github.com/rust-bio/rust-bio-tools/commit/bcf62609b52578a30a21a42971e0001701941681))
+
+## [0.38.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.37.0...v0.38.0) (2021-12-25)
+
+
+### Features
+
+* Add aux field to tooltip ([#226](https://www.github.com/rust-bio/rust-bio-tools/issues/226)) ([cfc8fe5](https://www.github.com/rust-bio/rust-bio-tools/commit/cfc8fe572fbc2e498d3d3cc0fe0de9e320b773d1))
+
+
+### Bug Fixes
+
+* Apply latest clippy lints ([#227](https://www.github.com/rust-bio/rust-bio-tools/issues/227)) ([d1a60cc](https://www.github.com/rust-bio/rust-bio-tools/commit/d1a60cc8876eb8ea2b6cffb21bdcee44a00d2dc4))
+
+## [0.37.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.36.0...v0.37.0) (2021-12-19)
+
+
+### Features
+
+* anonymize bam - adapt mandatory and aux fields ([#219](https://www.github.com/rust-bio/rust-bio-tools/issues/219)) ([e6ffdea](https://www.github.com/rust-bio/rust-bio-tools/commit/e6ffdea140704e305d8b30213c57d76bf7841fc2))
+
+## [0.36.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.35.0...v0.36.0) (2021-12-15)
+
+
+### Features
+
+* Use Feature before HGVSg for level 1 naming ([#224](https://www.github.com/rust-bio/rust-bio-tools/issues/224)) ([4377e42](https://www.github.com/rust-bio/rust-bio-tools/commit/4377e428e9bca2b806e666a8234da35e027fd523))
+* Warn instead of panic for missing HGVSg values in vcf-report ([#220](https://www.github.com/rust-bio/rust-bio-tools/issues/220)) ([5f16505](https://www.github.com/rust-bio/rust-bio-tools/commit/5f1650506fb502548e07d2756ff99557bb562580))
+
+
+### Bug Fixes
+
+* Fix possible broken link to third stage of vcf-report ([#221](https://www.github.com/rust-bio/rust-bio-tools/issues/221)) ([66299d2](https://www.github.com/rust-bio/rust-bio-tools/commit/66299d2e0e5ac96f67db8fcf4fef7834c2a2de05))
+
+## [0.35.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.34.0...v0.35.0) (2021-12-14)
+
+
+### Features
+
+* Add --annotation-field option to vcf-report ([#211](https://www.github.com/rust-bio/rust-bio-tools/issues/211)) ([29719d5](https://www.github.com/rust-bio/rust-bio-tools/commit/29719d51f0169de39570c6715af5b45336691ebb))
+
+
+### Bug Fixes
+
+* add missing js-file to vcf-report ([#212](https://www.github.com/rust-bio/rust-bio-tools/issues/212)) ([55b3166](https://www.github.com/rust-bio/rust-bio-tools/commit/55b3166516b6f369577df74f8cc020fbe9629721))
+* release version ([5de5480](https://www.github.com/rust-bio/rust-bio-tools/commit/5de548073816dc46ec68ad352c3b91a738971e20))
+* vcf-report tests ([#215](https://www.github.com/rust-bio/rust-bio-tools/issues/215)) ([b3e45b3](https://www.github.com/rust-bio/rust-bio-tools/commit/b3e45b3a290bfea7d1553ff34e186f1f870c6e02))
+
+
+### Miscellaneous Chores
+
+* release 0.33.2 ([10d2446](https://www.github.com/rust-bio/rust-bio-tools/commit/10d24469bfc5ea72ea385e82537e1fb52ca8f364))
+
+## [0.34.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.33.1...v0.34.0) (2021-12-11)
+
+### Features
+
+* Add --annotation-field option to vcf-report ([#211](https://github.com/rust-bio/rust-bio-tools/pull/211)) ([29719d5](https://github.com/rust-bio/rust-bio-tools/commit/29719d51f0169de39570c6715af5b45336691ebb))
+
+
+### Bug Fixes
+
+* add missing js-file to vcf-report ([#212](https://github.com/rust-bio/rust-bio-tools/pull/212)) ([55b3166](https://github.com/rust-bio/rust-bio-tools/commit/55b3166516b6f369577df74f8cc020fbe9629721))
+
+## [0.33.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.33.0...v0.33.1) (2021-12-07)
+
+
+### Features
+
+* Improve gene search for vcf-report ([#209](https://www.github.com/rust-bio/rust-bio-tools/issues/209)) ([cbeaff5](https://www.github.com/rust-bio/rust-bio-tools/commit/cbeaff5a79bf19fb745fa0e15505d5c41a9a6dd5))
+
+## [0.33.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.32.0...v0.33.0) (2021-12-06)
+
+
+### Features
+
+* Updates and fixes for vcf-report ([#207](https://www.github.com/rust-bio/rust-bio-tools/issues/207)) ([e19b4fb](https://www.github.com/rust-bio/rust-bio-tools/commit/e19b4fb4e3d935bfa5f41796dc23669a903563dc))
+
+
+### Bug Fixes
+
+* Add error messages for missing annotations ([#206](https://www.github.com/rust-bio/rust-bio-tools/issues/206)) ([6210dd2](https://www.github.com/rust-bio/rust-bio-tools/commit/6210dd22749c4cff818724f1a24dc6d8f104c927))
+
 ## [0.32.0](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.31.0...v0.32.0) (2021-12-01)
 
 

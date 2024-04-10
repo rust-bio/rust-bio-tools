@@ -37,7 +37,7 @@ fn main() -> Result<()> {
         FastqSplit { chunks } => {
             fastq::split::split(&chunks.iter().map(|p| p.to_str().unwrap()).collect_vec())?
         }
-        FastqFilter { ids } => fastq::filter::filter(&ids).unwrap(),
+        FastqFilter { ids } => fastq::filter::filter(ids).unwrap(),
         BamDepth {
             bam_path,
             max_read_length,
@@ -45,7 +45,7 @@ fn main() -> Result<()> {
             exclude_flags,
             min_mapq,
         } => bam::depth::depth(
-            &bam_path,
+            bam_path,
             max_read_length,
             include_flags,
             exclude_flags,
@@ -55,10 +55,12 @@ fn main() -> Result<()> {
             info,
             format,
             genotypes,
+            with_filter,
         } => bcf::to_txt::to_txt(
             info.iter().map(|s| s as &str).collect_vec().as_slice(),
             format.iter().map(|s| s as &str).collect_vec().as_slice(),
             genotypes,
+            with_filter,
         )?,
         VcfMatch {
             vcf,
@@ -76,7 +78,7 @@ fn main() -> Result<()> {
         } => bcf::annotate_dgidb::annotate_dgidb(
             vcf,
             api_path,
-            &*field,
+            &field,
             datasources.as_deref(),
             genes_per_request,
         )?,
@@ -133,6 +135,7 @@ fn main() -> Result<()> {
             custom_js_files,
             tsv,
             threads,
+            annotation_field,
             output_path,
         } => {
             let mut sample_calls = HashMap::new();
@@ -203,6 +206,7 @@ fn main() -> Result<()> {
                     formats.clone(),
                     max_read_depth,
                     js_file_names.clone(),
+                    &annotation_field,
                 )
                 .unwrap_or_else(|e| {
                     panic!("Failed building table report for sample {}. {}", sample, e)
@@ -215,6 +219,7 @@ fn main() -> Result<()> {
                 cells,
                 tsv.as_deref(),
                 plot_info,
+                &annotation_field,
             )?
         }
         VcfSplit { input, output } => bcf::split::split(input, output.as_ref())?,
@@ -252,14 +257,14 @@ fn main() -> Result<()> {
                 consensus_fq2,
                 consensus_fq_se,
                 skipped_bam,
-                verbose_read_names,
+                annotate_record_ids,
             } => bam::collapse_reads_to_fragments::call_consensus_reads_from_paths(
                 bam,
                 consensus_fq1,
                 consensus_fq2,
                 consensus_fq_se,
                 skipped_bam,
-                verbose_read_names,
+                annotate_record_ids,
             )?,
         },
         BamAnonymize {

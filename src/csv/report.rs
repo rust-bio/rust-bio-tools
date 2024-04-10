@@ -15,7 +15,7 @@ use std::io::{Read, Write};
 use std::path::Path;
 use std::str::FromStr;
 use tera::{Context, Tera};
-use xlsxwriter::*;
+use xlsxwriter::prelude::*;
 
 type LookupTable = HashMap<String, HashMap<String, Vec<(String, usize, usize)>>>;
 
@@ -127,7 +127,7 @@ pub(crate) fn csv_report(
         (_, _) => {}
     }
 
-    let wb = Workbook::new(&(output_path.to_owned() + "/report.xlsx"));
+    let wb = Workbook::new(&(output_path.to_owned() + "/report.xlsx"))?;
     let mut sheet = wb.add_worksheet(Some("Report"))?;
     for (i, title) in titles.iter().enumerate() {
         sheet.write_string(0, i.try_into()?, title, None)?;

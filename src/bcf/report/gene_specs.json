@@ -5,7 +5,7 @@
     "impact": {},
     "consequence": {},
     "clin_sig": {},
-    "allel_frequency": {},
+    "allele_frequency": {},
     "ev": {}
   },
   "autosize":{
@@ -1016,9 +1016,9 @@
         },
         {
           "data":{
-            "name":"allel_frequency"
+            "name":"allele_frequency"
           },
-          "mark":"tick",
+          "mark":"rect",
           "width":100,
           "encoding":{
             "y":{
@@ -1027,21 +1027,24 @@
               "sort": {},
               "axis": null
             },
-            "x":{
-              "field":"allel_frequency",
+            "color":{
+              "field":"allele_frequency",
               "type":"quantitative",
               "axis":{
                 "title":"allele frequency"
               }
             },
-            "color":{
+            "x":{
               "field":"sample",
               "type":"nominal",
               "title":"sample"
             },
             "tooltip": [{
-              "field": "allel_frequency",
+              "field": "allele_frequency",
               "type": "quantitative"
+            },{
+              "field": "sample",
+              "type": "nominal"
             }]
           }
         },
@@ -1085,6 +1088,9 @@
     "legend":{
       "orient": "bottom",
       "direction": "vertical"
+    },
+    "axisX": {
+      "orient": "top"
     }
   }
 }

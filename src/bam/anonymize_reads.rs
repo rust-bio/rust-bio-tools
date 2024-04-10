@@ -23,6 +23,7 @@ pub fn anonymize_reads<P: AsRef<Path> + std::fmt::Debug>(
     let mut fasta_reader = fasta::IndexedReader::from_file(&input_ref)?;
     fasta_reader.fetch(&chr, start, end)?;
     let mut reference = Vec::new();
+    reference.resize((end - start) as usize, 0);
     fasta_reader.read(&mut reference)?;
     let mut rng = rand::thread_rng();
     let alphabet = [b'A', b'C', b'G', b'T'];
@@ -58,7 +59,7 @@ pub fn anonymize_reads<P: AsRef<Path> + std::fmt::Debug>(
         {
             record.cache_cigar();
             //Check if mate record end within region
-            let artificial_seq = if record.is_unmapped() {
+            let artificial_seq = if record.is_unmapped() || record.seq_len() == 0 {
                 let mut seq = Vec::new();
                 add_random_bases(record.seq_len() as u64, &mut seq, &mut rng, &alphabet)?;
                 seq
@@ -98,22 +99,17 @@ fn init_altered_bases(
 
 fn build_record(record: &bam::Record, artificial_seq: &[u8], offset: i64) -> Result<bam::Record> {
     let mut artificial_record = bam::record::Record::new();
-    if let Ok(mate_cigar) = record.aux(b"MC") {
-        artificial_record.push_aux(b"MC", mate_cigar)?;
-    }
     artificial_record.set(
         record.qname(),
         Some(&record.cigar()),
         artificial_seq,
         record.qual(),
     );
-    artificial_record.set_pos(record.pos() - offset);
-    artificial_record.set_tid(0);
-    artificial_record.set_mtid(0);
-    artificial_record.set_mpos(record.mpos() - offset);
-    artificial_record.set_flags(record.flags());
-    artificial_record.set_insert_size(record.insert_size());
-    artificial_record.set_mapq(record.mapq());
+    set_mandatory_fields(&mut artificial_record, record, offset)?;
+    for aux_result in record.aux_iter() {
+        let (tag, aux_field) = aux_result?;
+        artificial_record.push_aux(tag, aux_field)?;
+    }
     Ok(artificial_record)
 }
 
@@ -167,6 +163,28 @@ fn build_sequence(
     }
 
     Ok(artificial_seq)
+}
+
+fn set_mandatory_fields(
+    target_rec: &mut bam::Record,
+    source_rec: &bam::Record,
+    offset: i64,
+) -> Result<()> {
+    target_rec.set_pos(source_rec.pos() - offset);
+    target_rec.set_tid(0);
+    let (mtid, mpos) = if source_rec.mtid() == -1 {
+        (-1, -1)
+    } else if source_rec.mtid() == source_rec.tid() {
+        (0, source_rec.mpos() - offset)
+    } else {
+        (1, source_rec.mpos())
+    };
+    target_rec.set_mtid(mtid);
+    target_rec.set_mpos(mpos);
+    target_rec.set_flags(source_rec.flags());
+    target_rec.set_insert_size(source_rec.insert_size());
+    target_rec.set_mapq(source_rec.mapq());
+    Ok(())
 }
 
 fn add_random_bases(

@@ -1,6 +1,7 @@
 use crate::bcf::report::table_report::fasta_reader::{get_fasta_lengths, read_fasta};
 use crate::bcf::report::table_report::static_reader::{get_static_reads, Variant};
 use crate::common::Region;
+use anyhow::anyhow;
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
 use chrono::{DateTime, Local};
@@ -13,7 +14,7 @@ use rust_htslib::bcf::{HeaderRecord, Read, Record};
 use rustc_serialize::json::Json;
 use serde::Serialize;
 use serde_json::{json, Value};
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -55,6 +56,7 @@ pub(crate) fn make_table_report(
     output_path: &str,
     max_read_depth: u32,
     js_files: Vec<String>,
+    annotation_field: &str,
 ) -> Result<()> {
     // HashMap<gene: String, Vec<Report>>, Vec<ann_field_identifiers: String>
     // let mut reports = HashMap::new();
@@ -62,7 +64,7 @@ pub(crate) fn make_table_report(
     let mut vcf = rust_htslib::bcf::Reader::from_path(&vcf_path).unwrap();
     let header = vcf.header().clone();
     let header_records = header.header_records();
-    let ann_field_description: Vec<_> = get_ann_description(header_records).unwrap();
+    let ann_field_description: Vec<_> = get_ann_description(header_records, annotation_field)?;
     let samples: Vec<_> = header
         .samples()
         .iter()
@@ -185,7 +187,7 @@ pub(crate) fn make_table_report(
         let mut alterations = Vec::new();
         let mut hgvsgs = Vec::new();
 
-        if let Some(ann) = variant.info(b"ANN").string()? {
+        if let Some(ann) = variant.info(annotation_field.as_bytes()).string()? {
             for entry in ann.iter() {
                 let fields = entry.split(|c| *c == b'|').collect_vec();
 
@@ -248,19 +250,31 @@ pub(crate) fn make_table_report(
                 let plot_start_position;
 
                 let hgvsg: String = if alleles.len() > 2 {
-                    hgvsgs.iter().find(|(a, _)| *a == std::str::from_utf8(allel).unwrap()).context(format!("Found variant {} at position {} without HGVSg field for every given allele.", &id, &pos))?.0.to_owned()
+                    if let Some(hgvsg) = hgvsgs
+                        .iter()
+                        .find(|(a, _)| *a == std::str::from_utf8(allel).unwrap())
+                    {
+                        hgvsg.0.to_owned()
+                    } else {
+                        warn!("Found variant {} at position {}:{} without HGVSg field for every given allele.", &id, &chrom, &pos + 1);
+                        continue;
+                    }
                 } else {
                     let mut unique_hgsvgs = hgvsgs.iter().map(|(_, b)| b).unique().collect_vec();
                     if unique_hgsvgs.len() > 1 {
-                        warn!("Found variant {} at position {} with multiple HGVSg values and only one alternative allele.", &id, &pos);
+                        warn!("Found variant {} at position {}:{} with multiple HGVSg values and only one alternative allele.", &id, &chrom, &pos + 1);
                     }
-                    unique_hgsvgs
-                        .pop()
-                        .context(format!(
-                            "Found variant {} at position {} with no HGVSg value.",
-                            &id, &pos
-                        ))?
-                        .to_owned()
+                    if let Some(hgvsg) = unique_hgsvgs.pop() {
+                        hgvsg.to_owned()
+                    } else {
+                        warn!(
+                            "Found variant {} at position {}:{} with no HGVSg value.",
+                            &id,
+                            &chrom,
+                            &pos + 1
+                        );
+                        continue;
+                    }
                 };
 
                 match alt {
@@ -405,6 +419,7 @@ pub(crate) fn make_table_report(
                     include_str!("report_table.html.tera"),
                 )?;
                 let mut context = Context::new();
+                context.insert("ann_description", &json!(ann_field_description).to_string());
                 context.insert("variant", &report_data);
                 context.insert("hgvsg", &hgvsg);
                 context.insert("escaped_hgvsg", &escaped_hgvsg);
@@ -438,13 +453,16 @@ pub(crate) fn make_table_report(
 }
 
 fn escape_hgvsg(hgvsg: &str) -> String {
-    hgvsg.replace(".", "_").replace(">", "_").replace(":", "_")
+    hgvsg.replace('.', "_").replace('>', "_").replace(':', "_")
 }
 
-pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<Vec<String>> {
+pub(crate) fn get_ann_description(
+    header_records: Vec<HeaderRecord>,
+    annotation_field: &str,
+) -> Result<Vec<String>> {
     for rec in header_records {
         if let rust_htslib::bcf::HeaderRecord::Info { key: _, values } = rec {
-            if values.get("ID").unwrap() == "ANN" {
+            if values.get("ID").unwrap() == annotation_field {
                 let description = values.get("Description").unwrap();
                 let fields: Vec<_> = description.split('|').collect();
                 let mut owned_fields = Vec::new();
@@ -457,11 +475,13 @@ pub(crate) fn get_ann_description(header_records: Vec<HeaderRecord>) -> Option<V
                     entry = entry.trim();
                     owned_fields.push(entry.to_owned());
                 }
-                return Some(owned_fields);
+                return Ok(owned_fields);
             }
         }
     }
-    None
+    Err(anyhow!(
+        "Could not find any annotations by VEP. Please only use VEP-annotated VCF-files."
+    ))
 }
 
 pub(crate) fn read_tag_entries(
@@ -552,14 +572,12 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64) -> Result<String> 
 
     let v = values["values"].as_array().unwrap().clone();
 
-    let mut row = 0;
+    let mut rows = HashSet::new();
 
     for (i, _) in v.iter().enumerate() {
         let k = v[i]["marker_type"].clone().as_str().unwrap().to_owned();
         let r = v[i]["row"].clone().as_i64().unwrap();
-        if r > row {
-            row = r;
-        }
+        rows.insert(r);
 
         if k == "A" || k == "T" || k == "G" || k == "C" || k == "U" || k == "N" {
             values["values"][i]["base"] = values["values"][i]["marker_type"].clone();
@@ -577,7 +595,7 @@ pub(crate) fn manipulate_json(data: Json, from: u64, to: u64) -> Result<String> 
     }
 
     vega_specs["width"] = json!(700);
-    vega_specs["height"] = json!(core::cmp::max(10 * row + 60, 203));
+    vega_specs["height"] = json!(core::cmp::max(10 * rows.len() + 60, 203));
     let domain = json!([from, to]);
 
     vega_specs["scales"][0]["domain"] = domain;

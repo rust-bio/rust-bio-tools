@@ -2,7 +2,6 @@ use anyhow::Context;
 use approx::relative_eq;
 use bio::stats::probs::{LogProb, PHREDProb};
 use bio_types::sequence::SequenceRead;
-use itertools::Itertools;
 use ordered_float::NotNaN;
 use std::cmp;
 use std::collections::HashMap;
@@ -65,37 +64,32 @@ pub trait CalcConsensus<'a, R: SequenceRead> {
             // new qual: (1 - MAP)
             let qual = (likelihoods[max_posterior] - marginal).ln_one_minus_exp();
             // Assume the maximal quality, if the likelihood is infinite
-            let truncated_quality: f64;
-            if (*PHREDProb::from(qual)).is_infinite() {
-                truncated_quality = 93.0;
+            let truncated_quality: f64 = if (*PHREDProb::from(qual)).is_infinite() {
+                93.0
             } else {
-                truncated_quality = *PHREDProb::from(qual);
-            }
+                *PHREDProb::from(qual)
+            };
             // Truncate quality values to PHRED+33 range
             consensus_qual
                 .push(cmp::min(93 + offset as u64, (truncated_quality + offset) as u64) as u8);
         }
     }
-    fn build_verbose_read_name(
-        uuid: &str,
+    fn collect_read_names(
         seq_ids: &[usize],
         read_ids: &Option<HashMap<usize, Vec<u8>>>,
-    ) -> String {
-        format!(
-            "{}_consensus-read-from:{}",
-            uuid,
-            seq_ids
-                .iter()
-                .map(|i| String::from_utf8(
-                    read_ids
-                        .as_ref()
-                        .map(|x| x.get(i).unwrap())
-                        .unwrap()
-                        .to_vec()
-                )
-                .unwrap())
-                .join(",")
-        )
+    ) -> Vec<u8> {
+        let ids = seq_ids
+            .iter()
+            .map(|i| {
+                read_ids
+                    .as_ref()
+                    .map(|x| x.get(i).unwrap())
+                    .unwrap()
+                    .to_vec()
+            })
+            .collect::<Vec<_>>()
+            .join(&b',');
+        [b"ID:Z:".to_vec(), ids].concat()
     }
 
     fn overall_allele_likelihood(&self, allele: &u8, i: usize) -> LogProb;

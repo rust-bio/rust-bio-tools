@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::iter;
 use std::path::Path;
 
 use anyhow::Context;
@@ -9,77 +8,42 @@ use rust_htslib::bcf;
 use rust_htslib::bcf::Read;
 
 pub fn split<P: AsRef<Path>>(input_bcf: P, output_bcfs: &[P]) -> Result<()> {
-    let info = BcfInfo::new(&input_bcf).context("error reading input VCF/BCF")?;
+    let n_records = bcf::Reader::from_path(input_bcf.as_ref())
+        .context("error reading input VCF/BCF")?
+        .records()
+        .fold(0_u64, |count, _| count + 1);
     let mut reader = bcf::Reader::from_path(input_bcf).context("error reading input VCF/BCF")?;
     let header = bcf::Header::from_template(reader.header());
     let mut bnd_cache = HashMap::new();
 
-    let chunk_size = info.n_records / output_bcfs.len() as u64;
+    let chunk_size = n_records / output_bcfs.len() as u64;
 
-    let mut i = 0;
-    for (chunk, out_path) in output_bcfs.iter().enumerate() {
-        let chunk = chunk as u64;
-        let mut writer = bcf::Writer::from_path(out_path, &header, false, bcf::Format::Bcf)?;
-        let mut written = 0;
-        let write_err = || {
-            format!(
-                "error writing record to {}",
-                out_path.as_ref().as_os_str().to_str().unwrap()
-            )
-        };
+    let mut writers = output_bcfs
+        .iter()
+        .map(|path| {
+            bcf::Writer::from_path(path, &header, false, bcf::Format::Bcf)
+                .context("error creating output VCF/BCF")
+        })
+        .collect::<Result<Vec<_>>>()?;
 
-        loop {
-            let mut rec = reader.empty_record();
+    for (rec, i) in reader.records().zip(0..) {
+        let rec = rec?;
 
-            if reader.read(&mut rec).is_none() {
-                // EOF
-                break;
-            }
-
-            let towrite = if is_bnd(&mut rec) {
-                if let Some(group) = BreakendGroup::from(&mut rec) {
-                    if let Some(end) = info.end(&group) {
-                        // BND is part of a group.
-                        if i == end {
-                            // BND is last BND of group.
-                            // Write out all previous BNDs of group.
-                            if let Some(bnds) =
-                                bnd_cache.get(info.supergroups.get(&group).unwrap_or(&group))
-                            {
-                                for rec in bnds {
-                                    writer.write(rec).with_context(write_err)?;
-                                    written += 1;
-                                }
-                            }
-                            Some(rec)
-                        } else {
-                            // Cache BND record for later.
-                            let entry = bnd_cache.entry(group).or_insert_with(Vec::new);
-                            entry.push(rec);
-                            None
-                        }
-                    } else {
-                        Some(rec)
+        let mut chunk = i / (chunk_size + 1);
+        if rec.is_bnd() {
+            if let Some(group) = BreakendGroup::from(&rec) {
+                let event_chunk = match group {
+                    BreakendGroup::Event(id) => bnd_cache.entry(id).or_insert(chunk),
+                    BreakendGroup::Mates(ids) => {
+                        let ids = ids.clone();
+                        bnd_cache.entry(ids.concat()).or_insert(chunk)
                     }
-                } else {
-                    Some(rec)
-                }
-            } else {
-                Some(rec)
-            };
-
-            if let Some(towrite) = towrite {
-                writer.write(&towrite).with_context(write_err)?;
-                written += 1;
+                };
+                chunk = *event_chunk;
             }
-
-            i += 1;
-
-            if chunk < output_bcfs.len() as u64 - 1 && written >= chunk_size {
-                // go on with next chunk
-                break;
-            }
-        }
+        };
+        let writer = &mut writers[chunk as usize];
+        writer.write(&rec)?;
     }
 
     Ok(())
@@ -92,41 +56,10 @@ enum BreakendGroup {
 }
 
 impl BreakendGroup {
-    fn subgroups<'a>(&'a self) -> Box<dyn Iterator<Item = Self> + 'a> {
-        if let BreakendGroup::Mates(mates) = self {
-            if mates.len() > 2 {
-                return Box::new(
-                    (2..mates.len())
-                        .map(move |k| {
-                            if let BreakendGroup::Mates(mates) = self {
-                                mates.iter().cloned().combinations(k)
-                            } else {
-                                unreachable!();
-                            }
-                        })
-                        .flatten()
-                        .map(BreakendGroup::Mates),
-                );
-            }
-        }
-        Box::new(iter::empty())
-    }
-
-    fn len(&self) -> usize {
-        match self {
-            BreakendGroup::Event(_) => 1,
-            BreakendGroup::Mates(mates) => mates.len(),
-        }
-    }
-
-    fn from(rec: &mut bcf::Record) -> Option<Self> {
-        if let Some(event) = event(rec) {
+    fn from(rec: &bcf::Record) -> Option<Self> {
+        if let Some(event) = rec.event() {
             Some(BreakendGroup::Event(event))
-        } else if let Some(mateids) = mateids(rec) {
-            let mut mates: Vec<_> = mateids
-                .into_iter()
-                .map(|mateid| mateid.to_owned())
-                .collect();
+        } else if let Some(mut mates) = rec.mateids() {
             let id = rec.id();
             mates.push(id);
             mates.sort();
@@ -137,79 +70,33 @@ impl BreakendGroup {
     }
 }
 
-#[derive(Debug)]
-struct BcfInfo {
-    n_records: u64,
-    bnd_ends: HashMap<BreakendGroup, u64>,
-    supergroups: HashMap<BreakendGroup, BreakendGroup>,
+type Id = Vec<u8>;
+
+trait BndRecord {
+    fn is_bnd(&self) -> bool;
+    fn event(&self) -> Option<Id>;
+    fn mateids(&self) -> Option<Vec<Id>>;
 }
 
-impl BcfInfo {
-    fn new<P: AsRef<Path>>(input_bcf: P) -> Result<Self> {
-        let mut reader = bcf::Reader::from_path(input_bcf)?;
-        let mut bnd_ends = HashMap::new();
-        let mut supergroups: HashMap<BreakendGroup, BreakendGroup> = HashMap::new();
-
-        let mut i = 0;
-        let mut set_end = |group: BreakendGroup, i: u64| {
-            let end = bnd_ends.entry(group).or_insert(0);
-            *end = i;
-        };
-        for res in reader.records() {
-            let mut rec = res?;
-
-            if is_bnd(&mut rec) {
-                if let Some(group) = BreakendGroup::from(&mut rec) {
-                    if let Some(repr) = supergroups.get(&group) {
-                        // this group is part of a supergroup
-                        set_end(repr.clone(), i)
-                    } else {
-                        // register all subgroups
-                        for subgroup in group.subgroups() {
-                            if let Some(repr) = supergroups.get(&subgroup) {
-                                if repr.len() < group.len() {
-                                    supergroups.insert(subgroup, group.clone());
-                                }
-                            }
-                        }
-                        set_end(group, i)
-                    }
-                }
-            }
-            i += 1;
-        }
-
-        Ok(BcfInfo {
-            n_records: i,
-            bnd_ends,
-            supergroups,
+impl BndRecord for bcf::Record {
+    fn is_bnd(&self) -> bool {
+        self.info(b"SVTYPE").string().map_or(false, |entries| {
+            entries.map_or(false, |entries| entries[0] == b"BND")
         })
     }
 
-    fn end(&self, group: &BreakendGroup) -> Option<u64> {
-        self.bnd_ends
-            .get(self.supergroups.get(group).unwrap_or(group))
-            .copied()
+    fn event(&self) -> Option<Id> {
+        if let Ok(Some(event)) = self.info(b"EVENT").string() {
+            Some(event[0].to_owned())
+        } else {
+            None
+        }
     }
-}
 
-fn is_bnd(record: &mut bcf::Record) -> bool {
-    record.info(b"SVTYPE").string().map_or(false, |entries| {
-        entries.map_or(false, |entries| entries[0] == b"BND")
-    })
-}
-
-fn event(record: &mut bcf::Record) -> Option<Vec<u8>> {
-    if let Ok(Some(event)) = record.info(b"EVENT").string() {
-        Some(event[0].to_owned())
-    } else {
-        None
-    }
-}
-
-fn mateids(record: &mut bcf::Record) -> Option<Vec<&[u8]>> {
-    match record.info(b"MATEID").string() {
-        Ok(Some(s)) => Some(s.clone().into_iter().collect_vec()),
-        _ => None,
+    fn mateids(&self) -> Option<Vec<Id>> {
+        match self.info(b"MATEID").string() {
+            Ok(Some(s)) => Some(s.clone().into_iter().map(|v| v.to_vec()).collect_vec()),
+            _ => None,
+        }
     }
 }

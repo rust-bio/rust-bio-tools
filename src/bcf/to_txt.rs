@@ -64,11 +64,19 @@ impl Writer {
 
 const HEADER_COMMON: &[u8] = b"VARIANT";
 
-pub fn to_txt(info_tags: &[&str], format_tags: &[&str], show_genotypes: bool) -> Result<()> {
+pub fn to_txt(
+    info_tags: &[&str],
+    format_tags: &[&str],
+    show_genotypes: bool,
+    show_filter: bool,
+) -> Result<()> {
     let mut reader = bcf::Reader::from_stdin()?;
     let mut writer = Writer::new(io::BufWriter::new(io::stdout()));
 
-    let common_n = 5 + info_tags.len();
+    let mut common_n = 5 + info_tags.len();
+    if show_filter {
+        common_n += 1
+    }
     writer.write_field(HEADER_COMMON)?;
     for _ in 1..common_n {
         writer.write_field(HEADER_COMMON)?;
@@ -88,6 +96,9 @@ pub fn to_txt(info_tags: &[&str], format_tags: &[&str], show_genotypes: bool) ->
     writer.write_field(b"REF")?;
     writer.write_field(b"ALT")?;
     writer.write_field(b"QUAL")?;
+    if show_filter {
+        writer.write_field(b"FILTER")?;
+    }
     for name in info_tags {
         writer.write_field(name.as_bytes())?;
     }
@@ -122,6 +133,23 @@ pub fn to_txt(info_tags: &[&str], format_tags: &[&str], show_genotypes: bool) ->
             match rec.qual() {
                 q if q.is_missing() => writer.write_field(b"")?,
                 q => writer.write_float(q)?,
+            }
+
+            if show_filter {
+                if rec.has_filter(".".as_bytes()) {
+                    writer.write_field(b"")?
+                } else if rec.has_filter("PASS".as_bytes()) {
+                    writer.write_field(b"PASS")?
+                } else {
+                    let mut filters = Vec::new();
+                    for (i, filter) in rec.filters().enumerate() {
+                        if i != 0 {
+                            filters.push(b';');
+                        }
+                        filters.extend_from_slice(&reader.header().id_to_name(filter));
+                    }
+                    writer.write_field(&filters)?;
+                }
             }
 
             for name in info_tags {
@@ -198,7 +226,7 @@ pub fn to_txt(info_tags: &[&str], format_tags: &[&str], show_genotypes: bool) ->
 
                         match tag_type {
                             bcf::header::TagType::Flag => {
-                                panic!("there is no flag type for format");
+                                panic!("Unable to find FORMAT \"{0}\" in the input file! Is \"{0}\" an INFO tag?", name);
                             }
                             bcf::header::TagType::Integer => {
                                 writer.write_field(

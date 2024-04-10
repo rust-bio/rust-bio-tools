@@ -1,0 +1,15 @@
+##fileformat=VCFv4.2
+##contig=<ID=chr2>
+##contig=<ID=chr3>
+##FORMAT=<ID=DP,Number=1,Type=String,Description="Depth">
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description="svtype">
+##INFO=<ID=MATEID,Number=.,Type=String,Description="mateid">
+##INFO=<ID=EVENT,Number=1,Type=String,Description="event">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	S1
+chr2	321681	bnd_W	G	G]chr3:421681]	6	PASS	SVTYPE=BND;MATEID=bnd_U	DP	1
+chr2	421682	bnd_X	C	[chr2:321682[C	6	PASS	SVTYPE=BND;MATEID=bnd_V	DP	1
+chr2	421683	regular1	A	C	6	PASS		DP	1
+chr3	321682	bnd_V	T	[chr2:421682[T	6	PASS	SVTYPE=BND;MATEID=bnd_X	DP	1
+chr3	321683	regular2	A	C	6	PASS		DP	1
+chr3	421681	bnd_U	A	A]chr3:321681]	6	PASS	SVTYPE=BND;MATEID=bnd_W	DP	1
+chr3	421682	regular3	A	C	6	PASS		DP	1

@@ -1,6 +1,6 @@
 [package]
 name = "rust-bio-tools"
-version = "0.32.0"
+version = "0.42.2"
 authors = ["Johannes Köster <johannes.koester@tu-dortmund.de>", "Erik Clarke <ecl@pennmedicine.upenn.edu>"]
 description = "A set of fast and robust command line utilities for bioinformatics tasks based on Rust-Bio."
 license-file = "LICENSE.md"
@@ -16,7 +16,7 @@ indicatif = "0.11"
 itertools = "0.9"
 log = "0.4.6"
 fern = "0.5.7"
-rust-htslib = "0.38"
+rust-htslib = "0.46.0"
 csv = "1.0.2"
 rustc-serialize = "0.3"
 newtype_derive = "0.1"
@@ -28,11 +28,11 @@ serde_derive = "1.0"
 serde_json = "1.0"
 uuid = { version = "0.7", features = ["v4"] }
 tempfile = "3.0"
-rocksdb = "0.17"
+rocksdb = "0.19"
 ordered-float = "0.5"
 flate2 = "1.0.5"
 streaming-stats =  "0.2.2"
-GSL = "1.1.0"
+GSL = "7.0.0"
 bio-types = ">=0.5.1"
 derive-new = "0.5"
 reqwest = "0.9"
@@ -40,7 +40,7 @@ regex = "1.3"
 tera = "1"
 jsonm = "0.1.4"
 chrono = "0.4"
-xlsxwriter = {version = "0.3.5", features= ["use-openssl-md5", "no-md5"]}
+xlsxwriter = {version = "0.6", features= ["use-openssl-md5", "no-md5"]}
 lazy_static = "1.4"
 anyhow = "1"
 thiserror = "1"
@@ -56,4 +56,13 @@ path = "src/main.rs"
 
 
 [features]
-default = ["GSL/v2"]
+default = ["GSL/v2_1"]
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+
+[profile.develop]
+codegen-units = 128
+inherits = "release"
+lto = false

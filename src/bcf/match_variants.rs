@@ -93,7 +93,7 @@ pub fn match_variants<P: AsRef<Path>>(matchbcf: P, max_dist: u32, max_len_diff: 
                 .iter()
                 .map(|a| {
                     if let Some(range) = index.range(chrom, pos as u64) {
-                        for v in range.map(|(_, idx_vars)| idx_vars).flatten() {
+                        for v in range.flat_map(|(_, idx_vars)| idx_vars) {
                             if let Some(id) = var.matches(v, a, max_dist, max_len_diff) {
                                 return id as i32;
                             }
@@ -119,7 +119,6 @@ pub fn match_variants<P: AsRef<Path>>(matchbcf: P, max_dist: u32, max_len_diff: 
 #[derive(Debug)]
 pub struct Variant {
     id: u32,
-    rid: u32,
     pos: u64,
     alleles: Vec<VariantType>,
 }
@@ -206,7 +205,6 @@ impl Variant {
         };
         let var = Variant {
             id: *id,
-            rid: rec.rid().unwrap(),
             pos: pos as u64,
             alleles: _alleles,
         };

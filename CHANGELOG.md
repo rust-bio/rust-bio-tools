@@ -2,6 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+### [0.42.2](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.42.1...v0.42.2) (2024-04-10)
+
+
+### Miscellaneous Chores
+
+* release 0.42.2 ([a1793ea](https://www.github.com/rust-bio/rust-bio-tools/commit/a1793ea7e7fe68d05e5d05c714213ad474581e70))
+
 ### [0.42.1](https://www.github.com/rust-bio/rust-bio-tools/compare/v0.42.0...v0.42.1) (2023-07-24)
 
 

@@ -1,6 +1,7 @@
 use crate::common::Region;
 use std::path::PathBuf;
 use structopt::StructOpt;
+use strum_macros::EnumString;
 
 #[derive(StructOpt)]
 #[structopt(
@@ -397,6 +398,43 @@ pub(crate) enum Command {
         )]
         fastq: bool,
     },
+
+    /// Reconstruct a phylogenetic tree given a Phylip distance matrix input file.
+    #[structopt(author = "Ragnar Groot Koerkamp <ragnar.grootkoerkamp@gmail.com>")]
+    Phylogeny {
+        #[structopt(
+            long = "method",
+            help = "The reconstruction method to use. `UPGMA` or `NeighborJoining`"
+        )]
+        method: PhylogenyMethod,
+        #[structopt(parse(from_os_str), help = "Input Phylip distance matrix file.")]
+        input: PathBuf,
+        #[structopt(
+            parse(from_os_str),
+            help = "Optional output Newick file. Stdout by default."
+        )]
+        output: Option<PathBuf>,
+    },
+
+    /// Compute the Robinson-Foulds distance between two phylogenetic trees.
+    #[structopt(author = "Ragnar Groot Koerkamp <ragnar.grootkoerkamp@gmail.com>")]
+    RobinsonFoulds {
+        #[structopt(parse(from_os_str), help = "First input Newick file.")]
+        newick_1: PathBuf,
+        #[structopt(parse(from_os_str), help = "Second input Newick file.")]
+        newick_2: PathBuf,
+        #[structopt(
+            parse(from_os_str),
+            help = "Optional file to write distance to. Stdout by default."
+        )]
+        output: Option<PathBuf>,
+    },
+}
+
+#[derive(EnumString)]
+pub enum PhylogenyMethod {
+    UPGMA,
+    NeighborJoining,
 }
 
 #[derive(StructOpt)]

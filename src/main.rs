@@ -16,6 +16,7 @@ mod cli;
 pub mod common;
 pub mod csv;
 pub mod fastq;
+pub mod phylogeny;
 pub mod sequences_stats;
 
 fn main() -> Result<()> {
@@ -285,6 +286,16 @@ fn main() -> Result<()> {
             keep_only_pairs,
         )?,
         SequenceStats { fastq } => sequences_stats::stats(fastq)?,
+        Phylogeny {
+            method,
+            input,
+            output,
+        } => phylogeny::phylogeny(input, method, output)?,
+        RobinsonFoulds {
+            newick_1,
+            newick_2,
+            output,
+        } => phylogeny::robinson_foulds_distance(&newick_1, &newick_2, output)?,
     }
     Ok(())
 }
